@@ -54,7 +54,7 @@ jobs:
           fi
           python -m src.main $LEAGUE_ARG
 
-       - name: Commit updated report to repo
+      - name: Commit updated report to repo
         run: |
           cp docs/index.html /tmp/report.html
           git config user.name "github-actions[bot]"
