@@ -1,11 +1,18 @@
 """Assembles all analysis results into a structured report dict for templating."""
-from dataclasses import asdict
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 from typing import Dict, List
 from src.config import DAILY_BUDGET, MAX_SINGLE_BETS
 from src.models.edge_finder import BetRecommendation
 from src.models.parlay_builder import ParlayRecommendation
 from src.models.props_analyzer import PropPick
+
+
+def _now_pacific_str() -> str:
+    now_utc = datetime.now(timezone.utc)
+    offset = -7 if 3 <= now_utc.month <= 10 else -8
+    label = "PDT" if offset == -7 else "PST"
+    pacific = now_utc + timedelta(hours=offset)
+    return pacific.strftime(f"%B %d, %Y at %I:%M %p {label}")
 
 
 def build_report(
@@ -57,7 +64,7 @@ def build_report(
         })
 
     return {
-        "generated_at": datetime.now().strftime("%B %d, %Y at %I:%M %p"),
+        "generated_at": _now_pacific_str(),
         "run_date": run_date.strftime("%A, %B %d, %Y"),
         "daily_budget": DAILY_BUDGET,
         "nba_game_count": nba_game_count,

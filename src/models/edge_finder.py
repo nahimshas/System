@@ -17,6 +17,7 @@ from src.config import (
     MLB_REST_BONUS_PER_DAY, MIN_EDGE, ROBINHOOD_COMMISSION
 )
 from src.data.injuries import injury_adjustment
+from src.data.nba_stats import normalize as nba_normalize
 from src.models.kelly import robinhood_kelly, has_positive_ev, BetSizing
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,8 @@ def _nba_margin_to_prob(expected_margin: float) -> float:
 def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetRecommendation]:
     home = game["home_team"]
     away = game["away_team"]
+    home = nba_normalize(home)
+    away = nba_normalize(away)
     label = f"{away} @ {home}"
     recs = []
 

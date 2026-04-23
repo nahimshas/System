@@ -6,13 +6,31 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# Lazy imports — nba_api can be slow to load
+
+def _current_season() -> str:
+    today = date.today()
+    year = today.year
+    if today.month >= 10:
+        return f"{year}-{str(year + 1)[2:]}"
+    return f"{year - 1}-{str(year)[2:]}"
+
+
+# Normalizes Odds API team names to match nba_api names
+_NAME_MAP = {
+    "Los Angeles Clippers": "LA Clippers",
+    "Los Angeles Lakers": "Los Angeles Lakers",
+}
+
+def normalize(name: str) -> str:
+    return _NAME_MAP.get(name, name)
+
+
 def _team_stats() -> Optional[Dict[str, Any]]:
     try:
         from nba_api.stats.endpoints import leaguedashteamstats
         resp = leaguedashteamstats.LeagueDashTeamStats(
             per_mode_simple="Per100Possessions",
-            season="2024-25",
+            season=_current_season(),
             measure_type_simple="Advanced",
         )
         time.sleep(0.6)
@@ -31,30 +49,7 @@ def _team_stats() -> Optional[Dict[str, Any]]:
         return None
 
 
-def _schedule_for_date(target_date: date) -> List[Dict]:
-    try:
-        from nba_api.stats.endpoints import scoreboardv2
-        date_str = target_date.strftime("%m/%d/%Y")
-        resp = scoreboardv2.ScoreboardV2(game_date=date_str)
-        time.sleep(0.6)
-        df = resp.get_data_frames()[0]
-        games = []
-        for _, row in df.iterrows():
-            games.append({
-                "game_id": str(row.get("GAME_ID", "")),
-                "home_team_id": int(row.get("HOME_TEAM_ID", 0)),
-                "away_team_id": int(row.get("VISITOR_TEAM_ID", 0)),
-                "home_team_name": str(row.get("HOME_TEAM_NICKNAME", "")),
-                "away_team_name": str(row.get("VISITOR_TEAM_NICKNAME", "")),
-            })
-        return games
-    except Exception as e:
-        logger.error(f"NBA schedule error: {e}")
-        return []
-
-
 def _recent_team_records(days: int = 14) -> Dict[str, Dict]:
-    """Returns win% and net rating for last N days to capture form."""
     try:
         from nba_api.stats.endpoints import leaguedashteamstats
         since = (date.today() - timedelta(days=days)).strftime("%m/%d/%Y")
@@ -62,6 +57,7 @@ def _recent_team_records(days: int = 14) -> Dict[str, Dict]:
         resp = leaguedashteamstats.LeagueDashTeamStats(
             per_mode_simple="Per100Possessions",
             measure_type_simple="Advanced",
+            season=_current_season(),
             date_from_nullable=since,
             date_to_nullable=today,
         )
@@ -82,15 +78,25 @@ def _recent_team_records(days: int = 14) -> Dict[str, Dict]:
 
 
 def _last_game_dates() -> Dict[str, date]:
-    """Returns the date of each team's most recent game (for rest days calc)."""
     try:
         from nba_api.stats.endpoints import leaguegamelog
-        resp = leaguegamelog.LeagueGameLog(season="2024-25", player_or_team_abbreviation="T")
+        resp = leaguegamelog.LeagueGameLog(
+            season=_current_season(),
+            player_or_team_abbreviation="T",
+        )
         time.sleep(0.6)
         df = resp.get_data_frames()[0]
-        df["GAME_DATE"] = df["GAME_DATE"].apply(lambda d: datetime.strptime(d, "%Y-%m-%dT%H:%M:%S").date()
-                                                 if "T" in str(d) else datetime.strptime(d, "%b %d, %Y").date()
-                                                 if len(str(d)) > 8 else date.today())
+
+        def parse_date(d):
+            s = str(d)
+            for fmt in ("%Y-%m-%dT%H:%M:%S", "%b %d, %Y", "%Y-%m-%d"):
+                try:
+                    return datetime.strptime(s[:len(fmt)+2].strip(), fmt).date()
+                except ValueError:
+                    continue
+            return date.today()
+
+        df["GAME_DATE"] = df["GAME_DATE"].apply(parse_date)
         result = {}
         for team, grp in df.groupby("TEAM_NAME"):
             result[team] = grp["GAME_DATE"].max()
@@ -101,7 +107,6 @@ def _last_game_dates() -> Dict[str, date]:
 
 
 def get_nba_context(today: date) -> Dict:
-    """Returns all NBA context needed for analysis: stats, form, rest."""
     logger.info("Fetching NBA stats...")
     season_stats = _team_stats() or {}
     recent_form = _recent_team_records() or {}
@@ -110,7 +115,7 @@ def get_nba_context(today: date) -> Dict:
     rest_days: Dict[str, int] = {}
     for team, last_date in last_game.items():
         delta = (today - last_date).days
-        rest_days[team] = max(0, delta - 1)   # 0 = played yesterday (B2B)
+        rest_days[team] = max(0, delta - 1)
 
     return {
         "season_stats": season_stats,

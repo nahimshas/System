@@ -1,6 +1,7 @@
 """Fetches game lines from The Odds API (free tier: 500 credits/month)."""
 import requests
 import logging
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 from src.config import ODDS_API_BASE, ODDS_API_KEY, PREFERRED_BOOK, FALLBACK_BOOKS
 
@@ -43,12 +44,22 @@ def _pick_book_odds(bookmakers: List[Dict], market_key: str) -> Optional[Dict]:
     return None
 
 
+def _today_utc_window():
+    now = datetime.now(timezone.utc)
+    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    end = start + timedelta(days=1)
+    return start.strftime("%Y-%m-%dT%H:%M:%SZ"), end.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def get_game_odds(sport: str) -> List[Dict]:
-    """Returns list of games with parsed moneyline, spread, and total odds."""
+    """Returns list of TODAY's games with parsed moneyline, spread, and total odds."""
+    commence_from, commence_to = _today_utc_window()
     data = _get(f"/sports/{sport}/odds", {
         "regions": "us",
         "markets": "h2h,spreads,totals",
         "oddsFormat": "american",
+        "commenceTimeFrom": commence_from,
+        "commenceTimeTo": commence_to,
     })
     if not data:
         return []
