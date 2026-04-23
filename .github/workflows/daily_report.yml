@@ -4,7 +4,7 @@ on:
   schedule:
     # 9:00 AM Eastern Time (UTC-4 in summer, UTC-5 in winter)
     # Set to 13:00 UTC which covers 9am ET in EDT (summer)
-    - cron: "0 13 * * *"
+    - cron: "0 16 * * *"
   workflow_dispatch:
     inputs:
       league:
