@@ -1,0 +1,59 @@
+name: Daily Betting Report
+
+on:
+  schedule:
+    # 9:00 AM Eastern Time (UTC-4 in summer, UTC-5 in winter)
+    # Set to 13:00 UTC which covers 9am ET in EDT (summer)
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+    inputs:
+      league:
+        description: "League to analyze (leave blank for both)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - nba
+          - mlb
+        default: ""
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run betting analysis
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          DAILY_BUDGET: ${{ vars.DAILY_BUDGET || '100' }}
+        run: |
+          LEAGUE_ARG=""
+          if [ -n "${{ github.event.inputs.league }}" ]; then
+            LEAGUE_ARG="--league ${{ github.event.inputs.league }}"
+          fi
+          python -m src.main $LEAGUE_ARG
+
+      - name: Commit updated report to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          git diff --cached --quiet || git commit -m "Report: $(date +'%Y-%m-%d')"
+          git push
