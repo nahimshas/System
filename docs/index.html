@@ -3,20 +3,1370 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Betting Report — Pending First Run</title>
+  <title>Daily Betting Report — Thursday, April 23, 2026</title>
   <style>
-    body { background: #0f1117; color: #e2e8f0; font-family: -apple-system, sans-serif;
-           display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-    .box { text-align: center; padding: 32px; }
-    h1 { font-size: 1.3rem; margin-bottom: 12px; }
-    p { color: #94a3b8; font-size: 0.9rem; }
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --border: #2d3148;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --green: #22c55e;
+      --green-dim: #166534;
+      --yellow: #eab308;
+      --yellow-dim: #713f12;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --blue-dim: #1e3a5f;
+      --purple: #a855f7;
+      --purple-dim: #3b0764;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.5; }
+    .container { max-width: 680px; margin: 0 auto; padding: 16px; }
+
+    /* Header */
+    .header { text-align: center; padding: 24px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+    .header h1 { font-size: 1.4rem; font-weight: 700; color: var(--text); }
+    .header .subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+    /* Section */
+    .section { margin-bottom: 28px; }
+    .section-title { font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .section-title .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; margin-left: 8px; font-weight: 600; text-transform: none; letter-spacing: 0; vertical-align: middle; }
+    .badge-nba { background: #1d4ed8; color: #fff; }
+    .badge-mlb { background: #991b1b; color: #fff; }
+    .badge-parlay { background: var(--purple-dim); color: var(--purple); }
+
+    /* Card */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
+    .card-title { font-weight: 700; font-size: 1rem; line-height: 1.3; }
+    .card-subtitle { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+    .confidence-badge { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+    .HIGH { background: var(--green-dim); color: var(--green); }
+    .MEDIUM { background: var(--yellow-dim); color: var(--yellow); }
+
+    /* Stats grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .stat-box { background: var(--bg); border-radius: 8px; padding: 8px 10px; text-align: center; }
+    .stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.yellow { color: var(--yellow); }
+    .stat-value.blue { color: var(--blue); }
+
+    /* Signals */
+    .signals { margin-top: 10px; }
+    .signals-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .signal-item { font-size: 0.82rem; color: var(--text); padding: 3px 0 3px 12px; border-left: 2px solid var(--blue); margin-bottom: 4px; line-height: 1.4; }
+
+    /* Action box */
+    .action-box { background: var(--blue-dim); border: 1px solid var(--blue); border-radius: 8px; padding: 12px; margin-top: 10px; }
+    .action-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+    .action-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 3px; }
+    .action-row .label { color: var(--muted); }
+    .action-row .value { font-weight: 600; }
+
+    /* Parlay card */
+    .parlay-card { border-color: var(--purple); }
+    .parlay-leg { background: var(--bg); border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; font-size: 0.85rem; }
+    .parlay-leg .pick { font-weight: 600; }
+    .parlay-leg .meta { color: var(--muted); font-size: 0.78rem; }
+
+    /* Props */
+    .prop-card { border-left: 3px solid var(--yellow); }
+    .prop-note { background: var(--yellow-dim); border-radius: 6px; padding: 8px 10px; font-size: 0.82rem; margin-top: 8px; color: var(--yellow); }
+
+    /* Budget table */
+    .budget-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .budget-table th { text-align: left; padding: 8px 6px; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .budget-table td { padding: 9px 6px; border-bottom: 1px solid var(--border); }
+    .budget-table tr:last-child td { border-bottom: none; }
+    .budget-total { display: flex; justify-content: space-between; padding: 12px 6px 0; font-weight: 700; border-top: 2px solid var(--border); margin-top: 4px; }
+
+    /* No games */
+    .empty-state { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 0.9rem; }
+    .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
+
+    /* Error */
+    .error-card { background: #1a0a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 0.82rem; color: #fca5a5; }
+
+    /* Footer */
+    .footer { text-align: center; color: var(--muted); font-size: 0.75rem; padding: 24px 0 32px; border-top: 1px solid var(--border); margin-top: 8px; }
+    .disclaimer { font-size: 0.72rem; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+    @media (max-width: 400px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+      .stat-value { font-size: 0.9rem; }
+      .card { padding: 12px; }
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>Report Not Yet Generated</h1>
-    <p>Run the GitHub Actions workflow to generate today's report.<br>
-    Go to your repo → Actions → Daily Betting Report → Run workflow.</p>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Daily Betting Report</h1>
+    <div class="subtitle">Thursday, April 23, 2026 &middot; Generated April 23, 2026 at 09:35 PM</div>
+    <div class="subtitle" style="margin-top:6px;">
+      NBA: 8 games &nbsp;|&nbsp;
+      MLB: 9 games &nbsp;|&nbsp;
+      Budget: $100
+    </div>
   </div>
+
+  <!-- Errors -->
+  
+
+  <!-- No games notice -->
+  
+  
+
+  
+
+  <!-- Singles -->
+  
+  <div class="section">
+    <div class="section-title">Singles <span style="color:var(--muted);font-weight:400;font-size:0.85rem;text-transform:none;letter-spacing:0;">(top 5 by edge)</span></div>
+
+    
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Colorado Rockies</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Moneyline &nbsp;&middot;&nbsp; Colorado Rockies @ New York Mets
+          </div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Market</div>
+          <div class="stat-value">34.3%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Model</div>
+          <div class="stat-value blue">80.2%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Edge</div>
+          <div class="stat-value green">+45.9%</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Key Signals</div>
+        
+        <div class="signal-item">Joe Ryan FIP: 2.28 | K/9: 9.3</div>
+        
+        <div class="signal-item">Model expected score: New York Mets 2.9 — Colorado Rockies 4.4</div>
+        
+      </div>
+      
+
+      <div class="action-box">
+        <div class="action-title">Robinhood Action</div>
+        <div class="action-row">
+          <span class="label">Contract price (est.)</span>
+          <span class="value">¢34.3</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Buy contracts</span>
+          <span class="value">47</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Total cost (incl. commission)</span>
+          <span class="value">$17.06</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Profit if win</span>
+          <span class="value" style="color:var(--green)">+$29.94</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Loss if lose</span>
+          <span class="value" style="color:var(--red)">-$17.06</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Expected value</span>
+          <span class="value" style="color:var(--green)">
+            +$20.64
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Over 8.0</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Total &nbsp;&middot;&nbsp; Cleveland Guardians @ Toronto Blue Jays
+          </div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Market</div>
+          <div class="stat-value">50.5%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Model</div>
+          <div class="stat-value blue">92.2%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Edge</div>
+          <div class="stat-value green">+41.7%</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Key Signals</div>
+        
+        <div class="signal-item">Park factor 1.30 (hitter-friendly: )</div>
+        
+        <div class="signal-item">Model expected score: Toronto Blue Jays 6.0 — Cleveland Guardians 5.9</div>
+        
+        <div class="signal-item">Model expected total: 11.8 vs line 8.0</div>
+        
+      </div>
+      
+
+      <div class="action-box">
+        <div class="action-title">Robinhood Action</div>
+        <div class="action-row">
+          <span class="label">Contract price (est.)</span>
+          <span class="value">¢50.5</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Buy contracts</span>
+          <span class="value">39</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Total cost (incl. commission)</span>
+          <span class="value">$20.47</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Profit if win</span>
+          <span class="value" style="color:var(--green)">+$18.53</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Loss if lose</span>
+          <span class="value" style="color:var(--red)">-$20.47</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Expected value</span>
+          <span class="value" style="color:var(--green)">
+            +$15.48
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Chicago Cubs</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Moneyline &nbsp;&middot;&nbsp; Chicago Cubs @ Los Angeles Dodgers
+          </div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Market</div>
+          <div class="stat-value">40.7%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Model</div>
+          <div class="stat-value blue">81.3%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Edge</div>
+          <div class="stat-value green">+40.6%</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Key Signals</div>
+        
+        <div class="signal-item">Logan Webb FIP: 3.23 | K/9: 7.8</div>
+        
+        <div class="signal-item">Tyler Glasnow FIP: 2.36 | K/9: 10.4</div>
+        
+        <div class="signal-item">Park factor 0.94 (pitcher-friendly: Oracle Park)</div>
+        
+        <div class="signal-item">Model expected score: Los Angeles Dodgers 3.0 — Chicago Cubs 4.6</div>
+        
+      </div>
+      
+
+      <div class="action-box">
+        <div class="action-title">Robinhood Action</div>
+        <div class="action-row">
+          <span class="label">Contract price (est.)</span>
+          <span class="value">¢40.7</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Buy contracts</span>
+          <span class="value">39</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Total cost (incl. commission)</span>
+          <span class="value">$16.66</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Profit if win</span>
+          <span class="value" style="color:var(--green)">+$22.34</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Loss if lose</span>
+          <span class="value" style="color:var(--red)">-$16.66</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Expected value</span>
+          <span class="value" style="color:var(--green)">
+            +$15.04
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Over 8.0</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Total &nbsp;&middot;&nbsp; Seattle Mariners @ St. Louis Cardinals
+          </div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Market</div>
+          <div class="stat-value">51.9%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Model</div>
+          <div class="stat-value blue">92.2%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Edge</div>
+          <div class="stat-value green">+40.3%</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Key Signals</div>
+        
+        <div class="signal-item">Park factor 1.30 (hitter-friendly: )</div>
+        
+        <div class="signal-item">Model expected score: St. Louis Cardinals 6.0 — Seattle Mariners 5.9</div>
+        
+        <div class="signal-item">Model expected total: 11.8 vs line 8.0</div>
+        
+      </div>
+      
+
+      <div class="action-box">
+        <div class="action-title">Robinhood Action</div>
+        <div class="action-row">
+          <span class="label">Contract price (est.)</span>
+          <span class="value">¢51.9</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Buy contracts</span>
+          <span class="value">38</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Total cost (incl. commission)</span>
+          <span class="value">$20.49</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Profit if win</span>
+          <span class="value" style="color:var(--green)">+$17.51</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Loss if lose</span>
+          <span class="value" style="color:var(--red)">-$20.49</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Expected value</span>
+          <span class="value" style="color:var(--green)">
+            +$14.54
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Cincinnati Reds</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Moneyline &nbsp;&middot;&nbsp; Detroit Tigers @ Cincinnati Reds
+          </div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Market</div>
+          <div class="stat-value">44.9%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Model</div>
+          <div class="stat-value blue">85.0%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Edge</div>
+          <div class="stat-value green">+40.1%</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Key Signals</div>
+        
+        <div class="signal-item">Tarik Skubal FIP: 1.95 | K/9: 9.5</div>
+        
+        <div class="signal-item">Brandon Sproat FIP: 6.1 | K/9: 8.1</div>
+        
+        <div class="signal-item">Model expected score: Cincinnati Reds 5.6 — Detroit Tigers 3.3</div>
+        
+      </div>
+      
+
+      <div class="action-box">
+        <div class="action-title">Robinhood Action</div>
+        <div class="action-row">
+          <span class="label">Contract price (est.)</span>
+          <span class="value">¢44.9</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Buy contracts</span>
+          <span class="value">38</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Total cost (incl. commission)</span>
+          <span class="value">$17.82</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Profit if win</span>
+          <span class="value" style="color:var(--green)">+$20.18</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Loss if lose</span>
+          <span class="value" style="color:var(--red)">-$17.82</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Expected value</span>
+          <span class="value" style="color:var(--green)">
+            +$14.48
+          </span>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+
+  <!-- Parlays -->
+  
+  <div class="section">
+    <div class="section-title">2-Leg Parlays <span class="badge badge-parlay">2</span></div>
+
+    
+    <div class="card parlay-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title" style="color:var(--purple);">Parlay #1</div>
+          <div class="card-subtitle">Combined prob: 85.0% &middot; Edge: +58.8%</div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      
+      <div class="parlay-leg">
+        <div class="pick">Over 8.0 <span style="color:var(--muted);font-weight:400;">(Total)</span></div>
+        <div class="meta">Cleveland Guardians @ Toronto Blue Jays &middot; Model: 92.2% &middot; Edge: +41.7%</div>
+      </div>
+      
+      <div class="parlay-leg">
+        <div class="pick">Over 8.0 <span style="color:var(--muted);font-weight:400;">(Total)</span></div>
+        <div class="meta">Seattle Mariners @ St. Louis Cardinals &middot; Model: 92.2% &middot; Edge: +40.3%</div>
+      </div>
+      
+
+      <div class="action-box" style="background:var(--purple-dim);border-color:var(--purple);">
+        <div class="action-title" style="color:var(--purple);">Robinhood Action</div>
+        <div class="action-row">
+          <span class="label">Parlay contract price (est.)</span>
+          <span class="value">¢26.2</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Buy contracts</span>
+          <span class="value">35</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Total cost</span>
+          <span class="value">$9.88</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Profit if win</span>
+          <span class="value" style="color:var(--green)">+$25.12</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card parlay-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title" style="color:var(--purple);">Parlay #2</div>
+          <div class="card-subtitle">Combined prob: 86.0% &middot; Edge: +58.6%</div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      
+      <div class="parlay-leg">
+        <div class="pick">Over 3.5 <span style="color:var(--muted);font-weight:400;">(Total)</span></div>
+        <div class="meta">Los Angeles Dodgers @ San Francisco Giants &middot; Model: 93.3% &middot; Edge: +39.0%</div>
+      </div>
+      
+      <div class="parlay-leg">
+        <div class="pick">Over 8.0 <span style="color:var(--muted);font-weight:400;">(Total)</span></div>
+        <div class="meta">Cleveland Guardians @ Toronto Blue Jays &middot; Model: 92.2% &middot; Edge: +41.7%</div>
+      </div>
+      
+
+      <div class="action-box" style="background:var(--purple-dim);border-color:var(--purple);">
+        <div class="action-title" style="color:var(--purple);">Robinhood Action</div>
+        <div class="action-row">
+          <span class="label">Parlay contract price (est.)</span>
+          <span class="value">¢27.4</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Buy contracts</span>
+          <span class="value">34</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Total cost</span>
+          <span class="value">$10.01</span>
+        </div>
+        <div class="action-row">
+          <span class="label">Profit if win</span>
+          <span class="value" style="color:var(--green)">+$23.99</span>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+
+  <!-- Props Research -->
+  
+  <div class="section">
+    <div class="section-title">Props Research <span style="color:var(--yellow);font-size:0.72rem;font-weight:400;text-transform:none;">(verify Robinhood price before betting)</span></div>
+
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Cade Cavalli</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">6.4</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 10.4 | FIP: 2.37 | Season IP: 24</div>
+        
+        <div class="signal-item">Projected 6.4 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Cade Cavalli strikeout prop. Model projects 6.4 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">JR Ritchie</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">5.5</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 9.0 | FIP: 5.77 | Season IP: 7</div>
+        
+        <div class="signal-item">Projected 5.5 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for JR Ritchie strikeout prop. Model projects 5.5 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Tarik Skubal</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">5.8</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 9.5 | FIP: 1.95 | Season IP: 36</div>
+        
+        <div class="signal-item">Projected 5.8 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Tarik Skubal strikeout prop. Model projects 5.8 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Brandon Sproat</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">4.9</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value yellow">Under</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 8.1 | FIP: 6.1 | Season IP: 22</div>
+        
+        <div class="signal-item">Projected 4.9 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Brandon Sproat strikeout prop. Model projects 4.9 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Edward Cabrera</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">4.2</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value yellow">Under</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 6.8 | FIP: 3.71 | Season IP: 29</div>
+        
+        <div class="signal-item">Projected 4.2 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Edward Cabrera strikeout prop. Model projects 4.2 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Cristopher Sánchez</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">7.1</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">HIGH</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 11.7 | FIP: 2.69 | Season IP: 33</div>
+        
+        <div class="signal-item">Projected 7.1 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Cristopher Sánchez strikeout prop. Model projects 7.1 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Ryan Feltner</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">4.6</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value yellow">Under</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 7.6 | FIP: 5.95 | Season IP: 20</div>
+        
+        <div class="signal-item">Projected 4.6 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Ryan Feltner strikeout prop. Model projects 4.6 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Matt Waldron</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">4.7</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value yellow">Under</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 7.7 | FIP: 6.13 | Season IP: 8</div>
+        
+        <div class="signal-item">Projected 4.7 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Matt Waldron strikeout prop. Model projects 4.7 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Michael Soroka</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">6.8</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 11.2 | FIP: 2.43 | Season IP: 27</div>
+        
+        <div class="signal-item">Projected 6.8 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Michael Soroka strikeout prop. Model projects 6.8 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Davis Martin</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">4.6</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value yellow">Under</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 7.5 | FIP: 3.04 | Season IP: 31</div>
+        
+        <div class="signal-item">Projected 4.6 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Davis Martin strikeout prop. Model projects 4.6 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Logan Webb</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">4.8</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value yellow">Under</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 7.8 | FIP: 3.23 | Season IP: 37</div>
+        
+        <div class="signal-item">Projected 4.8 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Logan Webb strikeout prop. Model projects 4.8 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Tyler Glasnow</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge HIGH">HIGH</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">6.4</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">HIGH</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 10.4 | FIP: 2.36 | Season IP: 32</div>
+        
+        <div class="signal-item">Projected 6.4 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Tyler Glasnow strikeout prop. Model projects 6.4 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Cam Schlittler</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">7.3</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 11.9 | FIP: 0.88 | Season IP: 27</div>
+        
+        <div class="signal-item">Projected 7.3 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Cam Schlittler strikeout prop. Model projects 7.3 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Joe Ryan</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">5.7</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 9.3 | FIP: 2.28 | Season IP: 27</div>
+        
+        <div class="signal-item">Projected 5.7 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Joe Ryan strikeout prop. Model projects 5.7 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Jacob deGrom</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">7.1</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value green">Over</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 11.7 | FIP: 3.56 | Season IP: 19</div>
+        
+        <div class="signal-item">Projected 7.1 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Jacob deGrom strikeout prop. Model projects 7.1 Ks.</div>
+    </div>
+    
+    <div class="card prop-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Bubba Chandler</div>
+          <div class="card-subtitle">
+            <span class="badge badge-mlb">MLB</span>
+            &nbsp;Strikeouts
+          </div>
+        </div>
+        <span class="confidence-badge MEDIUM">MEDIUM</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Model Line</div>
+          <div class="stat-value blue">4.6</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Direction</div>
+          <div class="stat-value yellow">Under</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Confidence</div>
+          <div class="stat-value">MEDIUM</div>
+        </div>
+      </div>
+
+      
+      <div class="signals">
+        <div class="signals-title">Signals</div>
+        
+        <div class="signal-item">K/9: 7.6 | FIP: 4.75 | Season IP: 20</div>
+        
+        <div class="signal-item">Projected 4.6 Ks over ~5.5 innings</div>
+        
+      </div>
+      
+
+      <div class="prop-note">Check Robinhood for Bubba Chandler strikeout prop. Model projects 4.6 Ks.</div>
+    </div>
+    
+  </div>
+  
+
+  <!-- Budget Allocation -->
+  
+  <div class="section">
+    <div class="section-title">Budget Allocation</div>
+    <div class="card">
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Bet</th>
+            <th>Contracts</th>
+            <th>Cost</th>
+            <th>Profit</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td style="color:var(--muted);">1</td>
+            <td>
+              <div style="font-weight:600;font-size:0.82rem;">Colorado Rockies (Moneyline)</div>
+              <div style="color:var(--muted);font-size:0.72rem;">MLB</div>
+            </td>
+            <td>47</td>
+            <td>$17.06<br><span style="color:var(--muted);font-size:0.72rem;">17.1%</span></td>
+            <td style="color:var(--green);">+$29.94</td>
+          </tr>
+          
+          <tr>
+            <td style="color:var(--muted);">2</td>
+            <td>
+              <div style="font-weight:600;font-size:0.82rem;">Over 8.0 (Total)</div>
+              <div style="color:var(--muted);font-size:0.72rem;">MLB</div>
+            </td>
+            <td>39</td>
+            <td>$20.47<br><span style="color:var(--muted);font-size:0.72rem;">20.5%</span></td>
+            <td style="color:var(--green);">+$18.53</td>
+          </tr>
+          
+          <tr>
+            <td style="color:var(--muted);">3</td>
+            <td>
+              <div style="font-weight:600;font-size:0.82rem;">Chicago Cubs (Moneyline)</div>
+              <div style="color:var(--muted);font-size:0.72rem;">MLB</div>
+            </td>
+            <td>39</td>
+            <td>$16.66<br><span style="color:var(--muted);font-size:0.72rem;">16.7%</span></td>
+            <td style="color:var(--green);">+$22.34</td>
+          </tr>
+          
+          <tr>
+            <td style="color:var(--muted);">4</td>
+            <td>
+              <div style="font-weight:600;font-size:0.82rem;">Over 8.0 (Total)</div>
+              <div style="color:var(--muted);font-size:0.72rem;">MLB</div>
+            </td>
+            <td>38</td>
+            <td>$20.49<br><span style="color:var(--muted);font-size:0.72rem;">20.5%</span></td>
+            <td style="color:var(--green);">+$17.51</td>
+          </tr>
+          
+          <tr>
+            <td style="color:var(--muted);">5</td>
+            <td>
+              <div style="font-weight:600;font-size:0.82rem;">Cincinnati Reds (Moneyline)</div>
+              <div style="color:var(--muted);font-size:0.72rem;">MLB</div>
+            </td>
+            <td>38</td>
+            <td>$17.82<br><span style="color:var(--muted);font-size:0.72rem;">17.8%</span></td>
+            <td style="color:var(--green);">+$20.18</td>
+          </tr>
+          
+          <tr>
+            <td style="color:var(--muted);">P1</td>
+            <td>
+              <div style="font-weight:600;font-size:0.82rem;">Over 8.0 (Total) + Over 8.0 (Total)</div>
+              <div style="color:var(--muted);font-size:0.72rem;">Parlay</div>
+            </td>
+            <td>35</td>
+            <td>$9.88<br><span style="color:var(--muted);font-size:0.72rem;">9.9%</span></td>
+            <td style="color:var(--green);">+$25.12</td>
+          </tr>
+          
+          <tr>
+            <td style="color:var(--muted);">P2</td>
+            <td>
+              <div style="font-weight:600;font-size:0.82rem;">Over 3.5 (Total) + Over 8.0 (Total)</div>
+              <div style="color:var(--muted);font-size:0.72rem;">Parlay</div>
+            </td>
+            <td>34</td>
+            <td>$10.01<br><span style="color:var(--muted);font-size:0.72rem;">10.0%</span></td>
+            <td style="color:var(--green);">+$23.99</td>
+          </tr>
+          
+        </tbody>
+      </table>
+      <div class="budget-total">
+        <span>Deployed</span>
+        <span>$112.39 / $100</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
+        <span style="color:var(--muted);">Reserve (do not bet)</span>
+        <span style="color:var(--green);">$0.00</span>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- Footer -->
+  <div class="footer">
+    Sports Betting Analysis System &middot; Robinhood Contracts
+    <div class="disclaimer">
+      This report is for informational purposes only. All bets involve risk of loss.
+      Verify contract prices on Robinhood before placing any bet — prices shown are estimates
+      based on DraftKings market odds. Past model accuracy does not guarantee future results.
+      Never bet more than you can afford to lose.
+    </div>
+  </div>
+
+</div>
 </body>
 </html>
