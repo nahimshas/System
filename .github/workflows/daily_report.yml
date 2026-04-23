@@ -54,11 +54,14 @@ jobs:
           fi
           python -m src.main $LEAGUE_ARG
 
-      - name: Commit updated report to repo
+       - name: Commit updated report to repo
         run: |
+          cp docs/index.html /tmp/report.html
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/report.html docs/index.html
           git add docs/index.html
           git diff --cached --quiet || git commit -m "Report: $(date +'%Y-%m-%d')"
-          git pull --rebase origin main
           git push
