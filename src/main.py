@@ -100,7 +100,7 @@ def run(leagues: list[str], send_email: bool = True) -> int:
             mlb_odds_games = get_game_odds(MLB_SPORT)
 
         mlb_schedule = get_todays_games(today)
-        mlb_game_count = len(mlb_schedule)
+        mlb_game_count = len(mlb_odds_games)
 
         # Build a lookup of schedule data (pitcher info) keyed by team name
         schedule_map = {g["home_team"]: g for g in mlb_schedule}

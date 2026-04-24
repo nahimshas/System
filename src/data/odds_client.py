@@ -64,8 +64,19 @@ def get_game_odds(sport: str) -> List[Dict]:
     if not data:
         return []
 
+    now_utc = datetime.now(timezone.utc)
     games = []
     for game in data:
+        # Skip games that have already started
+        commence_str = game.get("commence_time", "")
+        try:
+            commence_dt = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
+            if commence_dt <= now_utc:
+                logger.info(f"Skipping started game: {game.get('home_team')} vs {game.get('away_team')}")
+                continue
+        except (ValueError, AttributeError):
+            pass
+
         home = game["home_team"]
         away = game["away_team"]
         bookmakers = game.get("bookmakers", [])
