@@ -2,9 +2,9 @@ name: Daily Betting Report
 
 on:
   schedule:
-    # 9:00 AM Eastern Time (UTC-4 in summer, UTC-5 in winter)
-    # Set to 13:00 UTC which covers 9am ET in EDT (summer)
-    - cron: "0 16 * * *"
+    # Target: ~9:00 AM PDT. GitHub Actions free tier often runs 1-2 hrs late,
+    # so we schedule at 7:00 AM PDT (14:00 UTC) to land around 9 AM despite delays.
+    - cron: "0 14 * * *"
   workflow_dispatch:
     inputs:
       league:
