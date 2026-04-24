@@ -38,10 +38,8 @@ logger = logging.getLogger("main")
 
 
 def run(leagues: list[str], send_email: bool = True) -> int:
-    from datetime import datetime, timezone, timedelta
-    _utc_now = datetime.now(timezone.utc)
-    _pac_offset = -7 if 3 <= _utc_now.month <= 10 else -8
-    today = (_utc_now + timedelta(hours=_pac_offset)).date()
+    from src.data.odds_client import _today_pacific
+    today = _today_pacific()
     errors: list[str] = []
 
     if not ODDS_API_KEY:

@@ -44,15 +44,23 @@ def _pick_book_odds(bookmakers: List[Dict], market_key: str) -> Optional[Dict]:
     return None
 
 
-def _pacific_today_utc_window():
-    """Returns UTC timestamps covering today in Pacific time (PDT=UTC-7, PST=UTC-8)."""
+def _pacific_offset() -> int:
+    month = datetime.now(timezone.utc).month
+    return -7 if 3 <= month <= 10 else -8
+
+
+def _today_pacific():
     now_utc = datetime.now(timezone.utc)
-    offset = -7 if 3 <= now_utc.month <= 10 else -8
-    pacific_offset = timedelta(hours=offset)
-    now_pacific = now_utc + pacific_offset
-    # Start of today in Pacific, converted back to UTC
+    return (now_utc + timedelta(hours=_pacific_offset())).date()
+
+
+def _pacific_today_utc_window():
+    """Returns UTC timestamps covering today in Pacific time."""
+    offset = _pacific_offset()
+    now_utc = datetime.now(timezone.utc)
+    now_pacific = now_utc + timedelta(hours=offset)
     pac_midnight = now_pacific.replace(hour=0, minute=0, second=0, microsecond=0)
-    start_utc = pac_midnight - pacific_offset
+    start_utc = pac_midnight - timedelta(hours=offset)
     end_utc = start_utc + timedelta(days=1)
     return start_utc.strftime("%Y-%m-%dT%H:%M:%SZ"), end_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -71,14 +79,20 @@ def get_game_odds(sport: str) -> List[Dict]:
         return []
 
     now_utc = datetime.now(timezone.utc)
+    today_pacific = _today_pacific()
     games = []
     for game in data:
-        # Skip games that have already started
         commence_str = game.get("commence_time", "")
         try:
             commence_dt = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
+            # Skip games already started
             if commence_dt <= now_utc:
-                logger.info(f"Skipping started game: {game.get('home_team')} vs {game.get('away_team')}")
+                logger.info(f"Skipping started: {game.get('home_team')} vs {game.get('away_team')}")
+                continue
+            # Skip games not on today's Pacific date
+            game_pacific_date = (commence_dt + timedelta(hours=_pacific_offset())).date()
+            if game_pacific_date != today_pacific:
+                logger.info(f"Skipping non-today game ({game_pacific_date}): {game.get('home_team')} vs {game.get('away_team')}")
                 continue
         except (ValueError, AttributeError):
             pass
