@@ -29,7 +29,6 @@ def _team_stats() -> Optional[Dict[str, Any]]:
     try:
         from nba_api.stats.endpoints import leaguedashteamstats
         resp = leaguedashteamstats.LeagueDashTeamStats(
-            per_mode_simple="Per100Possessions",
             season=_current_season(),
             measure_type_simple="Advanced",
         )
@@ -55,9 +54,8 @@ def _recent_team_records(days: int = 14) -> Dict[str, Dict]:
         since = (date.today() - timedelta(days=days)).strftime("%m/%d/%Y")
         today = date.today().strftime("%m/%d/%Y")
         resp = leaguedashteamstats.LeagueDashTeamStats(
-            per_mode_simple="Per100Possessions",
-            measure_type_simple="Advanced",
             season=_current_season(),
+            measure_type_simple="Advanced",
             date_from_nullable=since,
             date_to_nullable=today,
         )
