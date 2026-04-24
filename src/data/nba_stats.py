@@ -1,329 +1,321 @@
-"""Fetches NBA team stats, schedules, and back-to-back info via nba_api or direct HTTP."""
+"""
+Fetches NBA team stats and player leaders via ESPN's public API.
+ESPN (site.api.espn.com) works from any IP including GitHub Actions —
+no bot protection like stats.nba.com.
+
+Key design:
+  - All context dicts are keyed by ESPN display names (the value normalize() returns).
+  - edge_finder already calls normalize() before looking up context.
+  - props_analyzer must also call normalize() — updated to do so.
+"""
 import logging
 import time
 import requests
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# Headers required by stats.nba.com — browser-like fingerprint to avoid 403s
-_NBA_STATS_HEADERS = {
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Connection": "keep-alive",
-    "Host": "stats.nba.com",
-    "Origin": "https://www.nba.com",
-    "Referer": "https://www.nba.com/",
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    ),
-    "x-nba-stats-origin": "stats",
-    "x-nba-stats-token": "true",
-}
+ESPN_NBA    = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
+ESPN_NBA_V2 = "https://site.api.espn.com/apis/v2/sports/basketball/nba"
 
-
-def _current_season() -> str:
-    today = date.today()
-    year = today.year
-    if today.month >= 10:
-        return f"{year}-{str(year + 1)[2:]}"
-    return f"{year - 1}-{str(year)[2:]}"
-
-
-# Normalizes Odds API team names to match nba_api / NBA Stats API names
-_NAME_MAP = {
+# Odds API name  →  ESPN displayName  (only entries that differ)
+_ODDS_TO_ESPN = {
     "Los Angeles Clippers": "LA Clippers",
-    "Los Angeles Lakers": "Los Angeles Lakers",
 }
+# Reverse map for building season_stats keys from ESPN standings
+_ESPN_TO_ODDS = {v: k for k, v in _ODDS_TO_ESPN.items()}
+
 
 def normalize(name: str) -> str:
-    return _NAME_MAP.get(name, name)
+    """Convert Odds API team name → ESPN displayName."""
+    return _ODDS_TO_ESPN.get(name, name)
 
 
-# ---------------------------------------------------------------------------
-# Direct HTTP helpers (primary method — more reliable than nba_api)
-# ---------------------------------------------------------------------------
-
-def _parse_nba_result_set(data: dict, result_set_index: int = 0) -> List[Dict]:
-    """Parse NBA Stats API resultSets response into list of dicts."""
-    rs = data["resultSets"][result_set_index]
-    headers = rs["headers"]
-    return [dict(zip(headers, row)) for row in rs["rowSet"]]
+def _espn_season() -> int:
+    """ESPN season year = ending year of the season. April 2026 → 2026."""
+    today = date.today()
+    return today.year if today.month < 10 else today.year + 1
 
 
-def _team_stats_http(season: str) -> Optional[Dict[str, Any]]:
-    """Fetch team advanced stats directly from stats.nba.com."""
+def _get(url: str, params: dict = None) -> Optional[dict]:
+    """GET → JSON or None on any error."""
     try:
-        url = "https://stats.nba.com/stats/leaguedashteamstats"
-        params = {
-            "Season": season,
-            "SeasonType": "Regular Season",
-            "MeasureType": "Advanced",
-            "PerMode": "PerGame",
-            "PlusMinus": "N",
-            "PaceAdjust": "N",
-            "Rank": "N",
-            "Outcome": "",
-            "Location": "",
-            "Month": "0",
-            "SeasonSegment": "",
-            "DateFrom": "",
-            "DateTo": "",
-            "OpponentTeamID": "0",
-            "VsConference": "",
-            "VsDivision": "",
-            "GameSegment": "",
-            "Period": "0",
-            "LastNGames": "0",
-            "Conference": "",
-            "Division": "",
-        }
-        r = requests.get(url, headers=_NBA_STATS_HEADERS, params=params, timeout=15)
+        r = requests.get(url, params=params, timeout=12)
         r.raise_for_status()
-        rows = _parse_nba_result_set(r.json())
-        result = {}
-        for row in rows:
-            name = row.get("TEAM_NAME", "")
-            if not name:
-                continue
-            result[name] = {
-                "off_rtg": float(row.get("OFF_RATING") or 110),
-                "def_rtg": float(row.get("DEF_RATING") or 110),
-                "net_rtg": float(row.get("NET_RATING") or 0),
-                "pace":    float(row.get("PACE") or 100),
-            }
-        logger.info(f"NBA advanced stats via HTTP: {len(result)} teams")
-        return result if result else None
+        return r.json()
     except Exception as e:
-        logger.error(f"NBA stats HTTP failed: {e}")
+        logger.error(f"ESPN GET failed [{url}]: {e}")
         return None
 
 
-def _recent_team_records_http(season: str, days: int = 14) -> Dict[str, Dict]:
-    """Fetch recent-form stats directly from stats.nba.com."""
-    try:
-        since = (date.today() - timedelta(days=days)).strftime("%m/%d/%Y")
-        today = date.today().strftime("%m/%d/%Y")
-        url = "https://stats.nba.com/stats/leaguedashteamstats"
-        params = {
-            "Season": season,
-            "SeasonType": "Regular Season",
-            "MeasureType": "Advanced",
-            "PerMode": "PerGame",
-            "PlusMinus": "N",
-            "PaceAdjust": "N",
-            "Rank": "N",
-            "DateFrom": since,
-            "DateTo": today,
-            "Outcome": "",
-            "Location": "",
-            "Month": "0",
-            "SeasonSegment": "",
-            "OpponentTeamID": "0",
-            "VsConference": "",
-            "VsDivision": "",
-            "GameSegment": "",
-            "Period": "0",
-            "LastNGames": "0",
-            "Conference": "",
-            "Division": "",
-        }
-        r = requests.get(url, headers=_NBA_STATS_HEADERS, params=params, timeout=15)
-        r.raise_for_status()
-        rows = _parse_nba_result_set(r.json())
-        result = {}
-        for row in rows:
-            name = row.get("TEAM_NAME", "")
-            if not name:
+# ---------------------------------------------------------------------------
+# Season stats — ONE call for all 30 teams via the standings endpoint
+# ---------------------------------------------------------------------------
+
+def _fetch_all_team_stats() -> Dict[str, Dict]:
+    """
+    Returns {espn_display_name: stats_dict} for every NBA team.
+    Uses the standings endpoint which includes PPG / OPPG for all teams at once.
+    """
+    season = _espn_season()
+    data = _get(f"{ESPN_NBA_V2}/standings", params={"season": season})
+    if not data:
+        return {}
+
+    result: Dict[str, Dict] = {}
+
+    # Standings structure: data["children"] → conferences → standings.entries
+    for conf in data.get("children", []):
+        entries = conf.get("standings", {}).get("entries", [])
+        for entry in entries:
+            espn_name = entry.get("team", {}).get("displayName", "")
+            if not espn_name:
                 continue
-            result[name] = {
-                "recent_net_rtg": float(row.get("NET_RATING") or 0),
-                "recent_off_rtg": float(row.get("OFF_RATING") or 110),
-                "recent_def_rtg": float(row.get("DEF_RATING") or 110),
-                "recent_w_pct":   float(row.get("W_PCT") or 0.5),
+
+            stat_map = {s["name"]: s.get("value", 0.0)
+                        for s in entry.get("stats", []) if "name" in s}
+
+            # Points per game — ESPN may use several possible keys
+            ppg  = float(stat_map.get("avgPointsFor",
+                         stat_map.get("pointsFor",
+                         stat_map.get("avgPoints", 110.0))) or 110.0)
+            oppg = float(stat_map.get("avgPointsAgainst",
+                         stat_map.get("pointsAgainst",
+                         stat_map.get("avgPointsAllowed", 110.0))) or 110.0)
+            wins  = float(stat_map.get("wins", 0))
+            losses = float(stat_map.get("losses", 1))
+            total = wins + losses
+            win_pct = float(stat_map.get("winPercent",
+                            wins / total if total > 0 else 0.5))
+
+            # Store under ESPN display name so normalize() lookups work
+            result[espn_name] = {
+                "off_rtg":  ppg,           # PPG  ≈ offensive rating
+                "def_rtg":  oppg,          # OPPG ≈ defensive rating
+                "net_rtg":  ppg - oppg,    # point differential
+                "pace":     100.0,         # ESPN doesn't expose pace; league avg
+                "ppg":      ppg,
+                "oppg":     oppg,
+                "win_pct":  win_pct,
+                "wins":     int(wins),
+                "losses":   int(losses),
             }
-        return result
-    except Exception as e:
-        logger.error(f"NBA recent form HTTP failed: {e}")
+
+    logger.info(f"ESPN standings: {len(result)} teams loaded (season {season})")
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Team ID map — needed for per-team detail calls
+# ---------------------------------------------------------------------------
+
+def _fetch_team_id_map() -> Dict[str, str]:
+    """Returns {espn_display_name: espn_team_id} for all 30 NBA teams."""
+    data = _get(f"{ESPN_NBA}/teams", params={"limit": 32})
+    if not data:
         return {}
 
+    result: Dict[str, str] = {}
+    for sport in data.get("sports", []):
+        for league in sport.get("leagues", []):
+            for item in league.get("teams", []):
+                t = item.get("team", {})
+                name = t.get("displayName", "")
+                tid  = t.get("id", "")
+                if name and tid:
+                    result[name] = tid
+    return result
 
-def _last_game_dates_http(season: str) -> Dict[str, date]:
-    """Fetch last game date per team directly from stats.nba.com."""
-    try:
-        url = "https://stats.nba.com/stats/leaguegamelog"
-        params = {
-            "Season": season,
-            "SeasonType": "Regular Season",
-            "PlayerOrTeam": "T",
-            "Direction": "DESC",
-            "Sorter": "DATE",
-            "DateFrom": "",
-            "DateTo": "",
-            "Counter": "0",
-        }
-        r = requests.get(url, headers=_NBA_STATS_HEADERS, params=params, timeout=15)
-        r.raise_for_status()
-        rows = _parse_nba_result_set(r.json())
 
-        def parse_date(s: str) -> date:
-            for fmt in ("%Y-%m-%dT%H:%M:%S", "%b %d, %Y", "%Y-%m-%d"):
-                try:
-                    return datetime.strptime(str(s)[:20].strip(), fmt).date()
-                except ValueError:
-                    continue
-            return date.today()
+# ---------------------------------------------------------------------------
+# Statistical leaders — top scorer / rebounder / assist man per team
+# ---------------------------------------------------------------------------
 
-        result: Dict[str, date] = {}
-        for row in rows:
-            team = row.get("TEAM_NAME", "")
-            game_date_raw = row.get("GAME_DATE", "")
-            if not team or not game_date_raw:
+def _fetch_team_leaders(team_id: str) -> Dict[str, Dict]:
+    """
+    Returns {category: {name, value, display}} for the team's top players.
+    Categories: 'points', 'rebounds', 'assists', 'blocks', 'steals'
+    Pulled from the team detail endpoint which embeds leaders.
+    """
+    data = _get(f"{ESPN_NBA}/teams/{team_id}")
+    if not data:
+        return {}
+
+    leaders_raw = data.get("team", {}).get("leaders", [])
+    result: Dict[str, Dict] = {}
+    for cat in leaders_raw:
+        cat_name = cat.get("name", "")
+        top = cat.get("leaders", [])
+        if not top:
+            continue
+        first = top[0]
+        athlete = first.get("athlete", {})
+        player_name = athlete.get("displayName") or athlete.get("fullName", "")
+        if player_name:
+            result[cat_name] = {
+                "name":    player_name,
+                "value":   float(first.get("value", 0)),
+                "display": first.get("displayValue", ""),
+            }
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Recent form — last 14 days from team schedule
+# ---------------------------------------------------------------------------
+
+def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
+    """
+    Fetches completed games in the last `days` days and returns:
+      recent_net_rtg, recent_off_rtg, recent_def_rtg, recent_w_pct, last_game_date
+    """
+    season = _espn_season()
+    data = _get(f"{ESPN_NBA}/teams/{team_id}/schedule", params={"season": season})
+    if not data:
+        return {}
+
+    cutoff = today - timedelta(days=days)
+    wins = losses = 0
+    pts_for = pts_against = 0.0
+    game_count = 0
+    last_game_date: Optional[date] = None
+
+    for event in data.get("events", []):
+        raw_date = event.get("date", "")
+        try:
+            game_date = datetime.fromisoformat(raw_date.replace("Z", "+00:00")).date()
+        except Exception:
+            continue
+
+        if game_date >= today or game_date < cutoff:
+            continue
+
+        if last_game_date is None or game_date > last_game_date:
+            last_game_date = game_date
+
+        for comp in event.get("competitions", []):
+            competitors = comp.get("competitors", [])
+            this = next((c for c in competitors if c.get("team", {}).get("id") == team_id), None)
+            opp  = next((c for c in competitors if c.get("team", {}).get("id") != team_id), None)
+            if not this:
                 continue
-            d = parse_date(str(game_date_raw))
-            if team not in result or d > result[team]:
-                result[team] = d
-        return result
-    except Exception as e:
-        logger.error(f"NBA last game dates HTTP failed: {e}")
-        return {}
 
-
-# ---------------------------------------------------------------------------
-# nba_api fallback helpers (used only if direct HTTP fails)
-# ---------------------------------------------------------------------------
-
-def _team_stats_nba_api(season: str) -> Optional[Dict[str, Any]]:
-    try:
-        from nba_api.stats.endpoints import leaguedashteamstats
-        resp = leaguedashteamstats.LeagueDashTeamStats(
-            season=season,
-            measure_type_simple="Advanced",
-        )
-        time.sleep(0.6)
-        df = resp.get_data_frames()[0]
-        if df.empty:
-            return None
-        result = {}
-        for _, row in df.iterrows():
-            result[row["TEAM_NAME"]] = {
-                "off_rtg": float(row.get("OFF_RATING") or 110),
-                "def_rtg": float(row.get("DEF_RATING") or 110),
-                "net_rtg": float(row.get("NET_RATING") or 0),
-                "pace":    float(row.get("PACE") or 100),
-            }
-        return result if result else None
-    except Exception as e:
-        logger.warning(f"nba_api advanced stats failed: {e}")
-        return None
-
-
-def _recent_team_records_nba_api(season: str, days: int = 14) -> Dict[str, Dict]:
-    try:
-        from nba_api.stats.endpoints import leaguedashteamstats
-        since = (date.today() - timedelta(days=days)).strftime("%m/%d/%Y")
-        today = date.today().strftime("%m/%d/%Y")
-        resp = leaguedashteamstats.LeagueDashTeamStats(
-            season=season,
-            measure_type_simple="Advanced",
-            date_from_nullable=since,
-            date_to_nullable=today,
-        )
-        time.sleep(0.6)
-        df = resp.get_data_frames()[0]
-        result = {}
-        for _, row in df.iterrows():
-            result[row["TEAM_NAME"]] = {
-                "recent_net_rtg": float(row.get("NET_RATING") or 0),
-                "recent_off_rtg": float(row.get("OFF_RATING") or 110),
-                "recent_def_rtg": float(row.get("DEF_RATING") or 110),
-                "recent_w_pct":   float(row.get("W_PCT") or 0.5),
-            }
-        return result
-    except Exception as e:
-        logger.warning(f"nba_api recent form failed: {e}")
-        return {}
-
-
-def _last_game_dates_nba_api(season: str) -> Dict[str, date]:
-    try:
-        from nba_api.stats.endpoints import leaguegamelog
-        resp = leaguegamelog.LeagueGameLog(
-            season=season,
-            player_or_team_abbreviation="T",
-        )
-        time.sleep(0.6)
-        df = resp.get_data_frames()[0]
-
-        def parse_date(d):
-            s = str(d)
-            for fmt in ("%Y-%m-%dT%H:%M:%S", "%b %d, %Y", "%Y-%m-%d"):
+            def _score(raw) -> float:
+                if isinstance(raw, dict):
+                    v = raw.get("value", raw.get("displayValue", 0))
+                    try:
+                        return float(v or 0)
+                    except Exception:
+                        return 0.0
                 try:
-                    return datetime.strptime(s[:len(fmt)+2].strip(), fmt).date()
-                except ValueError:
-                    continue
-            return date.today()
+                    return float(raw or 0)
+                except Exception:
+                    return 0.0
 
-        df["GAME_DATE"] = df["GAME_DATE"].apply(parse_date)
-        result = {}
-        for team, grp in df.groupby("TEAM_NAME"):
-            result[team] = grp["GAME_DATE"].max()
-        return result
-    except Exception as e:
-        logger.warning(f"nba_api last game dates failed: {e}")
-        return {}
+            s  = _score(this.get("score", 0))
+            os = _score(opp.get("score", 0)) if opp else 0.0
+
+            if s > 0:
+                if this.get("winner", False):
+                    wins += 1
+                else:
+                    losses += 1
+                pts_for     += s
+                pts_against += os
+                game_count  += 1
+
+    if game_count == 0:
+        return {"last_game_date": last_game_date}
+
+    rpg  = pts_for  / game_count
+    ropg = pts_against / game_count
+    return {
+        "recent_net_rtg": rpg - ropg,
+        "recent_off_rtg": rpg,
+        "recent_def_rtg": ropg,
+        "recent_w_pct":   wins / game_count,
+        "recent_ppg":     rpg,
+        "recent_oppg":    ropg,
+        "last_game_date": last_game_date,
+    }
 
 
 # ---------------------------------------------------------------------------
-# Public interface — tries direct HTTP first, falls back to nba_api
+# Public interface
 # ---------------------------------------------------------------------------
 
-def _team_stats() -> Optional[Dict[str, Any]]:
-    season = _current_season()
-    result = _team_stats_http(season)
-    if not result:
-        logger.info("Falling back to nba_api for team stats...")
-        result = _team_stats_nba_api(season)
-    return result
+def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
+    """
+    Fetch NBA context from ESPN.
 
+    team_names: Odds API team names playing today.
+      If provided → also fetches per-team leaders + recent form (more API calls,
+      but gives props real player names and accurate rest-day data).
+      If None → season stats only (no per-team detail calls).
 
-def _recent_team_records(days: int = 14) -> Dict[str, Dict]:
-    season = _current_season()
-    result = _recent_team_records_http(season, days)
-    if not result:
-        result = _recent_team_records_nba_api(season, days)
-    return result
+    All returned dicts are keyed by ESPN display names (normalize() output).
+    """
+    logger.info("Fetching NBA stats from ESPN...")
 
+    # ── Season stats for all 30 teams (1 call) ───────────────────────────────
+    season_stats = _fetch_all_team_stats()
+    if not season_stats:
+        logger.error("ESPN standings unavailable — NBA model will have no stats")
+        return {"season_stats": {}, "recent_form": {}, "rest_days": {}, "team_leaders": {}}
 
-def _last_game_dates() -> Dict[str, date]:
-    season = _current_season()
-    result = _last_game_dates_http(season)
-    if not result:
-        result = _last_game_dates_nba_api(season)
-    return result
+    recent_form:  Dict[str, Dict] = {}
+    rest_days:    Dict[str, int]  = {}
+    team_leaders: Dict[str, Dict] = {}
 
+    # ── Per-team detail: leaders + recent form ───────────────────────────────
+    if team_names:
+        id_map = _fetch_team_id_map()   # {espn_display_name: team_id}
 
-def get_nba_context(today: date) -> Dict:
-    logger.info("Fetching NBA stats...")
-    season_stats = _team_stats() or {}
-    recent_form = _recent_team_records() or {}
-    last_game = _last_game_dates()
+        for raw_name in team_names:
+            espn_name = normalize(raw_name)   # Odds API → ESPN display name
 
-    rest_days: Dict[str, int] = {}
-    for team, last_date in last_game.items():
-        delta = (today - last_date).days
-        rest_days[team] = max(0, delta - 1)
+            # Find ESPN team ID
+            team_id = id_map.get(espn_name)
+            if not team_id:
+                # Fuzzy fallback
+                for k, v in id_map.items():
+                    if espn_name.lower() in k.lower() or k.lower() in espn_name.lower():
+                        team_id = v
+                        break
+            if not team_id:
+                logger.warning(f"No ESPN team ID found for: {raw_name}")
+                rest_days[espn_name] = 1
+                continue
 
-    if season_stats:
-        logger.info(f"NBA season stats loaded for {len(season_stats)} teams")
-    else:
-        logger.warning("NBA season stats unavailable — props and model will use defaults")
+            # Leaders for props
+            leaders = _fetch_team_leaders(team_id)
+            if leaders:
+                team_leaders[espn_name] = leaders
+            time.sleep(0.25)
 
+            # Recent form + rest days
+            recent = _fetch_recent_form(team_id, today)
+            last_date = recent.get("last_game_date")
+            rest_days[espn_name] = (
+                max(0, (today - last_date).days - 1) if last_date else 1
+            )
+            if recent.get("recent_ppg"):
+                recent_form[espn_name] = {
+                    "recent_net_rtg": recent["recent_net_rtg"],
+                    "recent_off_rtg": recent["recent_off_rtg"],
+                    "recent_def_rtg": recent["recent_def_rtg"],
+                    "recent_w_pct":   recent["recent_w_pct"],
+                }
+            time.sleep(0.25)
+
+    logger.info(
+        f"NBA context ready — season stats: {len(season_stats)} teams | "
+        f"recent form: {len(recent_form)} | leaders: {len(team_leaders)}"
+    )
     return {
         "season_stats": season_stats,
-        "recent_form": recent_form,
-        "rest_days": rest_days,
+        "recent_form":  recent_form,
+        "rest_days":    rest_days,
+        "team_leaders": team_leaders,
     }

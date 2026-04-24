@@ -64,11 +64,16 @@ def run(leagues: list[str], send_email: bool = True) -> int:
         if nba_game_count == 0:
             logger.info("No NBA games today or odds unavailable")
         else:
+            # Extract unique team names so ESPN fetches leaders/form only for today's teams
+            team_names_today = list({
+                t for g in nba_odds_games
+                for t in [g["home_team"], g["away_team"]]
+            })
             try:
-                nba_ctx = get_nba_context(today)
+                nba_ctx = get_nba_context(today, team_names=team_names_today)
             except Exception as e:
                 logger.error(f"NBA stats fetch failed: {e}")
-                nba_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}}
+                nba_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}, "team_leaders": {}}
                 errors.append(f"NBA stats partially unavailable: {e}")
 
             try:
