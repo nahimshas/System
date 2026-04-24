@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Full Report (NBA + MLB)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "src.main", "--no-email"],
+      "port": null
+    },
+    {
+      "name": "NBA Only",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "src.main", "--league", "nba", "--no-email"],
+      "port": null
+    },
+    {
+      "name": "MLB Only",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "src.main", "--league", "mlb", "--no-email"],
+      "port": null
+    }
+  ]
+}
