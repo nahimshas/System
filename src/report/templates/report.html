@@ -244,8 +244,16 @@
       </div>
       {% if prop.signals %}
       <div class="signals">
-        <div class="signals-title">Signals</div>
+        <div class="signals-title">Key Signals</div>
         {% for signal in prop.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
+      </div>
+      {% endif %}
+      {% if prop.research %}
+      <div class="research-section">
+        <details>
+          <summary>Research &amp; Stats</summary>
+          {% for item in prop.research %}<div class="research-item">{{ item }}</div>{% endfor %}
+        </details>
       </div>
       {% endif %}
       <div class="prop-note">{{ prop.note }}</div>

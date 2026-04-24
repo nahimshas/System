@@ -146,4 +146,5 @@ def _prop_to_dict(p: PropPick) -> Dict:
         "confidence": p.confidence,
         "note": p.note,
         "signals": p.signals,
+        "research": p.research,
     }
