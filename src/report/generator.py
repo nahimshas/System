@@ -42,6 +42,7 @@ def build_report(
             "rank": i,
             "label": f"{rec.pick} ({rec.bet_type})",
             "game": rec.game,
+            "game_time": rec.game_time,
             "sport": rec.sport,
             "contracts": rec.sizing.num_contracts,
             "cost": rec.sizing.total_cost,
@@ -55,6 +56,7 @@ def build_report(
             "rank": f"P{j}",
             "label": par.label,
             "game": " / ".join(par.game_labels),
+            "game_time": "",
             "sport": "Parlay",
             "contracts": par.sizing.num_contracts,
             "cost": par.sizing.total_cost,
@@ -90,6 +92,7 @@ def _rec_to_dict(r: BetRecommendation) -> Dict:
     return {
         "sport": r.sport,
         "game": r.game,
+        "game_time": r.game_time,
         "bet_type": r.bet_type,
         "pick": r.pick,
         "market_prob_pct": round(r.market_prob * 100, 1),
@@ -104,6 +107,7 @@ def _rec_to_dict(r: BetRecommendation) -> Dict:
         "expected_value": r.sizing.expected_value,
         "confidence": r.confidence,
         "signals": r.signals,
+        "research": r.research,
     }
 
 
@@ -136,9 +140,9 @@ def _prop_to_dict(p: PropPick) -> Dict:
         "sport": p.sport,
         "player": p.player,
         "team": p.team,
+        "opponent": p.opponent,
         "prop_type": p.prop_type,
         "model_line": p.model_line,
-        "direction": p.direction,
         "confidence": p.confidence,
         "note": p.note,
         "signals": p.signals,

@@ -20,6 +20,8 @@
       --blue-dim: #1e3a5f;
       --purple: #a855f7;
       --purple-dim: #3b0764;
+      --teal: #14b8a6;
+      --teal-dim: #134e4a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.5; }
@@ -41,6 +43,7 @@
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
     .card-title { font-weight: 700; font-size: 1rem; line-height: 1.3; }
     .card-subtitle { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+    .card-time { color: var(--teal); font-size: 0.78rem; font-weight: 600; margin-top: 3px; }
     .confidence-badge { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
     .HIGH { background: var(--green-dim); color: var(--green); }
     .MEDIUM { background: var(--yellow-dim); color: var(--yellow); }
@@ -52,10 +55,21 @@
     .stat-value.green { color: var(--green); }
     .stat-value.yellow { color: var(--yellow); }
     .stat-value.blue { color: var(--blue); }
+    .stat-value.teal { color: var(--teal); }
 
     .signals { margin-top: 10px; }
     .signals-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
     .signal-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--blue); margin-bottom: 4px; line-height: 1.4; }
+
+    .research-section { margin-top: 10px; }
+    .research-section summary {
+      font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--teal);
+      cursor: pointer; list-style: none; padding: 6px 0; letter-spacing: 0.05em;
+    }
+    .research-section summary::-webkit-details-marker { display: none; }
+    .research-section summary::before { content: '▶ '; font-size: 0.6rem; }
+    .research-section[open] summary::before { content: '▼ '; }
+    .research-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--teal-dim); margin-bottom: 4px; line-height: 1.4; color: var(--muted); }
 
     .action-box { background: var(--blue-dim); border: 1px solid var(--blue); border-radius: 8px; padding: 12px; margin-top: 10px; }
     .action-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
@@ -73,7 +87,7 @@
 
     .budget-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     .budget-table th { text-align: left; padding: 8px 6px; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-    .budget-table td { padding: 9px 6px; border-bottom: 1px solid var(--border); }
+    .budget-table td { padding: 9px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
     .budget-table tr:last-child td { border-bottom: none; }
     .budget-total { display: flex; justify-content: space-between; padding: 12px 6px 0; font-weight: 700; border-top: 2px solid var(--border); margin-top: 4px; }
 
@@ -137,6 +151,7 @@
             <span class="badge {% if bet.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ bet.sport }}</span>
             &nbsp;{{ bet.bet_type }} &nbsp;&middot;&nbsp; {{ bet.game }}
           </div>
+          {% if bet.game_time %}<div class="card-time">🕐 {{ bet.game_time }}</div>{% endif %}
         </div>
         <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
       </div>
@@ -149,6 +164,14 @@
       <div class="signals">
         <div class="signals-title">Key Signals</div>
         {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
+      </div>
+      {% endif %}
+      {% if bet.research %}
+      <div class="research-section">
+        <details>
+          <summary>Research &amp; Stats</summary>
+          {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
+        </details>
       </div>
       {% endif %}
       <div class="action-box">
@@ -209,14 +232,14 @@
           <div class="card-title">{{ prop.player }}</div>
           <div class="card-subtitle">
             <span class="badge {% if prop.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ prop.sport }}</span>
-            &nbsp;{{ prop.team }} &middot; {{ prop.prop_type }}
+            &nbsp;{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} &middot; {{ prop.prop_type }}
           </div>
         </div>
         <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
       </div>
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">Model Line</div><div class="stat-value blue">{{ prop.model_line }}</div></div>
-        <div class="stat-box"><div class="stat-label">Direction</div><div class="stat-value {% if prop.direction == 'Over' %}green{% else %}yellow{% endif %}">{{ prop.direction }}</div></div>
+        <div class="stat-box"><div class="stat-label">Direction</div><div class="stat-value teal">Over</div></div>
         <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value">{{ prop.confidence }}</div></div>
       </div>
       {% if prop.signals %}
@@ -237,7 +260,7 @@
     <div class="card">
       <table class="budget-table">
         <thead>
-          <tr><th>#</th><th>Bet</th><th>Contracts</th><th>Cost</th><th>Profit</th></tr>
+          <tr><th>#</th><th>Bet &amp; Game</th><th>Contracts</th><th>Cost</th><th>Profit</th></tr>
         </thead>
         <tbody>
           {% for row in report.allocation %}
@@ -246,6 +269,8 @@
             <td>
               <div style="font-weight:600;font-size:0.82rem;">{{ row.label }}</div>
               <div style="color:var(--muted);font-size:0.72rem;">{{ row.sport }}</div>
+              {% if row.game %}<div style="color:var(--muted);font-size:0.72rem;">{{ row.game }}</div>{% endif %}
+              {% if row.game_time %}<div style="color:var(--teal);font-size:0.72rem;">{{ row.game_time }}</div>{% endif %}
             </td>
             <td>{{ row.contracts }}</td>
             <td>${{ "%.2f"|format(row.cost) }}<br><span style="color:var(--muted);font-size:0.72rem;">{{ row.pct_of_budget }}%</span></td>
