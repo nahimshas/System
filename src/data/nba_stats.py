@@ -1,12 +1,12 @@
 """
 Fetches NBA team stats and player leaders via ESPN's public API.
-ESPN (site.api.espn.com) works from any IP including GitHub Actions —
-no bot protection like stats.nba.com.
+ESPN (site.api.espn.com) is unblocked from any IP including GitHub Actions.
 
-Key design:
-  - All context dicts are keyed by ESPN display names (the value normalize() returns).
-  - edge_finder already calls normalize() before looking up context.
-  - props_analyzer must also call normalize() — updated to do so.
+Leader-fetch strategy (most reliable first):
+  1. Scoreboard  — today's games embed season-to-date leaders per team (1 call).
+  2. Team detail — /teams/{id} sometimes embeds leaders in the team object.
+  3. Statistics  — /teams/{id}/statistics has category leaders.
+  Any of these that returns player names wins; the rest are skipped.
 """
 import logging
 import time
@@ -20,20 +20,19 @@ ESPN_NBA    = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
 ESPN_NBA_V2 = "https://site.api.espn.com/apis/v2/sports/basketball/nba"
 
 # Odds API name  →  ESPN displayName  (only entries that differ)
-_ODDS_TO_ESPN = {
+_ODDS_TO_ESPN: Dict[str, str] = {
     "Los Angeles Clippers": "LA Clippers",
 }
-# Reverse map for building season_stats keys from ESPN standings
-_ESPN_TO_ODDS = {v: k for k, v in _ODDS_TO_ESPN.items()}
+_ESPN_TO_ODDS: Dict[str, str] = {v: k for k, v in _ODDS_TO_ESPN.items()}
 
 
 def normalize(name: str) -> str:
-    """Convert Odds API team name → ESPN displayName."""
+    """Convert Odds API team name → ESPN displayName (key used in all ctx dicts)."""
     return _ODDS_TO_ESPN.get(name, name)
 
 
 def _espn_season() -> int:
-    """ESPN season year = ending year of the season. April 2026 → 2026."""
+    """ESPN season year = ending year of the season.  April 2026 → 2026."""
     today = date.today()
     return today.year if today.month < 10 else today.year + 1
 
@@ -56,7 +55,7 @@ def _get(url: str, params: dict = None) -> Optional[dict]:
 def _fetch_all_team_stats() -> Dict[str, Dict]:
     """
     Returns {espn_display_name: stats_dict} for every NBA team.
-    Uses the standings endpoint which includes PPG / OPPG for all teams at once.
+    Keys match what normalize() returns so edge_finder lookups work directly.
     """
     season = _espn_season()
     data = _get(f"{ESPN_NBA_V2}/standings", params={"season": season})
@@ -64,11 +63,8 @@ def _fetch_all_team_stats() -> Dict[str, Dict]:
         return {}
 
     result: Dict[str, Dict] = {}
-
-    # Standings structure: data["children"] → conferences → standings.entries
     for conf in data.get("children", []):
-        entries = conf.get("standings", {}).get("entries", [])
-        for entry in entries:
+        for entry in conf.get("standings", {}).get("entries", []):
             espn_name = entry.get("team", {}).get("displayName", "")
             if not espn_name:
                 continue
@@ -76,38 +72,141 @@ def _fetch_all_team_stats() -> Dict[str, Dict]:
             stat_map = {s["name"]: s.get("value", 0.0)
                         for s in entry.get("stats", []) if "name" in s}
 
-            # Points per game — ESPN may use several possible keys
             ppg  = float(stat_map.get("avgPointsFor",
                          stat_map.get("pointsFor",
                          stat_map.get("avgPoints", 110.0))) or 110.0)
             oppg = float(stat_map.get("avgPointsAgainst",
                          stat_map.get("pointsAgainst",
                          stat_map.get("avgPointsAllowed", 110.0))) or 110.0)
-            wins  = float(stat_map.get("wins", 0))
+            wins   = float(stat_map.get("wins",   0))
             losses = float(stat_map.get("losses", 1))
-            total = wins + losses
+            total  = wins + losses
             win_pct = float(stat_map.get("winPercent",
                             wins / total if total > 0 else 0.5))
 
-            # Store under ESPN display name so normalize() lookups work
             result[espn_name] = {
-                "off_rtg":  ppg,           # PPG  ≈ offensive rating
-                "def_rtg":  oppg,          # OPPG ≈ defensive rating
-                "net_rtg":  ppg - oppg,    # point differential
-                "pace":     100.0,         # ESPN doesn't expose pace; league avg
-                "ppg":      ppg,
-                "oppg":     oppg,
-                "win_pct":  win_pct,
-                "wins":     int(wins),
-                "losses":   int(losses),
+                "off_rtg": ppg,
+                "def_rtg": oppg,
+                "net_rtg": ppg - oppg,
+                "pace":    100.0,   # ESPN doesn't expose pace; use league avg
+                "ppg":     ppg,
+                "oppg":    oppg,
+                "win_pct": win_pct,
+                "wins":    int(wins),
+                "losses":  int(losses),
             }
 
-    logger.info(f"ESPN standings: {len(result)} teams loaded (season {season})")
+    logger.info(f"ESPN standings: {len(result)} teams (season {season})")
     return result
 
 
 # ---------------------------------------------------------------------------
-# Team ID map — needed for per-team detail calls
+# Leaders helpers — parse ESPN's standard leader-category structure
+# ---------------------------------------------------------------------------
+
+def _parse_leader_categories(categories: list) -> Dict[str, Dict]:
+    """
+    Parse a list of ESPN leader-category dicts into our standard format.
+    Handles both 'points'/'rebounds'/'assists' name styles and
+    'pointsPerGame'/'reboundsPerGame' etc.
+    """
+    result: Dict[str, Dict] = {}
+    for cat in categories:
+        if not isinstance(cat, dict):
+            continue
+        raw_name = cat.get("name", "").lower()
+        # Normalise verbose names to short keys
+        key = (raw_name
+               .replace("pergame", "")
+               .replace("per game", "")
+               .replace("total", "")
+               .strip())
+        # e.g. "pointspergame" → "points", "assists" → "assists"
+        tops = cat.get("leaders", [])
+        if not tops:
+            continue
+        first   = tops[0]
+        athlete = first.get("athlete", {})
+        p_name  = athlete.get("displayName") or athlete.get("fullName", "")
+        if p_name and key:
+            result[key] = {
+                "name":    p_name,
+                "value":   float(first.get("value", 0)),
+                "display": first.get("displayValue", ""),
+            }
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Leaders strategy 1 — scoreboard (best: covers all today's teams in 1 call)
+# ---------------------------------------------------------------------------
+
+def _fetch_leaders_from_scoreboard() -> Dict[str, Dict]:
+    """
+    Returns {espn_display_name: leaders_dict} for every team playing today.
+    ESPN's scoreboard embeds season-to-date leaders in each game's competitor.
+    """
+    data = _get(f"{ESPN_NBA}/scoreboard")
+    if not data:
+        return {}
+
+    result: Dict[str, Dict] = {}
+    for event in data.get("events", []):
+        for comp in event.get("competitions", []):
+            for competitor in comp.get("competitors", []):
+                espn_name = competitor.get("team", {}).get("displayName", "")
+                if not espn_name:
+                    continue
+                leaders = _parse_leader_categories(competitor.get("leaders", []))
+                if leaders:
+                    result[espn_name] = leaders
+
+    logger.info(f"Scoreboard leaders: {len(result)} teams with data")
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Leaders strategy 2 — per-team fallback (tries 3 ESPN endpoints)
+# ---------------------------------------------------------------------------
+
+def _fetch_leaders_per_team(team_id: str, espn_name: str) -> Dict[str, Dict]:
+    """
+    Tries /statistics, /teams/{id}, then a recursive search.
+    Returns first non-empty leaders dict found.
+    """
+    endpoints = [
+        f"{ESPN_NBA}/teams/{team_id}/statistics",
+        f"{ESPN_NBA}/teams/{team_id}",
+    ]
+    for url in endpoints:
+        data = _get(url)
+        if not data:
+            continue
+
+        # Try standard "categories" path (statistics endpoint)
+        cats = (data.get("results", {})
+                    .get("stats", {})
+                    .get("categories", []))
+        if cats:
+            leaders = _parse_leader_categories(cats)
+            if leaders:
+                logger.info(f"Leaders for {espn_name} via {url.split('/')[-1]}: {list(leaders.keys())}")
+                return leaders
+
+        # Try team.leaders path (team detail endpoint)
+        team_leaders_raw = data.get("team", {}).get("leaders", [])
+        if team_leaders_raw:
+            leaders = _parse_leader_categories(team_leaders_raw)
+            if leaders:
+                logger.info(f"Leaders for {espn_name} via team.leaders: {list(leaders.keys())}")
+                return leaders
+
+    logger.warning(f"No leaders found for {espn_name} (id={team_id})")
+    return {}
+
+
+# ---------------------------------------------------------------------------
+# Team ID map — needed for per-team calls
 # ---------------------------------------------------------------------------
 
 def _fetch_team_id_map() -> Dict[str, str]:
@@ -115,49 +214,15 @@ def _fetch_team_id_map() -> Dict[str, str]:
     data = _get(f"{ESPN_NBA}/teams", params={"limit": 32})
     if not data:
         return {}
-
     result: Dict[str, str] = {}
     for sport in data.get("sports", []):
         for league in sport.get("leagues", []):
             for item in league.get("teams", []):
-                t = item.get("team", {})
+                t    = item.get("team", {})
                 name = t.get("displayName", "")
                 tid  = t.get("id", "")
                 if name and tid:
                     result[name] = tid
-    return result
-
-
-# ---------------------------------------------------------------------------
-# Statistical leaders — top scorer / rebounder / assist man per team
-# ---------------------------------------------------------------------------
-
-def _fetch_team_leaders(team_id: str) -> Dict[str, Dict]:
-    """
-    Returns {category: {name, value, display}} for the team's top players.
-    Categories: 'points', 'rebounds', 'assists', 'blocks', 'steals'
-    Pulled from the team detail endpoint which embeds leaders.
-    """
-    data = _get(f"{ESPN_NBA}/teams/{team_id}")
-    if not data:
-        return {}
-
-    leaders_raw = data.get("team", {}).get("leaders", [])
-    result: Dict[str, Dict] = {}
-    for cat in leaders_raw:
-        cat_name = cat.get("name", "")
-        top = cat.get("leaders", [])
-        if not top:
-            continue
-        first = top[0]
-        athlete = first.get("athlete", {})
-        player_name = athlete.get("displayName") or athlete.get("fullName", "")
-        if player_name:
-            result[cat_name] = {
-                "name":    player_name,
-                "value":   float(first.get("value", 0)),
-                "display": first.get("displayValue", ""),
-            }
     return result
 
 
@@ -167,8 +232,8 @@ def _fetch_team_leaders(team_id: str) -> Dict[str, Dict]:
 
 def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
     """
-    Fetches completed games in the last `days` days and returns:
-      recent_net_rtg, recent_off_rtg, recent_def_rtg, recent_w_pct, last_game_date
+    Fetches the team's schedule and calculates PPG/OPPG/win% over last `days` days.
+    Returns last_game_date (for rest-day calculation) even when no stats available.
     """
     season = _espn_season()
     data = _get(f"{ESPN_NBA}/teams/{team_id}/schedule", params={"season": season})
@@ -178,8 +243,20 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
     cutoff = today - timedelta(days=days)
     wins = losses = 0
     pts_for = pts_against = 0.0
-    game_count = 0
+    game_count  = 0
     last_game_date: Optional[date] = None
+
+    def _parse_score(raw) -> float:
+        if isinstance(raw, dict):
+            v = raw.get("value", raw.get("displayValue", 0))
+            try:
+                return float(v or 0)
+            except Exception:
+                return 0.0
+        try:
+            return float(raw or 0)
+        except Exception:
+            return 0.0
 
     for event in data.get("events", []):
         raw_date = event.get("date", "")
@@ -190,7 +267,6 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
 
         if game_date >= today or game_date < cutoff:
             continue
-
         if last_game_date is None or game_date > last_game_date:
             last_game_date = game_date
 
@@ -201,21 +277,8 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
             if not this:
                 continue
 
-            def _score(raw) -> float:
-                if isinstance(raw, dict):
-                    v = raw.get("value", raw.get("displayValue", 0))
-                    try:
-                        return float(v or 0)
-                    except Exception:
-                        return 0.0
-                try:
-                    return float(raw or 0)
-                except Exception:
-                    return 0.0
-
-            s  = _score(this.get("score", 0))
-            os = _score(opp.get("score", 0)) if opp else 0.0
-
+            s  = _parse_score(this.get("score", 0))
+            os = _parse_score(opp.get("score", 0)) if opp else 0.0
             if s > 0:
                 if this.get("winner", False):
                     wins += 1
@@ -250,15 +313,14 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
     Fetch NBA context from ESPN.
 
     team_names: Odds API team names playing today.
-      If provided → also fetches per-team leaders + recent form (more API calls,
-      but gives props real player names and accurate rest-day data).
-      If None → season stats only (no per-team detail calls).
+      If provided → fetches leaders (via scoreboard first) + recent form + rest days.
+      If None     → season stats only.
 
-    All returned dicts are keyed by ESPN display names (normalize() output).
+    All context dicts keyed by ESPN display names (normalize() output).
     """
     logger.info("Fetching NBA stats from ESPN...")
 
-    # ── Season stats for all 30 teams (1 call) ───────────────────────────────
+    # ── Season stats — all 30 teams, one standings call ──────────────────────
     season_stats = _fetch_all_team_stats()
     if not season_stats:
         logger.error("ESPN standings unavailable — NBA model will have no stats")
@@ -268,34 +330,51 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
     rest_days:    Dict[str, int]  = {}
     team_leaders: Dict[str, Dict] = {}
 
-    # ── Per-team detail: leaders + recent form ───────────────────────────────
-    if team_names:
-        id_map = _fetch_team_id_map()   # {espn_display_name: team_id}
+    if not team_names:
+        logger.info("No team_names supplied — skipping per-team detail calls")
+    else:
+        # ── Leaders — try scoreboard first (1 call for all today's teams) ────
+        scoreboard_leaders = _fetch_leaders_from_scoreboard()
+        espn_names_today   = [normalize(n) for n in team_names]
+
+        for espn_name in espn_names_today:
+            if espn_name in scoreboard_leaders:
+                team_leaders[espn_name] = scoreboard_leaders[espn_name]
+
+        # Which teams are still missing leaders? → per-team fallback
+        missing = [n for n in espn_names_today if n not in team_leaders]
+        if missing:
+            logger.info(f"Scoreboard missing leaders for: {missing} — trying per-team endpoints")
+            id_map = _fetch_team_id_map()
+            for espn_name in missing:
+                team_id = id_map.get(espn_name)
+                if not team_id:
+                    for k, v in id_map.items():
+                        if espn_name.lower() in k.lower() or k.lower() in espn_name.lower():
+                            team_id = v
+                            break
+                if not team_id:
+                    logger.warning(f"No ESPN team ID for: {espn_name}")
+                    continue
+                leaders = _fetch_leaders_per_team(team_id, espn_name)
+                if leaders:
+                    team_leaders[espn_name] = leaders
+                time.sleep(0.25)
+
+        # ── Recent form + rest days — per team ───────────────────────────────
+        # Build id_map if not already fetched
+        if missing:
+            pass  # id_map already built above
+        else:
+            id_map = _fetch_team_id_map()
 
         for raw_name in team_names:
-            espn_name = normalize(raw_name)   # Odds API → ESPN display name
-
-            # Find ESPN team ID
-            team_id = id_map.get(espn_name)
+            espn_name = normalize(raw_name)
+            team_id   = id_map.get(espn_name)
             if not team_id:
-                # Fuzzy fallback
-                for k, v in id_map.items():
-                    if espn_name.lower() in k.lower() or k.lower() in espn_name.lower():
-                        team_id = v
-                        break
-            if not team_id:
-                logger.warning(f"No ESPN team ID found for: {raw_name}")
                 rest_days[espn_name] = 1
                 continue
-
-            # Leaders for props
-            leaders = _fetch_team_leaders(team_id)
-            if leaders:
-                team_leaders[espn_name] = leaders
-            time.sleep(0.25)
-
-            # Recent form + rest days
-            recent = _fetch_recent_form(team_id, today)
+            recent    = _fetch_recent_form(team_id, today)
             last_date = recent.get("last_game_date")
             rest_days[espn_name] = (
                 max(0, (today - last_date).days - 1) if last_date else 1
@@ -309,9 +388,14 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
                 }
             time.sleep(0.25)
 
+    leaders_with_names = sum(
+        1 for v in team_leaders.values()
+        if any(cat.get("name") for cat in v.values())
+    )
     logger.info(
         f"NBA context ready — season stats: {len(season_stats)} teams | "
-        f"recent form: {len(recent_form)} | leaders: {len(team_leaders)}"
+        f"recent form: {len(recent_form)} | leaders: {len(team_leaders)} "
+        f"({leaders_with_names} with player names)"
     )
     return {
         "season_stats": season_stats,
