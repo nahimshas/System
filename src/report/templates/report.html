@@ -268,11 +268,11 @@
     <div class="card">
       <table class="budget-table">
         <thead>
-          <tr><th>#</th><th>Bet &amp; Game</th><th>Contracts</th><th>Cost</th><th>Profit</th></tr>
+          <tr><th>#</th><th>Bet &amp; Game</th><th>Edge</th><th>Contracts</th><th>Cost</th><th>Profit</th><th>Score</th></tr>
         </thead>
         <tbody>
           {% for row in report.allocation %}
-          <tr>
+          <tr data-home-team="{{ row.home_team }}" data-away-team="{{ row.away_team }}">
             <td style="color:var(--muted);">{{ row.rank }}</td>
             <td>
               <div style="font-weight:600;font-size:0.82rem;">{{ row.label }}</div>
@@ -280,9 +280,11 @@
               {% if row.game %}<div style="color:var(--muted);font-size:0.72rem;">{{ row.game }}</div>{% endif %}
               {% if row.game_time %}<div style="color:#14b8a6;font-size:0.72rem;">{{ row.game_time }}</div>{% endif %}
             </td>
+            <td style="color:{% if row.edge_pct >= 7 %}#16a34a{% else %}#eab308{% endif %};font-weight:600;">+{{ row.edge_pct }}%</td>
             <td>{{ row.contracts }}</td>
             <td>${{ "%.2f"|format(row.cost) }}<br><span style="color:var(--muted);font-size:0.72rem;">{{ row.pct_of_budget }}%</span></td>
             <td style="color:#16a34a;">+${{ "%.2f"|format(row.profit_if_win) }}</td>
+            <td class="score-cell" style="font-size:0.75rem;color:var(--muted);white-space:nowrap;">—</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -308,5 +310,126 @@
   </div>
 
 </div>
+
+<script>
+(function () {
+  // ── ESPN scoreboard endpoints ────────────────────────────────────────────
+  var ESPN = {
+    NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
+    MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard"
+  };
+
+  // ── Fuzzy team-name match ────────────────────────────────────────────────
+  // Returns true when the ESPN displayName or shortDisplayName contains any
+  // meaningful word from our stored team name (handles "LA Clippers" vs
+  // "Los Angeles Clippers", city abbreviations, etc.)
+  function teamMatch(espnName, ourName) {
+    if (!ourName) return false;
+    var e = espnName.toLowerCase();
+    var o = ourName.toLowerCase();
+    // Direct substring match
+    if (e.includes(o) || o.includes(e)) return true;
+    // Match on the last "word" (city nickname, e.g. "Lakers", "Yankees")
+    var words = o.split(/\s+/);
+    var nick = words[words.length - 1];
+    return nick.length > 3 && e.includes(nick);
+  }
+
+  // ── Parse a single ESPN event into a display string ─────────────────────
+  function parseEvent(event) {
+    var comp = (event.competitions || [])[0];
+    if (!comp) return null;
+
+    var competitors = comp.competitors || [];
+    var home = competitors.find(function (c) { return c.homeAway === "home"; });
+    var away = competitors.find(function (c) { return c.homeAway === "away"; });
+    if (!home || !away) return null;
+
+    var homeAbbr = (home.team || {}).abbreviation || (home.team || {}).shortDisplayName || "";
+    var awayAbbr = (away.team || {}).abbreviation || (away.team || {}).shortDisplayName || "";
+    var homeScore = home.score || "0";
+    var awayScore = away.score || "0";
+
+    // ESPN status: 1 = pre, 2 = in-progress, 3 = final
+    var statusType = ((event.status || {}).type || {});
+    var stateId = statusType.id || "1";
+    var detail  = statusType.shortDetail || statusType.description || "";
+
+    var homeName = (home.team || {}).displayName || "";
+    var awayName = (away.team || {}).displayName || "";
+
+    if (stateId === "3") {
+      return {
+        home: homeName, away: awayName,
+        html: '<span style="color:#94a3b8;">Final</span> ' +
+              awayAbbr + ' ' + awayScore + ' – ' + homeAbbr + ' ' + homeScore
+      };
+    }
+    if (stateId === "2") {
+      return {
+        home: homeName, away: awayName,
+        html: '<span style="color:#ef4444;font-weight:700;">● LIVE</span> ' +
+              '<span style="color:#94a3b8;font-size:0.7rem;">' + detail + '</span><br>' +
+              awayAbbr + ' ' + awayScore + ' – ' + homeAbbr + ' ' + homeScore
+      };
+    }
+    // Pre-game: show tip/first-pitch time
+    return {
+      home: homeName, away: awayName,
+      html: '<span style="color:#94a3b8;">Scheduled</span>'
+    };
+  }
+
+  // ── Fetch both scoreboards and update the table ──────────────────────────
+  function refreshScores() {
+    var rows = document.querySelectorAll("tr[data-home-team]");
+    if (!rows.length) return;
+
+    var allEvents = [];
+
+    function applyScores() {
+      rows.forEach(function (row) {
+        var cell = row.querySelector(".score-cell");
+        if (!cell) return;
+
+        var homeTeam = row.getAttribute("data-home-team") || "";
+        var awayTeam = row.getAttribute("data-away-team") || "";
+        if (!homeTeam && !awayTeam) return;  // parlay row — leave as "—"
+
+        for (var i = 0; i < allEvents.length; i++) {
+          var ev = allEvents[i];
+          if (!ev) continue;
+          if (teamMatch(ev.home, homeTeam) && teamMatch(ev.away, awayTeam)) {
+            cell.innerHTML = ev.html;
+            return;
+          }
+        }
+        // No match yet — leave "—"
+      });
+    }
+
+    var done = 0;
+    function onFetch(events) {
+      allEvents = allEvents.concat(events);
+      done++;
+      if (done === 2) applyScores();
+    }
+
+    [ESPN.NBA, ESPN.MLB].forEach(function (url) {
+      fetch(url)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var events = (data.events || []).map(parseEvent).filter(Boolean);
+          onFetch(events);
+        })
+        .catch(function () { onFetch([]); });
+    });
+  }
+
+  // Run on load, then every 60 s
+  refreshScores();
+  setInterval(refreshScores, 60000);
+})();
+</script>
 </body>
 </html>
