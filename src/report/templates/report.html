@@ -268,23 +268,36 @@
     <div class="card">
       <table class="budget-table">
         <thead>
-          <tr><th>#</th><th>Bet &amp; Game</th><th>Edge</th><th>Contracts</th><th>Cost</th><th>Profit</th><th>Score</th></tr>
+          <tr>
+            <th>#</th>
+            <th>Bet &amp; Game</th>
+            <th>Edge<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Score</span></th>
+            <th>Qty</th>
+            <th>Cost<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Profit</span></th>
+          </tr>
         </thead>
         <tbody>
           {% for row in report.allocation %}
           <tr data-home-team="{{ row.home_team }}" data-away-team="{{ row.away_team }}">
-            <td style="color:var(--muted);">{{ row.rank }}</td>
+            <td style="color:var(--muted);font-size:0.78rem;">{{ row.rank }}</td>
             <td>
-              <div style="font-weight:600;font-size:0.82rem;">{{ row.label }}</div>
-              <div style="color:var(--muted);font-size:0.72rem;">{{ row.sport }}</div>
-              {% if row.game %}<div style="color:var(--muted);font-size:0.72rem;">{{ row.game }}</div>{% endif %}
-              {% if row.game_time %}<div style="color:#14b8a6;font-size:0.72rem;">{{ row.game_time }}</div>{% endif %}
+              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">{{ row.label }}</div>
+              <div style="color:var(--muted);font-size:0.7rem;">{{ row.sport }}</div>
+              {% if row.game %}<div style="color:var(--muted);font-size:0.7rem;">{{ row.game }}</div>{% endif %}
+              {% if row.game_time %}<div style="color:#14b8a6;font-size:0.7rem;">{{ row.game_time }}</div>{% endif %}
             </td>
-            <td style="color:{% if row.edge_pct >= 7 %}#16a34a{% else %}#eab308{% endif %};font-weight:600;">+{{ row.edge_pct }}%</td>
-            <td>{{ row.contracts }}</td>
-            <td>${{ "%.2f"|format(row.cost) }}<br><span style="color:var(--muted);font-size:0.72rem;">{{ row.pct_of_budget }}%</span></td>
-            <td style="color:#16a34a;">+${{ "%.2f"|format(row.profit_if_win) }}</td>
-            <td class="score-cell" style="font-size:0.75rem;color:var(--muted);white-space:nowrap;">—</td>
+            <td style="vertical-align:top;">
+              <div style="color:{% if row.edge_pct >= 7 %}#16a34a{% else %}#eab308{% endif %};font-weight:700;font-size:0.8rem;">+{{ row.edge_pct }}%</div>
+              <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
+            </td>
+            <td style="font-size:0.8rem;vertical-align:top;">
+              {{ row.contracts }}<br>
+              <span style="color:var(--muted);font-size:0.7rem;">{{ row.pct_of_budget }}%</span>
+            </td>
+            <td style="vertical-align:top;">
+              <div style="font-size:0.8rem;">${{ "%.2f"|format(row.cost) }}</div>
+              <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+${{ "%.2f"|format(row.profit_if_win) }}</div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
