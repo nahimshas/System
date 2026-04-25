@@ -9,7 +9,7 @@ from src.config import EMAIL_FROM, EMAIL_TO, EMAIL_PASSWORD
 
 logger = logging.getLogger(__name__)
 
-SMTP_HOST = "smtp-mail.outlook.com"
+SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 
 
