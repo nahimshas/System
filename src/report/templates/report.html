@@ -151,7 +151,7 @@
             <span class="badge {% if bet.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ bet.sport }}</span>
             &nbsp;{{ bet.bet_type }} &nbsp;&middot;&nbsp; {{ bet.game }}
           </div>
-          {% if bet.game_time %}<div class="card-time">🕐 {{ bet.game_time }}</div>{% endif %}
+          {% if bet.game_time %}<div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 {{ bet.game_time }}</div>{% endif %}
         </div>
         <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
       </div>
@@ -169,7 +169,7 @@
       {% if bet.research %}
       <div class="research-section">
         <details>
-          <summary>Research &amp; Stats</summary>
+          <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
           {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
         </details>
       </div>
@@ -179,10 +179,10 @@
         <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢{{ bet.contract_price_cents }}</span></div>
         <div class="action-row"><span class="label">Buy contracts</span><span class="value">{{ bet.num_contracts }}</span></div>
         <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">${{ "%.2f"|format(bet.total_cost) }}</span></div>
-        <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+${{ "%.2f"|format(bet.profit_if_win) }}</span></div>
+        <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+${{ "%.2f"|format(bet.profit_if_win) }}</span></div>
         <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-${{ "%.2f"|format(bet.loss_if_lose) }}</span></div>
         <div class="action-row"><span class="label">Expected value</span>
-          <span class="value" style="color:{% if bet.expected_value > 0 %}var(--green){% else %}var(--red){% endif %}">
+          <span class="value" style="color:{% if bet.expected_value > 0 %}#16a34a{% else %}var(--red){% endif %}">
             {% if bet.expected_value > 0 %}+{% endif %}${{ "%.2f"|format(bet.expected_value) }}
           </span>
         </div>
@@ -215,7 +215,7 @@
         <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢{{ par.contract_price_cents }}</span></div>
         <div class="action-row"><span class="label">Buy contracts</span><span class="value">{{ par.num_contracts }}</span></div>
         <div class="action-row"><span class="label">Total cost</span><span class="value">${{ "%.2f"|format(par.total_cost) }}</span></div>
-        <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+${{ "%.2f"|format(par.profit_if_win) }}</span></div>
+        <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+${{ "%.2f"|format(par.profit_if_win) }}</span></div>
       </div>
     </div>
     {% endfor %}
@@ -239,7 +239,7 @@
       </div>
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">Model Line</div><div class="stat-value blue">{{ prop.model_line }}</div></div>
-        <div class="stat-box"><div class="stat-label">Direction</div><div class="stat-value teal">Over</div></div>
+        <div class="stat-box"><div class="stat-label">Direction</div><div class="stat-value teal" style="color:#14b8a6;">Over</div></div>
         <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value">{{ prop.confidence }}</div></div>
       </div>
       {% if prop.signals %}
@@ -251,7 +251,7 @@
       {% if prop.research %}
       <div class="research-section">
         <details>
-          <summary>Research &amp; Stats</summary>
+          <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
           {% for item in prop.research %}<div class="research-item">{{ item }}</div>{% endfor %}
         </details>
       </div>
@@ -278,11 +278,11 @@
               <div style="font-weight:600;font-size:0.82rem;">{{ row.label }}</div>
               <div style="color:var(--muted);font-size:0.72rem;">{{ row.sport }}</div>
               {% if row.game %}<div style="color:var(--muted);font-size:0.72rem;">{{ row.game }}</div>{% endif %}
-              {% if row.game_time %}<div style="color:var(--teal);font-size:0.72rem;">{{ row.game_time }}</div>{% endif %}
+              {% if row.game_time %}<div style="color:#14b8a6;font-size:0.72rem;">{{ row.game_time }}</div>{% endif %}
             </td>
             <td>{{ row.contracts }}</td>
             <td>${{ "%.2f"|format(row.cost) }}<br><span style="color:var(--muted);font-size:0.72rem;">{{ row.pct_of_budget }}%</span></td>
-            <td style="color:var(--green);">+${{ "%.2f"|format(row.profit_if_win) }}</td>
+            <td style="color:#16a34a;">+${{ "%.2f"|format(row.profit_if_win) }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -293,7 +293,7 @@
       </div>
       <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
         <span style="color:var(--muted);">Reserve (do not force bets)</span>
-        <span style="color:var(--green);">${{ "%.2f"|format(report.reserve) }}</span>
+        <span style="color:#16a34a;">${{ "%.2f"|format(report.reserve) }}</span>
       </div>
     </div>
   </div>

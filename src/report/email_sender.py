@@ -20,7 +20,7 @@ _CSS_VARS = {
     "var(--border)":     "#2d3148",
     "var(--text)":       "#e2e8f0",
     "var(--muted)":      "#94a3b8",
-    "var(--green)":      "#22c55e",
+    "var(--green)":      "#16a34a",
     "var(--green-dim)":  "#166534",
     "var(--yellow)":     "#eab308",
     "var(--yellow-dim)": "#713f12",
