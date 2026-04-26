@@ -15,6 +15,11 @@ from scipy.stats import norm
 from src.config import (
     NBA_HOME_ADVANTAGE, NBA_BACK_TO_BACK_PENALTY, NBA_REST_BONUS_PER_DAY,
     NBA_RECENT_FORM_WEIGHT, MLB_HOME_ADVANTAGE, MIN_EDGE,
+    NBA_PLAYOFF_SCORING_FACTOR, NBA_PLAYOFF_PACE_FACTOR,
+    NBA_PLAYOFF_RECENT_WEIGHT, NBA_PLAYOFF_TOTAL_STD,
+    MLB_PLAYOFF_SCORING_FACTOR, MLB_PLAYOFF_STARTER_IP,
+    MLB_PLAYOFF_RECENT_WEIGHT,
+    SCHEDULE_LOAD_THRESHOLDS,
 )
 from src.data.injuries import injury_adjustment
 from src.data.nba_stats import normalize as nba_normalize
@@ -24,6 +29,26 @@ logger = logging.getLogger(__name__)
 
 NBA_SPREAD_STD = 12.0
 MLB_SPREAD_STD = 1.8
+
+
+def _is_nba_playoff(dt: Optional[datetime] = None) -> bool:
+    """NBA playoffs: mid-April through mid-June."""
+    d = (dt or datetime.now(timezone.utc)).date()
+    return (d.month == 4 and d.day >= 14) or d.month in (5, 6)
+
+
+def _is_mlb_playoff(dt: Optional[datetime] = None) -> bool:
+    """MLB playoffs: October through early November."""
+    d = (dt or datetime.now(timezone.utc)).date()
+    return d.month == 10 or (d.month == 11 and d.day <= 5)
+
+
+def _schedule_load_penalty(games_last_7: int) -> float:
+    """Returns probability penalty for heavy schedule load."""
+    for threshold in sorted(SCHEDULE_LOAD_THRESHOLDS.keys(), reverse=True):
+        if games_last_7 >= threshold:
+            return SCHEDULE_LOAD_THRESHOLDS[threshold]
+    return 0.0
 
 
 def _utc_to_pdt(utc_str: str) -> str:
@@ -70,12 +95,13 @@ def _confidence_label(edge: float, signal_count: int, stats_available: bool) -> 
 # NBA Edge Finder
 # ---------------------------------------------------------------------------
 
-def _nba_team_strength(team: str, ctx: Dict) -> float:
+def _nba_team_strength(team: str, ctx: Dict, playoff: bool = False) -> float:
     season = ctx["season_stats"].get(team, {})
     recent = ctx["recent_form"].get(team, {})
     season_net = season.get("net_rtg", 0.0)
     recent_net = recent.get("recent_net_rtg", season_net)
-    return (1 - NBA_RECENT_FORM_WEIGHT) * season_net + NBA_RECENT_FORM_WEIGHT * recent_net
+    w = NBA_PLAYOFF_RECENT_WEIGHT if playoff else NBA_RECENT_FORM_WEIGHT
+    return (1 - w) * season_net + w * recent_net
 
 
 def _nba_margin_to_prob(expected_margin: float) -> float:
@@ -90,6 +116,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
     game_time = _utc_to_pdt(commence_time)
     recs = []
 
+    playoff = _is_nba_playoff()
     stats_available = bool(nba_ctx["season_stats"].get(home) or nba_ctx["season_stats"].get(away))
 
     ml = game.get("moneyline")
@@ -102,8 +129,8 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
         home_recent = nba_ctx["recent_form"].get(home, {})
         away_recent = nba_ctx["recent_form"].get(away, {})
 
-        home_strength = _nba_team_strength(home, nba_ctx)
-        away_strength = _nba_team_strength(away, nba_ctx)
+        home_strength = _nba_team_strength(home, nba_ctx, playoff)
+        away_strength = _nba_team_strength(away, nba_ctx, playoff)
         base_margin = home_strength - away_strength
 
         signals = []
@@ -171,6 +198,23 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
 
         research.append(f"Rest days — {home}: {home_rest} | {away}: {away_rest}")
 
+        # --- Schedule load (7-day fatigue) ---
+        home_load = nba_ctx.get("schedule_load", {}).get(home, 0)
+        away_load = nba_ctx.get("schedule_load", {}).get(away, 0)
+        home_load_pen = _schedule_load_penalty(home_load)
+        away_load_pen = _schedule_load_penalty(away_load)
+        if home_load_pen > 0:
+            adj -= home_load_pen
+            signals.append(f"⚠ {home} schedule load: {home_load} games in 7 days (-{home_load_pen*100:.0f}%)")
+        if away_load_pen > 0:
+            adj += away_load_pen
+            signals.append(f"⚠ {away} schedule load: {away_load} games in 7 days — favors {home} (+{away_load_pen*100:.0f}%)")
+
+        # --- Playoff context ---
+        if playoff:
+            signals.append("🏆 Playoffs: defensive intensity higher, recent form weighted 55%")
+            research.append("Playoff adjustment: scoring/pace factors applied to totals model")
+
         # --- Injuries ---
         home_inj = injury_adjustment(home, nba_injuries, "nba")
         away_inj = injury_adjustment(away, nba_injuries, "nba")
@@ -235,12 +279,16 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
         away_stats = nba_ctx["season_stats"].get(away, {})
         if home_stats and away_stats:
             avg_pace = (home_stats.get("pace", 100) + away_stats.get("pace", 100)) / 2
+            if playoff:
+                avg_pace *= NBA_PLAYOFF_PACE_FACTOR
             expected_home_pts = (home_stats.get("off_rtg", 110) + away_stats.get("def_rtg", 110)) / 2 * avg_pace / 100
             expected_away_pts = (away_stats.get("off_rtg", 110) + home_stats.get("def_rtg", 110)) / 2 * avg_pace / 100
             expected_total = expected_home_pts + expected_away_pts
+            if playoff:
+                expected_total *= NBA_PLAYOFF_SCORING_FACTOR
 
             market_line = total["line"]
-            total_std = 14.0
+            total_std   = NBA_PLAYOFF_TOTAL_STD if playoff else 14.0
             model_over_prob = float(1 - norm.cdf(market_line, expected_total, total_std))
             market_over_prob = total["over_prob"]
             market_under_prob = total["under_prob"]
@@ -324,7 +372,9 @@ def _pitcher_quality_score(stats: Dict) -> float:
 def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: Dict,
                      home_batting: Dict, away_batting: Dict,
                      home_bullpen: Dict, away_bullpen: Dict,
-                     mlb_injuries: Dict) -> List[BetRecommendation]:
+                     mlb_injuries: Dict,
+                     home_schedule_load: int = 0,
+                     away_schedule_load: int = 0) -> List[BetRecommendation]:
     from src.data.mlb_stats import get_park_factor
     home = game["home_team"]
     away = game["away_team"]
@@ -333,6 +383,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     game_time = _utc_to_pdt(commence_time)
     venue = game.get("venue", "")
     park_factor = get_park_factor(venue)
+    playoff = _is_mlb_playoff()
     recs = []
 
     signals = []
@@ -440,6 +491,23 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     model_home_prob = float(norm.cdf(run_diff, 0, MLB_SPREAD_STD))
     model_home_prob = min(0.85, max(0.15, model_home_prob - home_inj + away_inj))
     model_away_prob = 1 - model_home_prob
+
+    # --- Schedule load ---
+    home_load_pen = _schedule_load_penalty(home_schedule_load)
+    away_load_pen = _schedule_load_penalty(away_schedule_load)
+    if home_load_pen > 0:
+        expected_home_runs *= (1 - home_load_pen)
+        signals.append(f"⚠ {home} schedule load: {home_schedule_load} games in 7 days")
+    if away_load_pen > 0:
+        expected_away_runs *= (1 - away_load_pen)
+        signals.append(f"⚠ {away} schedule load: {away_schedule_load} games in 7 days")
+
+    # --- Playoff context ---
+    if playoff:
+        expected_home_runs *= MLB_PLAYOFF_SCORING_FACTOR
+        expected_away_runs *= MLB_PLAYOFF_SCORING_FACTOR
+        signals.append("🏆 Playoffs: ace starters, shorter leash, lower scoring applied")
+        research.append(f"Playoff adjustment: runs scaled by {MLB_PLAYOFF_SCORING_FACTOR} | starter IP capped at {MLB_PLAYOFF_STARTER_IP}")
 
     signals.append(f"Model projected score: {home} {expected_home_runs:.1f} — {away} {expected_away_runs:.1f}")
     research.append(f"Model expected runs: {home} {expected_home_runs:.2f} | {away} {expected_away_runs:.2f}")

@@ -121,6 +121,13 @@ def build_report(
                 f"⚡ Prop updated: {w['removed']} → {w['new']}. Reason: {w['reason']}"
             )
 
+    # ── Performance summary (from settled history) ───────────────────────────
+    try:
+        from src.data.outcome_checker import load_performance_summary
+        performance = load_performance_summary()
+    except Exception:
+        performance = {}
+
     return {
         "generated_at":       _now_pacific_str(),
         "run_date":           run_date.strftime("%A, %B %d, %Y"),
@@ -142,4 +149,6 @@ def build_report(
         "has_nba":            nba_game_count > 0,
         "has_mlb":            mlb_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
+        "performance":        performance,
+        "has_performance":    bool(performance.get("total", 0)),
     }

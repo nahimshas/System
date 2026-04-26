@@ -6,6 +6,8 @@ player leaders. User must verify Robinhood's actual line before betting.
 import logging
 from dataclasses import dataclass, field
 from typing import Dict, List
+from src.models.edge_finder import _is_nba_playoff, _is_mlb_playoff
+from src.config import NBA_PLAYOFF_RECENT_WEIGHT, MLB_PLAYOFF_STARTER_IP
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
     recent_form   = nba_ctx.get("recent_form", {})
     rest_days     = nba_ctx.get("rest_days", {})
     team_leaders  = nba_ctx.get("team_leaders", {})  # {espn_name: {cat: {name, value}}}
+    playoff       = _is_nba_playoff()
 
     if not season_stats:
         logger.warning("NBA season stats unavailable — skipping NBA props")
@@ -102,9 +105,11 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
             pts_season = pts_leader.get("value", 0.0)   # season PPG
 
             # Adjust season PPG for today's matchup vs opponent defense
-            # If opponent defense is worse than league avg, inflate slightly
             def_adj = (opp_def_rtg - league_avg) / league_avg * pts_season * 0.08
             model_pts = round(pts_season + def_adj, 1) if pts_season > 0 else round(expected_team_pts * 0.30, 1)
+            # Playoff: stars (≥23 PPG) get higher usage (+5%), role players stay flat
+            if playoff and model_pts >= 23:
+                model_pts = round(model_pts * 1.05, 1)
 
             if model_pts >= 18:
                 pts_conf = "HIGH" if (
@@ -120,6 +125,11 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     f"{opp} allows {opp_def_rtg:.1f} PPG — "
                     + ("above avg (weak defense)" if opp_def_rtg > 111 else "average defense"),
                 ]
+                if playoff:
+                    if model_pts >= 23:
+                        pts_signals.append("🏆 Playoffs: star usage boost applied (+5%)")
+                    else:
+                        pts_signals.append("🏆 Playoffs: tighter defense — verify line carefully")
                 if team_rest == 0:
                     pts_signals.append(f"⚠ {team} on B2B — consider reducing line or fading")
                 picks.append(PropPick(
@@ -218,6 +228,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
 # ---------------------------------------------------------------------------
 
 def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPick]:
+    playoff = _is_mlb_playoff()
     picks: List[PropPick] = []
 
     for game in games:
@@ -247,7 +258,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
             bb9 = stats.get("bb_per_9", 3.0)
             hr9 = stats.get("hr_per_9", 1.2)
             ip  = stats.get("innings_pitched", 0)
-            expected_innings = 5.5
+            expected_innings = MLB_PLAYOFF_STARTER_IP if playoff else 5.5
 
             if ip < 20:
                 continue

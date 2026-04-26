@@ -16,7 +16,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from src.config import MAX_SINGLE_BETS
+from src.config import MAX_SINGLE_BETS, LINE_MOVE_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
@@ -289,14 +289,26 @@ def merge_picks(
             # model prob) so any model improvements show up without changing the core bet.
             fresh = new_pick_map.get(_signal_refresh_key(pick))
             if fresh:
+                # Detect line movement: compare morning market_prob to current
+                morning_mkt  = pick.get("market_prob", pick.get("contract_price", 0))
+                current_mkt  = fresh.get("market_prob", morning_mkt)
+                line_move    = current_mkt - morning_mkt  # positive = line moved toward our pick
+                fresh_signals = list(fresh["signals"])
+                if abs(line_move) >= LINE_MOVE_THRESHOLD:
+                    if line_move > 0:
+                        fresh_signals.insert(0,
+                            f"📈 Sharp money: line moved +{line_move*100:.1f}% toward this pick since morning")
+                    else:
+                        fresh_signals.insert(0,
+                            f"📉 Line faded: market moved {line_move*100:.1f}% against this pick since morning")
                 pick = {
                     **pick,
-                    "signals":        fresh["signals"],
-                    "research":       fresh["research"],
-                    "model_prob_pct": fresh["model_prob_pct"],
+                    "signals":         fresh_signals,
+                    "research":        fresh["research"],
+                    "model_prob_pct":  fresh["model_prob_pct"],
                     "market_prob_pct": fresh["market_prob_pct"],
-                    "edge":           fresh["edge"],
-                    "edge_pct":       fresh["edge_pct"],
+                    "edge":            fresh["edge"],
+                    "edge_pct":        fresh["edge_pct"],
                 }
             elif current_edge is not None:
                 pick = {**pick, "edge": current_edge, "edge_pct": round(current_edge * 100, 1)}

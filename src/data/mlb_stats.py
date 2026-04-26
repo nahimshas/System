@@ -167,3 +167,32 @@ def get_park_factor(venue: str) -> float:
         if k.lower() in venue.lower() or venue.lower() in k.lower():
             return v
     return 1.00
+
+
+def get_team_schedule_load(team_id: int, today: date) -> int:
+    """
+    Returns the number of confirmed games this team played in the last 7 days.
+    Used for schedule-fatigue adjustment in the model.
+    """
+    if not team_id:
+        return 0
+    from datetime import timedelta
+    seven_ago = today - timedelta(days=7)
+    date_from = seven_ago.strftime("%Y-%m-%d")
+    date_to   = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+    data = _get("/schedule", {
+        "sportId": 1,
+        "teamId":  team_id,
+        "startDate": date_from,
+        "endDate":   date_to,
+        "hydrate": "linescore",
+    })
+    if not data:
+        return 0
+    count = 0
+    for date_entry in data.get("dates", []):
+        for g in date_entry.get("games", []):
+            status = g.get("status", {}).get("abstractGameState", "")
+            if status == "Final":
+                count += 1
+    return count

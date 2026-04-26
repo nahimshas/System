@@ -294,7 +294,29 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
                 game_count  += 1
 
     if game_count == 0:
-        return {"last_game_date": last_game_date}
+        return {"last_game_date": last_game_date, "games_last_7": 0}
+
+    # Count confirmed games in the tighter 7-day window for schedule-load fatigue
+    seven_day_cutoff = today - timedelta(days=7)
+    games_last_7 = 0
+    for event in data.get("events", []):
+        raw_date = event.get("date", "")
+        if not raw_date:
+            continue
+        try:
+            dt_utc = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+            pac_off = -7 if 3 <= dt_utc.month <= 10 else -8
+            gd = (dt_utc + timedelta(hours=pac_off)).date()
+        except Exception:
+            continue
+        if not (seven_day_cutoff <= gd < today):
+            continue
+        for comp in event.get("competitions", []):
+            c = next((x for x in comp.get("competitors", [])
+                      if x.get("team", {}).get("id") == team_id), None)
+            if c and _parse_score(c.get("score", 0)) > 0:
+                games_last_7 += 1
+                break
 
     rpg  = pts_for  / game_count
     ropg = pts_against / game_count
@@ -306,6 +328,7 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
         "recent_ppg":     rpg,
         "recent_oppg":    ropg,
         "last_game_date": last_game_date,
+        "games_last_7":   games_last_7,
     }
 
 
@@ -373,17 +396,20 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
         else:
             id_map = _fetch_team_id_map()
 
+        schedule_load: Dict[str, int] = {}
         for raw_name in team_names:
             espn_name = normalize(raw_name)
             team_id   = id_map.get(espn_name)
             if not team_id:
-                rest_days[espn_name] = 1
+                rest_days[espn_name]     = 1
+                schedule_load[espn_name] = 0
                 continue
             recent    = _fetch_recent_form(team_id, today)
             last_date = recent.get("last_game_date")
             rest_days[espn_name] = (
                 max(0, (today - last_date).days - 1) if last_date else 1
             )
+            schedule_load[espn_name] = recent.get("games_last_7", 0)
             if recent.get("recent_ppg"):
                 recent_form[espn_name] = {
                     "recent_net_rtg": recent["recent_net_rtg"],
@@ -392,6 +418,8 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
                     "recent_w_pct":   recent["recent_w_pct"],
                 }
             time.sleep(0.25)
+    else:
+        schedule_load = {}
 
     leaders_with_names = sum(
         1 for v in team_leaders.values()
@@ -403,8 +431,9 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
         f"({leaders_with_names} with player names)"
     )
     return {
-        "season_stats": season_stats,
-        "recent_form":  recent_form,
-        "rest_days":    rest_days,
-        "team_leaders": team_leaders,
+        "season_stats":   season_stats,
+        "recent_form":    recent_form,
+        "rest_days":      rest_days,
+        "schedule_load":  schedule_load,
+        "team_leaders":   team_leaders,
     }

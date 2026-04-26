@@ -20,7 +20,7 @@ from src.data.odds_client import get_game_odds
 from src.data.nba_stats import get_nba_context
 from src.data.mlb_stats import (
     get_todays_games, get_pitcher_stats, get_team_batting_stats,
-    get_bullpen_stats,
+    get_bullpen_stats, get_team_schedule_load,
 )
 from src.data.injuries import get_nba_injuries, get_mlb_injuries
 from src.models.edge_finder import analyze_nba_game, analyze_mlb_game
@@ -30,6 +30,7 @@ from src.state.manager import (
     load_state, save_state, merge_picks,
     bet_to_dict, parlay_to_dict, prop_to_dict,
 )
+from src.data.outcome_checker import check_and_settle
 from src.report.generator import build_report
 from src.report.email_sender import send_report
 
@@ -45,6 +46,16 @@ def run(leagues: list[str], send_email: bool = True) -> int:
     from src.data.odds_client import _today_pacific
     today = _today_pacific()
     errors: list[str] = []
+
+    # ------------------------------------------------------------------ #
+    #  Settle yesterday's picks (idempotent — skips already-settled bets)
+    # ------------------------------------------------------------------ #
+    try:
+        settled = check_and_settle(today)
+        if settled:
+            logger.info(f"Outcome settlement: {settled} pick(s) closed from yesterday")
+    except Exception as e:
+        logger.warning(f"Outcome settlement failed (non-fatal): {e}")
 
     if not ODDS_API_KEY:
         logger.error("ODDS_API_KEY is not set.")
@@ -145,13 +156,18 @@ def run(leagues: list[str], send_email: bool = True) -> int:
                 away_bat  = get_team_batting_stats(game.get("away_team_id"))
                 home_bp   = get_bullpen_stats(game.get("home_team_id"))
                 away_bp   = get_bullpen_stats(game.get("away_team_id"))
+                home_load = get_team_schedule_load(game.get("home_team_id"), today)
+                away_load = get_team_schedule_load(game.get("away_team_id"), today)
 
                 if game.get("home_pitcher_name"):
                     pitcher_stats_map[game["home_pitcher_name"]] = hp_stats
                 if game.get("away_pitcher_name"):
                     pitcher_stats_map[game["away_pitcher_name"]] = ap_stats
 
-                recs = analyze_mlb_game(game, hp_stats, ap_stats, home_bat, away_bat, home_bp, away_bp, mlb_injuries)
+                recs = analyze_mlb_game(game, hp_stats, ap_stats, home_bat, away_bat,
+                                        home_bp, away_bp, mlb_injuries,
+                                        home_schedule_load=home_load,
+                                        away_schedule_load=away_load)
                 mlb_singles_raw.extend(recs)
             except Exception as e:
                 logger.error(f"MLB game analysis error ({home} vs {away}): {e}")

@@ -54,6 +54,7 @@
     .stat-value { font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
     .stat-value.green { color: var(--green); }
     .stat-value.yellow { color: var(--yellow); }
+    .stat-value.red { color: var(--red); }
     .stat-value.blue { color: var(--blue); }
     .stat-value.teal { color: var(--teal); }
 
@@ -351,6 +352,79 @@
         <span style="color:var(--muted);">Reserve (do not force bets)</span>
         <span style="color:#16a34a;">${{ "%.2f"|format(report.reserve) }}</span>
       </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if report.has_performance %}
+  <div class="section" id="performance-section">
+    <div class="section-title">Model Performance <span style="color:var(--muted);font-weight:400;font-size:0.85rem;text-transform:none;letter-spacing:0;">(all-time settled bets)</span></div>
+    <div class="card">
+      {% set p = report.performance %}
+      <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat-box">
+          <div class="stat-label">Record</div>
+          <div class="stat-value {% if p.won > p.lost %}green{% elif p.won < p.lost %}red{% else %}yellow{% endif %}">{{ p.won }}W–{{ p.lost }}L</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Win Rate</div>
+          <div class="stat-value {% if p.win_rate_pct and p.win_rate_pct >= 55 %}green{% elif p.win_rate_pct and p.win_rate_pct < 45 %}red{% else %}yellow{% endif %}">
+            {% if p.win_rate_pct is not none %}{{ p.win_rate_pct }}%{% else %}—{% endif %}
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Total PnL</div>
+          <div class="stat-value {% if p.total_pnl > 0 %}green{% elif p.total_pnl < 0 %}red{% else %}yellow{% endif %}">
+            ${{ "%+.2f"|format(p.total_pnl) }}
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">ROI</div>
+          <div class="stat-value {% if p.roi_pct and p.roi_pct > 0 %}green{% elif p.roi_pct and p.roi_pct < 0 %}red{% else %}yellow{% endif %}">
+            {% if p.roi_pct is not none %}{{ p.roi_pct }}%{% else %}—{% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% if p.by_confidence %}
+      <div style="margin-top:12px;">
+        <div class="signals-title">By Confidence</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          {% for conf, cs in p.by_confidence.items() %}
+          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;">
+              <span class="confidence-badge {{ conf }}" style="font-size:0.65rem;">{{ conf }}</span>
+            </div>
+            <div style="font-size:0.82rem;">{{ cs.won }}W–{{ cs.lost }}L
+              {% if cs.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ cs.win_rate_pct }}%)</span>{% endif %}
+            </div>
+            <div style="font-size:0.78rem;{% if cs.total_pnl > 0 %}color:var(--green){% elif cs.total_pnl < 0 %}color:var(--red){% else %}color:var(--yellow){% endif %};">
+              ${{ "%+.2f"|format(cs.total_pnl) }}
+            </div>
+          </div>
+          {% endfor %}
+          {% if p.by_sport %}
+          {% for sport, ss in p.by_sport.items() %}
+          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">{{ sport }}</div>
+            <div style="font-size:0.82rem;">{{ ss.won }}W–{{ ss.lost }}L
+              {% if ss.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ ss.win_rate_pct }}%)</span>{% endif %}
+            </div>
+            <div style="font-size:0.78rem;{% if ss.total_pnl > 0 %}color:var(--green){% elif ss.total_pnl < 0 %}color:var(--red){% else %}color:var(--yellow){% endif %};">
+              ${{ "%+.2f"|format(ss.total_pnl) }}
+            </div>
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if p.total < 30 %}
+      <div style="margin-top:10px;font-size:0.78rem;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;">
+        ⚠ Only {{ p.total }} settled bet(s) — need 30+ for statistically meaningful calibration.
+      </div>
+      {% endif %}
     </div>
   </div>
   {% endif %}
