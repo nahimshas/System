@@ -158,7 +158,10 @@
          data-away-team="{{ bet.away_team }}"
          data-bet-type="{{ bet.bet_type }}"
          data-pick="{{ bet.pick }}"
-         data-sport="{{ bet.sport }}">
+         data-sport="{{ bet.sport }}"
+         data-cost="{{ bet.total_cost }}"
+         data-profit="{{ bet.profit_if_win }}"
+         data-confidence="{{ bet.confidence }}">
       <div class="card-header">
         <div>
           <div class="card-title">{{ bet.pick }}</div>
@@ -357,30 +360,38 @@
   {% endif %}
 
   {% if report.has_performance %}
+  {% set p = report.performance %}
   <div class="section" id="performance-section">
-    <div class="section-title">Model Performance <span style="color:var(--muted);font-weight:400;font-size:0.85rem;text-transform:none;letter-spacing:0;">(all-time settled bets)</span></div>
-    <div class="card">
-      {% set p = report.performance %}
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Model Performance</span>
+      <span id="perf-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;">● includes today</span>
+    </div>
+    <div class="card"
+         id="perf-card"
+         data-hist-won="{{ p.won }}"
+         data-hist-lost="{{ p.lost }}"
+         data-hist-push="{{ p.push }}"
+         data-hist-pnl="{{ p.total_pnl }}"
+         data-hist-cost="{{ p.recent_30 | map(attribute='cost') | sum if p.recent_30 else 0 }}"
+         data-hist-total-cost="{{ (p.total_pnl / p.roi_pct * 100) | round(2) if p.roi_pct else 0 }}">
       <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
         <div class="stat-box">
           <div class="stat-label">Record</div>
-          <div class="stat-value {% if p.won > p.lost %}green{% elif p.won < p.lost %}red{% else %}yellow{% endif %}">{{ p.won }}W–{{ p.lost }}L</div>
+          <div class="stat-value" id="perf-record">{{ p.won }}W–{{ p.lost }}L</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Win Rate</div>
-          <div class="stat-value {% if p.win_rate_pct and p.win_rate_pct >= 55 %}green{% elif p.win_rate_pct and p.win_rate_pct < 45 %}red{% else %}yellow{% endif %}">
+          <div class="stat-value" id="perf-winrate">
             {% if p.win_rate_pct is not none %}{{ p.win_rate_pct }}%{% else %}—{% endif %}
           </div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Total PnL</div>
-          <div class="stat-value {% if p.total_pnl > 0 %}green{% elif p.total_pnl < 0 %}red{% else %}yellow{% endif %}">
-            ${{ "%+.2f"|format(p.total_pnl) }}
-          </div>
+          <div class="stat-value" id="perf-pnl">${{ "%+.2f"|format(p.total_pnl) }}</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">ROI</div>
-          <div class="stat-value {% if p.roi_pct and p.roi_pct > 0 %}green{% elif p.roi_pct and p.roi_pct < 0 %}red{% else %}yellow{% endif %}">
+          <div class="stat-value" id="perf-roi">
             {% if p.roi_pct is not none %}{{ p.roi_pct }}%{% else %}—{% endif %}
           </div>
         </div>
@@ -389,16 +400,20 @@
       {% if p.by_confidence %}
       <div style="margin-top:12px;">
         <div class="signals-title">By Confidence</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="perf-breakdown">
           {% for conf, cs in p.by_confidence.items() %}
-          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;">
+          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;"
+               id="perf-conf-{{ conf }}"
+               data-hist-won="{{ cs.won }}"
+               data-hist-lost="{{ cs.lost }}"
+               data-hist-pnl="{{ cs.total_pnl }}">
             <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;">
               <span class="confidence-badge {{ conf }}" style="font-size:0.65rem;">{{ conf }}</span>
             </div>
-            <div style="font-size:0.82rem;">{{ cs.won }}W–{{ cs.lost }}L
+            <div class="perf-conf-record" style="font-size:0.82rem;">{{ cs.won }}W–{{ cs.lost }}L
               {% if cs.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ cs.win_rate_pct }}%)</span>{% endif %}
             </div>
-            <div style="font-size:0.78rem;{% if cs.total_pnl > 0 %}color:var(--green){% elif cs.total_pnl < 0 %}color:var(--red){% else %}color:var(--yellow){% endif %};">
+            <div class="perf-conf-pnl" style="font-size:0.78rem;color:{% if cs.total_pnl > 0 %}var(--green){% elif cs.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">
               ${{ "%+.2f"|format(cs.total_pnl) }}
             </div>
           </div>
@@ -410,7 +425,7 @@
             <div style="font-size:0.82rem;">{{ ss.won }}W–{{ ss.lost }}L
               {% if ss.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ ss.win_rate_pct }}%)</span>{% endif %}
             </div>
-            <div style="font-size:0.78rem;{% if ss.total_pnl > 0 %}color:var(--green){% elif ss.total_pnl < 0 %}color:var(--red){% else %}color:var(--yellow){% endif %};">
+            <div style="font-size:0.78rem;color:{% if ss.total_pnl > 0 %}var(--green){% elif ss.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">
               ${{ "%+.2f"|format(ss.total_pnl) }}
             </div>
           </div>
@@ -805,12 +820,15 @@
     if (ev.stateId === "3") {
       // Game over — show score line + WON/LOST
       var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore);
+      // Store result on the card so updatePerformance() can read it
+      if (result) card.setAttribute("data-live-result", result);
       liveDiv.innerHTML =
         '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
         ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore + '</span>' +
         (result ? '&nbsp;&nbsp;' + outcomeHtml(result) : "");
     } else if (ev.stateId === "2") {
-      // In progress — show score + win probability
+      // In progress — clear any previous result (game still live)
+      card.removeAttribute("data-live-result");
       var prob = winProb(betType, pick, ourTeam, evHome, evAway,
                          evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
       liveDiv.innerHTML =
@@ -820,6 +838,7 @@
           ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
         '</span>&nbsp;&nbsp;' + probHtml(prob);
     } else {
+      card.removeAttribute("data-live-result");
       liveDiv.innerHTML = "";  // pre-game — nothing to show
     }
   }
@@ -927,6 +946,117 @@
     });
   }
 
+  // ── Live performance table update ───────────────────────────────────────
+  // Scans all settled single-bet cards for WON/LOST/PUSH outcomes determined
+  // by the JS (data-live-result set by applyCard), computes today's PnL delta,
+  // and adds it on top of the historical baseline stored in data-hist-* attrs.
+  function updatePerformance() {
+    var card = document.getElementById("perf-card");
+    if (!card) return;
+
+    // Historical baseline (from Python-rendered state/history.json)
+    var histWon  = parseInt(card.getAttribute("data-hist-won")  || "0", 10);
+    var histLost = parseInt(card.getAttribute("data-hist-lost") || "0", 10);
+    var histPush = parseInt(card.getAttribute("data-hist-push") || "0", 10);
+    var histPnl  = parseFloat(card.getAttribute("data-hist-pnl") || "0");
+    var histCost = parseFloat(card.getAttribute("data-hist-total-cost") || "0");
+
+    // Accumulate today's live outcomes from settled bet cards
+    var liveWon = 0, liveLost = 0, livePush = 0, livePnl = 0, liveCost = 0;
+    var confLive = {};   // { HIGH: {won,lost,pnl}, MEDIUM: {won,lost,pnl} }
+
+    document.querySelectorAll(".card[data-home-team]").forEach(function (betCard) {
+      var result = betCard.getAttribute("data-live-result");
+      if (!result) return;  // game not yet final
+
+      var cost    = parseFloat(betCard.getAttribute("data-cost")   || "0");
+      var profit  = parseFloat(betCard.getAttribute("data-profit") || "0");
+      var conf    = betCard.getAttribute("data-confidence") || "MEDIUM";
+      var pnl     = result === "WON" ? profit : (result === "PUSH" ? 0 : -cost);
+
+      if (result === "WON")       { liveWon++;  }
+      else if (result === "LOST") { liveLost++; }
+      else if (result === "PUSH") { livePush++; }
+      livePnl  += pnl;
+      liveCost += cost;
+
+      if (!confLive[conf]) confLive[conf] = { won: 0, lost: 0, pnl: 0 };
+      if (result === "WON")       confLive[conf].won++;
+      else if (result === "LOST") confLive[conf].lost++;
+      confLive[conf].pnl += pnl;
+    });
+
+    // No live outcomes yet — leave the table as-is
+    if (liveWon + liveLost + livePush === 0) return;
+
+    // Combined totals
+    var won  = histWon  + liveWon;
+    var lost = histLost + liveLost;
+    var pnl  = histPnl  + livePnl;
+    var cost = histCost + liveCost;
+    var winDecisions = won + lost;
+    var winRate = winDecisions > 0 ? (won / winDecisions * 100).toFixed(1) : null;
+    var roi     = cost > 0         ? (pnl / cost * 100).toFixed(1)         : null;
+
+    function pnlColor(v) {
+      return v > 0 ? "var(--green)" : v < 0 ? "var(--red)" : "var(--yellow)";
+    }
+    function pctColor(v, hi, lo) {
+      return v >= hi ? "var(--green)" : v <= lo ? "var(--red)" : "var(--yellow)";
+    }
+    function fmt(v) {
+      return (v >= 0 ? "$+" : "$") + Math.abs(v).toFixed(2);
+    }
+
+    // Update headline stats
+    var recEl = document.getElementById("perf-record");
+    if (recEl) {
+      recEl.textContent = won + "W–" + lost + "L";
+      recEl.style.color = won > lost ? "var(--green)" : won < lost ? "var(--red)" : "var(--yellow)";
+    }
+    var wrEl = document.getElementById("perf-winrate");
+    if (wrEl) {
+      wrEl.textContent = winRate !== null ? winRate + "%" : "—";
+      if (winRate !== null) wrEl.style.color = pctColor(parseFloat(winRate), 55, 45);
+    }
+    var pnlEl = document.getElementById("perf-pnl");
+    if (pnlEl) {
+      pnlEl.textContent = fmt(pnl);
+      pnlEl.style.color = pnlColor(pnl);
+    }
+    var roiEl = document.getElementById("perf-roi");
+    if (roiEl) {
+      roiEl.textContent = roi !== null ? roi + "%" : "—";
+      if (roi !== null) roiEl.style.color = pctColor(parseFloat(roi), 0.01, -0.01);
+    }
+
+    // Update per-confidence breakdown
+    Object.keys(confLive).forEach(function (conf) {
+      var confCard = document.getElementById("perf-conf-" + conf);
+      if (!confCard) return;
+      var hw = parseInt(confCard.getAttribute("data-hist-won")  || "0", 10);
+      var hl = parseInt(confCard.getAttribute("data-hist-lost") || "0", 10);
+      var hp = parseFloat(confCard.getAttribute("data-hist-pnl") || "0");
+      var cw = hw + confLive[conf].won;
+      var cl = hl + confLive[conf].lost;
+      var cp = hp + confLive[conf].pnl;
+      var cWinRate = (cw + cl) > 0 ? (cw / (cw + cl) * 100).toFixed(1) : null;
+
+      var recDiv = confCard.querySelector(".perf-conf-record");
+      if (recDiv) recDiv.innerHTML = cw + "W–" + cl + "L" +
+        (cWinRate !== null ? '<span style="color:var(--muted);font-size:0.75rem;"> (' + cWinRate + '%)</span>' : "");
+      var pnlDiv = confCard.querySelector(".perf-conf-pnl");
+      if (pnlDiv) {
+        pnlDiv.textContent = fmt(cp);
+        pnlDiv.style.color = pnlColor(cp);
+      }
+    });
+
+    // Show "● includes today" badge
+    var badge = document.getElementById("perf-live-badge");
+    if (badge) badge.style.display = "inline-block";
+  }
+
   // ── Main refresh loop ────────────────────────────────────────────────────
   function refresh() {
     var allEvents = [];
@@ -944,6 +1074,9 @@
 
       // Update allocation table
       applyTable(allEvents);
+
+      // Update performance table with live outcomes
+      updatePerformance();
     }
 
     [
