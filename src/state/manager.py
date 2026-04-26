@@ -218,8 +218,10 @@ def merge_picks(
     started  = [p for p in locked_singles if p.get("locked")]
     pregame  = [p for p in locked_singles if not p.get("locked")]
 
-    locked_keys = {_single_key(p) for p in locked_singles}
+    locked_keys  = {_single_key(p) for p in locked_singles}
     new_edge_map = {_single_key(d): d["edge"] for d in new_singles}
+    # Full fresh dict lookup — used to refresh display fields on kept pre-game picks
+    new_pick_map = {_single_key(d): d for d in new_singles}
 
     # New bets not already in the locked morning set
     truly_new = [d for d in new_singles if _single_key(d) not in locked_keys]
@@ -267,21 +269,34 @@ def merge_picks(
             used_new.add(id(best_new))
             final_singles.append(best_new)
         else:
-            # Keep pick; update edge if market moved (display only)
-            if current_edge is not None:
+            # Keep pick; refresh display fields from fresh analysis (signals, research,
+            # model prob) so any model improvements show up without changing the core bet.
+            fresh = new_pick_map.get(_single_key(pick))
+            if fresh:
+                pick = {
+                    **pick,
+                    "signals":        fresh["signals"],
+                    "research":       fresh["research"],
+                    "model_prob_pct": fresh["model_prob_pct"],
+                    "market_prob_pct": fresh["market_prob_pct"],
+                    "edge":           fresh["edge"],
+                    "edge_pct":       fresh["edge_pct"],
+                }
+            elif current_edge is not None:
                 pick = {**pick, "edge": current_edge, "edge_pct": round(current_edge * 100, 1)}
-                if edge_dropped:
-                    warnings.append({
-                        "type": "edge_dropped",
-                        "pick": pick["pick"],
-                        "game": pick["game"],
-                        "old_edge_pct": round(state_edge := next(
-                            (s["edge"] for s in locked_singles if _single_key(s) == _single_key(pick)),
-                            pick["edge"],
-                        ) * 100, 1),
-                        "new_edge_pct": round(current_edge * 100, 1),
-                        "reason": "Market moved against this bet — still no better alternative found",
-                    })
+
+            if edge_dropped:
+                warnings.append({
+                    "type": "edge_dropped",
+                    "pick": pick["pick"],
+                    "game": pick["game"],
+                    "old_edge_pct": round(state_edge := next(
+                        (s["edge"] for s in locked_singles if _single_key(s) == _single_key(pick)),
+                        pick["edge"],
+                    ) * 100, 1),
+                    "new_edge_pct": round(current_edge * 100, 1),
+                    "reason": "Market moved against this bet — still no better alternative found",
+                })
             final_singles.append(pick)
 
     # ── Parlays ───────────────────────────────────────────────────────────────
