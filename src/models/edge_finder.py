@@ -374,8 +374,12 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                      home_bullpen: Dict, away_bullpen: Dict,
                      mlb_injuries: Dict,
                      home_schedule_load: int = 0,
-                     away_schedule_load: int = 0) -> List[BetRecommendation]:
+                     away_schedule_load: int = 0,
+                     umpire_tendency: Optional[Dict] = None,
+                     weather: Optional[Dict] = None) -> List[BetRecommendation]:
     from src.data.mlb_stats import get_park_factor
+    from src.data.umpire import build_umpire_signals
+    from src.data.weather import build_weather_signals, weather_run_adjustment
     home = game["home_team"]
     away = game["away_team"]
     label = f"{away} @ {home}"
@@ -385,6 +389,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     park_factor = get_park_factor(venue)
     playoff = _is_mlb_playoff()
     recs = []
+    umpire_tendency = umpire_tendency or {}
+    weather = weather or {}
 
     signals = []
     research = []
@@ -462,6 +468,34 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     if away_inj > 0.01:
         signals.append(f"{away} injury impact (-{away_inj*100:.1f}%)")
 
+    # --- Umpire tendencies ---
+    ump_run_factor = umpire_tendency.get("run_factor", 1.0)
+    ump_k_factor   = umpire_tendency.get("k_factor", 1.0)
+    ump_name       = game.get("umpire_name", "")
+    ump_signals    = build_umpire_signals(ump_name, umpire_tendency)
+    if ump_signals:
+        signals.extend(ump_signals)
+        research.append(
+            f"👨‍⚖️ HP Umpire: {ump_name} — run factor {ump_run_factor:.2f}x | "
+            f"K factor {ump_k_factor:.2f}x | {umpire_tendency.get('notes', '')}"
+        )
+    elif ump_name:
+        research.append(f"👨‍⚖️ HP Umpire: {ump_name} (near-neutral tendencies)")
+
+    # --- Weather ---
+    wx_adj     = weather_run_adjustment(weather)
+    wx_signals = build_weather_signals(weather)
+    if wx_signals:
+        signals.extend(wx_signals)
+    if not weather.get("indoor") and weather.get("city"):
+        wx_city = weather.get("city", "")
+        research.append(
+            f"🌤 Weather ({wx_city}): {weather.get('temp_f', 70)}°F | "
+            f"Wind {weather.get('wind_mph', 0)} mph {weather.get('wind_dir', '')} "
+            f"({'blowing ' + weather.get('wind_effect', 'cross') if weather.get('wind_effect') != 'cross' else 'cross wind'}) | "
+            f"Precip {weather.get('precip_pct', 0)}%"
+        )
+
     # --- Expected runs ---
     home_ops = home_batting.get("ops", 0.720)
     away_ops = away_batting.get("ops", 0.720)
@@ -486,6 +520,18 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
 
     expected_home_runs *= park_factor
     expected_away_runs *= park_factor
+
+    # Apply umpire run factor (scales both teams equally)
+    if abs(ump_run_factor - 1.0) >= 0.02:
+        expected_home_runs *= ump_run_factor
+        expected_away_runs *= ump_run_factor
+
+    # Apply weather run adjustment (split evenly between teams)
+    if wx_adj != 0.0:
+        expected_home_runs += wx_adj / 2
+        expected_away_runs += wx_adj / 2
+        expected_home_runs = max(1.5, expected_home_runs)
+        expected_away_runs = max(1.5, expected_away_runs)
 
     run_diff = expected_home_runs - expected_away_runs
     model_home_prob = float(norm.cdf(run_diff, 0, MLB_SPREAD_STD))

@@ -23,6 +23,8 @@ from src.data.mlb_stats import (
     get_bullpen_stats, get_team_schedule_load,
 )
 from src.data.injuries import get_nba_injuries, get_mlb_injuries
+from src.data.umpire import get_home_plate_umpires, get_umpire_tendency
+from src.data.weather import get_game_weather
 from src.models.edge_finder import analyze_nba_game, analyze_mlb_game
 from src.models.parlay_builder import build_parlays
 from src.models.props_analyzer import nba_player_props, mlb_player_props
@@ -131,6 +133,13 @@ def run(leagues: list[str], send_email: bool = True) -> int:
             logger.warning(f"MLB injuries unavailable: {e}")
             mlb_injuries = {}
 
+        # Fetch umpires once for all today's games (single API call)
+        try:
+            umpire_map = get_home_plate_umpires(today)  # {game_pk: umpire_name}
+        except Exception as e:
+            logger.warning(f"Umpire fetch failed: {e}")
+            umpire_map = {}
+
         pitcher_stats_map: dict = {}
 
         for game in mlb_odds_games:
@@ -147,7 +156,22 @@ def run(leagues: list[str], send_email: bool = True) -> int:
                     "venue":             sched_game.get("venue", ""),
                     "home_team_id":      sched_game.get("home_team_id"),
                     "away_team_id":      sched_game.get("away_team_id"),
+                    "game_pk":           sched_game.get("game_pk"),
                 })
+
+            # Stamp umpire name + k_factor onto game dict (used by edge_finder + props)
+            game_pk = game.get("game_pk")
+            ump_name = umpire_map.get(game_pk, "")
+            ump_tendency = get_umpire_tendency(ump_name)
+            game["umpire_name"]     = ump_name
+            game["umpire_k_factor"] = ump_tendency.get("k_factor", 1.0)
+
+            # Fetch weather for this venue (cached by city across games at the same park)
+            try:
+                wx = get_game_weather(game.get("venue", ""))
+            except Exception as e:
+                logger.debug(f"Weather fetch failed ({game.get('venue', '')}): {e}")
+                wx = {}
 
             try:
                 hp_stats  = get_pitcher_stats(game.get("home_pitcher_id"))
@@ -167,10 +191,19 @@ def run(leagues: list[str], send_email: bool = True) -> int:
                 recs = analyze_mlb_game(game, hp_stats, ap_stats, home_bat, away_bat,
                                         home_bp, away_bp, mlb_injuries,
                                         home_schedule_load=home_load,
-                                        away_schedule_load=away_load)
+                                        away_schedule_load=away_load,
+                                        umpire_tendency=ump_tendency,
+                                        weather=wx)
                 mlb_singles_raw.extend(recs)
             except Exception as e:
                 logger.error(f"MLB game analysis error ({home} vs {away}): {e}")
+
+        # Stamp umpire k_factor onto schedule games too (used by props_analyzer)
+        for sg in mlb_schedule:
+            gpk = sg.get("game_pk")
+            ump = umpire_map.get(gpk, "")
+            sg["umpire_name"]     = ump
+            sg["umpire_k_factor"] = get_umpire_tendency(ump).get("k_factor", 1.0)
 
         mlb_props_raw = mlb_player_props(mlb_schedule, pitcher_stats_map)
         logger.info(f"MLB: {len(mlb_singles_raw)} edge(s) found across {mlb_game_count} games")

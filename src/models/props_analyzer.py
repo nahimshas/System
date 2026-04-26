@@ -263,16 +263,36 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
             if ip < 20:
                 continue
 
+            # Umpire K-factor adjustment (stored on game dict by main.py)
+            ump_k_factor = game.get("umpire_k_factor", 1.0)
+            k9_adj = round(k9 * ump_k_factor, 1)
+
             pitcher_research = [
                 f"{pitcher_name}: ERA {era:.2f} | FIP {fip:.2f} | K/9 {k9:.1f} | BB/9 {bb9:.1f} | HR/9 {hr9:.2f}",
                 f"Season IP: {ip:.0f} | Projected start: ~{expected_innings} inn",
                 f"Venue: {venue} (park factor {pf:.2f})" if venue else "Venue unknown",
             ]
 
+            ump_name = game.get("umpire_name", "")
+            if ump_name and abs(ump_k_factor - 1.0) >= 0.03:
+                direction = "large" if ump_k_factor > 1.0 else "tight"
+                pitcher_research.append(
+                    f"👨‍⚖️ Umpire {ump_name}: {direction} zone (K factor {ump_k_factor:.2f}x) → "
+                    f"adjusted K/9 {k9} → {k9_adj}"
+                )
+
             # ── Pitcher strikeouts over ──────────────────────────────────────
-            expected_ks = round(k9 / 9 * expected_innings, 1)
-            k_conf      = "HIGH" if (k9 > 9.5 and ip > 40 and fip < 4.0) else "MEDIUM"
-            k_margin    = round(k9 - 7.0, 1)   # K/9 above league-average strikeout rate
+            expected_ks = round(k9_adj / 9 * expected_innings, 1)
+            k_conf      = "HIGH" if (k9_adj > 9.5 and ip > 40 and fip < 4.0) else "MEDIUM"
+            k_margin    = round(k9_adj - 7.0, 1)
+
+            k_signals = [
+                f"K/9: {k9:.1f}" + (f" → adjusted to {k9_adj} (umpire {ump_name})" if ump_name and abs(ump_k_factor - 1.0) >= 0.03 else "") +
+                f" → projects {expected_ks} Ks over {expected_innings} inn",
+                f"FIP {fip:.2f} ({'above' if fip > 4.20 else 'below'} league avg 4.20)",
+                f"Season IP: {ip:.0f} — {'solid' if ip > 50 else 'limited'} sample",
+            ]
+
             picks.append(PropPick(
                 sport="MLB",
                 player=pitcher_name,
@@ -287,11 +307,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
                     f"Model: ~{expected_ks} Ks in {expected_innings} inn. "
                     f"Look for Over at or below {int(expected_ks)}."
                 ),
-                signals=[
-                    f"K/9: {k9:.1f} → projects {expected_ks} Ks over {expected_innings} inn",
-                    f"FIP {fip:.2f} ({'above' if fip > 4.20 else 'below'} league avg 4.20)",
-                    f"Season IP: {ip:.0f} — {'solid' if ip > 50 else 'limited'} sample",
-                ],
+                signals=k_signals,
                 research=pitcher_research[:],
                 commence_time=game_commence,
             ))
