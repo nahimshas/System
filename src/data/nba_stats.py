@@ -354,9 +354,10 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
         logger.error("ESPN standings unavailable — NBA model will have no stats")
         return {"season_stats": {}, "recent_form": {}, "rest_days": {}, "team_leaders": {}}
 
-    recent_form:  Dict[str, Dict] = {}
-    rest_days:    Dict[str, int]  = {}
-    team_leaders: Dict[str, Dict] = {}
+    recent_form:   Dict[str, Dict] = {}
+    rest_days:     Dict[str, int]  = {}
+    team_leaders:  Dict[str, Dict] = {}
+    schedule_load: Dict[str, int]  = {}  # initialised here so it's always defined
 
     if not team_names:
         logger.info("No team_names supplied — skipping per-team detail calls")
@@ -396,7 +397,6 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
         else:
             id_map = _fetch_team_id_map()
 
-        schedule_load: Dict[str, int] = {}
         for raw_name in team_names:
             espn_name = normalize(raw_name)
             team_id   = id_map.get(espn_name)
@@ -418,8 +418,6 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
                     "recent_w_pct":   recent["recent_w_pct"],
                 }
             time.sleep(0.25)
-    else:
-        schedule_load = {}
 
     leaders_with_names = sum(
         1 for v in team_leaders.values()
