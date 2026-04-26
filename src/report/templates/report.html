@@ -417,22 +417,22 @@
   //   period    current period / inning (1-based)
   //   clock     remaining clock in current period (seconds) — 0 for MLB
   function winProb(betType, pick, ourTeam, homeTeam, awayTeam,
-                   homeScore, awayScore, sport, period, clock) {
+                   homeScore, awayScore, sport, period, clock, isBottom) {
 
     // Remaining time expressed as a single "units" number
     var remUnits;  // NBA: minutes remaining; MLB: half-innings remaining
 
     if (sport === "NBA") {
-      var totalPeriods = Math.max(4, period);
-      var periRem = Math.max(0, 4 - period);       // full quarters left after this one
-      var clockMin = Math.max(0, clock / 60);       // minutes left in current period
-      // Overtime: each extra period is 5 min
-      var otMin = period > 4 ? 5 * (period - 4) : 0;
-      remUnits = periRem * 12 + clockMin + otMin;   // minutes remaining
+      var periRem  = Math.max(0, 4 - period);     // full quarters remaining after this one
+      var clockMin = Math.max(0, clock / 60);     // minutes left in current quarter
+      var otMin    = period > 4 ? 5 : 0;          // if we're in OT, 5-min period
+      remUnits = periRem * 12 + clockMin + otMin; // total minutes remaining
     } else {
-      // MLB: half-innings remaining (top + bottom counts as 2)
-      var inningsTotal = Math.max(9, period);
-      var halfInningsPlayed = (period - 1) * 2;     // simplification: treat each inning as 2 halves
+      // MLB: half-innings remaining.
+      // isBottom=1 means bottom of inning is in progress (top already played).
+      // halfInningsPlayed = full innings done × 2 + whether top of this inning is done.
+      var inningsTotal     = Math.max(9, period);
+      var halfInningsPlayed = (period - 1) * 2 + (isBottom || 0);
       remUnits = Math.max(0, (inningsTotal * 2) - halfInningsPlayed);
     }
 
@@ -471,9 +471,10 @@
         var pOver  = 1 - normalCDF((needed - expRem) / (stdRem || 0.1));
         return parsed.dir === "over" ? pOver : 1 - pOver;
       } else {
-        // MLB: ~1 run per half-inning combined; variance ≈ 1.2 runs/half-inning
-        var expRem2 = remUnits * 1.0;
-        var stdRem2 = Math.sqrt(remUnits * 1.2);
+        // MLB: ~0.5 runs per half-inning combined (≈9 runs / 18 half-innings)
+        // Variance ≈ 0.55 runs² per half-inning (Poisson-like)
+        var expRem2 = remUnits * 0.5;
+        var stdRem2 = Math.sqrt(remUnits * 0.55);
         var pOver2  = 1 - normalCDF((needed - expRem2) / (stdRem2 || 0.1));
         return parsed.dir === "over" ? pOver2 : 1 - pOver2;
       }
@@ -577,8 +578,15 @@
 
     var status    = event.status || {};
     var stype     = status.type  || {};
-    var stateId   = stype.id     || "1";   // "1"=pre, "2"=live, "3"=final
-    var detail    = stype.shortDetail || "";
+
+    // Use stype.state ("pre"/"in"/"post") — more reliable than stype.id which
+    // changes for halftime (17), end-of-period (23), overtime (22), etc.
+    var gameState = stype.state || "pre";
+    var stateId   = gameState === "in"   ? "2"
+                  : gameState === "post" ? "3" : "1";
+
+    // Prefer shortDetail; fall back to description (covers more ESPN formats)
+    var detail    = stype.shortDetail || stype.description || "";
 
     // Period / inning and clock
     var period    = status.period  || 1;
@@ -586,12 +594,16 @@
     var clockParts = clockStr.split(":").map(Number);
     var clockSec  = (clockParts[0] || 0) * 60 + (clockParts[1] || 0);
 
+    // For MLB: detect top vs bottom of inning from detail ("Bot 1st", "Top 3rd", etc.)
+    var isBottom  = /\bbot/i.test(detail) ? 1 : 0;
+
     return {
       home: homeName, away: awayName,
       homeAbbr: homeAbbr, awayAbbr: awayAbbr,
       homeScore: homeScore, awayScore: awayScore,
       stateId: stateId, detail: detail,
       period: period, clockSec: clockSec,
+      isBottom: isBottom,
       sport: sportKey,
     };
   }
@@ -641,7 +653,7 @@
     } else if (ev.stateId === "2") {
       // In progress — show score + win probability
       var prob = winProb(betType, pick, ourTeam, evHome, evAway,
-                         evHScore, evAScore, sport, ev.period, ev.clockSec);
+                         evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
       liveDiv.innerHTML =
         '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
         ' <span style="color:#94a3b8;font-size:0.72rem;">' + ev.detail + '</span>' +
@@ -683,12 +695,13 @@
           (result ? '<br>' + outcomeHtml(result) : "");
       } else if (ev.stateId === "2") {
         var prob2 = winProb(betType, pick, ourTeam, evHome, ev.away,
-                            evHScore, evAScore, sport, ev.period, ev.clockSec);
+                            evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
         var pct2  = Math.round(prob2 * 100);
         var col2  = pct2 >= 60 ? "#16a34a" : pct2 >= 40 ? "#eab308" : "#ef4444";
         cell.innerHTML =
           '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
-          ' ' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+          (ev.detail ? ' <span style="color:#94a3b8;font-size:0.68rem;">' + ev.detail + '</span>' : '') +
+          '<br>' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
           '<br><span style="color:' + col2 + ';font-weight:700;">' + pct2 + '% win</span>';
       } else {
         cell.innerHTML = "—";
