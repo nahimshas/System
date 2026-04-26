@@ -101,6 +101,7 @@ def parlay_to_dict(par) -> Dict:
                 "game": l.game,
                 "pick": l.pick,
                 "bet_type": l.bet_type,
+                "sport": l.sport,
                 "model_prob_pct": round(l.model_prob * 100, 1),
                 "edge_pct": round(l.edge * 100, 1),
                 "home_team": l.home_team,

@@ -227,7 +227,13 @@
       </div>
       <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
       {% for leg in par.legs %}
-      <div class="parlay-leg">
+      <div class="parlay-leg"
+           data-home-team="{{ leg.home_team }}"
+           data-away-team="{{ leg.away_team }}"
+           data-bet-type="{{ leg.bet_type }}"
+           data-pick="{{ leg.pick }}"
+           data-sport="{{ leg.sport }}"
+           data-model-prob="{{ leg.model_prob_pct }}">
         <div class="pick">{{ leg.pick }} <span style="color:var(--muted);font-weight:400;">({{ leg.bet_type }})</span></div>
         <div class="meta">{{ leg.game }} &middot; Model: {{ leg.model_prob_pct }}% &middot; Edge: +{{ leg.edge_pct }}%</div>
       </div>
@@ -465,16 +471,18 @@
       var needed    = lineVal - curTotal;   // points still needed to hit the line
 
       if (sport === "NBA") {
-        // NBA combined scoring ≈ 4.4 pts/min; variance ≈ 10 pts²/min combined
-        var expRem = remUnits * 4.4;
-        var stdRem = Math.sqrt(remUnits * 10);
+        // Use the line itself as the expected total for THIS game (4.4 pts/min is
+        // the league avg but each game's line already bakes in the true expected pace).
+        // Full-game std ≈ 22 pts → variance per minute = 22²/48 ≈ 10.1
+        var expRem = (lineVal / 48) * remUnits;
+        var stdRem = Math.sqrt(remUnits * 10.1);
         var pOver  = 1 - normalCDF((needed - expRem) / (stdRem || 0.1));
         return parsed.dir === "over" ? pOver : 1 - pOver;
       } else {
-        // MLB: ~0.5 runs per half-inning combined (≈9 runs / 18 half-innings)
-        // Variance ≈ 0.55 runs² per half-inning (Poisson-like)
-        var expRem2 = remUnits * 0.5;
-        var stdRem2 = Math.sqrt(remUnits * 0.55);
+        // MLB: line / 18 half-innings = expected runs per half-inning for this game.
+        // Full-game std ≈ 3 runs → variance per half-inning = 3²/18 = 0.5
+        var expRem2 = (lineVal / 18) * remUnits;
+        var stdRem2 = Math.sqrt(remUnits * 0.5);
         var pOver2  = 1 - normalCDF((needed - expRem2) / (stdRem2 || 0.1));
         return parsed.dir === "over" ? pOver2 : 1 - pOver2;
       }
@@ -618,15 +626,90 @@
     return null;
   }
 
+  // ── Apply live state to a parlay card ───────────────────────────────────
+  // Probability = P(leg1 wins) × P(leg2 wins)
+  // Pre-game legs use the stored model probability.
+  // Once any leg loses → show LOST immediately.
+  // Once all legs are final and none lost → show WON.
+  function applyParlayCard(card, allEvents) {
+    var liveDiv = card.querySelector(".live-status");
+    if (!liveDiv) return;
+
+    var legEls = Array.prototype.slice.call(
+      card.querySelectorAll(".parlay-leg[data-home-team]")
+    );
+    if (!legEls.length) return;
+
+    // Evaluate each leg
+    var legResults = legEls.map(function (legEl) {
+      var homeTeam  = legEl.getAttribute("data-home-team") || "";
+      var awayTeam  = legEl.getAttribute("data-away-team") || "";
+      var betType   = legEl.getAttribute("data-bet-type")  || "";
+      var pick      = legEl.getAttribute("data-pick")      || "";
+      var sport     = legEl.getAttribute("data-sport")     || "";
+      var modelProb = parseFloat(legEl.getAttribute("data-model-prob") || "50") / 100;
+
+      var ev = (homeTeam || awayTeam) ? findEvent(allEvents, homeTeam, awayTeam) : null;
+
+      // Pre-game or not yet in ESPN feed — use model probability
+      if (!ev || ev.stateId === "1") {
+        return { status: "pre", prob: modelProb };
+      }
+
+      var ourTeam  = (betType === "Moneyline" || betType === "Spread") ? pick : homeTeam;
+      var evHScore = teamMatch(ev.home, homeTeam) ? ev.homeScore : ev.awayScore;
+      var evAScore = teamMatch(ev.away, awayTeam) ? ev.awayScore : ev.homeScore;
+      var evHome   = teamMatch(ev.home, homeTeam) ? ev.home : ev.away;
+
+      if (ev.stateId === "3") {
+        var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore);
+        return {
+          status: "final",
+          result: result,
+          prob:   (result === "LOST") ? 0.0 : 1.0,   // PUSH treated as win
+        };
+      }
+
+      // In progress — live win probability for this leg
+      var prob = winProb(betType, pick, ourTeam, evHome, ev.away,
+                         evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
+      return { status: "live", prob: prob };
+    });
+
+    // If no leg has reached ESPN yet, nothing to show
+    var hasData = legResults.some(function (r) { return r.status !== "pre"; });
+    if (!hasData) { liveDiv.innerHTML = ""; return; }
+
+    // Any leg already lost → parlay is busted
+    var anyLost = legResults.some(function (r) {
+      return r.status === "final" && r.result === "LOST";
+    });
+    if (anyLost) { liveDiv.innerHTML = outcomeHtml("LOST"); return; }
+
+    // All legs final and none lost → parlay won
+    var allFinal = legResults.every(function (r) { return r.status === "final"; });
+    if (allFinal) { liveDiv.innerHTML = outcomeHtml("WON"); return; }
+
+    // Otherwise: combined probability = product of all leg probabilities
+    var combined = legResults.reduce(function (acc, r) { return acc * r.prob; }, 1.0);
+    liveDiv.innerHTML = probHtml(combined);
+  }
+
   // ── Apply live state to a card element ──────────────────────────────────
   function applyCard(card, allEvents) {
+    // Parlay cards have their own handler
+    if (card.getAttribute("data-parlay") === "true") {
+      applyParlayCard(card, allEvents);
+      return;
+    }
+
     var homeTeam = card.getAttribute("data-home-team") || "";
     var awayTeam = card.getAttribute("data-away-team") || "";
     var betType  = card.getAttribute("data-bet-type")  || "";
     var pick     = card.getAttribute("data-pick")      || "";
     var sport    = card.getAttribute("data-sport")     || "";
 
-    if (!homeTeam && !awayTeam) return;  // parlay or unknown — skip
+    if (!homeTeam && !awayTeam) return;
     if (betType === "Parlay" || betType === "Prop") return;
 
     var ev = findEvent(allEvents, homeTeam, awayTeam);
