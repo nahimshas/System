@@ -178,6 +178,18 @@ def _single_key(d: Dict) -> str:
     return f"{d['pick']}|{d['game']}"
 
 
+def _signal_refresh_key(d: Dict) -> str:
+    """Looser key for signal/display refresh — ignores the exact line number on
+    Totals so a 0.5-point line move doesn't prevent signals from being updated."""
+    game = d.get("game", "")
+    bt   = d.get("bet_type", "")
+    pick = d.get("pick", "")
+    if bt == "Total":
+        direction = "Over" if pick.startswith("Over") else "Under"
+        return f"{game}|{bt}|{direction}"
+    return f"{game}|{bt}|{pick}"
+
+
 def _parlay_label(d) -> str:
     """Works on both dict and ParlayRecommendation."""
     return d["label"] if isinstance(d, dict) else d.label
@@ -218,10 +230,11 @@ def merge_picks(
     started  = [p for p in locked_singles if p.get("locked")]
     pregame  = [p for p in locked_singles if not p.get("locked")]
 
-    locked_keys  = {_single_key(p) for p in locked_singles}
-    new_edge_map = {_single_key(d): d["edge"] for d in new_singles}
-    # Full fresh dict lookup — used to refresh display fields on kept pre-game picks
-    new_pick_map = {_single_key(d): d for d in new_singles}
+    locked_keys      = {_single_key(p) for p in locked_singles}
+    new_edge_map     = {_single_key(d): d["edge"] for d in new_singles}
+    # Full fresh dict lookup — used to refresh display fields on kept pre-game picks.
+    # Uses the looser signal-refresh key so a line move doesn't block the update.
+    new_pick_map     = {_signal_refresh_key(d): d for d in new_singles}
 
     # New bets not already in the locked morning set
     truly_new = [d for d in new_singles if _single_key(d) not in locked_keys]
@@ -271,7 +284,7 @@ def merge_picks(
         else:
             # Keep pick; refresh display fields from fresh analysis (signals, research,
             # model prob) so any model improvements show up without changing the core bet.
-            fresh = new_pick_map.get(_single_key(pick))
+            fresh = new_pick_map.get(_signal_refresh_key(pick))
             if fresh:
                 pick = {
                     **pick,
