@@ -118,6 +118,15 @@
   </div>
   {% endif %}
 
+  {% if report.change_warnings %}
+  <div class="section">
+    <div class="section-title" style="color:var(--yellow);">⚡ Pick Changes Since Morning Run</div>
+    {% for w in report.change_warnings %}
+    <div class="error-card" style="background-color:#1c1a07;border-color:#713f12;color:#fde68a;">{{ w }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {% if not report.has_nba %}
   <div class="card" style="margin-bottom:12px;">
     <div class="empty-state"><div class="icon">🏀</div>No NBA games today.</div>
@@ -143,7 +152,12 @@
   <div class="section">
     <div class="section-title">Singles <span style="color:var(--muted);font-weight:400;font-size:0.85rem;text-transform:none;letter-spacing:0;">(top {{ report.all_singles|length }} by edge)</span></div>
     {% for bet in report.all_singles %}
-    <div class="card">
+    <div class="card"
+         data-home-team="{{ bet.home_team }}"
+         data-away-team="{{ bet.away_team }}"
+         data-bet-type="{{ bet.bet_type }}"
+         data-pick="{{ bet.pick }}"
+         data-sport="{{ bet.sport }}">
       <div class="card-header">
         <div>
           <div class="card-title">{{ bet.pick }}</div>
@@ -153,8 +167,12 @@
           </div>
           {% if bet.game_time %}<div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 {{ bet.game_time }}</div>{% endif %}
         </div>
-        <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          {% if bet.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+          <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
+        </div>
       </div>
+      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
         <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
@@ -196,14 +214,18 @@
   <div class="section">
     <div class="section-title">2-Leg Parlays <span class="badge badge-parlay">{{ report.parlays|length }}</span></div>
     {% for par in report.parlays %}
-    <div class="card parlay-card">
+    <div class="card parlay-card" data-parlay="true">
       <div class="card-header">
         <div>
           <div class="card-title" style="color:var(--purple);">Parlay #{{ loop.index }}</div>
           <div class="card-subtitle">Combined prob: {{ par.combined_prob_pct }}% &middot; Edge: +{{ par.edge_pct }}%</div>
         </div>
-        <span class="confidence-badge {{ par.confidence }}">{{ par.confidence }}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          {% if par.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+          <span class="confidence-badge {{ par.confidence }}">{{ par.confidence }}</span>
+        </div>
       </div>
+      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
       {% for leg in par.legs %}
       <div class="parlay-leg">
         <div class="pick">{{ leg.pick }} <span style="color:var(--muted);font-weight:400;">({{ leg.bet_type }})</span></div>
@@ -226,7 +248,11 @@
   <div class="section">
     <div class="section-title">Props Research <span style="color:var(--yellow);font-size:0.72rem;font-weight:400;text-transform:none;">(verify Robinhood price before betting)</span></div>
     {% for prop in report.props %}
-    <div class="card prop-card">
+    <div class="card prop-card"
+         data-home-team="{{ prop.team }}"
+         data-away-team="{{ prop.opponent }}"
+         data-bet-type="Prop"
+         data-sport="{{ prop.sport }}">
       <div class="card-header">
         <div>
           <div class="card-title">{{ prop.player }}</div>
@@ -235,8 +261,12 @@
             &nbsp;{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} &middot; {{ prop.prop_type }}
           </div>
         </div>
-        <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          {% if prop.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+          <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
+        </div>
       </div>
+      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">Model Line</div><div class="stat-value blue">{{ prop.model_line }}</div></div>
         <div class="stat-box"><div class="stat-label">Direction</div><div class="stat-value teal" style="color:#14b8a6;">Over</div></div>
@@ -278,7 +308,11 @@
         </thead>
         <tbody>
           {% for row in report.allocation %}
-          <tr data-home-team="{{ row.home_team }}" data-away-team="{{ row.away_team }}">
+          <tr data-home-team="{{ row.home_team }}"
+              data-away-team="{{ row.away_team }}"
+              data-bet-type="{{ row.bet_type }}"
+              data-pick="{{ row.pick }}"
+              data-sport="{{ row.sport }}">
             <td style="color:var(--muted);font-size:0.78rem;">{{ row.rank }}</td>
             <td>
               <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">{{ row.label }}</div>
@@ -326,122 +360,379 @@
 
 <script>
 (function () {
-  // ── ESPN scoreboard endpoints ────────────────────────────────────────────
+  "use strict";
+
+  // ── ESPN endpoints ───────────────────────────────────────────────────────
   var ESPN = {
     NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
     MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard"
   };
 
+  // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
+  function normalCDF(z) {
+    var t = 1 / (1 + 0.2316419 * Math.abs(z));
+    var d = 0.3989423 * Math.exp(-z * z / 2);
+    var p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.7814779 + t * (-1.8212560 + t * 1.3302744))));
+    return z > 0 ? 1 - p : p;
+  }
+
   // ── Fuzzy team-name match ────────────────────────────────────────────────
-  // Returns true when the ESPN displayName or shortDisplayName contains any
-  // meaningful word from our stored team name (handles "LA Clippers" vs
-  // "Los Angeles Clippers", city abbreviations, etc.)
   function teamMatch(espnName, ourName) {
-    if (!ourName) return false;
+    if (!ourName || !espnName) return false;
     var e = espnName.toLowerCase();
     var o = ourName.toLowerCase();
-    // Direct substring match
     if (e.includes(o) || o.includes(e)) return true;
-    // Match on the last "word" (city nickname, e.g. "Lakers", "Yankees")
-    var words = o.split(/\s+/);
-    var nick = words[words.length - 1];
+    var nick = o.split(/\s+/).pop();
     return nick.length > 3 && e.includes(nick);
   }
 
-  // ── Parse a single ESPN event into a display string ─────────────────────
-  function parseEvent(event) {
+  // ── Parse a line number from a pick string ───────────────────────────────
+  // "Over 220.5" → {dir:"over", line:220.5}
+  // "Under 8.5"  → {dir:"under", line:8.5}
+  // "Lakers -4.5"→ {dir:"fav", line:4.5}  (team name before the number)
+  function parsePick(pick, betType) {
+    if (!pick) return null;
+    if (betType === "Total") {
+      var m = pick.match(/(over|under)\s*([\d.]+)/i);
+      if (m) return { dir: m[1].toLowerCase(), line: parseFloat(m[2]) };
+    }
+    if (betType === "Spread") {
+      var m2 = pick.match(/([-+][\d.]+)\s*$/);
+      if (m2) return { dir: "spread", line: parseFloat(m2[1]) };
+    }
+    return null;
+  }
+
+  // ── Live win-probability for an in-progress game ─────────────────────────
+  // Returns 0–1 probability that OUR bet wins from the current game state.
+  //
+  // Parameters:
+  //   betType   "Moneyline" | "Total" | "Spread"
+  //   pick      pick string  (for Total / Spread line extraction)
+  //   ourTeam   team name we bet on  (for Moneyline / Spread)
+  //   homeTeam  home team name
+  //   homeScore current home score (numeric)
+  //   awayScore current away score (numeric)
+  //   sport     "NBA" | "MLB"
+  //   period    current period / inning (1-based)
+  //   clock     remaining clock in current period (seconds) — 0 for MLB
+  function winProb(betType, pick, ourTeam, homeTeam, awayTeam,
+                   homeScore, awayScore, sport, period, clock) {
+
+    // Remaining time expressed as a single "units" number
+    var remUnits;  // NBA: minutes remaining; MLB: half-innings remaining
+
+    if (sport === "NBA") {
+      var totalPeriods = Math.max(4, period);
+      var periRem = Math.max(0, 4 - period);       // full quarters left after this one
+      var clockMin = Math.max(0, clock / 60);       // minutes left in current period
+      // Overtime: each extra period is 5 min
+      var otMin = period > 4 ? 5 * (period - 4) : 0;
+      remUnits = periRem * 12 + clockMin + otMin;   // minutes remaining
+    } else {
+      // MLB: half-innings remaining (top + bottom counts as 2)
+      var inningsTotal = Math.max(9, period);
+      var halfInningsPlayed = (period - 1) * 2;     // simplification: treat each inning as 2 halves
+      remUnits = Math.max(0, (inningsTotal * 2) - halfInningsPlayed);
+    }
+
+    if (remUnits <= 0) remUnits = 0.01;  // avoid div-by-zero at game's very end
+
+    // --- Moneyline ---
+    if (betType === "Moneyline") {
+      // We win if OUR team leads (or comes back to lead) by game end.
+      var ourScore  = teamMatch(homeTeam, ourTeam) ? homeScore : awayScore;
+      var oppScore  = teamMatch(homeTeam, ourTeam) ? awayScore : homeScore;
+      var curMargin = ourScore - oppScore;  // positive = we're winning
+
+      if (sport === "NBA") {
+        // Score-change std ≈ sqrt(min_remaining * 5) for the differential
+        var std = Math.sqrt(remUnits * 5);
+        return 1 - normalCDF(-curMargin / (std || 0.1));
+      } else {
+        // MLB: runs per half-inning ≈ 0.5 per team → differential std ≈ sqrt(rem * 0.6)
+        var std2 = Math.sqrt(remUnits * 0.6);
+        return 1 - normalCDF(-curMargin / (std2 || 0.1));
+      }
+    }
+
+    // --- Total (Over / Under) ---
+    if (betType === "Total") {
+      var parsed = parsePick(pick, "Total");
+      if (!parsed) return 0.5;
+      var curTotal  = homeScore + awayScore;
+      var lineVal   = parsed.line;
+      var needed    = lineVal - curTotal;   // points still needed to hit the line
+
+      if (sport === "NBA") {
+        // NBA combined scoring ≈ 4.4 pts/min; variance ≈ 10 pts²/min combined
+        var expRem = remUnits * 4.4;
+        var stdRem = Math.sqrt(remUnits * 10);
+        var pOver  = 1 - normalCDF((needed - expRem) / (stdRem || 0.1));
+        return parsed.dir === "over" ? pOver : 1 - pOver;
+      } else {
+        // MLB: ~1 run per half-inning combined; variance ≈ 1.2 runs/half-inning
+        var expRem2 = remUnits * 1.0;
+        var stdRem2 = Math.sqrt(remUnits * 1.2);
+        var pOver2  = 1 - normalCDF((needed - expRem2) / (stdRem2 || 0.1));
+        return parsed.dir === "over" ? pOver2 : 1 - pOver2;
+      }
+    }
+
+    // --- Spread ---
+    if (betType === "Spread") {
+      var parsed3 = parsePick(pick, "Spread");
+      if (!parsed3) return 0.5;
+      var spreadLine = parsed3.line;   // negative for favourite, positive for dog
+      var ourScore3  = teamMatch(homeTeam, ourTeam) ? homeScore : awayScore;
+      var oppScore3  = teamMatch(homeTeam, ourTeam) ? awayScore : homeScore;
+      var curMargin3 = ourScore3 - oppScore3;
+      // We win if final_margin > -spreadLine  (e.g. spread=-4.5 → need margin > 4.5)
+      var needed3    = -spreadLine - curMargin3;   // how much more margin we need
+
+      if (sport === "NBA") {
+        var std3 = Math.sqrt(remUnits * 5);
+        return 1 - normalCDF(needed3 / (std3 || 0.1));
+      } else {
+        var std4 = Math.sqrt(remUnits * 0.6);
+        return 1 - normalCDF(needed3 / (std4 || 0.1));
+      }
+    }
+
+    return 0.5;  // fallback
+  }
+
+  // ── Determine WON / LOST for a completed game ────────────────────────────
+  function outcome(betType, pick, ourTeam, homeTeam, homeScore, awayScore) {
+    var hs = parseInt(homeScore, 10) || 0;
+    var as = parseInt(awayScore, 10) || 0;
+
+    if (betType === "Moneyline") {
+      var weAreHome = teamMatch(homeTeam, ourTeam);
+      var ourFinal  = weAreHome ? hs : as;
+      var oppFinal  = weAreHome ? as : hs;
+      return ourFinal > oppFinal ? "WON" : ourFinal < oppFinal ? "LOST" : "PUSH";
+    }
+
+    if (betType === "Total") {
+      var parsed = parsePick(pick, "Total");
+      if (!parsed) return null;
+      var total = hs + as;
+      if (total === parsed.line) return "PUSH";
+      var overHit = total > parsed.line;
+      return (parsed.dir === "over") === overHit ? "WON" : "LOST";
+    }
+
+    if (betType === "Spread") {
+      var parsed2 = parsePick(pick, "Spread");
+      if (!parsed2) return null;
+      var weAreHome2 = teamMatch(homeTeam, ourTeam);
+      var margin     = weAreHome2 ? (hs - as) : (as - hs);  // positive = our team winning
+      var adj        = margin + parsed2.line;  // margin adjusted for spread (if spread=-4.5, adj = margin-4.5)
+      if (adj === 0) return "PUSH";
+      return adj > 0 ? "WON" : "LOST";
+    }
+
+    return null;
+  }
+
+  // ── Render win-prob or WON/LOST HTML ────────────────────────────────────
+  function probHtml(prob) {
+    var pct  = Math.round(prob * 100);
+    var col  = pct >= 60 ? "#16a34a" : pct >= 40 ? "#eab308" : "#ef4444";
+    var bar  = Math.round(pct);
+    return (
+      '<div style="display:flex;align-items:center;gap:6px;">' +
+        '<span style="color:' + col + ';font-weight:700;font-size:0.82rem;">' + pct + '% win prob</span>' +
+        '<div style="flex:1;max-width:80px;height:5px;background:#2d3148;border-radius:3px;">' +
+          '<div style="width:' + bar + '%;height:100%;background:' + col + ';border-radius:3px;"></div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function outcomeHtml(result) {
+    if (!result) return "";
+    if (result === "WON")  return '<span style="color:#16a34a;font-weight:700;font-size:0.9rem;">✓ WON</span>';
+    if (result === "LOST") return '<span style="color:#ef4444;font-weight:700;font-size:0.9rem;">✗ LOST</span>';
+    return '<span style="color:#94a3b8;font-size:0.9rem;">— PUSH</span>';
+  }
+
+  // ── Parse ESPN game state ────────────────────────────────────────────────
+  function parseEvent(event, sportKey) {
     var comp = (event.competitions || [])[0];
     if (!comp) return null;
 
     var competitors = comp.competitors || [];
-    var home = competitors.find(function (c) { return c.homeAway === "home"; });
-    var away = competitors.find(function (c) { return c.homeAway === "away"; });
-    if (!home || !away) return null;
+    var homeComp = competitors.find(function (c) { return c.homeAway === "home"; });
+    var awayComp = competitors.find(function (c) { return c.homeAway === "away"; });
+    if (!homeComp || !awayComp) return null;
 
-    var homeAbbr = (home.team || {}).abbreviation || (home.team || {}).shortDisplayName || "";
-    var awayAbbr = (away.team || {}).abbreviation || (away.team || {}).shortDisplayName || "";
-    var homeScore = home.score || "0";
-    var awayScore = away.score || "0";
+    var homeAbbr  = (homeComp.team || {}).abbreviation || "";
+    var awayAbbr  = (awayComp.team || {}).abbreviation || "";
+    var homeName  = (homeComp.team || {}).displayName  || "";
+    var awayName  = (awayComp.team || {}).displayName  || "";
+    var homeScore = parseInt(homeComp.score || "0", 10);
+    var awayScore = parseInt(awayComp.score || "0", 10);
 
-    // ESPN status: 1 = pre, 2 = in-progress, 3 = final
-    var statusType = ((event.status || {}).type || {});
-    var stateId = statusType.id || "1";
-    var detail  = statusType.shortDetail || statusType.description || "";
+    var status    = event.status || {};
+    var stype     = status.type  || {};
+    var stateId   = stype.id     || "1";   // "1"=pre, "2"=live, "3"=final
+    var detail    = stype.shortDetail || "";
 
-    var homeName = (home.team || {}).displayName || "";
-    var awayName = (away.team || {}).displayName || "";
+    // Period / inning and clock
+    var period    = status.period  || 1;
+    var clockStr  = status.displayClock || "0:00";
+    var clockParts = clockStr.split(":").map(Number);
+    var clockSec  = (clockParts[0] || 0) * 60 + (clockParts[1] || 0);
 
-    if (stateId === "3") {
-      return {
-        home: homeName, away: awayName,
-        html: '<span style="color:#94a3b8;">Final</span> ' +
-              awayAbbr + ' ' + awayScore + ' – ' + homeAbbr + ' ' + homeScore
-      };
-    }
-    if (stateId === "2") {
-      return {
-        home: homeName, away: awayName,
-        html: '<span style="color:#ef4444;font-weight:700;">● LIVE</span> ' +
-              '<span style="color:#94a3b8;font-size:0.7rem;">' + detail + '</span><br>' +
-              awayAbbr + ' ' + awayScore + ' – ' + homeAbbr + ' ' + homeScore
-      };
-    }
-    // Pre-game: show tip/first-pitch time
     return {
       home: homeName, away: awayName,
-      html: '<span style="color:#94a3b8;">Scheduled</span>'
+      homeAbbr: homeAbbr, awayAbbr: awayAbbr,
+      homeScore: homeScore, awayScore: awayScore,
+      stateId: stateId, detail: detail,
+      period: period, clockSec: clockSec,
+      sport: sportKey,
     };
   }
 
-  // ── Fetch both scoreboards and update the table ──────────────────────────
-  function refreshScores() {
-    var rows = document.querySelectorAll("tr[data-home-team]");
-    if (!rows.length) return;
-
-    var allEvents = [];
-
-    function applyScores() {
-      rows.forEach(function (row) {
-        var cell = row.querySelector(".score-cell");
-        if (!cell) return;
-
-        var homeTeam = row.getAttribute("data-home-team") || "";
-        var awayTeam = row.getAttribute("data-away-team") || "";
-        if (!homeTeam && !awayTeam) return;  // parlay row — leave as "—"
-
-        for (var i = 0; i < allEvents.length; i++) {
-          var ev = allEvents[i];
-          if (!ev) continue;
-          if (teamMatch(ev.home, homeTeam) && teamMatch(ev.away, awayTeam)) {
-            cell.innerHTML = ev.html;
-            return;
-          }
-        }
-        // No match yet — leave "—"
-      });
+  // ── Find the ESPN event matching a bet card ──────────────────────────────
+  function findEvent(allEvents, homeTeam, awayTeam) {
+    for (var i = 0; i < allEvents.length; i++) {
+      var ev = allEvents[i];
+      if (teamMatch(ev.home, homeTeam) && teamMatch(ev.away, awayTeam)) return ev;
+      if (teamMatch(ev.home, awayTeam) && teamMatch(ev.away, homeTeam)) return ev; // flipped
     }
+    return null;
+  }
 
-    var done = 0;
+  // ── Apply live state to a card element ──────────────────────────────────
+  function applyCard(card, allEvents) {
+    var homeTeam = card.getAttribute("data-home-team") || "";
+    var awayTeam = card.getAttribute("data-away-team") || "";
+    var betType  = card.getAttribute("data-bet-type")  || "";
+    var pick     = card.getAttribute("data-pick")      || "";
+    var sport    = card.getAttribute("data-sport")     || "";
+
+    if (!homeTeam && !awayTeam) return;  // parlay or unknown — skip
+    if (betType === "Parlay" || betType === "Prop") return;
+
+    var ev = findEvent(allEvents, homeTeam, awayTeam);
+    if (!ev) return;
+
+    var liveDiv = card.querySelector(".live-status");
+    if (!liveDiv) return;
+
+    // The "ourTeam" is the pick itself for ML/Spread; for Totals we just need home/away
+    var ourTeam = (betType === "Moneyline" || betType === "Spread") ? pick : homeTeam;
+    // If ESPN has home/away flipped vs our data, normalise
+    var evHome  = teamMatch(ev.home, homeTeam) ? ev.home : ev.away;
+    var evAway  = teamMatch(ev.away, awayTeam) ? ev.away : ev.home;
+    var evHScore = teamMatch(ev.home, homeTeam) ? ev.homeScore : ev.awayScore;
+    var evAScore = teamMatch(ev.away, awayTeam) ? ev.awayScore : ev.homeScore;
+
+    if (ev.stateId === "3") {
+      // Game over — show score line + WON/LOST
+      var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore);
+      liveDiv.innerHTML =
+        '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
+        ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore + '</span>' +
+        (result ? '&nbsp;&nbsp;' + outcomeHtml(result) : "");
+    } else if (ev.stateId === "2") {
+      // In progress — show score + win probability
+      var prob = winProb(betType, pick, ourTeam, evHome, evAway,
+                         evHScore, evAScore, sport, ev.period, ev.clockSec);
+      liveDiv.innerHTML =
+        '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
+        ' <span style="color:#94a3b8;font-size:0.72rem;">' + ev.detail + '</span>' +
+        ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
+          ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+        '</span>&nbsp;&nbsp;' + probHtml(prob);
+    } else {
+      liveDiv.innerHTML = "";  // pre-game — nothing to show
+    }
+  }
+
+  // ── Apply live state to the allocation table score cells ────────────────
+  function applyTable(allEvents) {
+    var rows = document.querySelectorAll("tr[data-home-team]");
+    rows.forEach(function (row) {
+      var cell     = row.querySelector(".score-cell");
+      if (!cell) return;
+      var homeTeam = row.getAttribute("data-home-team") || "";
+      var awayTeam = row.getAttribute("data-away-team") || "";
+      var betType  = row.getAttribute("data-bet-type")  || "";
+      var pick     = row.getAttribute("data-pick")      || "";
+      var sport    = row.getAttribute("data-sport")     || "";
+      if (!homeTeam && !awayTeam) return;  // parlay
+      if (betType === "Parlay")   return;
+
+      var ev = findEvent(allEvents, homeTeam, awayTeam);
+      if (!ev) return;
+
+      var ourTeam  = (betType === "Moneyline" || betType === "Spread") ? pick : homeTeam;
+      var evHScore = teamMatch(ev.home, homeTeam) ? ev.homeScore : ev.awayScore;
+      var evAScore = teamMatch(ev.away, awayTeam) ? ev.awayScore : ev.homeScore;
+      var evHome   = teamMatch(ev.home, homeTeam) ? ev.home : ev.away;
+
+      if (ev.stateId === "3") {
+        var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore);
+        cell.innerHTML =
+          '<span style="color:#94a3b8;">Final</span><br>' +
+          ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+          (result ? '<br>' + outcomeHtml(result) : "");
+      } else if (ev.stateId === "2") {
+        var prob2 = winProb(betType, pick, ourTeam, evHome, ev.away,
+                            evHScore, evAScore, sport, ev.period, ev.clockSec);
+        var pct2  = Math.round(prob2 * 100);
+        var col2  = pct2 >= 60 ? "#16a34a" : pct2 >= 40 ? "#eab308" : "#ef4444";
+        cell.innerHTML =
+          '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
+          ' ' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+          '<br><span style="color:' + col2 + ';font-weight:700;">' + pct2 + '% win</span>';
+      } else {
+        cell.innerHTML = "—";
+      }
+    });
+  }
+
+  // ── Main refresh loop ────────────────────────────────────────────────────
+  function refresh() {
+    var allEvents = [];
+    var done      = 0;
+
     function onFetch(events) {
       allEvents = allEvents.concat(events);
       done++;
-      if (done === 2) applyScores();
+      if (done < 2) return;
+
+      // Update all bet cards
+      document.querySelectorAll(".card[data-home-team]").forEach(function (card) {
+        applyCard(card, allEvents);
+      });
+
+      // Update allocation table
+      applyTable(allEvents);
     }
 
-    [ESPN.NBA, ESPN.MLB].forEach(function (url) {
-      fetch(url)
+    [
+      { url: ESPN.NBA, sport: "NBA" },
+      { url: ESPN.MLB, sport: "MLB" },
+    ].forEach(function (item) {
+      fetch(item.url)
         .then(function (r) { return r.json(); })
         .then(function (data) {
-          var events = (data.events || []).map(parseEvent).filter(Boolean);
+          var events = (data.events || [])
+            .map(function (e) { return parseEvent(e, item.sport); })
+            .filter(Boolean);
           onFetch(events);
         })
         .catch(function () { onFetch([]); });
     });
   }
 
-  // Run on load, then every 60 s
-  refreshScores();
-  setInterval(refreshScores, 60000);
+  refresh();
+  setInterval(refresh, 60000);
 })();
 </script>
 </body>

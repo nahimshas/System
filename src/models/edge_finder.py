@@ -55,6 +55,8 @@ class BetRecommendation:
     home_team: str = ""
     away_team: str = ""
     game_time: str = ""                                  # e.g. "7:10 PM PDT"
+    commence_time: str = ""                              # raw UTC ISO — for game-started detection
+    locked: bool = False                                 # True once game has started
 
 
 def _confidence_label(edge: float, signal_count: int, stats_available: bool) -> str:
@@ -84,7 +86,8 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
     home = nba_normalize(game["home_team"])
     away = nba_normalize(game["away_team"])
     label = f"{away} @ {home}"
-    game_time = _utc_to_pdt(game.get("commence_time", ""))
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
     recs = []
 
     stats_available = bool(nba_ctx["season_stats"].get(home) or nba_ctx["season_stats"].get(away))
@@ -208,6 +211,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                     confidence=_confidence_label(home_edge, len(signals), stats_available),
                     signals=signals[:], research=research[:],
                     home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
                 ))
 
         if away_edge >= MIN_EDGE and has_positive_ev(adjusted_away_prob, market_away_prob):
@@ -221,6 +225,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                     confidence=_confidence_label(away_edge, len(signals), stats_available),
                     signals=signals[:], research=research[:],
                     home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
                 ))
 
     # --- Total ---
@@ -265,6 +270,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                         confidence=_confidence_label(over_edge, len(total_signals), stats_available),
                         signals=total_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
                     ))
             if under_edge >= MIN_EDGE and has_positive_ev(1 - model_over_prob, market_under_prob):
                 sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
@@ -277,6 +283,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                         confidence=_confidence_label(under_edge, len(total_signals), stats_available),
                         signals=total_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
                     ))
 
     return recs
@@ -299,7 +306,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     home = game["home_team"]
     away = game["away_team"]
     label = f"{away} @ {home}"
-    game_time = _utc_to_pdt(game.get("commence_time", ""))
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
     venue = game.get("venue", "")
     park_factor = get_park_factor(venue)
     recs = []
@@ -432,6 +440,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     confidence=_confidence_label(home_edge, len(signals), stats_available),
                     signals=signals[:], research=research[:],
                     home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
                 ))
 
         if away_edge >= MIN_EDGE and has_positive_ev(model_away_prob, market_away_prob):
@@ -445,6 +454,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     confidence=_confidence_label(away_edge, len(signals), stats_available),
                     signals=signals[:], research=research[:],
                     home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
                 ))
 
     # --- Total ---
@@ -473,6 +483,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     confidence=_confidence_label(over_edge, len(total_signals), stats_available),
                     signals=total_signals, research=total_research,
                     home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
                 ))
         if under_edge >= MIN_EDGE and has_positive_ev(1 - model_over_prob, market_under_prob):
             sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
@@ -485,6 +496,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     confidence=_confidence_label(under_edge, len(total_signals), stats_available),
                     signals=total_signals, research=total_research,
                     home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
                 ))
 
     return recs

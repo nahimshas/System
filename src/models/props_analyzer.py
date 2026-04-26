@@ -22,6 +22,7 @@ class PropPick:
     note: str
     signals: List[str] = field(default_factory=list)
     research: List[str] = field(default_factory=list)
+    commence_time: str = ""   # raw UTC ISO — for game-started detection
 
 
 # ---------------------------------------------------------------------------
@@ -46,6 +47,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
         # Normalize to ESPN names (same key scheme as season_stats)
         home = nba_normalize(game["home_team"])
         away = nba_normalize(game["away_team"])
+        game_commence = game.get("commence_time", "")
 
         for team, opp in [(home, away), (away, home)]:
             team_stats = season_stats.get(team, {})
@@ -132,6 +134,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     ),
                     signals=pts_signals,
                     research=base_research[:],
+                    commence_time=game_commence,
                 ))
 
             # ── Rebounds over ────────────────────────────────────────────────
@@ -159,6 +162,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                         f"Matchup pace supports rebounding volume",
                     ],
                     research=base_research[:],
+                    commence_time=game_commence,
                 ))
 
             # ── Assists over ─────────────────────────────────────────────────
@@ -185,6 +189,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                         f"High-scoring expected game supports assist volume",
                     ],
                     research=base_research[:],
+                    commence_time=game_commence,
                 ))
 
     # Deduplicate (same player could appear from home+away loop) and cap
@@ -210,6 +215,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
         home  = game.get("home_team", "")
         away  = game.get("away_team", "")
         venue = game.get("venue", "")
+        game_commence = game.get("commence_time", "")
 
         from src.data.mlb_stats import get_park_factor
         pf = get_park_factor(venue)
@@ -265,6 +271,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
                     f"Season IP: {ip:.0f} — {'solid' if ip > 50 else 'limited'} sample",
                 ],
                 research=pitcher_research[:],
+                commence_time=game_commence,
             ))
 
             # ── Batter 1+ hits over (vs hittable pitcher, FIP > 4.50) ───────
@@ -293,6 +300,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
                         f"FIP {fip:.2f} > 4.50 — hitter-favorable matchup",
                         f"ERA-based hit estimate: ~{expected_hits} hits in {expected_innings} inn",
                     ],
+                    commence_time=game_commence,
                 ))
 
     # Deduplicate and cap
