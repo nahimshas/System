@@ -231,7 +231,10 @@
   <div class="section">
     <div class="section-title">2-Leg Parlays <span class="badge badge-parlay">{{ report.parlays|length }}</span></div>
     {% for par in report.parlays %}
-    <div class="card parlay-card" data-parlay="true" id="bet-p{{ loop.index }}">
+    <div class="card parlay-card" data-parlay="true"
+         id="bet-p{{ loop.index }}"
+         data-cost="{{ par.total_cost }}"
+         data-profit="{{ par.profit_if_win }}">
       <div class="card-header">
         <div>
           <div class="card-title" style="color:var(--purple);">
@@ -333,7 +336,7 @@
         </thead>
         <tbody>
           {% for row in report.allocation %}
-          <tr id="alloc-{% if row.bet_type == 'Parlay' %}p{{ loop.index }}{% else %}{{ loop.index }}{% endif %}"
+          <tr id="alloc-{{ row.rank | string | lower }}"
               data-home-team="{{ row.home_team }}"
               data-away-team="{{ row.away_team }}"
               data-bet-type="{{ row.bet_type }}"
@@ -342,7 +345,7 @@
               {% if row.bet_type == "Parlay" %}data-legs="{{ row.legs_json | e }}"{% endif %}>
             <td style="color:var(--muted);font-size:0.78rem;">{{ row.rank }}</td>
             <td>
-              <a href="#{% if row.bet_type == 'Parlay' %}bet-p{{ loop.index }}{% else %}bet-{{ loop.index }}{% endif %}"
+              <a href="#bet-{{ row.rank | string | lower }}"
                  class="nav-link" title="Jump to bet details">
                 <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">{{ row.label }} <span class="nav-arrow">↑</span></div>
               </a>
@@ -798,11 +801,21 @@
     var anyLost = legResults.some(function (r) {
       return r.status === "final" && r.result === "LOST";
     });
-    if (anyLost) { liveDiv.innerHTML = outcomeHtml("LOST"); return; }
+    if (anyLost) {
+      card.setAttribute("data-live-result", "LOST");
+      liveDiv.innerHTML = outcomeHtml("LOST");
+      return;
+    }
 
     // All legs final and none lost → parlay won
     var allFinal = legResults.every(function (r) { return r.status === "final"; });
-    if (allFinal) { liveDiv.innerHTML = outcomeHtml("WON"); return; }
+    if (allFinal) {
+      card.setAttribute("data-live-result", "WON");
+      liveDiv.innerHTML = outcomeHtml("WON");
+      return;
+    }
+
+    card.removeAttribute("data-live-result");
 
     // Otherwise: combined probability = product of all leg probabilities
     var combined = legResults.reduce(function (acc, r) { return acc * r.prob; }, 1.0);
@@ -989,19 +1002,20 @@
     var confLive  = {};   // { HIGH: {won,lost,pnl}, MEDIUM: {won,lost,pnl} }
     var sportLive = {};   // { NBA: {won,lost,pnl}, MLB: {won,lost,pnl}, ... }
 
+    // Singles
     document.querySelectorAll(".card[data-home-team]").forEach(function (betCard) {
       var result = betCard.getAttribute("data-live-result");
-      if (!result) return;  // game not yet final
+      if (!result) return;
 
-      var cost    = parseFloat(betCard.getAttribute("data-cost")   || "0");
-      var profit  = parseFloat(betCard.getAttribute("data-profit") || "0");
-      var conf    = betCard.getAttribute("data-confidence") || "MEDIUM";
-      var sport   = betCard.getAttribute("data-sport") || "";
-      var pnl     = result === "WON" ? profit : (result === "PUSH" ? 0 : -cost);
+      var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(betCard.getAttribute("data-profit") || "0");
+      var conf   = betCard.getAttribute("data-confidence") || "MEDIUM";
+      var sport  = betCard.getAttribute("data-sport") || "";
+      var pnl    = result === "WON" ? profit : (result === "PUSH" ? 0 : -cost);
 
-      if (result === "WON")       { liveWon++;  }
-      else if (result === "LOST") { liveLost++; }
-      else if (result === "PUSH") { livePush++; }
+      if (result === "WON")       liveWon++;
+      else if (result === "LOST") liveLost++;
+      else if (result === "PUSH") livePush++;
       livePnl  += pnl;
       liveCost += cost;
 
@@ -1016,6 +1030,33 @@
         else if (result === "LOST") sportLive[sport].lost++;
         sportLive[sport].pnl += pnl;
       }
+    });
+
+    // Parlays — counted as sport "PARLAY", confidence from card attr
+    document.querySelectorAll(".card[data-parlay='true']").forEach(function (betCard) {
+      var result = betCard.getAttribute("data-live-result");
+      if (!result) return;
+
+      var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(betCard.getAttribute("data-profit") || "0");
+      var conf   = betCard.getAttribute("data-confidence") || "MEDIUM";
+      var pnl    = result === "WON" ? profit : (result === "PUSH" ? 0 : -cost);
+
+      if (result === "WON")       liveWon++;
+      else if (result === "LOST") liveLost++;
+      else if (result === "PUSH") livePush++;
+      livePnl  += pnl;
+      liveCost += cost;
+
+      if (!confLive[conf]) confLive[conf] = { won: 0, lost: 0, pnl: 0 };
+      if (result === "WON")       confLive[conf].won++;
+      else if (result === "LOST") confLive[conf].lost++;
+      confLive[conf].pnl += pnl;
+
+      if (!sportLive["PARLAY"]) sportLive["PARLAY"] = { won: 0, lost: 0, pnl: 0 };
+      if (result === "WON")       sportLive["PARLAY"].won++;
+      else if (result === "LOST") sportLive["PARLAY"].lost++;
+      sportLive["PARLAY"].pnl += pnl;
     });
 
     // No live outcomes yet — leave the table as-is
@@ -1084,10 +1125,27 @@
       }
     });
 
-    // Update per-sport breakdown
+    // Update per-sport breakdown (creates PARLAY tile dynamically if not yet in history)
     Object.keys(sportLive).forEach(function (sport) {
       var sportCard = document.getElementById("perf-sport-" + sport);
-      if (!sportCard) return;
+
+      if (!sportCard) {
+        // Sport not yet in history — create the tile dynamically
+        var breakdown = document.getElementById("perf-breakdown");
+        if (!breakdown) return;
+        sportCard = document.createElement("div");
+        sportCard.id = "perf-sport-" + sport;
+        sportCard.setAttribute("data-hist-won",  "0");
+        sportCard.setAttribute("data-hist-lost", "0");
+        sportCard.setAttribute("data-hist-pnl",  "0");
+        sportCard.style.cssText = "flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;";
+        sportCard.innerHTML =
+          '<div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">' + sport + '</div>' +
+          '<div class="perf-sport-record" style="font-size:0.82rem;">0W–0L</div>' +
+          '<div class="perf-sport-pnl" style="font-size:0.78rem;color:var(--yellow);">$+0.00</div>';
+        breakdown.appendChild(sportCard);
+      }
+
       var hw = parseInt(sportCard.getAttribute("data-hist-won")  || "0", 10);
       var hl = parseInt(sportCard.getAttribute("data-hist-lost") || "0", 10);
       var hp = parseFloat(sportCard.getAttribute("data-hist-pnl") || "0");
