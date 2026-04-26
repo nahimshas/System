@@ -275,8 +275,8 @@
       <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">Model Line</div><div class="stat-value blue">{{ prop.model_line }}</div></div>
-        <div class="stat-box"><div class="stat-label">Direction</div><div class="stat-value teal" style="color:#14b8a6;">Over</div></div>
-        <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value">{{ prop.confidence }}</div></div>
+        <div class="stat-box"><div class="stat-label">Margin</div><div class="stat-value {% if prop.model_margin >= 3 %}green{% elif prop.model_margin >= 1 %}yellow{% else %}teal{% endif %}">+{{ prop.model_margin }}</div></div>
+        <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">{{ prop.confidence }}</div></div>
       </div>
       {% if prop.signals %}
       <div class="signals">

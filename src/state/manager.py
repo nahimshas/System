@@ -132,6 +132,7 @@ def prop_to_dict(prop) -> Dict:
         "opponent": prop.opponent,
         "prop_type": prop.prop_type,
         "model_line": prop.model_line,
+        "model_margin": getattr(prop, "model_margin", 0.0),
         "confidence": prop.confidence,
         "note": prop.note,
         "signals": prop.signals,
@@ -329,8 +330,10 @@ def merge_picks(
 
     truly_new_props = [d for d in new_props if _prop_key(d) not in locked_prop_keys]
     truly_new_props.sort(
-        key=lambda d: _CONF_RANK.get(d["confidence"] if isinstance(d, dict) else d.confidence, 0),
-        reverse=True,
+        key=lambda d: (
+            -_CONF_RANK.get(d["confidence"] if isinstance(d, dict) else d.confidence, 0),
+            -(d["model_margin"] if isinstance(d, dict) else getattr(d, "model_margin", 0.0)),
+        ),
     )
 
     final_props: List[Dict] = list(started_pr)

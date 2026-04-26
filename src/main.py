@@ -170,7 +170,9 @@ def run(leagues: list[str], send_email: bool = True) -> int:
     #  Serialise to dicts (template-ready + state-storable)
     # ------------------------------------------------------------------ #
     fresh_singles = [bet_to_dict(r) for r in
-                     sorted(all_singles_raw, key=lambda r: r.edge, reverse=True)[:MAX_SINGLE_BETS]]
+                     sorted(all_singles_raw,
+                            key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge),
+                            )[:MAX_SINGLE_BETS]]
     fresh_parlays = [parlay_to_dict(p) for p in parlays_raw]
     fresh_props   = [prop_to_dict(p)   for p in props_raw]
 

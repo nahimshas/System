@@ -20,6 +20,7 @@ class PropPick:
     model_line: float
     confidence: str
     note: str
+    model_margin: float = 0.0  # how far model line is above the show threshold — used for sorting
     signals: List[str] = field(default_factory=list)
     research: List[str] = field(default_factory=list)
     commence_time: str = ""   # raw UTC ISO — for game-started detection
@@ -112,6 +113,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     and expected_team_pts > league_avg + 4
                     and team_rest > 0
                 ) else "MEDIUM"
+                pts_margin = round(model_pts - 18.0, 1)
                 pts_signals = [
                     f"{pts_name} season avg: {pts_season:.1f} PPG"
                     + (f" (adjusted to {model_pts} vs {opp}'s defense)" if abs(def_adj) > 0.5 else ""),
@@ -128,6 +130,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     prop_type="Points Over",
                     model_line=model_pts,
                     confidence=pts_conf,
+                    model_margin=pts_margin,
                     note=(
                         f"Search '{pts_name} points' on Robinhood. "
                         f"Model line: {model_pts} pts. Look for Robinhood Over at or below {int(model_pts)}."
@@ -144,6 +147,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
 
             if reb_name and reb_season >= 7.0:
                 reb_conf = "HIGH" if reb_season >= 10.0 else "MEDIUM"
+                reb_margin = round(reb_season - 7.0, 1)
                 picks.append(PropPick(
                     sport="NBA",
                     player=reb_name,
@@ -152,6 +156,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     prop_type="Rebounds Over",
                     model_line=round(reb_season, 1),
                     confidence=reb_conf,
+                    model_margin=reb_margin,
                     note=(
                         f"Search '{reb_name} rebounds' on Robinhood. "
                         f"Model line: {reb_season:.1f} RPG season avg. "
@@ -170,7 +175,9 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
             ast_name   = ast_leader.get("name", "")
             ast_season = ast_leader.get("value", 0.0)
 
-            if ast_name and ast_season >= 6.0:
+            if ast_name and ast_season >= 7.0:   # tightened from 6.0 → 7.0
+                ast_conf   = "HIGH" if ast_season >= 9.0 else "MEDIUM"
+                ast_margin = round(ast_season - 7.0, 1)
                 picks.append(PropPick(
                     sport="NBA",
                     player=ast_name,
@@ -178,7 +185,8 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     opponent=opp,
                     prop_type="Assists Over",
                     model_line=round(ast_season, 1),
-                    confidence="MEDIUM",
+                    confidence=ast_conf,
+                    model_margin=ast_margin,
                     note=(
                         f"Search '{ast_name} assists' on Robinhood. "
                         f"Model line: {ast_season:.1f} APG season avg. "
@@ -192,7 +200,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     commence_time=game_commence,
                 ))
 
-    # Deduplicate (same player could appear from home+away loop) and cap
+    # Deduplicate (same player could appear from home+away loop), sort, then cap
     seen: set = set()
     deduped: List[PropPick] = []
     for p in picks:
@@ -201,6 +209,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
             seen.add(key)
             deduped.append(p)
 
+    deduped.sort(key=lambda p: (0 if p.confidence == "HIGH" else 1, -p.model_margin))
     return deduped[:6]
 
 
@@ -251,7 +260,8 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
 
             # ── Pitcher strikeouts over ──────────────────────────────────────
             expected_ks = round(k9 / 9 * expected_innings, 1)
-            k_conf = "HIGH" if (k9 > 9.5 and ip > 40 and fip < 4.0) else "MEDIUM"
+            k_conf      = "HIGH" if (k9 > 9.5 and ip > 40 and fip < 4.0) else "MEDIUM"
+            k_margin    = round(k9 - 7.0, 1)   # K/9 above league-average strikeout rate
             picks.append(PropPick(
                 sport="MLB",
                 player=pitcher_name,
@@ -260,6 +270,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
                 prop_type="Strikeouts Over",
                 model_line=expected_ks,
                 confidence=k_conf,
+                model_margin=k_margin,
                 note=(
                     f"Search '{pitcher_name} strikeouts' on Robinhood. "
                     f"Model: ~{expected_ks} Ks in {expected_innings} inn. "
@@ -277,6 +288,8 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
             # ── Batter 1+ hits over (vs hittable pitcher, FIP > 4.50) ───────
             if fip > 4.50:
                 expected_hits = round((era / 9) * expected_innings * 1.1, 1)
+                hits_conf     = "HIGH" if fip > 5.20 else "MEDIUM"
+                hits_margin   = round(fip - 4.50, 2)   # how hittable above threshold
                 picks.append(PropPick(
                     sport="MLB",
                     player=f"{opp_team} top-order batters",
@@ -284,7 +297,8 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
                     opponent=team,
                     prop_type="Hits Over (1+)",
                     model_line=1.0,
-                    confidence="MEDIUM",
+                    confidence=hits_conf,
+                    model_margin=hits_margin,
                     note=(
                         f"{pitcher_name} (FIP {fip:.2f}) is hittable. "
                         f"On Robinhood, search 1+ hits over props for {opp_team}'s "
@@ -303,7 +317,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
                     commence_time=game_commence,
                 ))
 
-    # Deduplicate and cap
+    # Deduplicate, sort, then cap
     seen: set = set()
     deduped: List[PropPick] = []
     for p in picks:
@@ -312,4 +326,5 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
             seen.add(key)
             deduped.append(p)
 
+    deduped.sort(key=lambda p: (0 if p.confidence == "HIGH" else 1, -p.model_margin))
     return deduped[:6]

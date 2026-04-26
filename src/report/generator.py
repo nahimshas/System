@@ -25,8 +25,11 @@ def build_report(
 ) -> Dict:
     change_warnings = change_warnings or []
 
-    # Top picks by edge (capped at MAX_SINGLE_BETS)
-    all_singles = sorted(singles, key=lambda r: r["edge"], reverse=True)[:MAX_SINGLE_BETS]
+    # Top picks: HIGH confidence first, then by edge within each tier
+    all_singles = sorted(
+        singles,
+        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+    )[:MAX_SINGLE_BETS]
     nba_singles = [s for s in all_singles if s["sport"] == "NBA"]
     mlb_singles = [s for s in all_singles if s["sport"] == "MLB"]
 

@@ -16,6 +16,11 @@ on:
           - nba
           - mlb
         default: ""
+      reset_state:
+        description: "Delete today's state file and rebuild picks from scratch"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   generate-report:
@@ -39,6 +44,13 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Reset state (if requested)
+        if: ${{ github.event.inputs.reset_state == 'true' }}
+        run: |
+          TODAY=$(TZ=America/Los_Angeles date +'%Y-%m-%d')
+          rm -f "state/picks_${TODAY}.json"
+          echo "State reset: deleted state/picks_${TODAY}.json (if it existed)"
 
       - name: Run betting analysis
         env:
