@@ -622,9 +622,10 @@
 
   // ── Render win-prob or WON/LOST HTML ────────────────────────────────────
   function probHtml(prob) {
-    var pct  = Math.round(prob * 100);
+    // Cap at 99% / floor at 1% — never show 100% or 0% for an in-progress game
+    var pct  = Math.min(99, Math.max(1, Math.round(prob * 100)));
     var col  = pct >= 60 ? "#16a34a" : pct >= 40 ? "#eab308" : "#ef4444";
-    var bar  = Math.round(pct);
+    var bar  = pct;
     return (
       '<div style="display:flex;align-items:center;gap:6px;">' +
         '<span style="color:' + col + ';font-weight:700;font-size:0.82rem;">' + pct + '% win prob</span>' +
@@ -887,7 +888,7 @@
         } else if (allFinal) {
           cell.innerHTML = outcomeHtml("WON");
         } else {
-          var pctP  = Math.round(combined * 100);
+          var pctP  = Math.min(99, Math.max(1, Math.round(combined * 100)));
           var colP  = pctP >= 40 ? "#16a34a" : pctP >= 20 ? "#eab308" : "#ef4444";
           cell.innerHTML = '<span style="color:' + colP + ';font-weight:700;">' + pctP + '% win</span>';
         }
@@ -913,7 +914,7 @@
       } else if (ev.stateId === "2") {
         var prob2 = winProb(betType, pick, ourTeam, evHome, ev.away,
                             evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
-        var pct2  = Math.round(prob2 * 100);
+        var pct2  = Math.min(99, Math.max(1, Math.round(prob2 * 100)));
         var col2  = pct2 >= 60 ? "#16a34a" : pct2 >= 40 ? "#eab308" : "#ef4444";
         cell.innerHTML =
           '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
