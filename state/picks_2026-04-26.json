@@ -108,7 +108,7 @@
       "away_team": "San Antonio Spurs",
       "commence_time": "2026-04-26T19:40:00Z",
       "edge": 0.3140324632578956,
-      "locked": false
+      "locked": true
     },
     {
       "sport": "NBA",
@@ -147,9 +147,9 @@
       "game_time": "1:06 PM PDT",
       "bet_type": "Total",
       "pick": "Under 15.0",
-      "market_prob_pct": 48.8,
-      "model_prob_pct": 98.8,
-      "edge_pct": 50.1,
+      "market_prob_pct": 53.6,
+      "model_prob_pct": 98.9,
+      "edge_pct": 45.4,
       "contract_price": 0.4878,
       "contract_price_cents": 48.8,
       "num_contracts": 48,
@@ -161,8 +161,10 @@
       "signals": [
         "Ryne Nelson FIP: 5.13 | K/9: 8.9",
         "Michael King FIP: 3.31 | K/9: 8.6",
-        "Model projected score: Arizona Diamondbacks 4.2 \u2014 San Diego Padres 4.7",
-        "Model expected total: 8.9 vs line 15.0"
+        "\u26a0 Arizona Diamondbacks schedule load: 5 games in 7 days",
+        "\u26a0 San Diego Padres schedule load: 5 games in 7 days",
+        "Model projected score: Arizona Diamondbacks 4.1 \u2014 San Diego Padres 4.6",
+        "Model expected total: 8.8 vs line 15.0"
       ],
       "research": [
         "\ud83d\udd35 Ryne Nelson (home): ERA 6.97 | FIP 5.13 | K/9 8.9 | BB/9 4.0 | IP 20",
@@ -172,12 +174,12 @@
         "Bullpen ERA \u2014 Arizona Diamondbacks: 4.44 | San Diego Padres: 3.63",
         "Venue: Estadio Alfredo Harp Helu \u2014 neutral park",
         "No significant injuries reported",
-        "Model expected runs: Arizona Diamondbacks 4.19 | San Diego Padres 4.68"
+        "Model expected runs: Arizona Diamondbacks 4.15 | San Diego Padres 4.64"
       ],
       "home_team": "Arizona Diamondbacks",
       "away_team": "San Diego Padres",
       "commence_time": "2026-04-26T20:06:00Z",
-      "edge": 0.500593202949924,
+      "edge": 0.4535822349760962,
       "locked": false
     }
   ],
@@ -280,7 +282,7 @@
         "Rest days \u2014 Portland Trail Blazers: 0d | San Antonio Spurs: 0d"
       ],
       "commence_time": "2026-04-26T19:40:00Z",
-      "locked": false
+      "locked": true
     },
     {
       "sport": "NBA",
@@ -304,7 +306,32 @@
         "Rest days \u2014 San Antonio Spurs: 0d | Portland Trail Blazers: 0d"
       ],
       "commence_time": "2026-04-26T19:40:00Z",
-      "locked": false
+      "locked": true
+    },
+    {
+      "sport": "NBA",
+      "player": "Victor Wembanyama",
+      "team": "San Antonio Spurs",
+      "opponent": "Portland Trail Blazers",
+      "prop_type": "Points Over",
+      "model_line": 25.1,
+      "model_margin": 7.1,
+      "confidence": "MEDIUM",
+      "note": "Search 'Victor Wembanyama points' on Robinhood. Model line: 25.1 pts. Look for Robinhood Over at or below 25.",
+      "signals": [
+        "Victor Wembanyama season avg: 25.0 PPG",
+        "Portland Trail Blazers allows 115.8 PPG \u2014 above avg (weak defense)",
+        "\u26a0 San Antonio Spurs on B2B \u2014 consider reducing line or fading"
+      ],
+      "research": [
+        "San Antonio Spurs: 62W-20L | PPG 119.8 | OPPG 115.8 (opp) | Net +8.3",
+        "Portland Trail Blazers: 42W-40L | Net -0.3",
+        "San Antonio Spurs recent (14d): PPG 111.3 | OPPG 104.0 | Win% 67%",
+        "Model projected team pts: 115.2 (league avg 112.0)",
+        "Rest days \u2014 San Antonio Spurs: 0d | Portland Trail Blazers: 0d"
+      ],
+      "commence_time": "2026-04-26T19:40:00Z",
+      "locked": true
     },
     {
       "sport": "NBA",
@@ -377,31 +404,6 @@
         "Rest days \u2014 Houston Rockets: 0d | Los Angeles Lakers: 0d"
       ],
       "commence_time": "2026-04-27T01:40:00Z",
-      "locked": false
-    },
-    {
-      "sport": "NBA",
-      "player": "Victor Wembanyama",
-      "team": "San Antonio Spurs",
-      "opponent": "Portland Trail Blazers",
-      "prop_type": "Points Over",
-      "model_line": 25.1,
-      "model_margin": 7.1,
-      "confidence": "MEDIUM",
-      "note": "Search 'Victor Wembanyama points' on Robinhood. Model line: 25.1 pts. Look for Robinhood Over at or below 25.",
-      "signals": [
-        "Victor Wembanyama season avg: 25.0 PPG",
-        "Portland Trail Blazers allows 115.8 PPG \u2014 above avg (weak defense)",
-        "\u26a0 San Antonio Spurs on B2B \u2014 consider reducing line or fading"
-      ],
-      "research": [
-        "San Antonio Spurs: 62W-20L | PPG 119.8 | OPPG 115.8 (opp) | Net +8.3",
-        "Portland Trail Blazers: 42W-40L | Net -0.3",
-        "San Antonio Spurs recent (14d): PPG 111.3 | OPPG 104.0 | Win% 67%",
-        "Model projected team pts: 115.2 (league avg 112.0)",
-        "Rest days \u2014 San Antonio Spurs: 0d | Portland Trail Blazers: 0d"
-      ],
-      "commence_time": "2026-04-26T19:40:00Z",
       "locked": false
     },
     {
@@ -545,5 +547,14 @@
       "locked": false
     }
   ],
-  "warnings": []
+  "warnings": [
+    {
+      "type": "edge_dropped",
+      "pick": "Under 15.0",
+      "game": "San Diego Padres @ Arizona Diamondbacks",
+      "old_edge_pct": 50.1,
+      "new_edge_pct": 45.4,
+      "reason": "Market moved against this bet \u2014 still no better alternative found"
+    }
+  ]
 }

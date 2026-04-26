@@ -54,6 +54,7 @@
     .stat-value { font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
     .stat-value.green { color: var(--green); }
     .stat-value.yellow { color: var(--yellow); }
+    .stat-value.red { color: var(--red); }
     .stat-value.blue { color: var(--blue); }
     .stat-value.teal { color: var(--teal); }
 
@@ -104,16 +105,23 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 11:27 AM PDT</div>
+    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 12:50 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
-      NBA: 3 games &nbsp;|&nbsp;
-      MLB: 6 games &nbsp;|&nbsp;
+      NBA: 2 games &nbsp;|&nbsp;
+      MLB: 5 games &nbsp;|&nbsp;
       Budget: $100
     </div>
   </div>
 
   
 
+  
+  <div class="section">
+    <div class="section-title" style="color:var(--yellow);">⚡ Pick Changes Since Morning Run</div>
+    
+    <div class="error-card" style="background-color:#1c1a07;border-color:#713f12;color:#fde68a;">⚠ Edge drop: 'Under 15.0' (San Diego Padres @ Arizona Diamondbacks) — 50.1% → 45.4%. Market moved against this bet — still no better alternative found</div>
+    
+  </div>
   
 
   
@@ -147,21 +155,21 @@
       </div>
       <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
       <div class="stats-grid">
-        <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">48.8%</div></div>
-        <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">98.8%</div></div>
-        <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+50.1%</div></div>
+        <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">53.6%</div></div>
+        <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">98.9%</div></div>
+        <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+45.4%</div></div>
       </div>
       
       <div class="signals">
         <div class="signals-title">Key Signals</div>
-        <div class="signal-item">Ryne Nelson FIP: 5.13 | K/9: 8.9</div><div class="signal-item">Michael King FIP: 3.31 | K/9: 8.6</div><div class="signal-item">Model projected score: Arizona Diamondbacks 4.2 — San Diego Padres 4.7</div><div class="signal-item">Model expected total: 8.9 vs line 15.0</div>
+        <div class="signal-item">Ryne Nelson FIP: 5.13 | K/9: 8.9</div><div class="signal-item">Michael King FIP: 3.31 | K/9: 8.6</div><div class="signal-item">⚠ Arizona Diamondbacks schedule load: 5 games in 7 days</div><div class="signal-item">⚠ San Diego Padres schedule load: 5 games in 7 days</div><div class="signal-item">Model projected score: Arizona Diamondbacks 4.1 — San Diego Padres 4.6</div><div class="signal-item">Model expected total: 8.8 vs line 15.0</div>
       </div>
       
       
       <div class="research-section">
         <details>
           <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-          <div class="research-item">🔵 Ryne Nelson (home): ERA 6.97 | FIP 5.13 | K/9 8.9 | BB/9 4.0 | IP 20</div><div class="research-item">🔴 Michael King (away): ERA 2.28 | FIP 3.31 | K/9 8.6 | BB/9 4.6 | IP 27</div><div class="research-item">Arizona Diamondbacks offense: OPS 0.717 | AVG 0.249 | R/G 4.62</div><div class="research-item">San Diego Padres offense: OPS 0.683 | AVG 0.233 | R/G 4.46</div><div class="research-item">Bullpen ERA — Arizona Diamondbacks: 4.44 | San Diego Padres: 3.63</div><div class="research-item">Venue: Estadio Alfredo Harp Helu — neutral park</div><div class="research-item">No significant injuries reported</div><div class="research-item">Model expected runs: Arizona Diamondbacks 4.19 | San Diego Padres 4.68</div>
+          <div class="research-item">🔵 Ryne Nelson (home): ERA 6.97 | FIP 5.13 | K/9 8.9 | BB/9 4.0 | IP 20</div><div class="research-item">🔴 Michael King (away): ERA 2.28 | FIP 3.31 | K/9 8.6 | BB/9 4.6 | IP 27</div><div class="research-item">Arizona Diamondbacks offense: OPS 0.717 | AVG 0.249 | R/G 4.62</div><div class="research-item">San Diego Padres offense: OPS 0.683 | AVG 0.233 | R/G 4.46</div><div class="research-item">Bullpen ERA — Arizona Diamondbacks: 4.44 | San Diego Padres: 3.63</div><div class="research-item">Venue: Estadio Alfredo Harp Helu — neutral park</div><div class="research-item">No significant injuries reported</div><div class="research-item">Model expected runs: Arizona Diamondbacks 4.15 | San Diego Padres 4.64</div>
         </details>
       </div>
       
@@ -361,7 +369,7 @@
           <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 12:40 PM PDT</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          
+          <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
           <span class="confidence-badge HIGH">HIGH</span>
         </div>
       </div>
@@ -516,7 +524,7 @@
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          
+          <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
           <span class="confidence-badge HIGH">HIGH</span>
         </div>
       </div>
@@ -557,7 +565,7 @@
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          
+          <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
           <span class="confidence-badge HIGH">HIGH</span>
         </div>
       </div>
@@ -582,6 +590,47 @@
       </div>
       
       <div class="prop-note">Search 'Victor Wembanyama rebounds' on Robinhood. Model line: 11.5 RPG season avg. Look for Over at or below 11.</div>
+    </div>
+    
+    <div class="card prop-card"
+         data-home-team="San Antonio Spurs"
+         data-away-team="Portland Trail Blazers"
+         data-bet-type="Prop"
+         data-sport="NBA">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Victor Wembanyama</div>
+          <div class="card-subtitle">
+            <span class="badge badge-nba">NBA</span>
+            &nbsp;San Antonio Spurs vs Portland Trail Blazers &middot; Points Over
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
+          <span class="confidence-badge MEDIUM">MEDIUM</span>
+        </div>
+      </div>
+      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-label">Model Line</div><div class="stat-value blue">25.1</div></div>
+        <div class="stat-box"><div class="stat-label">Margin</div><div class="stat-value green">+7.1</div></div>
+        <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value yellow">MEDIUM</div></div>
+      </div>
+      
+      <div class="signals">
+        <div class="signals-title">Key Signals</div>
+        <div class="signal-item">Victor Wembanyama season avg: 25.0 PPG</div><div class="signal-item">Portland Trail Blazers allows 115.8 PPG — above avg (weak defense)</div><div class="signal-item">⚠ San Antonio Spurs on B2B — consider reducing line or fading</div>
+      </div>
+      
+      
+      <div class="research-section">
+        <details>
+          <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
+          <div class="research-item">San Antonio Spurs: 62W-20L | PPG 119.8 | OPPG 115.8 (opp) | Net +8.3</div><div class="research-item">Portland Trail Blazers: 42W-40L | Net -0.3</div><div class="research-item">San Antonio Spurs recent (14d): PPG 111.3 | OPPG 104.0 | Win% 67%</div><div class="research-item">Model projected team pts: 115.2 (league avg 112.0)</div><div class="research-item">Rest days — San Antonio Spurs: 0d | Portland Trail Blazers: 0d</div>
+        </details>
+      </div>
+      
+      <div class="prop-note">Search 'Victor Wembanyama points' on Robinhood. Model line: 25.1 pts. Look for Robinhood Over at or below 25.</div>
     </div>
     
     <div class="card prop-card"
@@ -705,47 +754,6 @@
       </div>
       
       <div class="prop-note">Search 'Kevin Durant points' on Robinhood. Model line: 26.0 pts. Look for Robinhood Over at or below 26.</div>
-    </div>
-    
-    <div class="card prop-card"
-         data-home-team="San Antonio Spurs"
-         data-away-team="Portland Trail Blazers"
-         data-bet-type="Prop"
-         data-sport="NBA">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Victor Wembanyama</div>
-          <div class="card-subtitle">
-            <span class="badge badge-nba">NBA</span>
-            &nbsp;San Antonio Spurs vs Portland Trail Blazers &middot; Points Over
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          
-          <span class="confidence-badge MEDIUM">MEDIUM</span>
-        </div>
-      </div>
-      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
-      <div class="stats-grid">
-        <div class="stat-box"><div class="stat-label">Model Line</div><div class="stat-value blue">25.1</div></div>
-        <div class="stat-box"><div class="stat-label">Margin</div><div class="stat-value green">+7.1</div></div>
-        <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value yellow">MEDIUM</div></div>
-      </div>
-      
-      <div class="signals">
-        <div class="signals-title">Key Signals</div>
-        <div class="signal-item">Victor Wembanyama season avg: 25.0 PPG</div><div class="signal-item">Portland Trail Blazers allows 115.8 PPG — above avg (weak defense)</div><div class="signal-item">⚠ San Antonio Spurs on B2B — consider reducing line or fading</div>
-      </div>
-      
-      
-      <div class="research-section">
-        <details>
-          <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-          <div class="research-item">San Antonio Spurs: 62W-20L | PPG 119.8 | OPPG 115.8 (opp) | Net +8.3</div><div class="research-item">Portland Trail Blazers: 42W-40L | Net -0.3</div><div class="research-item">San Antonio Spurs recent (14d): PPG 111.3 | OPPG 104.0 | Win% 67%</div><div class="research-item">Model projected team pts: 115.2 (league avg 112.0)</div><div class="research-item">Rest days — San Antonio Spurs: 0d | Portland Trail Blazers: 0d</div>
-        </details>
-      </div>
-      
-      <div class="prop-note">Search 'Victor Wembanyama points' on Robinhood. Model line: 25.1 pts. Look for Robinhood Over at or below 25.</div>
     </div>
     
     <div class="card prop-card"
@@ -1027,7 +1035,7 @@
               <div style="color:#14b8a6;font-size:0.7rem;">1:06 PM PDT</div>
             </td>
             <td style="vertical-align:top;">
-              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+50.1%</div>
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+45.4%</div>
               <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
             </td>
             <td style="font-size:0.8rem;vertical-align:top;">
@@ -1212,6 +1220,101 @@
         <span style="color:var(--muted);">Reserve (do not force bets)</span>
         <span style="color:#16a34a;">$0.00</span>
       </div>
+    </div>
+  </div>
+  
+
+  
+  <div class="section" id="performance-section">
+    <div class="section-title">Model Performance <span style="color:var(--muted);font-weight:400;font-size:0.85rem;text-transform:none;letter-spacing:0;">(all-time settled bets)</span></div>
+    <div class="card">
+      
+      <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat-box">
+          <div class="stat-label">Record</div>
+          <div class="stat-value yellow">2W–2L</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Win Rate</div>
+          <div class="stat-value yellow">
+            50.0%
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Total PnL</div>
+          <div class="stat-value red">
+            $-16.19
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">ROI</div>
+          <div class="stat-value red">
+            -69.8%
+          </div>
+        </div>
+      </div>
+
+      
+      <div style="margin-top:12px;">
+        <div class="signals-title">By Confidence</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          
+          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;">
+              <span class="confidence-badge HIGH" style="font-size:0.65rem;">HIGH</span>
+            </div>
+            <div style="font-size:0.82rem;">1W–2L
+              <span style="color:var(--muted);font-size:0.75rem;"> (33.3%)</span>
+            </div>
+            <div style="font-size:0.78rem;color:var(--red);">
+              $-17.13
+            </div>
+          </div>
+          
+          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;">
+              <span class="confidence-badge MEDIUM" style="font-size:0.65rem;">MEDIUM</span>
+            </div>
+            <div style="font-size:0.82rem;">1W–0L
+              <span style="color:var(--muted);font-size:0.75rem;"> (100.0%)</span>
+            </div>
+            <div style="font-size:0.78rem;color:var(--green);">
+              $+0.94
+            </div>
+          </div>
+          
+          
+          
+          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">NBA</div>
+            <div style="font-size:0.82rem;">1W–1L
+              <span style="color:var(--muted);font-size:0.75rem;"> (50.0%)</span>
+            </div>
+            <div style="font-size:0.78rem;color:var(--red);">
+              $-5.67
+            </div>
+          </div>
+          
+          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">MLB</div>
+            <div style="font-size:0.82rem;">1W–1L
+              <span style="color:var(--muted);font-size:0.75rem;"> (50.0%)</span>
+            </div>
+            <div style="font-size:0.78rem;color:var(--red);">
+              $-10.52
+            </div>
+          </div>
+          
+          
+        </div>
+      </div>
+      
+
+      
+      <div style="margin-top:10px;font-size:0.78rem;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;">
+        ⚠ Only 4 settled bet(s) — need 30+ for statistically meaningful calibration.
+      </div>
+      
     </div>
   </div>
   
