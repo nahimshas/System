@@ -84,7 +84,9 @@ def build_parlays(singles: List[BetRecommendation]) -> List[ParlayRecommendation
         if sizing.num_contracts == 0:
             continue
 
-        confidence = "HIGH" if edge >= 0.05 else "MEDIUM"
+        # HIGH only when both legs are HIGH confidence
+        both_high  = (leg_a.confidence == "HIGH" and leg_b.confidence == "HIGH")
+        confidence = "HIGH" if (both_high and edge >= 0.03) else "MEDIUM"
 
         parlays.append(ParlayRecommendation(
             legs=[leg_a, leg_b],
@@ -96,5 +98,11 @@ def build_parlays(singles: List[BetRecommendation]) -> List[ParlayRecommendation
             expected_value=sizing.expected_value,
         ))
 
-    parlays.sort(key=lambda p: p.edge, reverse=True)
+    # Sort: best leg-quality tier first, then edge within each tier.
+    # Tier 0 = both legs HIGH, Tier 1 = one HIGH + one MEDIUM, Tier 2 = both MEDIUM.
+    def _tier(p: ParlayRecommendation) -> int:
+        high = sum(1 for l in p.legs if l.confidence == "HIGH")
+        return 2 - high   # 2 HIGH → 0, 1 HIGH → 1, 0 HIGH → 2
+
+    parlays.sort(key=lambda p: (_tier(p), -p.edge))
     return parlays[:MAX_PARLAYS]
