@@ -1,4 +1,5 @@
 """Assembles pre-serialised pick dicts into the report context for Jinja templating."""
+import json
 from datetime import date, datetime, timezone, timedelta
 from typing import Dict, List, Optional
 from src.config import DAILY_BUDGET, MAX_SINGLE_BETS
@@ -59,6 +60,16 @@ def build_report(
         })
 
     for j, par in enumerate(parlays, 1):
+        # Build a compact legs JSON for live win-prob in the allocation table
+        legs_json = json.dumps([{
+            "home_team":     l.get("home_team", ""),
+            "away_team":     l.get("away_team", ""),
+            "bet_type":      l.get("bet_type", ""),
+            "pick":          l.get("pick", ""),
+            "sport":         l.get("sport", ""),
+            "model_prob_pct": l.get("model_prob_pct", 50),
+        } for l in par.get("legs", [])])
+
         # Parlay is locked if any leg's game has started
         allocation_rows.append({
             "rank":          f"P{j}",
@@ -78,6 +89,7 @@ def build_report(
             "commence_time": "",
             "bet_type":      "Parlay",
             "pick":          par["label"],
+            "legs_json":     legs_json,
         })
 
     # ── Format change warnings for template ──────────────────────────────────
