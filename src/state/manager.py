@@ -209,6 +209,7 @@ def merge_picks(
     new_singles: List[Dict],
     new_parlays: List[Dict],
     new_props: List[Dict],
+    all_fresh_singles: Optional[List[Dict]] = None,
 ) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict]]:
     """
     Merge the locked morning state with fresh analysis results.
@@ -230,11 +231,13 @@ def merge_picks(
     started  = [p for p in locked_singles if p.get("locked")]
     pregame  = [p for p in locked_singles if not p.get("locked")]
 
-    locked_keys      = {_single_key(p) for p in locked_singles}
-    new_edge_map     = {_single_key(d): d["edge"] for d in new_singles}
-    # Full fresh dict lookup — used to refresh display fields on kept pre-game picks.
-    # Uses the looser signal-refresh key so a line move doesn't block the update.
-    new_pick_map     = {_signal_refresh_key(d): d for d in new_singles}
+    locked_keys  = {_single_key(p) for p in locked_singles}
+    new_edge_map = {_single_key(d): d["edge"] for d in new_singles}
+    # Signal refresh map: uses ALL fresh bets (uncapped) so bets that dropped out
+    # of the top-5 since morning still get updated signals/research/probs.
+    # Looser key ignores exact line value for Totals (handles 0.5-pt line moves).
+    _refresh_pool = all_fresh_singles if all_fresh_singles is not None else new_singles
+    new_pick_map  = {_signal_refresh_key(d): d for d in _refresh_pool}
 
     # New bets not already in the locked morning set
     truly_new = [d for d in new_singles if _single_key(d) not in locked_keys]

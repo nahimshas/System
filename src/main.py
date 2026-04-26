@@ -169,10 +169,12 @@ def run(leagues: list[str], send_email: bool = True) -> int:
     # ------------------------------------------------------------------ #
     #  Serialise to dicts (template-ready + state-storable)
     # ------------------------------------------------------------------ #
-    fresh_singles = [bet_to_dict(r) for r in
-                     sorted(all_singles_raw,
-                            key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge),
-                            )[:MAX_SINGLE_BETS]]
+    _sorted_raw   = sorted(all_singles_raw,
+                           key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge))
+    fresh_singles = [bet_to_dict(r) for r in _sorted_raw[:MAX_SINGLE_BETS]]
+    # Full uncapped list — passed to merge_picks so signal refresh works even for
+    # bets that dropped out of the top-5 since the morning run.
+    fresh_singles_all = [bet_to_dict(r) for r in _sorted_raw]
     fresh_parlays = [parlay_to_dict(p) for p in parlays_raw]
     fresh_props   = [prop_to_dict(p)   for p in props_raw]
 
@@ -202,6 +204,7 @@ def run(leagues: list[str], send_email: bool = True) -> int:
         logger.info("Subsequent run — merging with morning baseline")
         final_singles, final_parlays, final_props, change_warnings = merge_picks(
             state, fresh_singles, fresh_parlays, fresh_props,
+            all_fresh_singles=fresh_singles_all,
         )
 
         # Persist updated state (locked flags, any substitutions)
