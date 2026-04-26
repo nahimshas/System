@@ -245,7 +245,20 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             market_over_prob = total["over_prob"]
             market_under_prob = total["under_prob"]
 
-            total_signals = [
+            # Apply B2B scoring penalty directly to expected total
+            # (4% penalty per team ≈ ~4 pts off expected scoring for that team)
+            b2b_teams = []
+            if home_rest == 0:
+                expected_total -= 4.0
+                b2b_teams.append(home)
+            if away_rest == 0:
+                expected_total -= 4.0
+                b2b_teams.append(away)
+
+            # Recalculate with B2B-adjusted expected total
+            model_over_prob = float(1 - norm.cdf(market_line, expected_total, total_std))
+
+            base_total_signals = [
                 f"Model expected total: {expected_total:.1f} vs market line {market_line}",
                 f"Combined pace: {avg_pace:.1f} possessions/game",
             ]
@@ -253,11 +266,21 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                 f"{home} OffRtg: {home_stats.get('off_rtg', '?'):.1f} vs {away} DefRtg: {away_stats.get('def_rtg', '?'):.1f}",
                 f"{away} OffRtg: {away_stats.get('off_rtg', '?'):.1f} vs {home} DefRtg: {home_stats.get('def_rtg', '?'):.1f}",
             ]
-            if home_rest == 0 or away_rest == 0:
-                total_signals.append("B2B team reduces pace — leans Under")
+            if b2b_teams:
+                total_research.append(
+                    f"B2B: {', '.join(b2b_teams)} — pace/scoring reduction applied to model (-4 pts per team)"
+                )
 
-            over_edge = model_over_prob - market_over_prob
+            over_edge  = model_over_prob - market_over_prob
             under_edge = (1 - model_over_prob) - market_under_prob
+
+            # Direction-specific signals so B2B note is never contradictory
+            over_signals  = base_total_signals[:]
+            under_signals = base_total_signals[:]
+            if b2b_teams:
+                b2b_str = ", ".join(b2b_teams)
+                under_signals.append(f"⚠ {b2b_str} on B2B — pace reduction supports Under")
+                over_signals.append( f"⚠ {b2b_str} on B2B — model projects Over despite pace reduction")
 
             if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
                 sizing = robinhood_kelly(model_over_prob, market_over_prob)
@@ -267,8 +290,8 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                         market_prob=market_over_prob, model_prob=model_over_prob,
                         edge=over_edge, contract_price=market_over_prob,
                         sizing=sizing,
-                        confidence=_confidence_label(over_edge, len(total_signals), stats_available),
-                        signals=total_signals, research=total_research,
+                        confidence=_confidence_label(over_edge, len(over_signals), stats_available),
+                        signals=over_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
                     ))
@@ -280,8 +303,8 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                         market_prob=market_under_prob, model_prob=1 - model_over_prob,
                         edge=under_edge, contract_price=market_under_prob,
                         sizing=sizing,
-                        confidence=_confidence_label(under_edge, len(total_signals), stats_available),
-                        signals=total_signals, research=total_research,
+                        confidence=_confidence_label(under_edge, len(under_signals), stats_available),
+                        signals=under_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
                     ))

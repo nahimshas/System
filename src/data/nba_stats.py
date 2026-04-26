@@ -261,7 +261,11 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
     for event in data.get("events", []):
         raw_date = event.get("date", "")
         try:
-            game_date = datetime.fromisoformat(raw_date.replace("Z", "+00:00")).date()
+            dt_utc    = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+            # Convert to Pacific time (matches how `today` is derived) so that
+            # late-night games don't shift to the wrong date under UTC.
+            pac_offset = -7 if 3 <= dt_utc.month <= 10 else -8
+            game_date  = (dt_utc + timedelta(hours=pac_offset)).date()
         except Exception:
             continue
 
