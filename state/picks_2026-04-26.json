@@ -1,6 +1,6 @@
 {
   "date": "2026-04-26",
-  "first_run_at": "2026-04-26T17:33:24.490937+00:00",
+  "first_run_at": "2026-04-26T17:38:38.718692+00:00",
   "singles": [
     {
       "sport": "MLB",
@@ -185,18 +185,18 @@
   ],
   "parlays": [
     {
-      "label": "Colorado Rockies (Moneyline) + Houston Astros (Moneyline)",
+      "label": "Detroit Tigers (Moneyline) + Houston Astros (Moneyline)",
       "legs": [
         {
-          "game": "Colorado Rockies @ New York Mets",
-          "pick": "Colorado Rockies",
+          "game": "Detroit Tigers @ Cincinnati Reds",
+          "pick": "Detroit Tigers",
           "bet_type": "Moneyline",
           "sport": "MLB",
-          "model_prob_pct": 74.6,
-          "edge_pct": 44.5,
-          "home_team": "New York Mets",
-          "away_team": "Colorado Rockies",
-          "commence_time": "2026-04-26T17:41:00Z"
+          "model_prob_pct": 75.1,
+          "edge_pct": 24.6,
+          "home_team": "Cincinnati Reds",
+          "away_team": "Detroit Tigers",
+          "commence_time": "2026-04-26T17:40:00Z"
         },
         {
           "game": "New York Yankees @ Houston Astros",
@@ -210,20 +210,31 @@
           "commence_time": "2026-04-26T18:11:00Z"
         }
       ],
-      "combined_prob_pct": 63.4,
-      "contract_price_cents": 13.8,
-      "edge_pct": 49.6,
-      "num_contracts": 44,
-      "total_cost": 6.94,
-      "profit_if_win": 37.06,
-      "expected_value": 20.95,
+      "combined_prob_pct": 63.8,
+      "contract_price_cents": 23.1,
+      "edge_pct": 40.7,
+      "num_contracts": 25,
+      "total_cost": 6.27,
+      "profit_if_win": 18.73,
+      "expected_value": 9.68,
       "confidence": "HIGH",
-      "edge": 0.4961,
+      "edge": 0.4074,
       "locked": false
     },
     {
-      "label": "Houston Astros (Moneyline) + Colorado Rockies (Moneyline)",
+      "label": "San Antonio Spurs (Moneyline) + Houston Astros (Moneyline)",
       "legs": [
+        {
+          "game": "San Antonio Spurs @ Portland Trail Blazers",
+          "pick": "San Antonio Spurs",
+          "bet_type": "Moneyline",
+          "sport": "NBA",
+          "model_prob_pct": 77.7,
+          "edge_pct": 14.0,
+          "home_team": "Portland Trail Blazers",
+          "away_team": "San Antonio Spurs",
+          "commence_time": "2026-04-26T19:40:00Z"
+        },
         {
           "game": "New York Yankees @ Houston Astros",
           "pick": "Houston Astros",
@@ -234,28 +245,17 @@
           "home_team": "Houston Astros",
           "away_team": "New York Yankees",
           "commence_time": "2026-04-26T18:11:00Z"
-        },
-        {
-          "game": "Colorado Rockies @ New York Mets",
-          "pick": "Colorado Rockies",
-          "bet_type": "Moneyline",
-          "sport": "MLB",
-          "model_prob_pct": 74.6,
-          "edge_pct": 36.8,
-          "home_team": "New York Mets",
-          "away_team": "Colorado Rockies",
-          "commence_time": "2026-04-26T21:11:00Z"
         }
       ],
-      "combined_prob_pct": 63.4,
-      "contract_price_cents": 17.3,
-      "edge_pct": 46.1,
-      "num_contracts": 35,
-      "total_cost": 6.75,
-      "profit_if_win": 28.25,
-      "expected_value": 15.43,
+      "combined_prob_pct": 66.1,
+      "contract_price_cents": 29.1,
+      "edge_pct": 36.9,
+      "num_contracts": 20,
+      "total_cost": 6.23,
+      "profit_if_win": 13.77,
+      "expected_value": 6.99,
       "confidence": "HIGH",
-      "edge": 0.4608,
+      "edge": 0.3693,
       "locked": false
     }
   ],
@@ -433,31 +433,6 @@
     },
     {
       "sport": "MLB",
-      "player": "Toronto Blue Jays top-order batters",
-      "team": "Toronto Blue Jays",
-      "opponent": "Cleveland Guardians",
-      "prop_type": "Hits Over (1+)",
-      "model_line": 1.0,
-      "model_margin": 1.22,
-      "confidence": "HIGH",
-      "note": "Slade Cecconi (FIP 5.72) is hittable. On Robinhood, search 1+ hits over props for Toronto Blue Jays's #1\u2013#3 batters in the lineup. Model projects ~4.2 total hits in 5.5 inn.",
-      "signals": [
-        "Pitcher FIP 5.72 \u2014 above avg (4.20), favorable for hitters",
-        "Model projects ~4.2 hits in 5.5 inn",
-        "Target: Toronto Blue Jays leadoff, #2, and #3 batters for 1+ hit props"
-      ],
-      "research": [
-        "Slade Cecconi: ERA 6.20 | FIP 5.72 | K/9 7.4 | BB/9 4.5 | HR/9 1.86",
-        "Season IP: 24 | Projected start: ~5.5 inn",
-        "Venue: Rogers Centre (park factor 1.00)",
-        "FIP 5.72 > 4.50 \u2014 hitter-favorable matchup",
-        "ERA-based hit estimate: ~4.2 hits in 5.5 inn"
-      ],
-      "commence_time": "",
-      "locked": false
-    },
-    {
-      "sport": "MLB",
       "player": "Landen Roupp",
       "team": "San Francisco Giants",
       "opponent": "Miami Marlins",
@@ -475,29 +450,6 @@
         "Landen Roupp: ERA 2.28 | FIP 2.24 | K/9 10.3 | BB/9 4.0 | HR/9 0.00",
         "Season IP: 27 | Projected start: ~5.5 inn",
         "Venue: Oracle Park (park factor 0.94)"
-      ],
-      "commence_time": "",
-      "locked": false
-    },
-    {
-      "sport": "MLB",
-      "player": "Kyle Bradish",
-      "team": "Baltimore Orioles",
-      "opponent": "Boston Red Sox",
-      "prop_type": "Strikeouts Over",
-      "model_line": 6.2,
-      "model_margin": 3.1,
-      "confidence": "MEDIUM",
-      "note": "Search 'Kyle Bradish strikeouts' on Robinhood. Model: ~6.2 Ks in 5.5 inn. Look for Over at or below 6.",
-      "signals": [
-        "K/9: 10.1 \u2192 projects 6.2 Ks over 5.5 inn",
-        "FIP 3.56 (below league avg 4.20)",
-        "Season IP: 25 \u2014 limited sample"
-      ],
-      "research": [
-        "Kyle Bradish: ERA 3.96 | FIP 3.56 | K/9 10.1 | BB/9 4.7 | HR/9 0.72",
-        "Season IP: 25 | Projected start: ~5.5 inn",
-        "Venue: Oriole Park at Camden Yards (park factor 1.00)"
       ],
       "commence_time": "",
       "locked": false
@@ -527,23 +479,69 @@
     },
     {
       "sport": "MLB",
-      "player": "Aaron Nola",
-      "team": "Philadelphia Phillies",
-      "opponent": "Atlanta Braves",
+      "player": "Reid Detmers",
+      "team": "Los Angeles Angels",
+      "opponent": "Kansas City Royals",
       "prop_type": "Strikeouts Over",
       "model_line": 6.1,
-      "model_margin": 3.0,
+      "model_margin": 2.9,
       "confidence": "MEDIUM",
-      "note": "Search 'Aaron Nola strikeouts' on Robinhood. Model: ~6.1 Ks in 5.5 inn. Look for Over at or below 6.",
+      "note": "Search 'Reid Detmers strikeouts' on Robinhood. Model: ~6.1 Ks in 5.5 inn. Look for Over at or below 6.",
       "signals": [
-        "K/9: 10.0 \u2192 projects 6.1 Ks over 5.5 inn",
-        "FIP 4.12 (below league avg 4.20)",
-        "Season IP: 26 \u2014 limited sample"
+        "K/9: 9.9 \u2192 projects 6.1 Ks over 5.5 inn",
+        "FIP 2.77 (below league avg 4.20)",
+        "Season IP: 28 \u2014 limited sample"
       ],
       "research": [
-        "Aaron Nola: ERA 5.06 | FIP 4.12 | K/9 10.0 | BB/9 3.4 | HR/9 1.37",
-        "Season IP: 26 | Projected start: ~5.5 inn",
-        "Venue: Truist Park (park factor 1.03)"
+        "Reid Detmers: ERA 4.08 | FIP 2.77 | K/9 9.9 | BB/9 2.6 | HR/9 0.64",
+        "Season IP: 28 | Projected start: ~5.5 inn",
+        "Venue: Kauffman Stadium (park factor 1.00)"
+      ],
+      "commence_time": "",
+      "locked": false
+    },
+    {
+      "sport": "MLB",
+      "player": "Shota Imanaga",
+      "team": "Chicago Cubs",
+      "opponent": "Los Angeles Dodgers",
+      "prop_type": "Strikeouts Over",
+      "model_line": 6.1,
+      "model_margin": 2.9,
+      "confidence": "MEDIUM",
+      "note": "Search 'Shota Imanaga strikeouts' on Robinhood. Model: ~6.1 Ks in 5.5 inn. Look for Over at or below 6.",
+      "signals": [
+        "K/9: 9.9 \u2192 projects 6.1 Ks over 5.5 inn",
+        "FIP 2.96 (below league avg 4.20)",
+        "Season IP: 29 \u2014 limited sample"
+      ],
+      "research": [
+        "Shota Imanaga: ERA 2.17 | FIP 2.96 | K/9 9.9 | BB/9 1.9 | HR/9 0.93",
+        "Season IP: 29 | Projected start: ~5.5 inn",
+        "Venue: UNIQLO Field at Dodger Stadium (park factor 0.97)"
+      ],
+      "commence_time": "",
+      "locked": false
+    },
+    {
+      "sport": "MLB",
+      "player": "Carmen Mlodzinski",
+      "team": "Pittsburgh Pirates",
+      "opponent": "Milwaukee Brewers",
+      "prop_type": "Strikeouts Over",
+      "model_line": 5.9,
+      "model_margin": 2.7,
+      "confidence": "MEDIUM",
+      "note": "Search 'Carmen Mlodzinski strikeouts' on Robinhood. Model: ~5.9 Ks in 5.5 inn. Look for Over at or below 5.",
+      "signals": [
+        "K/9: 9.7 \u2192 projects 5.9 Ks over 5.5 inn",
+        "FIP 2.29 (below league avg 4.20)",
+        "Season IP: 24 \u2014 limited sample"
+      ],
+      "research": [
+        "Carmen Mlodzinski: ERA 3.28 | FIP 2.29 | K/9 9.7 | BB/9 3.7 | HR/9 0.00",
+        "Season IP: 24 | Projected start: ~5.5 inn",
+        "Venue: American Family Field (park factor 1.02)"
       ],
       "commence_time": "",
       "locked": false
