@@ -271,8 +271,6 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
 
         if game_date >= today or game_date < cutoff:
             continue
-        if last_game_date is None or game_date > last_game_date:
-            last_game_date = game_date
 
         for comp in event.get("competitions", []):
             competitors = comp.get("competitors", [])
@@ -284,6 +282,9 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
             s  = _parse_score(this.get("score", 0))
             os = _parse_score(opp.get("score", 0)) if opp else 0.0
             if s > 0:
+                # Only count completed games (confirmed scores) for rest-day tracking
+                if last_game_date is None or game_date > last_game_date:
+                    last_game_date = game_date
                 if this.get("winner", False):
                     wins += 1
                 else:
