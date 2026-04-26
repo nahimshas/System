@@ -105,23 +105,16 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 12:50 PM PDT</div>
+    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 01:13 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 2 games &nbsp;|&nbsp;
-      MLB: 5 games &nbsp;|&nbsp;
+      MLB: 1 game &nbsp;|&nbsp;
       Budget: $100
     </div>
   </div>
 
   
 
-  
-  <div class="section">
-    <div class="section-title" style="color:var(--yellow);">⚡ Pick Changes Since Morning Run</div>
-    
-    <div class="error-card" style="background-color:#1c1a07;border-color:#713f12;color:#fde68a;">⚠ Edge drop: 'Under 15.0' (San Diego Padres @ Arizona Diamondbacks) — 50.1% → 45.4%. Market moved against this bet — still no better alternative found</div>
-    
-  </div>
   
 
   
@@ -149,7 +142,7 @@
           <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 1:06 PM PDT</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          
+          <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
           <span class="confidence-badge HIGH">HIGH</span>
         </div>
       </div>
@@ -1512,9 +1505,10 @@
 
   // ── Render win-prob or WON/LOST HTML ────────────────────────────────────
   function probHtml(prob) {
-    var pct  = Math.round(prob * 100);
+    // Cap at 99% / floor at 1% — never show 100% or 0% for an in-progress game
+    var pct  = Math.min(99, Math.max(1, Math.round(prob * 100)));
     var col  = pct >= 60 ? "#16a34a" : pct >= 40 ? "#eab308" : "#ef4444";
-    var bar  = Math.round(pct);
+    var bar  = pct;
     return (
       '<div style="display:flex;align-items:center;gap:6px;">' +
         '<span style="color:' + col + ';font-weight:700;font-size:0.82rem;">' + pct + '% win prob</span>' +
@@ -1777,7 +1771,7 @@
         } else if (allFinal) {
           cell.innerHTML = outcomeHtml("WON");
         } else {
-          var pctP  = Math.round(combined * 100);
+          var pctP  = Math.min(99, Math.max(1, Math.round(combined * 100)));
           var colP  = pctP >= 40 ? "#16a34a" : pctP >= 20 ? "#eab308" : "#ef4444";
           cell.innerHTML = '<span style="color:' + colP + ';font-weight:700;">' + pctP + '% win</span>';
         }
@@ -1803,7 +1797,7 @@
       } else if (ev.stateId === "2") {
         var prob2 = winProb(betType, pick, ourTeam, evHome, ev.away,
                             evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
-        var pct2  = Math.round(prob2 * 100);
+        var pct2  = Math.min(99, Math.max(1, Math.round(prob2 * 100)));
         var col2  = pct2 >= 60 ? "#16a34a" : pct2 >= 40 ? "#eab308" : "#ef4444";
         cell.innerHTML =
           '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
