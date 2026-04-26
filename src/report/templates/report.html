@@ -420,12 +420,16 @@
           {% endfor %}
           {% if p.by_sport %}
           {% for sport, ss in p.by_sport.items() %}
-          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;">
+          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;"
+               id="perf-sport-{{ sport }}"
+               data-hist-won="{{ ss.won }}"
+               data-hist-lost="{{ ss.lost }}"
+               data-hist-pnl="{{ ss.total_pnl }}">
             <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">{{ sport }}</div>
-            <div style="font-size:0.82rem;">{{ ss.won }}W–{{ ss.lost }}L
+            <div class="perf-sport-record" style="font-size:0.82rem;">{{ ss.won }}W–{{ ss.lost }}L
               {% if ss.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ ss.win_rate_pct }}%)</span>{% endif %}
             </div>
-            <div style="font-size:0.78rem;color:{% if ss.total_pnl > 0 %}var(--green){% elif ss.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">
+            <div class="perf-sport-pnl" style="font-size:0.78rem;color:{% if ss.total_pnl > 0 %}var(--green){% elif ss.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">
               ${{ "%+.2f"|format(ss.total_pnl) }}
             </div>
           </div>
@@ -963,7 +967,8 @@
 
     // Accumulate today's live outcomes from settled bet cards
     var liveWon = 0, liveLost = 0, livePush = 0, livePnl = 0, liveCost = 0;
-    var confLive = {};   // { HIGH: {won,lost,pnl}, MEDIUM: {won,lost,pnl} }
+    var confLive  = {};   // { HIGH: {won,lost,pnl}, MEDIUM: {won,lost,pnl} }
+    var sportLive = {};   // { NBA: {won,lost,pnl}, MLB: {won,lost,pnl}, ... }
 
     document.querySelectorAll(".card[data-home-team]").forEach(function (betCard) {
       var result = betCard.getAttribute("data-live-result");
@@ -972,6 +977,7 @@
       var cost    = parseFloat(betCard.getAttribute("data-cost")   || "0");
       var profit  = parseFloat(betCard.getAttribute("data-profit") || "0");
       var conf    = betCard.getAttribute("data-confidence") || "MEDIUM";
+      var sport   = betCard.getAttribute("data-sport") || "";
       var pnl     = result === "WON" ? profit : (result === "PUSH" ? 0 : -cost);
 
       if (result === "WON")       { liveWon++;  }
@@ -984,6 +990,13 @@
       if (result === "WON")       confLive[conf].won++;
       else if (result === "LOST") confLive[conf].lost++;
       confLive[conf].pnl += pnl;
+
+      if (sport) {
+        if (!sportLive[sport]) sportLive[sport] = { won: 0, lost: 0, pnl: 0 };
+        if (result === "WON")       sportLive[sport].won++;
+        else if (result === "LOST") sportLive[sport].lost++;
+        sportLive[sport].pnl += pnl;
+      }
     });
 
     // No live outcomes yet — leave the table as-is
@@ -1049,6 +1062,28 @@
       if (pnlDiv) {
         pnlDiv.textContent = fmt(cp);
         pnlDiv.style.color = pnlColor(cp);
+      }
+    });
+
+    // Update per-sport breakdown
+    Object.keys(sportLive).forEach(function (sport) {
+      var sportCard = document.getElementById("perf-sport-" + sport);
+      if (!sportCard) return;
+      var hw = parseInt(sportCard.getAttribute("data-hist-won")  || "0", 10);
+      var hl = parseInt(sportCard.getAttribute("data-hist-lost") || "0", 10);
+      var hp = parseFloat(sportCard.getAttribute("data-hist-pnl") || "0");
+      var sw = hw + sportLive[sport].won;
+      var sl = hl + sportLive[sport].lost;
+      var sp = hp + sportLive[sport].pnl;
+      var sWinRate = (sw + sl) > 0 ? (sw / (sw + sl) * 100).toFixed(1) : null;
+
+      var recDiv = sportCard.querySelector(".perf-sport-record");
+      if (recDiv) recDiv.innerHTML = sw + "W–" + sl + "L" +
+        (sWinRate !== null ? '<span style="color:var(--muted);font-size:0.75rem;"> (' + sWinRate + '%)</span>' : "");
+      var pnlDiv = sportCard.querySelector(".perf-sport-pnl");
+      if (pnlDiv) {
+        pnlDiv.textContent = fmt(sp);
+        pnlDiv.style.color = pnlColor(sp);
       }
     });
 
