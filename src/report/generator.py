@@ -154,4 +154,6 @@ def build_report(
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),
         "chart_data":         chart_data,
+        "history_records":    performance.get("all_records", []),
+        "run_date_iso":       run_date.isoformat(),
     }

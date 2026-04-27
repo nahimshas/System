@@ -462,6 +462,9 @@ def load_performance_summary() -> Dict:
     # Last 30 bets (chronological)
     summary["recent_30"] = settled[-30:]
 
+    # Full settled list (used by JS for live chart updates)
+    summary["all_records"] = settled
+
     return summary
 
 
