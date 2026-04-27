@@ -175,7 +175,7 @@ def run(leagues: list[str], send_email: bool = True) -> int:
 
             # Fetch weather for this venue (cached by city across games at the same park)
             try:
-                wx = get_game_weather(game.get("venue", ""))
+                wx = get_game_weather(game.get("venue", ""), game.get("commence_time", ""))
             except Exception as e:
                 logger.debug(f"Weather fetch failed ({game.get('venue', '')}): {e}")
                 wx = {}

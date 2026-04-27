@@ -171,20 +171,30 @@ def _fetch_weather(city: str) -> Optional[Dict]:
         return None
 
 
-def _parse_wttr(data: Dict, city: str) -> Dict:
-    """Extract relevant fields from wttr.in JSON response."""
+def _parse_wttr(data: Dict, city: str, game_hour_local: int = 19) -> Dict:
+    """
+    Extract relevant fields from wttr.in JSON response.
+    game_hour_local: local hour (0-23) the game starts — used to pick the
+    closest hourly forecast block instead of always defaulting to noon.
+    wttr.in returns blocks at 0, 300, 600, 900, 1200, 1500, 1800, 2100.
+    """
     try:
         current = data.get("current_condition", [{}])[0]
         temp_f    = int(current.get("temp_F", 70))
         wind_mph  = int(current.get("windspeedMiles", 0))
         wind_dir  = current.get("winddir16Point", "N")
-        # Hourly forecast for today (first day, pick afternoon block ~noon-6pm)
         today_wx  = data.get("weather", [{}])[0]
         hourly    = today_wx.get("hourly", [{}])
-        # Pick the noon-ish block (index 2 = 1200) if available, else current
-        afternoon = hourly[2] if len(hourly) > 2 else hourly[0] if hourly else {}
-        precip_pct = int(afternoon.get("chanceofrain", 0))
-        precip_pct = max(precip_pct, int(afternoon.get("chanceofthunder", 0)))
+        # Pick the hourly block whose time_val is closest to game_hour_local
+        # wttr blocks have "time" = "0","300","600",...,"2100"
+        def _block_hour(blk):
+            try:
+                return int(blk.get("time", "0")) // 100
+            except (ValueError, TypeError):
+                return 0
+        game_block = min(hourly, key=lambda b: abs(_block_hour(b) - game_hour_local)) if hourly else {}
+        precip_pct = int(game_block.get("chanceofrain", 0))
+        precip_pct = max(precip_pct, int(game_block.get("chanceofthunder", 0)))
         desc = current.get("weatherDesc", [{}])
         conditions = desc[0].get("value", "") if desc else ""
         return {
@@ -205,10 +215,14 @@ def _parse_wttr(data: Dict, city: str) -> Dict:
 # Public interface
 # ---------------------------------------------------------------------------
 
-def get_game_weather(venue: str) -> Dict:
+def get_game_weather(venue: str, commence_time_utc: str = "") -> Dict:
     """
     Returns weather dict for the given venue, or neutral defaults on failure.
     Keys: temp_f, wind_mph, wind_dir, wind_effect, precip_pct, conditions, indoor
+
+    commence_time_utc: ISO-8601 UTC string (e.g. "2026-04-27T23:10:00Z").
+    When provided, the hourly forecast block nearest to local game time is
+    used instead of always defaulting to noon.
     """
     neutral = {
         "temp_f": 70, "wind_mph": 0, "wind_dir": "N", "wind_effect": "cross",
@@ -238,7 +252,32 @@ def get_game_weather(venue: str) -> Dict:
     if not raw:
         return neutral
 
-    wx = _parse_wttr(raw, city)
+    # Derive local game hour from UTC commence time (rough: UTC - venue offset)
+    game_hour_local = 19  # default evening game if no time available
+    if commence_time_utc:
+        try:
+            from datetime import datetime, timezone
+            import re
+            # Parse ISO-8601 (handles trailing Z or +00:00)
+            ct = commence_time_utc.rstrip("Z").split("+")[0]
+            utc_dt = datetime.strptime(ct, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
+            utc_hour = utc_dt.hour
+            # Approximate UTC→local offset by city (good enough for forecast slot selection)
+            TZ_OFFSET = {
+                "Chicago": -5, "New York": -4, "Boston": -4, "Philadelphia": -4,
+                "Baltimore": -4, "Washington": -4, "Cleveland": -4, "Detroit": -4,
+                "Toronto": -4, "Atlanta": -4, "Miami": -4, "Pittsburgh": -4,
+                "St. Louis": -5, "Cincinnati": -4, "Milwaukee": -5, "Minneapolis": -5,
+                "Kansas City": -5, "Houston": -5, "Arlington": -5, "Denver": -6,
+                "Phoenix": -7, "Los Angeles": -7, "San Diego": -7,
+                "San Francisco": -7, "Seattle": -7, "Oakland": -7,
+            }
+            offset = TZ_OFFSET.get(city, -5)
+            game_hour_local = (utc_hour + offset) % 24
+        except Exception:
+            pass
+
+    wx = _parse_wttr(raw, city, game_hour_local)
 
     # Determine wind effect relative to this ballpark's CF orientation
     wind_bearing = _wind_to_bearing(wx["wind_dir"])

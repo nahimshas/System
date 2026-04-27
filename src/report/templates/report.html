@@ -1053,6 +1053,12 @@
         };
       }
 
+      // Rain delay / suspended — treat as pre-game probability (leg still open)
+      var legDetailLower = (ev.detail || "").toLowerCase();
+      if (/delay|suspend|postpone|rain|weather/.test(legDetailLower)) {
+        return { status: "delayed", prob: modelProb };
+      }
+
       // In progress — live win probability for this leg
       var prob = winProb(betType, pick, ourTeam, evHome, ev.away,
                          evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
@@ -1082,6 +1088,13 @@
     }
 
     card.removeAttribute("data-live-result");
+
+    // Any leg in a delay — show ⏸ instead of a probability
+    var anyDelayed = legResults.some(function (r) { return r.status === "delayed"; });
+    if (anyDelayed) {
+      liveDiv.innerHTML = '<span style="color:#eab308;font-weight:700;font-size:0.75rem;">⏸ Delay</span>';
+      return;
+    }
 
     // Otherwise: combined probability = product of all leg probabilities
     var combined = legResults.reduce(function (acc, r) { return acc * r.prob; }, 1.0);
@@ -1129,16 +1142,27 @@
         ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore + '</span>' +
         (result ? '&nbsp;&nbsp;' + outcomeHtml(result) : "");
     } else if (ev.stateId === "2") {
-      // In progress — clear any previous result (game still live)
       card.removeAttribute("data-live-result");
-      var prob = winProb(betType, pick, ourTeam, evHome, evAway,
-                         evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
-      liveDiv.innerHTML =
-        '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
-        ' <span style="color:#94a3b8;font-size:0.72rem;">' + ev.detail + '</span>' +
-        ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
-          ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
-        '</span>&nbsp;&nbsp;' + probHtml(prob);
+      // Rain delay / suspended / postponed — don't show win probability
+      var detailLower = (ev.detail || "").toLowerCase();
+      var isDelayed = /delay|suspend|postpone|rain|weather/.test(detailLower);
+      if (isDelayed) {
+        liveDiv.innerHTML =
+          '<span style="color:#eab308;font-weight:700;font-size:0.75rem;">⏸ ' + (ev.detail || "Delay") + '</span>' +
+          ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
+            ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+          '</span>';
+      } else {
+        // Normal in-progress game — compute live win probability
+        var prob = winProb(betType, pick, ourTeam, evHome, evAway,
+                           evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
+        liveDiv.innerHTML =
+          '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
+          ' <span style="color:#94a3b8;font-size:0.72rem;">' + ev.detail + '</span>' +
+          ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
+            ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+          '</span>&nbsp;&nbsp;' + probHtml(prob);
+      }
     } else {
       card.removeAttribute("data-live-result");
       liveDiv.innerHTML = "";  // pre-game — nothing to show
@@ -1233,15 +1257,23 @@
           ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
           (result ? '<br>' + outcomeHtml(result) : "");
       } else if (ev.stateId === "2") {
-        var prob2 = winProb(betType, pick, ourTeam, evHome, ev.away,
-                            evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
-        var pct2  = Math.min(99, Math.max(1, Math.round(prob2 * 100)));
-        var col2  = pct2 >= 60 ? "#16a34a" : pct2 >= 40 ? "#eab308" : "#ef4444";
-        cell.innerHTML =
-          '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
-          (ev.detail ? ' <span style="color:#94a3b8;font-size:0.68rem;">' + ev.detail + '</span>' : '') +
-          '<br>' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
-          '<br><span style="color:' + col2 + ';font-weight:700;">' + pct2 + '% win</span>';
+        var detailLower2 = (ev.detail || "").toLowerCase();
+        var isDelayed2 = /delay|suspend|postpone|rain|weather/.test(detailLower2);
+        if (isDelayed2) {
+          cell.innerHTML =
+            '<span style="color:#eab308;font-weight:700;">⏸ Delay</span><br>' +
+            ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore;
+        } else {
+          var prob2 = winProb(betType, pick, ourTeam, evHome, ev.away,
+                              evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
+          var pct2  = Math.min(99, Math.max(1, Math.round(prob2 * 100)));
+          var col2  = pct2 >= 60 ? "#16a34a" : pct2 >= 40 ? "#eab308" : "#ef4444";
+          cell.innerHTML =
+            '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
+            (ev.detail ? ' <span style="color:#94a3b8;font-size:0.68rem;">' + ev.detail + '</span>' : '') +
+            '<br>' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+            '<br><span style="color:' + col2 + ';font-weight:700;">' + pct2 + '% win</span>';
+        }
       } else {
         cell.innerHTML = "—";
       }
