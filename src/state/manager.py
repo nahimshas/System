@@ -201,6 +201,29 @@ def _prop_key(d) -> str:
     return f"{player}|{prop_type}"
 
 
+def _cached_parlay_valid(d: Dict) -> bool:
+    """
+    Validate a cached parlay dict against current Robinhood rules.
+    Drops it unconditionally if it violates the rules so invalid
+    cached parlays never survive a fresh run.
+
+    Rules:
+      ML + Spread  → invalid everywhere
+      Cross-game   → only ML + ML is valid
+      Same-game    → anything except ML + Spread (already caught above)
+    """
+    legs = d.get("legs", [])
+    if len(legs) < 2:
+        return False
+    types = {leg.get("bet_type", "") for leg in legs}
+    if types == {"Moneyline", "Spread"}:
+        return False
+    games = {leg.get("game", "") for leg in legs}
+    if len(games) > 1:  # cross-game
+        return all(leg.get("bet_type") == "Moneyline" for leg in legs)
+    return True
+
+
 _CONF_RANK = {"HIGH": 2, "MEDIUM": 1}
 
 
@@ -328,7 +351,9 @@ def merge_picks(
             final_singles.append(pick)
 
     # ── Parlays ───────────────────────────────────────────────────────────────
-    locked_parlays: List[Dict] = state.get("parlays", [])
+    locked_parlays: List[Dict] = [
+        p for p in state.get("parlays", []) if _cached_parlay_valid(p)
+    ]
     _update_lock_flags(locked_parlays, use_any_leg=True)
 
     started_p = [p for p in locked_parlays if p.get("locked")]
