@@ -74,4 +74,4 @@ def injury_adjustment(team: str, injuries: Dict[str, List[Dict]], sport: str) ->
         impact = position_map.get(pos, 0.010)
         weight = STATUS_WEIGHT.get(status, 0.35)
         adjustment += impact * weight
-    return min(adjustment, 0.12)   # cap at 12% total injury drag
+    return min(adjustment, 0.06)   # cap at 6% total injury drag (market prices injuries quickly)

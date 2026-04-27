@@ -27,14 +27,17 @@ MAX_PARLAYS: int = 2                  # max 2-leg parlay recommendations
 MIN_PARLAY_LEG_EDGE: float = 0.025   # each parlay leg must have ≥ 2.5% edge
 
 # --- Adjustment weights for probability model ---
-NBA_HOME_ADVANTAGE = 0.030            # 3% home win probability boost
-NBA_BACK_TO_BACK_PENALTY = 0.040     # 4% penalty for team on B2B
-NBA_REST_BONUS_PER_DAY = 0.015       # 1.5% per extra rest day (max 3 days)
+# These represent the RESIDUAL edge beyond what the market already prices in.
+# B2B, rest, and injuries are public — the market adjusts for them quickly.
+# We only claim a small fraction of the full effect as an additional edge.
+NBA_HOME_ADVANTAGE = 0.025            # 2.5% (market partially prices home court)
+NBA_BACK_TO_BACK_PENALTY = 0.020     # 2.0% residual (was 4.0%; market already adjusts ~2%)
+NBA_REST_BONUS_PER_DAY = 0.008       # 0.8% per day (was 1.5%; max 3 days = 2.4% total)
 NBA_RECENT_FORM_WEIGHT = 0.30        # weight toward last-14d vs season avg (regular season)
 
-MLB_HOME_ADVANTAGE = 0.020
-MLB_BACK_TO_BACK_PENALTY = 0.015
-MLB_REST_BONUS_PER_DAY = 0.008
+MLB_HOME_ADVANTAGE = 0.015           # 1.5% (was 2.0%)
+MLB_BACK_TO_BACK_PENALTY = 0.010     # 1.0% residual (was 1.5%)
+MLB_REST_BONUS_PER_DAY = 0.005       # 0.5% per day (was 0.8%)
 
 # --- Playoff context adjustments ---
 # NBA playoffs (mid-April → mid-June): slower pace, tighter defense, lower scoring
