@@ -108,6 +108,23 @@
       100% { box-shadow: 0 0 0 3px transparent; }
     }
     .nav-highlight { animation: nav-flash 0.9s ease-out; border-radius: 12px; }
+
+    /* ── Collapsible sections ─────────────────────────────────────────────── */
+    .section-title { cursor: pointer; user-select: none; }
+    .section-title::after { content: ' ▾'; font-size: 0.65rem; opacity: 0.45; display: inline-block; transition: transform 0.18s; }
+    .section.s-collapsed .section-title::after { transform: rotate(-90deg); }
+    .section.s-collapsed > *:not(.section-title) { display: none; }
+
+    /* ── Collapsible bet / prop cards ─────────────────────────────────────── */
+    .card-toggle-header { cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
+    .card-compact { display: flex; align-items: center; gap: 8px; padding: 4px 0 6px; font-size: 0.8rem; }
+    .card-compact .mkt-mdl { flex: 1; color: var(--muted); }
+    .card-compact .edge-chip { font-weight: 700; font-size: 0.82rem; }
+    .card-compact .edge-chip.green { color: var(--green); }
+    .card-compact .edge-chip.yellow { color: var(--yellow); }
+    .card-compact .card-chevron { font-size: 0.65rem; opacity: 0.4; flex-shrink: 0; transition: transform 0.2s; }
+    .card.c-collapsed .card-details { display: none; }
+    .card.c-collapsed .card-compact .card-chevron { transform: rotate(-90deg); }
   </style>
 </head>
 <body>
@@ -175,53 +192,62 @@
          data-confidence="{{ bet.confidence }}"
          data-edge-pct="{{ bet.edge_pct }}"
          data-model-prob-pct="{{ bet.model_prob_pct }}">
-      <div class="card-header">
-        <div>
-          <div class="card-title">
-            <a href="#alloc-{{ loop.index }}" class="nav-link" title="Jump to allocation table">{{ bet.pick }} <span class="nav-arrow">↓</span></a>
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <a href="#alloc-{{ loop.index }}" class="nav-link" title="Jump to allocation table">{{ bet.pick }} <span class="nav-arrow">↓</span></a>
+            </div>
+            <div class="card-subtitle">
+              <span class="badge {% if bet.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ bet.sport }}</span>
+              &nbsp;{{ bet.bet_type }} &nbsp;&middot;&nbsp; {{ bet.game }}
+            </div>
+            {% if bet.game_time %}<div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 {{ bet.game_time }}</div>{% endif %}
           </div>
-          <div class="card-subtitle">
-            <span class="badge {% if bet.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ bet.sport }}</span>
-            &nbsp;{{ bet.bet_type }} &nbsp;&middot;&nbsp; {{ bet.game }}
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            {% if bet.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+            <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
           </div>
-          {% if bet.game_time %}<div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 {{ bet.game_time }}</div>{% endif %}
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          {% if bet.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
-          <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
+          <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
+          <span class="card-chevron">▾</span>
         </div>
       </div>
-      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
-      <div class="stats-grid">
-        <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
-        <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
-        <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
-      </div>
-      {% if bet.signals %}
-      <div class="signals">
-        <div class="signals-title">Key Signals</div>
-        {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
-      </div>
-      {% endif %}
-      {% if bet.research %}
-      <div class="research-section">
-        <details>
-          <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-          {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
-        </details>
-      </div>
-      {% endif %}
-      <div class="action-box">
-        <div class="action-title">Robinhood Action</div>
-        <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢{{ bet.contract_price_cents }}</span></div>
-        <div class="action-row"><span class="label">Buy contracts</span><span class="value">{{ bet.num_contracts }}</span></div>
-        <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">${{ "%.2f"|format(bet.total_cost) }}</span></div>
-        <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+${{ "%.2f"|format(bet.profit_if_win) }}</span></div>
-        <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-${{ "%.2f"|format(bet.loss_if_lose) }}</span></div>
-        <div class="action-row"><span class="label">Expected value</span>
-          <span class="value" style="color:{% if bet.expected_value > 0 %}#16a34a{% else %}var(--red){% endif %}">
-            {% if bet.expected_value > 0 %}+{% endif %}${{ "%.2f"|format(bet.expected_value) }}
-          </span>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
+        </div>
+        {% if bet.signals %}
+        <div class="signals">
+          <div class="signals-title">Key Signals</div>
+          {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
+        </div>
+        {% endif %}
+        {% if bet.research %}
+        <div class="research-section">
+          <details>
+            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
+            {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
+          </details>
+        </div>
+        {% endif %}
+        <div class="action-box">
+          <div class="action-title">Robinhood Action</div>
+          <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢{{ bet.contract_price_cents }}</span></div>
+          <div class="action-row"><span class="label">Buy contracts</span><span class="value">{{ bet.num_contracts }}</span></div>
+          <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">${{ "%.2f"|format(bet.total_cost) }}</span></div>
+          <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+${{ "%.2f"|format(bet.profit_if_win) }}</span></div>
+          <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-${{ "%.2f"|format(bet.loss_if_lose) }}</span></div>
+          <div class="action-row"><span class="label">Expected value</span>
+            <span class="value" style="color:{% if bet.expected_value > 0 %}#16a34a{% else %}var(--red){% endif %}">
+              {% if bet.expected_value > 0 %}+{% endif %}${{ "%.2f"|format(bet.expected_value) }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -294,49 +320,57 @@
          data-prop-type="{{ prop.prop_type }}"
          data-model-line="{{ prop.model_line }}">
       {% set last = report.prop_last_result.get((prop.player, prop.prop_type)) %}
-      <div class="card-header">
-        <div>
-          <div class="card-title">{{ prop.player }}</div>
-          <div class="card-subtitle">
-            <span class="badge {% if prop.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ prop.sport }}</span>
-            &nbsp;{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} &middot; {{ prop.prop_type }}
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">{{ prop.player }}</div>
+            <div class="card-subtitle">
+              <span class="badge {% if prop.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ prop.sport }}</span>
+              &nbsp;{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} &middot; {{ prop.prop_type }}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            {% if prop.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+            <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
+            <div class="prop-live-badge"></div>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          {% if prop.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
-          <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
-          <div class="prop-live-badge"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Proj <b style="color:var(--blue)">{{ prop.model_line }}</b> · Bet Over ≤ <b>{{ prop.model_line | int }}</b></span>
+          <span class="card-chevron">▾</span>
         </div>
       </div>
-      <div class="stats-grid">
-        <div class="stat-box" title="Model's season-average projection for this player today">
-          <div class="stat-label">Projected</div>
-          <div class="stat-value blue">{{ prop.model_line }}</div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box" title="Model's season-average projection for this player today">
+            <div class="stat-label">Projected</div>
+            <div class="stat-value blue">{{ prop.model_line }}</div>
+          </div>
+          <div class="stat-box" title="Only take the Over if Robinhood's line is at or below this number">
+            <div class="stat-label">Bet Over ≤</div>
+            <div class="stat-value green">{{ prop.model_line | int }}</div>
+          </div>
+          <div class="stat-box" title="Signal strength based on how comfortably the projection clears the threshold">
+            <div class="stat-label">Signal</div>
+            <div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">{{ prop.confidence }}</div>
+          </div>
         </div>
-        <div class="stat-box" title="Only take the Over if Robinhood's line is at or below this number">
-          <div class="stat-label">Bet Over ≤</div>
-          <div class="stat-value green">{{ prop.model_line | int }}</div>
+        <div class="prop-note" style="margin-top:6px;">{{ prop.note }}</div>
+        {% if prop.signals %}
+        <div class="signals" style="margin-top:8px;">
+          <div class="signals-title">Key Signals</div>
+          {% for signal in prop.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
         </div>
-        <div class="stat-box" title="Signal strength based on how comfortably the projection clears the threshold">
-          <div class="stat-label">Signal</div>
-          <div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">{{ prop.confidence }}</div>
+        {% endif %}
+        {% if prop.research %}
+        <div class="research-section">
+          <details>
+            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
+            {% for item in prop.research %}<div class="research-item">{{ item }}</div>{% endfor %}
+          </details>
         </div>
+        {% endif %}
       </div>
-      <div class="prop-note" style="margin-top:6px;">{{ prop.note }}</div>
-      {% if prop.signals %}
-      <div class="signals" style="margin-top:8px;">
-        <div class="signals-title">Key Signals</div>
-        {% for signal in prop.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
-      </div>
-      {% endif %}
-      {% if prop.research %}
-      <div class="research-section">
-        <details>
-          <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-          {% for item in prop.research %}<div class="research-item">{{ item }}</div>{% endfor %}
-        </details>
-      </div>
-      {% endif %}
     </div>
     {% endfor %}
   </div>
@@ -1862,6 +1896,26 @@
     el.addEventListener("toggle", function () {
       var arrow = summary.textContent.trim().startsWith("▶") ? "▼" : "▶";
       summary.innerHTML = summary.innerHTML.replace(/[▶▼]/, arrow);
+    });
+  });
+
+  // ── Collapsible sections ─────────────────────────────────────────────────
+  document.querySelectorAll(".section-title").forEach(function (title) {
+    var section = title.parentElement;
+    if (!section) return;
+    title.addEventListener("click", function () {
+      section.classList.toggle("s-collapsed");
+    });
+  });
+
+  // ── Collapsible bet / prop cards ──────────────────────────────────────────
+  document.querySelectorAll(".card-toggle-header").forEach(function (header) {
+    var card = header.closest(".card");
+    if (!card) return;
+    card.classList.add("c-collapsed");   // start all cards collapsed
+    header.addEventListener("click", function (e) {
+      if (e.target.closest("a")) return;  // let nav-link clicks pass through
+      card.classList.toggle("c-collapsed");
     });
   });
 
