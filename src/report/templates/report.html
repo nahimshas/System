@@ -290,6 +290,7 @@
          data-away-team="{{ prop.opponent }}"
          data-bet-type="Prop"
          data-sport="{{ prop.sport }}">
+      {% set last = report.prop_last_result.get((prop.player, prop.prop_type)) %}
       <div class="card-header">
         <div>
           <div class="card-title">{{ prop.player }}</div>
@@ -301,6 +302,13 @@
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
           {% if prop.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
           <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
+          {% if last %}
+          <span title="Last result for this player ({{ last.date }}): Model {{ last.model_line }} | Actual {{ last.actual_stat }}"
+                style="font-size:0.65rem;padding:2px 7px;border-radius:99px;border:1px solid;
+                       {% if last.hit %}color:#4ade80;border-color:#166534;background:#052e16;{% else %}color:#f87171;border-color:#7f1d1d;background:#2d0a0a;{% endif %}">
+            {% if last.hit %}✅ Hit {{ last.actual_stat | int }}{% else %}❌ Got {{ last.actual_stat | int }}{% endif %}
+          </span>
+          {% endif %}
         </div>
       </div>
       <div class="stats-grid">
@@ -394,6 +402,85 @@
         <span style="color:var(--muted);">Reserve (do not force bets)</span>
         <span style="color:#16a34a;">${{ "%.2f"|format(report.reserve) }}</span>
       </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if report.has_prop_accuracy %}
+  {% set pa = report.prop_accuracy %}
+  <div class="section">
+    <div class="section-title">Props Model Accuracy
+      <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;">
+        — how often the model's projection exceeded the actual stat
+      </span>
+    </div>
+    <div class="card">
+      <div class="stats-grid" style="margin-bottom:12px;">
+        <div class="stat-box">
+          <div class="stat-label">Props Settled</div>
+          <div class="stat-value blue">{{ pa.total }}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Model Hit Rate</div>
+          <div class="stat-value {% if pa.all.hit_rate and pa.all.hit_rate >= 55 %}green{% elif pa.all.hit_rate and pa.all.hit_rate >= 45 %}yellow{% else %}red{% endif %}">
+            {{ pa.all.hit_rate }}%
+          </div>
+        </div>
+        <div class="stat-box" title="Average actual stat minus average model projection. Positive = model under-projected.">
+          <div class="stat-label">Avg Error</div>
+          <div class="stat-value {% if pa.all.avg_err and pa.all.avg_err > 0 %}green{% elif pa.all.avg_err and pa.all.avg_err < -1 %}red{% else %}teal{% endif %}">
+            {% if pa.all.avg_err is not none %}{{ "%+.1f"|format(pa.all.avg_err) }}{% else %}—{% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% if pa.by_type %}
+      <table style="width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:12px;">
+        <thead>
+          <tr style="color:var(--muted);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;">
+            <th style="text-align:left;padding:4px 0;">Prop Type</th>
+            <th style="text-align:right;padding:4px 6px;">Settled</th>
+            <th style="text-align:right;padding:4px 6px;">Hit Rate</th>
+            <th style="text-align:right;padding:4px 6px;">Avg Proj</th>
+            <th style="text-align:right;padding:4px 6px;">Avg Actual</th>
+            <th style="text-align:right;padding:4px 6px;">Avg Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pt, stats in pa.by_type.items() %}
+          <tr style="border-top:1px solid var(--border);">
+            <td style="padding:5px 0;color:var(--fg);">{{ pt }}</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.total }}</td>
+            <td style="text-align:right;padding:5px 6px;font-weight:600;
+                       color:{% if stats.hit_rate and stats.hit_rate >= 55 %}#4ade80{% elif stats.hit_rate and stats.hit_rate >= 45 %}#facc15{% else %}#f87171{% endif %};">
+              {{ stats.hit_rate }}%
+            </td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.avg_proj }}</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.avg_actual }}</td>
+            <td style="text-align:right;padding:5px 6px;font-weight:600;
+                       color:{% if stats.avg_err and stats.avg_err > 0 %}#4ade80{% elif stats.avg_err and stats.avg_err < -1 %}#f87171{% else %}#94a3b8{% endif %};">
+              {% if stats.avg_err is not none %}{{ "%+.1f"|format(stats.avg_err) }}{% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      {% if pa.by_conf %}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        {% for conf, stats in pa.by_conf.items() %}
+        <div style="flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+          <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">{{ conf }} confidence</div>
+          <div style="font-size:1.1rem;font-weight:700;
+                      color:{% if stats.hit_rate and stats.hit_rate >= 55 %}#4ade80{% elif stats.hit_rate and stats.hit_rate >= 45 %}#facc15{% else %}#f87171{% endif %};">
+            {{ stats.hit_rate }}%
+          </div>
+          <div style="font-size:0.72rem;color:var(--muted);">{{ stats.hits }}H / {{ stats.misses }}M ({{ stats.total }} settled)</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
   </div>
   {% endif %}

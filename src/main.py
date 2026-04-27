@@ -32,7 +32,7 @@ from src.state.manager import (
     load_state, save_state, merge_picks,
     bet_to_dict, parlay_to_dict, prop_to_dict,
 )
-from src.data.outcome_checker import check_and_settle
+from src.data.outcome_checker import check_and_settle, check_and_settle_props
 from src.report.generator import build_report
 from src.report.email_sender import send_report
 
@@ -58,6 +58,13 @@ def run(leagues: list[str], send_email: bool = True) -> int:
             logger.info(f"Outcome settlement: {settled} pick(s) closed from yesterday")
     except Exception as e:
         logger.warning(f"Outcome settlement failed (non-fatal): {e}")
+
+    try:
+        settled_props = check_and_settle_props(today)
+        if settled_props:
+            logger.info(f"Prop settlement: {settled_props} prop(s) closed from yesterday")
+    except Exception as e:
+        logger.warning(f"Prop settlement failed (non-fatal): {e}")
 
     if not ODDS_API_KEY:
         logger.error("ODDS_API_KEY is not set.")

@@ -123,12 +123,21 @@ def build_report(
 
     # ── Performance summary (from settled history) ───────────────────────────
     try:
-        from src.data.outcome_checker import load_performance_summary, build_chart_data
-        performance = load_performance_summary()
-        chart_data  = build_chart_data()
+        from src.data.outcome_checker import load_performance_summary, build_chart_data, load_prop_accuracy
+        performance   = load_performance_summary()
+        chart_data    = build_chart_data()
+        prop_accuracy = load_prop_accuracy()
     except Exception:
-        performance = {}
-        chart_data  = {"has_data": False}
+        performance   = {}
+        chart_data    = {"has_data": False}
+        prop_accuracy = {}
+
+    # Build a lookup so prop cards can show the most recent settled result
+    # for the same player+prop_type: {(player, prop_type): record}
+    prop_last_result: Dict = {}
+    for rec in prop_accuracy.get("recent", []):
+        key = (rec.get("player", ""), rec.get("prop_type", ""))
+        prop_last_result[key] = rec   # later records overwrite earlier → most recent wins
 
     return {
         "generated_at":       _now_pacific_str(),
@@ -156,4 +165,7 @@ def build_report(
         "chart_data":         chart_data,
         "history_records":    performance.get("all_records", []),
         "run_date_iso":       run_date.isoformat(),
+        "prop_accuracy":      prop_accuracy,
+        "has_prop_accuracy":  bool(prop_accuracy.get("total", 0)),
+        "prop_last_result":   prop_last_result,
     }

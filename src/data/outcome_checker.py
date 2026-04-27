@@ -18,6 +18,7 @@ from src.config import HISTORY_FILE
 logger = logging.getLogger(__name__)
 
 ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports"
+PROP_HISTORY_PATH = Path("state/prop_history.json")
 ESPN_SPORT_PATHS = {
     "NBA": "basketball/nba",
     "MLB": "baseball/mlb",
@@ -634,3 +635,121 @@ def build_chart_data() -> Dict:
         # Calibration
         "calibration":    calibration,
     }
+
+
+# ---------------------------------------------------------------------------
+# Prop model accuracy — settlement + summary
+# ---------------------------------------------------------------------------
+
+def check_and_settle_props(today: date) -> int:
+    """
+    Settle yesterday's prop projections against ESPN box score actuals.
+    Appends new settled records to state/prop_history.json.
+    Returns the number of props settled this run.
+    """
+    yesterday = today - timedelta(days=1)
+
+    from src.state.manager import load_state
+    state = load_state(yesterday)
+    if not state:
+        logger.info(f"No state for {yesterday} — no props to settle")
+        return 0
+
+    props = state.get("props", [])
+    if not props:
+        return 0
+
+    from src.data.prop_outcomes import check_prop_outcomes
+    settled = check_prop_outcomes(props, yesterday)
+    if not settled:
+        return 0
+
+    existing      = _load_prop_history()
+    existing_keys = {(r["date"], r["player"], r["prop_type"]) for r in existing}
+    new_records   = [
+        r for r in settled
+        if (r["date"], r["player"], r["prop_type"]) not in existing_keys
+    ]
+
+    if new_records:
+        _append_to_prop_history(existing + new_records)
+        hits   = sum(1 for r in new_records if r["hit"])
+        misses = len(new_records) - hits
+        logger.info(
+            f"Prop settlement: {len(new_records)} prop(s) from {yesterday} — "
+            f"{hits} hit / {misses} miss"
+        )
+
+    return len(new_records)
+
+
+def load_prop_accuracy() -> Dict:
+    """
+    Returns a summary of prop model accuracy for the report:
+      total, hit_rate, by_type, by_conf, recent (last 20)
+    """
+    records = _load_prop_history()
+    if not records:
+        return {}
+
+    def _acc(subset: List[Dict]) -> Dict:
+        total  = len(subset)
+        hits   = sum(1 for r in subset if r.get("hit"))
+        projs  = [r.get("model_line", 0) for r in subset]
+        actuals = [r.get("actual_stat", 0) for r in subset]
+        avg_proj   = round(sum(projs)   / total, 1) if total else None
+        avg_actual = round(sum(actuals) / total, 1) if total else None
+        avg_err    = round((sum(actuals) - sum(projs)) / total, 1) if total else None
+        return {
+            "total":      total,
+            "hits":       hits,
+            "misses":     total - hits,
+            "hit_rate":   round(hits / total * 100, 1) if total else None,
+            "avg_proj":   avg_proj,
+            "avg_actual": avg_actual,
+            "avg_err":    avg_err,   # positive = we under-projected (players outperformed)
+        }
+
+    by_type: Dict[str, Dict] = {}
+    for pt in ("Points Over", "Rebounds Over", "Assists Over", "Strikeouts Over"):
+        subset = [r for r in records if r.get("prop_type") == pt]
+        if subset:
+            by_type[pt] = _acc(subset)
+
+    by_conf: Dict[str, Dict] = {}
+    for conf in ("HIGH", "MEDIUM"):
+        subset = [r for r in records if r.get("confidence") == conf]
+        if subset:
+            by_conf[conf] = _acc(subset)
+
+    return {
+        "total":    len(records),
+        "all":      _acc(records),
+        "by_type":  by_type,
+        "by_conf":  by_conf,
+        "recent":   records[-20:],   # last 20 for display in report
+    }
+
+
+def _load_prop_history() -> List[Dict]:
+    if not PROP_HISTORY_PATH.exists():
+        return []
+    try:
+        with open(PROP_HISTORY_PATH) as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception as e:
+        logger.error(f"Failed to load prop history: {e}")
+        return []
+
+
+def _append_to_prop_history(records: List[Dict]) -> None:
+    PROP_HISTORY_PATH.parent.mkdir(exist_ok=True)
+    try:
+        with open(PROP_HISTORY_PATH, "w") as f:
+            json.dump(records, f, indent=2, default=str)
+        logger.info(
+            f"Prop history updated → {PROP_HISTORY_PATH} ({len(records)} total records)"
+        )
+    except Exception as e:
+        logger.error(f"Failed to write prop history: {e}")
