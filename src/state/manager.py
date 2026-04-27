@@ -16,7 +16,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from src.config import MAX_SINGLE_BETS, LINE_MOVE_THRESHOLD
+from src.config import MAX_SINGLE_BETS, MAX_PARLAYS, LINE_MOVE_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
@@ -387,6 +387,15 @@ def merge_picks(
             final_parlays.append(new_d)
         else:
             final_parlays.append(par)
+
+    # Fill any remaining slots (e.g. all cached parlays were invalid and dropped)
+    for d in truly_new_par:
+        if len(final_parlays) >= MAX_PARLAYS:
+            break
+        if id(d) not in used_new_par:
+            new_d = d if isinstance(d, dict) else parlay_to_dict(d)
+            final_parlays.append(new_d)
+            used_new_par.add(id(d))
 
     # ── Props ─────────────────────────────────────────────────────────────────
     locked_props: List[Dict] = state.get("props", [])
