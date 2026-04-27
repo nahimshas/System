@@ -20,7 +20,7 @@ def _get(path: str, params: Dict = {}) -> Optional[Any]:
 
 def get_todays_games(today: date) -> List[Dict]:
     date_str = today.strftime("%Y-%m-%d")
-    data = _get("/schedule", {"sportId": 1, "date": date_str, "hydrate": "probablePitcher,team,linescore"})
+    data = _get("/schedule", {"sportId": 1, "date": date_str, "hydrate": "probablePitcher,team,linescore,venue"})
     if not data:
         return []
     games = []
@@ -145,21 +145,39 @@ def get_bullpen_stats(team_id: int) -> Dict:
 
 # Park factors (runs scored relative to league average, >1.0 = hitter friendly)
 PARK_FACTORS: Dict[str, float] = {
-    "Coors Field": 1.30,
-    "Great American Ball Park": 1.12,
-    "Citizens Bank Park": 1.10,
-    "Fenway Park": 1.08,
-    "Yankee Stadium": 1.06,
-    "Globe Life Field": 1.05,
-    "Truist Park": 1.03,
-    "American Family Field": 1.02,
-    "Chase Field": 1.01,
-    "Minute Maid Park": 1.00,
-    "Dodger Stadium": 0.97,
-    "Oracle Park": 0.94,
-    "Petco Park": 0.93,
-    "T-Mobile Park": 0.93,
-    "Oakland Coliseum": 0.93,
+    # Hitter-friendly (> 1.02)
+    "Coors Field": 1.30,              # COL — extreme altitude
+    "Great American Ball Park": 1.12, # CIN
+    "Citizens Bank Park": 1.10,       # PHI
+    "Fenway Park": 1.08,              # BOS
+    "Yankee Stadium": 1.07,           # NYY
+    "Rogers Centre": 1.05,            # TOR — artificial turf
+    "Globe Life Field": 1.05,         # TEX
+    "Wrigley Field": 1.03,            # CHC
+    "Truist Park": 1.03,              # ATL
+    "American Family Field": 1.02,    # MIL
+    # Slight hitter / neutral (0.99 – 1.02)
+    "Chase Field": 1.01,              # ARI
+    "Camden Yards": 1.01,             # BAL
+    "Kauffman Stadium": 1.00,         # KC
+    "Minute Maid Park": 1.00,         # HOU
+    "Angel Stadium": 0.99,            # LAA
+    "Target Field": 0.99,             # MIN
+    "Nationals Park": 0.99,           # WSH
+    "Busch Stadium": 0.98,            # STL
+    "Citi Field": 0.97,               # NYM
+    "Dodger Stadium": 0.97,           # LAD (also "UNIQLO Field at Dodger Stadium")
+    # Pitcher-friendly (< 0.97)
+    "Progressive Field": 0.96,        # CLE
+    "PNC Park": 0.96,                 # PIT
+    "Tropicana Field": 0.96,          # TB
+    "Comerica Park": 0.95,            # DET
+    "Guaranteed Rate Field": 0.95,    # CWS (also "Rate Field")
+    "loanDepot park": 0.94,           # MIA (lower-case 'l' as ESPN/MLB API spells it)
+    "Oracle Park": 0.94,              # SF
+    "Petco Park": 0.93,               # SD
+    "T-Mobile Park": 0.93,            # SEA
+    "Oakland Coliseum": 0.93,         # OAK
 }
 
 def get_park_factor(venue: str) -> float:
