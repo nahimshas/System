@@ -115,7 +115,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 05:15 PM PDT</div>
+    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 05:21 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
       MLB: 0 games &nbsp;|&nbsp;
@@ -1487,10 +1487,42 @@
           </svg>
 
           
-          <div id="chart-wr-label" style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin:14px 0 6px;display:none;">
+          <div id="chart-wr-label" style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin:14px 0 6px;">
             Rolling Win Rate <span style="font-weight:400;text-transform:none;letter-spacing:0;">(last 20 bets)</span>
           </div>
-          <svg id="svg-wr" viewBox="0 0 460 130" style="width:100%;display:none;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+          <svg id="svg-wr" viewBox="0 0 460 130" style="width:100%;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+          
+            
+            <line x1="42" y1="56.0" x2="448" y2="56.0"
+                  stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="450" y="60.0" text-anchor="start"
+                  font-size="9" fill="#2d3148">50%</text>
+            
+            <polyline points="312.7,40.6 448.0,56.0"
+                      fill="none" stroke="#3b82f6" stroke-width="2"
+                      stroke-linejoin="round" stroke-linecap="round"/>
+            
+            
+            <text x="38" y="14.0" text-anchor="end"
+                  font-size="9" fill="#94a3b8">100%</text>
+            
+            <text x="38" y="60.0" text-anchor="end"
+                  font-size="9" fill="#94a3b8">50%</text>
+            
+            <text x="38" y="106.0" text-anchor="end"
+                  font-size="9" fill="#94a3b8">0%</text>
+            
+            
+            
+            <text x="42.0" y="126" text-anchor="middle"
+                  font-size="9" fill="#94a3b8">04-25</text>
+            
+            <text x="312.7" y="126" text-anchor="middle"
+                  font-size="9" fill="#94a3b8">04-25</text>
+            
+            <text x="448.0" y="126" text-anchor="middle"
+                  font-size="9" fill="#94a3b8">04-25</text>
+            
           
           </svg>
 
@@ -2408,7 +2440,7 @@
     }
 
     // ── Rolling win-rate ────────────────────────────────────────────────
-    var WINDOW = 20, MIN_SHOW = 10;
+    var WINDOW = 20, MIN_SHOW = 3;
     var wrSeries = [];
     for (var i = MIN_SHOW - 1; i < settled.length; i++) {
       var win = settled.slice(Math.max(0, i - WINDOW + 1), i + 1);
