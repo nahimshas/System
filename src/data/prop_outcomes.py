@@ -230,7 +230,11 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
             logger.debug(f"Stat not found in box score: {player} ({prop_type})")
             continue
 
-        hit = actual_stat > model_line
+        # Hit = player reached the integer floor of the projection.
+        # We display "Bet Over ≤ N" where N = int(model_line), so getting
+        # exactly N (e.g. 6 when model is 6.2) counts as a hit — the bet
+        # wins if the Robinhood line was 5.5 and pushes at 6 (not a loss).
+        hit = actual_stat >= int(model_line)
 
         record = {
             "date":        game_date.isoformat(),

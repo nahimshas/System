@@ -1737,17 +1737,19 @@
     }
     if (stat === null) return;
 
+    // Hit threshold = floor of model line (matches the "Bet Over ≤ N" we display)
+    var floorLine = Math.floor(modelLine);
     if (isFinal) {
-      var hit = stat > modelLine;
+      var hit = stat >= floorLine;
       liveDiv.innerHTML = hit
         ? '<span style="' + BADGE + 'border:1px solid #166534;background:#052e16;color:#4ade80;">✅ Hit ' + stat + '</span>'
         : '<span style="' + BADGE + 'border:1px solid #7f1d1d;background:#2d0a0a;color:#f87171;">❌ Got ' + stat + '</span>';
     } else {
-      // Game in progress — show current accumulation vs model line
-      var pct = modelLine > 0 ? stat / modelLine : 0;
-      var col = stat >= modelLine ? "#4ade80"
-              : pct >= 0.75      ? "#fb923c"
-              : pct >= 0.5       ? "#facc15"
+      // Game in progress — colour warms as player approaches the floor threshold
+      var pct = floorLine > 0 ? stat / floorLine : 0;
+      var col = stat >= floorLine ? "#4ade80"
+              : pct >= 0.75       ? "#fb923c"
+              : pct >= 0.5        ? "#facc15"
               : "#94a3b8";
       var label = propType.replace(" Over", "");   // "Points", "Rebounds", "Assists", "Strikeouts"
       liveDiv.innerHTML =
