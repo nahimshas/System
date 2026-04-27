@@ -307,7 +307,7 @@
           <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
           {% if last %}
           <span title="Last result for this player ({{ last.date }}): Model {{ last.model_line }} | Actual {{ last.actual_stat }}"
-                style="font-size:0.65rem;padding:2px 7px;border-radius:99px;border:1px solid;
+                style="font-size:0.65rem;padding:2px 7px;border-radius:99px;border:1px solid;white-space:nowrap;
                        {% if last.hit %}color:#4ade80;border-color:#166534;background:#052e16;{% else %}color:#f87171;border-color:#7f1d1d;background:#2d0a0a;{% endif %}">
             {% if last.hit %}✅ Hit {{ last.actual_stat | int }}{% else %}❌ Got {{ last.actual_stat | int }}{% endif %}
           </span>
@@ -1685,7 +1685,50 @@
     return null;
   }
 
-  function renderPropLive(liveDiv, summary, player, propType, modelLine, isFinal) {
+  // For "Hits Over (1+)" props: count how many of the first 3 batters
+  // for battingTeam got 1+ hit (ESPN lists lineup roughly in batting order)
+  function getTopBatterHits(summary, battingTeam) {
+    var playerGroups = (summary.boxscore || {}).players || [];
+    for (var t = 0; t < playerGroups.length; t++) {
+      var tn = ((playerGroups[t].team || {}).displayName || "");
+      if (!propNameMatch(tn, battingTeam)) continue;
+      var statGroups = playerGroups[t].statistics || [];
+      for (var s = 0; s < statGroups.length; s++) {
+        var keys = statGroups[s].keys || [];
+        var hIdx = keys.indexOf("hits");
+        if (hIdx === -1) continue;
+        // Skip pitching group (also has "hits" = hits allowed)
+        var isPitch = MLB_PITCHING_MARKERS.some(function (mk) { return keys.indexOf(mk) !== -1; });
+        if (isPitch) continue;
+        var athletes = statGroups[s].athletes || [];
+        var hitCount = 0, checked = 0;
+        for (var a = 0; a < athletes.length && checked < 3; a++) {
+          var h = parseInt(((athletes[a].stats || [])[hIdx] || "0"), 10);
+          if (!isNaN(h) && h >= 1) hitCount++;
+          checked++;
+        }
+        return { hits: hitCount, checked: checked };
+      }
+    }
+    return null;
+  }
+
+  function renderPropLive(liveDiv, summary, player, propType, modelLine, isFinal, battingTeam) {
+    var BADGE = 'font-size:0.65rem;padding:2px 7px;border-radius:99px;white-space:nowrap;';
+
+    // ── Hits Over (1+) — team-level, show top-3 batter results ──────────────
+    if (propType === "Hits Over (1+)") {
+      if (!isFinal) return;   // only show once game is over
+      var res = battingTeam ? getTopBatterHits(summary, battingTeam) : null;
+      if (!res) return;
+      var col = res.hits >= 3 ? "#4ade80" : res.hits >= 2 ? "#facc15" : "#f87171";
+      liveDiv.innerHTML =
+        '<span style="' + BADGE + 'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
+        res.hits + '/' + res.checked + ' top batters got a hit</span>';
+      return;
+    }
+
+    // ── NBA / MLB Strikeouts Over ────────────────────────────────────────────
     var stat = null;
     if (PROP_STAT_KEY[propType]) {
       stat = getNbaPlayerStat(summary, player, PROP_STAT_KEY[propType]);
@@ -1697,21 +1740,18 @@
     if (isFinal) {
       var hit = stat > modelLine;
       liveDiv.innerHTML = hit
-        ? '<span style="font-size:0.65rem;padding:2px 7px;border-radius:99px;' +
-          'border:1px solid #166534;background:#052e16;color:#4ade80;">✅ Hit ' + stat + '</span>'
-        : '<span style="font-size:0.65rem;padding:2px 7px;border-radius:99px;' +
-          'border:1px solid #7f1d1d;background:#2d0a0a;color:#f87171;">❌ Got ' + stat + '</span>';
+        ? '<span style="' + BADGE + 'border:1px solid #166534;background:#052e16;color:#4ade80;">✅ Hit ' + stat + '</span>'
+        : '<span style="' + BADGE + 'border:1px solid #7f1d1d;background:#2d0a0a;color:#f87171;">❌ Got ' + stat + '</span>';
     } else {
       // Game in progress — show current accumulation vs model line
-      var pct    = modelLine > 0 ? stat / modelLine : 0;
-      var col    = stat >= modelLine ? "#4ade80"
-                 : pct >= 0.75       ? "#fb923c"
-                 : pct >= 0.5        ? "#facc15"
-                 : "#94a3b8";
-      var label  = propType.replace(" Over", "");   // "Points", "Rebounds", "Assists", "Strikeouts"
+      var pct = modelLine > 0 ? stat / modelLine : 0;
+      var col = stat >= modelLine ? "#4ade80"
+              : pct >= 0.75      ? "#fb923c"
+              : pct >= 0.5       ? "#facc15"
+              : "#94a3b8";
+      var label = propType.replace(" Over", "");   // "Points", "Rebounds", "Assists", "Strikeouts"
       liveDiv.innerHTML =
-        '<span style="font-size:0.65rem;padding:2px 7px;border-radius:99px;' +
-        'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
+        '<span style="' + BADGE + 'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
         '▶ ' + stat + ' ' + label + ' / ' + modelLine + '</span>';
     }
   }
@@ -1735,10 +1775,13 @@
       if (!eventId) return;
       var isFinal  = ev.stateId === "3";
 
+      // For "Hits Over (1+)", battingTeam is homeTeam (prop.team = batting team)
+      var battingTeam = homeTeam;
+
       // For final games, use cached summary to avoid repeat fetches
       var cached = propSummaryCache[eventId];
       if (cached && cached.isFinal) {
-        renderPropLive(liveDiv, cached.data, player, propType, modelLine, true);
+        renderPropLive(liveDiv, cached.data, player, propType, modelLine, true, battingTeam);
         return;
       }
 
@@ -1750,7 +1793,7 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
           propSummaryCache[eventId] = { data: data, isFinal: isFinal };
-          renderPropLive(liveDiv, data, player, propType, modelLine, isFinal);
+          renderPropLive(liveDiv, data, player, propType, modelLine, isFinal, battingTeam);
         })
         .catch(function () {});
     });
