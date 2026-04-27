@@ -115,7 +115,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 08:13 PM PDT</div>
+    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 08:17 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 0 games &nbsp;|&nbsp;
       MLB: 0 games &nbsp;|&nbsp;
@@ -1553,7 +1553,7 @@
               
               
               <tr>
-                <td style="padding:6px 6px;border-bottom:1px solid var(--border);font-weight:600;">Under 15%</td>
+                <td style="padding:6px 6px;border-bottom:1px solid var(--border);font-weight:600;">3–8%</td>
                 <td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;color:var(--muted);">2</td>
                 <td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;">
                   55.9%
@@ -1569,8 +1569,10 @@
               
               
               
+              
+              
               <tr>
-                <td style="padding:6px 6px;border-bottom:1px solid var(--border);font-weight:600;">15–25%</td>
+                <td style="padding:6px 6px;border-bottom:1px solid var(--border);font-weight:600;">15%+</td>
                 <td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;color:var(--muted);">2</td>
                 <td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;">
                   74.5%
@@ -1583,8 +1585,6 @@
                   -74.5%
                 </td>
               </tr>
-              
-              
               
               
             </tbody>
@@ -2467,9 +2467,9 @@
 
     // ── Calibration table ───────────────────────────────────────────────
     var CAL_BUCKETS = [
-      { label: "Under 15%", lo: 0.00, hi: 0.15 },
-      { label: "15–25%",    lo: 0.15, hi: 0.25 },
-      { label: "25%+",      lo: 0.25, hi: 1.00 },
+      { label: "3–8%",  lo: 0.03, hi: 0.08 },
+      { label: "8–15%", lo: 0.08, hi: 0.15 },
+      { label: "15%+",  lo: 0.15, hi: 1.00 },
     ];
     var calTbody = document.getElementById("chart-cal-tbody");
     if (calTbody) {
