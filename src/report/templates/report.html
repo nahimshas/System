@@ -279,7 +279,11 @@
 
   {% if report.props %}
   <div class="section">
-    <div class="section-title">Props Research <span style="color:var(--yellow);font-size:0.72rem;font-weight:400;text-transform:none;">(verify Robinhood price before betting)</span></div>
+    <div class="section-title">Props Watchlist
+      <span style="color:var(--yellow);font-size:0.72rem;font-weight:400;text-transform:none;">
+        — model projections only. No sportsbook line available. Search Robinhood manually before betting.
+      </span>
+    </div>
     {% for prop in report.props %}
     <div class="card prop-card"
          data-home-team="{{ prop.team }}"
@@ -299,17 +303,23 @@
           <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
         </div>
       </div>
-      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
       <div class="stats-grid">
-        <div class="stat-box"><div class="stat-label">Model Line</div><div class="stat-value blue">{{ prop.model_line }}</div></div>
-        <div class="stat-box" title="How far the model projects above the minimum threshold for recommending this prop">
-          <div class="stat-label">Cushion</div>
-          <div class="stat-value {% if prop.model_margin >= 3 %}green{% elif prop.model_margin >= 1 %}yellow{% else %}teal{% endif %}">+{{ prop.model_margin }}</div>
+        <div class="stat-box" title="Model's season-average projection for this player today">
+          <div class="stat-label">Projected</div>
+          <div class="stat-value blue">{{ prop.model_line }}</div>
         </div>
-        <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">{{ prop.confidence }}</div></div>
+        <div class="stat-box" title="Only take the Over if Robinhood's line is at or below this number">
+          <div class="stat-label">Bet Over ≤</div>
+          <div class="stat-value green">{{ prop.model_line | int }}</div>
+        </div>
+        <div class="stat-box" title="Signal strength based on how comfortably the projection clears the threshold">
+          <div class="stat-label">Signal</div>
+          <div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">{{ prop.confidence }}</div>
+        </div>
       </div>
+      <div class="prop-note" style="margin-top:6px;">{{ prop.note }}</div>
       {% if prop.signals %}
-      <div class="signals">
+      <div class="signals" style="margin-top:8px;">
         <div class="signals-title">Key Signals</div>
         {% for signal in prop.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
       </div>
@@ -322,7 +332,6 @@
         </details>
       </div>
       {% endif %}
-      <div class="prop-note">{{ prop.note }}</div>
     </div>
     {% endfor %}
   </div>
