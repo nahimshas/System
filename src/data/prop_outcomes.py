@@ -13,14 +13,17 @@ logger = logging.getLogger(__name__)
 ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports"
 
 # Map prop_type strings → ESPN NBA box score stat key
+# ESPN uses lowercase full words (confirmed from live API): "points", "rebounds", "assists"
 NBA_STAT_KEY = {
-    "Points Over":   "PTS",
-    "Rebounds Over": "REB",
-    "Assists Over":  "AST",
+    "Points Over":   "points",
+    "Rebounds Over": "rebounds",
+    "Assists Over":  "assists",
 }
 
-# Possible ESPN key names for pitcher strikeouts (varies by API version)
-MLB_K_KEYS = ["K", "SO", "strikeouts", "Strikeouts"]
+# ESPN MLB pitching group has no name — detect by pitching-specific keys
+MLB_PITCHING_MARKERS = {"ERA", "fullInnings.partInnings", "earnedRuns"}
+# Strikeout key name in the pitching group
+MLB_K_KEYS = ["strikeouts", "K", "SO", "Strikeouts"]
 
 
 # ---------------------------------------------------------------------------
@@ -131,13 +134,16 @@ def _get_nba_player_stat(summary: Dict, player_name: str, stat_key: str) -> Opti
 def _get_mlb_pitcher_ks(summary: Dict, pitcher_name: str) -> Optional[float]:
     """
     Walk the MLB box score and return a pitcher's strikeout total.
-    Handles varying ESPN key names for the K stat.
+    ESPN returns an empty group name, so we detect pitching groups by
+    checking whether pitching-specific keys (ERA, fullInnings.partInnings)
+    are present rather than relying on the group name.
     """
     for team_data in summary.get("boxscore", {}).get("players", []):
         for stat_group in team_data.get("statistics", []):
-            if "pitch" not in stat_group.get("name", "").lower():
-                continue
             keys = stat_group.get("keys", [])
+            # Detect pitching group by content, not name (ESPN name is empty)
+            if not any(m in keys for m in MLB_PITCHING_MARKERS):
+                continue
             k_key = next((k for k in MLB_K_KEYS if k in keys), None)
             if k_key is None:
                 continue
