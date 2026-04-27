@@ -289,7 +289,10 @@
          data-home-team="{{ prop.team }}"
          data-away-team="{{ prop.opponent }}"
          data-bet-type="Prop"
-         data-sport="{{ prop.sport }}">
+         data-sport="{{ prop.sport }}"
+         data-player="{{ prop.player }}"
+         data-prop-type="{{ prop.prop_type }}"
+         data-model-line="{{ prop.model_line }}">
       {% set last = report.prop_last_result.get((prop.player, prop.prop_type)) %}
       <div class="card-header">
         <div>
@@ -309,6 +312,7 @@
             {% if last.hit %}✅ Hit {{ last.actual_stat | int }}{% else %}❌ Got {{ last.actual_stat | int }}{% endif %}
           </span>
           {% endif %}
+          <div class="prop-live-badge"></div>
         </div>
       </div>
       <div class="stats-grid">
@@ -954,6 +958,7 @@
     var isBottom  = /\bbot/i.test(detail) ? 1 : 0;
 
     return {
+      id: event.id || "",
       home: homeName, away: awayName,
       homeAbbr: homeAbbr, awayAbbr: awayAbbr,
       homeScore: homeScore, awayScore: awayScore,
@@ -1602,6 +1607,150 @@
     if (countEl) countEl.textContent = settled.length;
   }
 
+  // ── Prop live settlement ─────────────────────────────────────────────────
+  // Fetches ESPN box scores for completed (and in-progress) games that have
+  // prop cards, then updates each card with the player's actual stat.
+  // Final-game summaries are cached forever; in-progress are re-fetched each cycle.
+
+  var propSummaryCache = {};   // eventId → { data, isFinal }
+
+  var PROP_STAT_KEY = {
+    "Points Over":   "PTS",
+    "Rebounds Over": "REB",
+    "Assists Over":  "AST",
+  };
+  var MLB_K_KEYS = ["K", "SO", "strikeouts", "Strikeouts"];
+
+  // Flexible name comparison: handles full names, last-name-only, abbreviations
+  function propNameMatch(a, b) {
+    a = (a || "").toLowerCase().trim();
+    b = (b || "").toLowerCase().trim();
+    if (!a || !b) return false;
+    if (a === b) return true;
+    var aParts = a.split(" "), bParts = b.split(" ");
+    if (aParts.length && bParts.length &&
+        aParts[aParts.length - 1] === bParts[bParts.length - 1]) return true;
+    return a.indexOf(b) !== -1 || b.indexOf(a) !== -1;
+  }
+
+  function getNbaPlayerStat(summary, playerName, statKey) {
+    var playerGroups = (summary.boxscore || {}).players || [];
+    for (var t = 0; t < playerGroups.length; t++) {
+      var statGroups = playerGroups[t].statistics || [];
+      for (var s = 0; s < statGroups.length; s++) {
+        var keys = statGroups[s].keys || [];
+        var idx  = keys.indexOf(statKey);
+        if (idx === -1) continue;
+        var athletes = statGroups[s].athletes || [];
+        for (var a = 0; a < athletes.length; a++) {
+          var name = (athletes[a].athlete || {}).displayName || "";
+          if (propNameMatch(name, playerName)) {
+            var val = parseFloat((athletes[a].stats || [])[idx]);
+            if (!isNaN(val)) return val;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function getMlbPitcherKs(summary, pitcherName) {
+    var playerGroups = (summary.boxscore || {}).players || [];
+    for (var t = 0; t < playerGroups.length; t++) {
+      var statGroups = playerGroups[t].statistics || [];
+      for (var s = 0; s < statGroups.length; s++) {
+        if (!/pitch/i.test(statGroups[s].name || "")) continue;
+        var keys = statGroups[s].keys || [];
+        var kKey = null;
+        for (var k = 0; k < MLB_K_KEYS.length; k++) {
+          if (keys.indexOf(MLB_K_KEYS[k]) !== -1) { kKey = MLB_K_KEYS[k]; break; }
+        }
+        if (!kKey) continue;
+        var idx = keys.indexOf(kKey);
+        var athletes = statGroups[s].athletes || [];
+        for (var a = 0; a < athletes.length; a++) {
+          var name = (athletes[a].athlete || {}).displayName || "";
+          if (propNameMatch(name, pitcherName)) {
+            var val = parseFloat((athletes[a].stats || [])[idx]);
+            if (!isNaN(val)) return val;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  function renderPropLive(liveDiv, summary, player, propType, modelLine, isFinal) {
+    var stat = null;
+    if (PROP_STAT_KEY[propType]) {
+      stat = getNbaPlayerStat(summary, player, PROP_STAT_KEY[propType]);
+    } else if (propType === "Strikeouts Over") {
+      stat = getMlbPitcherKs(summary, player);
+    }
+    if (stat === null) return;
+
+    if (isFinal) {
+      var hit = stat > modelLine;
+      liveDiv.innerHTML = hit
+        ? '<span style="font-size:0.65rem;padding:2px 7px;border-radius:99px;' +
+          'border:1px solid #166534;background:#052e16;color:#4ade80;">✅ Hit ' + stat + '</span>'
+        : '<span style="font-size:0.65rem;padding:2px 7px;border-radius:99px;' +
+          'border:1px solid #7f1d1d;background:#2d0a0a;color:#f87171;">❌ Got ' + stat + '</span>';
+    } else {
+      // Game in progress — show current accumulation vs model line
+      var pct    = modelLine > 0 ? stat / modelLine : 0;
+      var col    = stat >= modelLine ? "#4ade80"
+                 : pct >= 0.75       ? "#fb923c"
+                 : pct >= 0.5        ? "#facc15"
+                 : "#94a3b8";
+      var label  = propType.replace(" Over", "");   // "Points", "Rebounds", "Assists", "Strikeouts"
+      liveDiv.innerHTML =
+        '<span style="font-size:0.65rem;padding:2px 7px;border-radius:99px;' +
+        'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
+        '▶ ' + stat + ' ' + label + ' / ' + modelLine + '</span>';
+    }
+  }
+
+  function applyPropCards(allEvents) {
+    document.querySelectorAll(".card[data-bet-type='Prop']").forEach(function (card) {
+      var homeTeam  = card.getAttribute("data-home-team")  || "";
+      var awayTeam  = card.getAttribute("data-away-team")  || "";
+      var sport     = (card.getAttribute("data-sport")     || "").toUpperCase();
+      var player    = card.getAttribute("data-player")     || "";
+      var propType  = card.getAttribute("data-prop-type")  || "";
+      var modelLine = parseFloat(card.getAttribute("data-model-line") || "0");
+      var liveDiv   = card.querySelector(".prop-live-badge");
+
+      if (!liveDiv || !player || !propType) return;
+
+      var ev = findEvent(allEvents, homeTeam, awayTeam);
+      if (!ev || ev.stateId === "1") return;   // pre-game — nothing to show
+
+      var eventId  = ev.id;
+      if (!eventId) return;
+      var isFinal  = ev.stateId === "3";
+
+      // For final games, use cached summary to avoid repeat fetches
+      var cached = propSummaryCache[eventId];
+      if (cached && cached.isFinal) {
+        renderPropLive(liveDiv, cached.data, player, propType, modelLine, true);
+        return;
+      }
+
+      var sportPath = sport === "NBA" ? "basketball/nba" : "baseball/mlb";
+      var url = "https://site.api.espn.com/apis/site/v2/sports/" +
+                sportPath + "/summary?event=" + eventId;
+
+      fetch(url)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          propSummaryCache[eventId] = { data: data, isFinal: isFinal };
+          renderPropLive(liveDiv, data, player, propType, modelLine, isFinal);
+        })
+        .catch(function () {});
+    });
+  }
+
   // ── Main refresh loop ────────────────────────────────────────────────────
   function refresh() {
     var allEvents = [];
@@ -1622,6 +1771,9 @@
 
       // Update performance table with live outcomes
       updatePerformance();
+
+      // Update prop cards with live/final player stats from ESPN box scores
+      applyPropCards(allEvents);
     }
 
     [
