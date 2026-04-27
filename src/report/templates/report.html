@@ -470,6 +470,127 @@
         ⚠ Only {{ p.total }} settled bet(s) — need 30+ for statistically meaningful calibration.
       </div>
       {% endif %}
+
+      {% set cd = report.chart_data %}
+      {% if cd and cd.has_data %}
+      <details style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+        <summary style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);cursor:pointer;list-style:none;padding:4px 0;">
+          ▶ Trend Charts &amp; Calibration ({{ cd.total_bets }} settled bets)
+        </summary>
+        <div style="margin-top:12px;">
+
+          {# ── Cumulative PnL chart ── #}
+          <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin-bottom:6px;">
+            Cumulative PnL
+            <span style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px;
+                         color:{% if cd.final_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};">
+              ${{ "%+.2f"|format(cd.final_pnl) }} total
+            </span>
+          </div>
+          <svg viewBox="0 0 {{ cd.svg_w }} {{ cd.svg_h }}" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+            {# Zero reference line #}
+            <line x1="{{ cd.pad_l }}" y1="{{ cd.zero_y }}" x2="{{ cd.svg_w - 12 }}" y2="{{ cd.zero_y }}"
+                  stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>
+            {# PnL line — single colour based on final value #}
+            {% if cd.pnl_all %}
+            <polyline points="{{ cd.pnl_all }}"
+                      fill="none"
+                      stroke="{% if cd.final_pnl >= 0 %}#22c55e{% else %}#ef4444{% endif %}"
+                      stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            {# Dot at final point #}
+            {% set last = cd.pnl_all.split(' ')[-1].split(',') %}
+            <circle cx="{{ last[0] }}" cy="{{ last[1] }}" r="3"
+                    fill="{% if cd.final_pnl >= 0 %}#22c55e{% else %}#ef4444{% endif %}"/>
+            {% endif %}
+            {# Y-axis labels #}
+            {% for lbl in cd.pnl_y_labels %}
+            <text x="{{ cd.pad_l - 4 }}" y="{{ lbl.y + 4 }}" text-anchor="end"
+                  font-size="9" fill="#94a3b8">{{ lbl.val }}</text>
+            {% endfor %}
+            {# X-axis date labels #}
+            {% for lbl in cd.x_labels %}
+            <text x="{{ lbl.x }}" y="{{ cd.svg_h - 4 }}" text-anchor="middle"
+                  font-size="9" fill="#94a3b8">{{ lbl.val }}</text>
+            {% endfor %}
+          </svg>
+
+          {# ── Rolling win-rate chart ── #}
+          {% if cd.has_wr %}
+          <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin:14px 0 6px;">
+            Rolling Win Rate <span style="font-weight:400;text-transform:none;letter-spacing:0;">(last 20 bets)</span>
+          </div>
+          <svg viewBox="0 0 {{ cd.svg_w }} {{ cd.svg_h }}" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+            {# 50% reference line #}
+            <line x1="{{ cd.pad_l }}" y1="{{ cd.ref50_y }}" x2="{{ cd.svg_w - 12 }}" y2="{{ cd.ref50_y }}"
+                  stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="{{ cd.svg_w - 10 }}" y="{{ cd.ref50_y + 4 }}" text-anchor="start"
+                  font-size="9" fill="#2d3148">50%</text>
+            {# Win-rate line #}
+            <polyline points="{{ cd.wr_points }}"
+                      fill="none" stroke="#3b82f6" stroke-width="2"
+                      stroke-linejoin="round" stroke-linecap="round"/>
+            {# Y-axis labels #}
+            {% for lbl in cd.wr_y_labels %}
+            <text x="{{ cd.pad_l - 4 }}" y="{{ lbl.y + 4 }}" text-anchor="end"
+                  font-size="9" fill="#94a3b8">{{ lbl.val }}</text>
+            {% endfor %}
+            {# X-axis labels (reuse PnL x-labels since same bet count) #}
+            {% for lbl in cd.x_labels %}
+            <text x="{{ lbl.x }}" y="{{ cd.svg_h - 4 }}" text-anchor="middle"
+                  font-size="9" fill="#94a3b8">{{ lbl.val }}</text>
+            {% endfor %}
+          </svg>
+          {% endif %}
+
+          {# ── Calibration table ── #}
+          {% set has_cal = cd.calibration | selectattr("count", "gt", 0) | list %}
+          {% if has_cal %}
+          <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin:14px 0 6px;">
+            Edge Calibration
+            <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:0.68rem;margin-left:6px;">
+              Model win% vs actual win% — ideally these should align
+            </span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:5px 6px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;border-bottom:1px solid var(--border);">Edge bucket</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;border-bottom:1px solid var(--border);">Bets</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;border-bottom:1px solid var(--border);">Model win%</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;border-bottom:1px solid var(--border);">Actual win%</th>
+                <th style="text-align:center;padding:5px 6px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;border-bottom:1px solid var(--border);">Delta</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in cd.calibration %}
+              {% if row.count > 0 %}
+              <tr>
+                <td style="padding:6px 6px;border-bottom:1px solid var(--border);font-weight:600;">{{ row.bucket }}</td>
+                <td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;color:var(--muted);">{{ row.count }}</td>
+                <td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;">
+                  {% if row.avg_model_pct is not none %}{{ row.avg_model_pct }}%{% else %}—{% endif %}
+                </td>
+                <td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">
+                  {% if row.actual_win_pct is not none %}{{ row.actual_win_pct }}%{% else %}—{% endif %}
+                </td>
+                <td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;
+                            color:{% if row.delta is not none %}{% if row.delta > 2 %}var(--green){% elif row.delta < -2 %}var(--red){% else %}var(--muted){% endif %}{% else %}var(--muted){% endif %};">
+                  {% if row.delta is not none %}{{ "%+.1f"|format(row.delta) }}%{% else %}—{% endif %}
+                </td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+          <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;">
+            Delta = Actual − Model. Green = outperforming model expectations. Red = underperforming.
+            Meaningful only with 10+ bets per bucket.
+          </div>
+          {% endif %}
+
+        </div>
+      </details>
+      {% endif %}
     </div>
   </div>
   {% endif %}
@@ -1213,6 +1334,16 @@
 
   refresh();
   setInterval(refresh, 60000);
+
+  // ── Chart details toggle arrow ───────────────────────────────────────────
+  document.querySelectorAll("details").forEach(function (el) {
+    var summary = el.querySelector("summary");
+    if (!summary) return;
+    el.addEventListener("toggle", function () {
+      var arrow = summary.textContent.trim().startsWith("▶") ? "▼" : "▶";
+      summary.innerHTML = summary.innerHTML.replace(/[▶▼]/, arrow);
+    });
+  });
 
   // ── Anchor nav: flash highlight on the target element when a nav link is clicked ──
   document.querySelectorAll("a.nav-link").forEach(function (link) {

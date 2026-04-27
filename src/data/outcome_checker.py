@@ -463,3 +463,171 @@ def load_performance_summary() -> Dict:
     summary["recent_30"] = settled[-30:]
 
     return summary
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 — Chart data (pre-computed SVG coordinates)
+# ---------------------------------------------------------------------------
+
+# SVG canvas constants (viewBox="0 0 460 130")
+_SVG_W, _SVG_H   = 460, 130
+_PAD_L, _PAD_R   = 42, 12
+_PAD_T, _PAD_B   = 10, 28
+_PLOT_W = _SVG_W - _PAD_L - _PAD_R   # 406
+_PLOT_H = _SVG_H - _PAD_T - _PAD_B   # 92
+
+
+def _sx(i: int, n: int) -> float:
+    """Map index i (0-based) to SVG x coordinate."""
+    if n <= 1:
+        return _PAD_L + _PLOT_W / 2
+    return _PAD_L + i / (n - 1) * _PLOT_W
+
+
+def _sy(val: float, lo: float, hi: float) -> float:
+    """Map value to SVG y coordinate (inverted — SVG y increases downward)."""
+    if hi == lo:
+        return _PAD_T + _PLOT_H / 2
+    frac = (val - lo) / (hi - lo)
+    return _PAD_T + _PLOT_H * (1 - frac)
+
+
+def _points_str(coords: list) -> str:
+    return " ".join(f"{x:.1f},{y:.1f}" for x, y in coords)
+
+
+def build_chart_data() -> Dict:
+    """
+    Returns pre-computed chart data for Phase 2 visualizations:
+      - Cumulative PnL SVG polyline
+      - Rolling win-rate SVG polyline
+      - Calibration table rows
+    All SVG coordinates are computed here so the Jinja template stays simple.
+    """
+    records = _load_history()
+    settled = [r for r in records if r.get("result") in ("WON", "LOST", "PUSH")]
+
+    if len(settled) < 3:
+        return {"has_data": False}
+
+    # ── Cumulative PnL series ────────────────────────────────────────────────
+    cum = 0.0
+    pnl_series: List[Dict] = []
+    for i, r in enumerate(settled):
+        cum += r.get("actual_pnl", 0.0)
+        pnl_series.append({"i": i, "date": r.get("date", ""), "cum": round(cum, 2)})
+
+    pnl_vals   = [p["cum"] for p in pnl_series]
+    pnl_lo     = min(pnl_vals + [0])   # always include 0 in range
+    pnl_hi     = max(pnl_vals + [0])
+    if pnl_hi == pnl_lo:
+        pnl_hi = pnl_lo + 1
+
+    n = len(pnl_series)
+    pnl_coords = [(_sx(p["i"], n), _sy(p["cum"], pnl_lo, pnl_hi)) for p in pnl_series]
+
+    # Zero line y-position
+    zero_y = round(_sy(0, pnl_lo, pnl_hi), 1)
+
+    # Y-axis labels (top, zero if interior, bottom) — deduplicate when zero == min or max
+    pnl_y_labels = [
+        {"y": round(_sy(pnl_hi, pnl_lo, pnl_hi), 1), "val": f"${pnl_hi:+.0f}"},
+        {"y": round(_sy(pnl_lo, pnl_lo, pnl_hi), 1), "val": f"${pnl_lo:+.0f}"},
+    ]
+    # Only add zero label if it's meaningfully between min and max (not at either edge)
+    if pnl_lo < 0 < pnl_hi:
+        pnl_y_labels.insert(1, {"y": round(zero_y, 1), "val": "$0"})
+
+    # Colour segments: green above zero, red below
+    # Split polyline into above-zero and below-zero segments
+    pnl_above = _points_str([(x, y) for (x, y), p in zip(pnl_coords, pnl_series) if p["cum"] >= 0])
+    pnl_below = _points_str([(x, y) for (x, y), p in zip(pnl_coords, pnl_series) if p["cum"] < 0])
+    pnl_all   = _points_str(pnl_coords)
+
+    # ── Rolling win-rate series (window = 20, show from bet 10 onwards) ──────
+    WINDOW     = 20
+    MIN_SHOW   = 10
+    wr_series: List[Dict] = []
+    for i in range(MIN_SHOW - 1, len(settled)):
+        window    = settled[max(0, i - WINDOW + 1): i + 1]
+        decisions = [r for r in window if r.get("result") in ("WON", "LOST")]
+        if not decisions:
+            continue
+        rate = sum(1 for r in decisions if r["result"] == "WON") / len(decisions) * 100
+        wr_series.append({"i": i, "rate": round(rate, 1)})
+
+    wr_points = ""
+    ref50_y   = round(_sy(50, 0, 100), 1)
+    if wr_series:
+        nw = len(settled)
+        wr_coords  = [(_sx(p["i"], nw), _sy(p["rate"], 0, 100)) for p in wr_series]
+        wr_points  = _points_str(wr_coords)
+
+    wr_y_labels = [
+        {"y": round(_sy(100, 0, 100), 1), "val": "100%"},
+        {"y": round(_sy(50,  0, 100), 1), "val":  "50%"},
+        {"y": round(_sy(0,   0, 100), 1), "val":   "0%"},
+    ]
+
+    # ── Calibration table ────────────────────────────────────────────────────
+    BUCKETS = [
+        ("3–5%",  0.03, 0.05),
+        ("5–8%",  0.05, 0.08),
+        ("8%+",   0.08, 1.00),
+    ]
+    calibration = []
+    for label, lo, hi in BUCKETS:
+        bets      = [r for r in settled if lo <= r.get("edge_pct", 0) / 100 < hi
+                     or (hi == 1.0 and r.get("edge_pct", 0) / 100 >= lo)]
+        decisions = [r for r in bets if r.get("result") in ("WON", "LOST")]
+        won       = sum(1 for r in decisions if r["result"] == "WON")
+        actual    = round(won / len(decisions) * 100, 1) if decisions else None
+        avg_model = round(
+            sum(r.get("model_prob_pct", 50) for r in bets) / len(bets), 1
+        ) if bets else None
+        # Delta: positive means model was pessimistic (we beat expectations)
+        delta     = round(actual - avg_model, 1) if (actual is not None and avg_model is not None) else None
+        calibration.append({
+            "bucket":          label,
+            "count":           len(bets),
+            "decisions":       len(decisions),
+            "actual_win_pct":  actual,
+            "avg_model_pct":   avg_model,
+            "delta":           delta,
+        })
+
+    # X-axis: first and last date labels
+    x_labels = []
+    if pnl_series:
+        x_labels = [
+            {"x": round(_sx(0,  n), 1), "val": pnl_series[0]["date"][5:]},   # MM-DD
+            {"x": round(_sx(n-1, n), 1), "val": pnl_series[-1]["date"][5:]},
+        ]
+        if n > 2:
+            mid = n // 2
+            x_labels.insert(1, {"x": round(_sx(mid, n), 1), "val": pnl_series[mid]["date"][5:]})
+
+    return {
+        "has_data":       True,
+        "total_bets":     len(settled),
+        "svg_w":          _SVG_W,
+        "svg_h":          _SVG_H,
+        "pad_l":          _PAD_L,
+        "pad_t":          _PAD_T,
+        "plot_h":         _PLOT_H,
+        # PnL chart
+        "pnl_all":        pnl_all,
+        "pnl_above":      pnl_above,
+        "pnl_below":      pnl_below,
+        "zero_y":         zero_y,
+        "pnl_y_labels":   pnl_y_labels,
+        "x_labels":       x_labels,
+        "final_pnl":      round(cum, 2),
+        # Win-rate chart
+        "wr_points":      wr_points,
+        "ref50_y":        ref50_y,
+        "wr_y_labels":    wr_y_labels,
+        "has_wr":         bool(wr_series),
+        # Calibration
+        "calibration":    calibration,
+    }

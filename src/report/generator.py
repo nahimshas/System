@@ -123,10 +123,12 @@ def build_report(
 
     # ── Performance summary (from settled history) ───────────────────────────
     try:
-        from src.data.outcome_checker import load_performance_summary
+        from src.data.outcome_checker import load_performance_summary, build_chart_data
         performance = load_performance_summary()
+        chart_data  = build_chart_data()
     except Exception:
         performance = {}
+        chart_data  = {"has_data": False}
 
     return {
         "generated_at":       _now_pacific_str(),
@@ -151,4 +153,5 @@ def build_report(
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),
+        "chart_data":         chart_data,
     }
