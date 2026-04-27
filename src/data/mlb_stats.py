@@ -169,6 +169,51 @@ def get_park_factor(venue: str) -> float:
     return 1.00
 
 
+def get_team_batting_leaders(team_id: int, top_n: int = 3, min_pa: int = 15) -> List[Dict]:
+    """
+    Returns the top N batters for a team sorted by OBP.
+    Used to generate individual 'Hits Over (1+)' prop picks.
+    min_pa is intentionally low to cover early-season data.
+    """
+    data = _get("/stats", {
+        "stats":    "season",
+        "group":    "hitting",
+        "gameType": "R",
+        "season":   date.today().year,
+        "teamId":   team_id,
+        "limit":    50,
+    })
+    if not data:
+        return []
+
+    players: List[Dict] = []
+    for stat_group in data.get("stats", []):
+        for split in stat_group.get("splits", []):
+            player = split.get("player", {})
+            stat   = split.get("stat", {})
+            name   = player.get("fullName", "")
+            if not name:
+                continue
+            pa = int(stat.get("plateAppearances", 0))
+            if pa < min_pa:
+                continue
+            try:
+                avg = float(stat.get("avg", ".000").replace("-", "0") or "0")
+                obp = float(stat.get("obp", ".000").replace("-", "0") or "0")
+            except ValueError:
+                continue
+            players.append({
+                "name": name,
+                "id":   player.get("id"),
+                "avg":  round(avg, 3),
+                "obp":  round(obp, 3),
+                "pa":   pa,
+            })
+
+    players.sort(key=lambda p: p["obp"], reverse=True)
+    return players[:top_n]
+
+
 def get_team_schedule_load(team_id: int, today: date) -> int:
     """
     Returns the number of confirmed games this team played in the last 7 days.

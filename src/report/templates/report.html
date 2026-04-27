@@ -1657,6 +1657,30 @@
     return null;
   }
 
+  function getMlbBatterHits(summary, batterName) {
+    var playerGroups = (summary.boxscore || {}).players || [];
+    for (var t = 0; t < playerGroups.length; t++) {
+      var statGroups = playerGroups[t].statistics || [];
+      for (var s = 0; s < statGroups.length; s++) {
+        var keys = statGroups[s].keys || [];
+        var hIdx = keys.indexOf("hits");
+        if (hIdx === -1) continue;
+        // Skip pitching group (also contains "hits" = hits allowed)
+        var isPitch = MLB_PITCHING_MARKERS.some(function (mk) { return keys.indexOf(mk) !== -1; });
+        if (isPitch) continue;
+        var athletes = statGroups[s].athletes || [];
+        for (var a = 0; a < athletes.length; a++) {
+          var name = (athletes[a].athlete || {}).displayName || "";
+          if (propNameMatch(name, batterName)) {
+            var val = parseFloat((athletes[a].stats || [])[hIdx]);
+            if (!isNaN(val)) return val;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   function getMlbPitcherKs(summary, pitcherName) {
     var playerGroups = (summary.boxscore || {}).players || [];
     for (var t = 0; t < playerGroups.length; t++) {
@@ -1716,24 +1740,14 @@
   function renderPropLive(liveDiv, summary, player, propType, modelLine, isFinal, battingTeam) {
     var BADGE = 'font-size:0.65rem;padding:2px 7px;border-radius:99px;white-space:nowrap;';
 
-    // ── Hits Over (1+) — team-level, show top-3 batter results ──────────────
-    if (propType === "Hits Over (1+)") {
-      if (!isFinal) return;   // only show once game is over
-      var res = battingTeam ? getTopBatterHits(summary, battingTeam) : null;
-      if (!res) return;
-      var col = res.hits >= 3 ? "#4ade80" : res.hits >= 2 ? "#facc15" : "#f87171";
-      liveDiv.innerHTML =
-        '<span style="' + BADGE + 'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
-        res.hits + '/' + res.checked + ' top batters got a hit</span>';
-      return;
-    }
-
-    // ── NBA / MLB Strikeouts Over ────────────────────────────────────────────
+    // ── Stat lookup: NBA, MLB pitcher Ks, MLB batter hits ───────────────────
     var stat = null;
     if (PROP_STAT_KEY[propType]) {
       stat = getNbaPlayerStat(summary, player, PROP_STAT_KEY[propType]);
     } else if (propType === "Strikeouts Over") {
       stat = getMlbPitcherKs(summary, player);
+    } else if (propType === "Hits Over (1+)") {
+      stat = getMlbBatterHits(summary, player);
     }
     if (stat === null) return;
 

@@ -131,6 +131,32 @@ def _get_nba_player_stat(summary: Dict, player_name: str, stat_key: str) -> Opti
     return None
 
 
+def _get_mlb_batter_hits(summary: Dict, batter_name: str) -> Optional[float]:
+    """
+    Extract a batter's hit count from a MLB game summary.
+    Finds the batting stat group (has 'hits' key but NOT pitching markers).
+    """
+    for team_data in summary.get("boxscore", {}).get("players", []):
+        for stat_group in team_data.get("statistics", []):
+            keys = stat_group.get("keys", [])
+            if "hits" not in keys:
+                continue
+            # Skip the pitching group which also has a "hits" (hits allowed) key
+            if any(m in keys for m in MLB_PITCHING_MARKERS):
+                continue
+            idx = keys.index("hits")
+            for athlete_entry in stat_group.get("athletes", []):
+                name = athlete_entry.get("athlete", {}).get("displayName", "")
+                if _name_match(name, batter_name):
+                    stats = athlete_entry.get("stats", [])
+                    if idx < len(stats):
+                        try:
+                            return float(stats[idx])
+                        except (ValueError, TypeError):
+                            pass
+    return None
+
+
 def _get_mlb_pitcher_ks(summary: Dict, pitcher_name: str) -> Optional[float]:
     """
     Walk the MLB box score and return a pitcher's strikeout total.
@@ -211,8 +237,8 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
 
         # ── MLB ───────────────────────────────────────────────────────────────
         elif sport == "MLB":
-            if prop_type != "Strikeouts Over":
-                continue  # Hits Over 1+ uses team placeholder — not individually settable
+            if prop_type not in ("Strikeouts Over", "Hits Over (1+)"):
+                continue
             if mlb_events is None:
                 mlb_events = _get_scoreboard("baseball/mlb", game_date)
             event_id = _find_event_id(mlb_events, team, opponent)
@@ -224,7 +250,10 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
             summary = summary_cache[event_id]
             if not _is_completed(summary):
                 continue
-            actual_stat = _get_mlb_pitcher_ks(summary, player)
+            if prop_type == "Strikeouts Over":
+                actual_stat = _get_mlb_pitcher_ks(summary, player)
+            else:  # Hits Over (1+) — real player name from batting leaders
+                actual_stat = _get_mlb_batter_hits(summary, player)
 
         if actual_stat is None:
             logger.debug(f"Stat not found in box score: {player} ({prop_type})")

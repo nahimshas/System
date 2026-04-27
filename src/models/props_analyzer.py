@@ -319,35 +319,47 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
 
             # ── Batter 1+ hits over (vs hittable pitcher, FIP > 4.50) ───────
             if fip > 4.50:
+                from src.data.mlb_stats import get_team_batting_leaders
+                opp_team_id = game.get(f"{opp_side}_team_id")
+                batters = []
+                if opp_team_id:
+                    try:
+                        batters = get_team_batting_leaders(opp_team_id, top_n=3)
+                    except Exception as e:
+                        logger.warning(f"Could not fetch batting leaders for {opp_team}: {e}")
+
+                hits_margin = round(fip - 4.50, 2)
                 expected_hits = round((era / 9) * expected_innings * 1.1, 1)
-                hits_conf     = "HIGH" if fip > 5.20 else "MEDIUM"
-                hits_margin   = round(fip - 4.50, 2)   # how hittable above threshold
-                picks.append(PropPick(
-                    sport="MLB",
-                    player=f"{opp_team} top-order batters",
-                    team=opp_team,
-                    opponent=team,
-                    prop_type="Hits Over (1+)",
-                    model_line=1.0,
-                    confidence=hits_conf,
-                    model_margin=hits_margin,
-                    note=(
-                        f"{pitcher_name} (FIP {fip:.2f}) is hittable. "
-                        f"On Robinhood, search 1+ hits over props for {opp_team}'s "
-                        f"#1–#3 batters in the lineup. "
-                        f"Model projects ~{expected_hits} total hits in {expected_innings} inn."
-                    ),
-                    signals=[
-                        f"Pitcher FIP {fip:.2f} — above avg (4.20), favorable for hitters",
-                        f"Model projects ~{expected_hits} hits in {expected_innings} inn",
-                        f"Target: {opp_team} leadoff, #2, and #3 batters for 1+ hit props",
-                    ],
-                    research=pitcher_research + [
-                        f"FIP {fip:.2f} > 4.50 — hitter-favorable matchup",
-                        f"ERA-based hit estimate: ~{expected_hits} hits in {expected_innings} inn",
-                    ],
-                    commence_time=game_commence,
-                ))
+
+                for batter in batters:
+                    avg_str = f".{int(batter['avg'] * 1000):03d}"
+                    obp_str = f".{int(batter['obp'] * 1000):03d}"
+                    hits_conf = "HIGH" if (fip > 5.20 and batter["obp"] >= 0.350) else "MEDIUM"
+                    picks.append(PropPick(
+                        sport="MLB",
+                        player=batter["name"],
+                        team=opp_team,
+                        opponent=team,
+                        prop_type="Hits Over (1+)",
+                        model_line=1.0,
+                        confidence=hits_conf,
+                        model_margin=hits_margin,
+                        note=(
+                            f"Search '{batter['name']} hits' on Robinhood. "
+                            f"Look for Over 0.5 (1+ hits). "
+                            f"Facing {pitcher_name} (FIP {fip:.2f})."
+                        ),
+                        signals=[
+                            f"{batter['name']}: {avg_str} AVG / {obp_str} OBP this season ({batter['pa']} PA)",
+                            f"{pitcher_name} FIP {fip:.2f} — above avg (4.20), hitter-friendly matchup",
+                            f"Model projects ~{expected_hits} total hits in {expected_innings} inn",
+                        ],
+                        research=pitcher_research + [
+                            f"FIP {fip:.2f} > 4.50 — hitter-favorable matchup",
+                            f"ERA-based hit estimate: ~{expected_hits} hits in {expected_innings} inn",
+                        ],
+                        commence_time=game_commence,
+                    ))
 
     # Deduplicate, sort, then cap
     seen: set = set()
