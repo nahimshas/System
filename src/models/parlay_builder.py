@@ -2,10 +2,15 @@
 Builds 2-leg parlays from top single-game recommendations.
 
 Robinhood parlay rules enforced here:
-  - Totals (Over/Under) can only be combined with bets from the SAME game.
-  - Moneyline and Spread bets can be parlayed across different games/leagues.
-  - Same-game parlays (any bet type) are valid.
-  - Cross-game parlays require BOTH legs to be ML or Spread (no Totals).
+
+  Cross-game parlays (different games / leagues):
+    - ML + ML only.  Spread + anything cross-game is not allowed.
+      Total + anything cross-game is not allowed.
+
+  Same-game parlays (SGP — both legs from the same game):
+    - Any combination is valid EXCEPT ML + Spread.
+    - Valid: ML+Total, ML+Prop, Spread+Total, Spread+Prop, Total+Prop.
+    - Invalid: ML+Spread (same game or cross-game).
 """
 from dataclasses import dataclass, field
 from itertools import combinations
@@ -40,23 +45,27 @@ def _parlay_valid(leg_a: BetRecommendation, leg_b: BetRecommendation) -> bool:
     """
     Returns True only if the leg combination is allowed on Robinhood.
 
-    Rules:
-      1. Same game  → always valid (ML+Total, Spread+Total, ML+ML, etc.)
-      2. Cross game → valid ONLY if neither leg is a Total (Over/Under).
-         ML + ML across games/leagues ✓
-         ML + Spread across games ✓
-         Total + anything cross-game ✗
+    ML + Spread is never allowed (same game or cross-game).
+    Cross-game: only ML + ML is valid.
+    Same-game:  any combo except ML + Spread is valid.
     """
+    type_a = leg_a.bet_type
+    type_b = leg_b.bet_type
+
+    # ML + Spread is invalid in all contexts
+    types = {type_a, type_b}
+    if types == {"Moneyline", "Spread"}:
+        return False
+
     same_game = (leg_a.game == leg_b.game)
 
     if same_game:
+        # All remaining combos valid as SGP:
+        # ML+Total, ML+Prop, Spread+Total, Spread+Prop, Total+Prop
         return True
 
-    # Cross-game: block if either leg is a Total
-    if leg_a.bet_type == _TOTAL_TYPE or leg_b.bet_type == _TOTAL_TYPE:
-        return False
-
-    return True
+    # Cross-game: only ML + ML is allowed
+    return type_a == "Moneyline" and type_b == "Moneyline"
 
 
 def build_parlays(singles: List[BetRecommendation]) -> List[ParlayRecommendation]:
