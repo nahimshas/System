@@ -277,6 +277,57 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                     commence_time=commence_time,
                 ))
 
+        # --- Spread ---
+        sp = game.get("spread")
+        if sp:
+            home_spread_line = sp.get("home_spread", 0.0)   # e.g. -6.5 means home favoured by 6.5
+            market_home_cover = sp.get("home_prob", 0.50)
+            market_away_cover = sp.get("away_prob", 0.50)
+
+            # Derive effective point margin from win probability (inverse of _nba_margin_to_prob).
+            # This keeps the spread model consistent with every adjustment already applied
+            # (home court, rest, injuries, schedule load) without recomputing them separately.
+            effective_margin = float(norm.ppf(adjusted_home_prob)) * NBA_SPREAD_STD
+
+            # P(home covers) = P(actual margin > −home_spread_line)
+            model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, NBA_SPREAD_STD))
+            model_away_cover = 1.0 - model_home_cover
+
+            away_spread_line = -home_spread_line
+
+            home_sp_edge = model_home_cover - market_home_cover
+            away_sp_edge = model_away_cover - market_away_cover
+
+            if home_sp_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
+                sizing = robinhood_kelly(model_home_cover, market_home_cover)
+                if sizing.num_contracts > 0:
+                    recs.append(BetRecommendation(
+                        sport="NBA", game=label, bet_type="Spread",
+                        pick=f"{home} {home_spread_line:+.1f}",
+                        market_prob=market_home_cover, model_prob=model_home_cover,
+                        edge=home_sp_edge, contract_price=market_home_cover,
+                        sizing=sizing,
+                        confidence=_confidence_label(home_sp_edge, len(signals), stats_available),
+                        signals=signals[:], research=research[:],
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
+            if away_sp_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
+                sizing = robinhood_kelly(model_away_cover, market_away_cover)
+                if sizing.num_contracts > 0:
+                    recs.append(BetRecommendation(
+                        sport="NBA", game=label, bet_type="Spread",
+                        pick=f"{away} {away_spread_line:+.1f}",
+                        market_prob=market_away_cover, model_prob=model_away_cover,
+                        edge=away_sp_edge, contract_price=market_away_cover,
+                        sizing=sizing,
+                        confidence=_confidence_label(away_sp_edge, len(signals), stats_available),
+                        signals=signals[:], research=research[:],
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
     # --- Total ---
     total = game.get("total")
     if total and nba_ctx["season_stats"]:
@@ -598,6 +649,55 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
                 ))
+
+        # --- Run Line (Spread) ---
+        sp = game.get("spread")
+        if sp:
+            home_spread_line = sp.get("home_spread", 0.0)   # almost always ±1.5 in MLB
+            market_home_cover = sp.get("home_prob", 0.50)
+            market_away_cover = sp.get("away_prob", 0.50)
+
+            # Derive effective run margin from win probability, consistent with all adjustments above.
+            effective_margin = float(norm.ppf(model_home_prob)) * MLB_SPREAD_STD
+
+            # P(home covers run line) = P(actual margin > −home_spread_line)
+            model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, MLB_SPREAD_STD))
+            model_away_cover = 1.0 - model_home_cover
+
+            away_spread_line = -home_spread_line
+
+            home_rl_edge = model_home_cover - market_home_cover
+            away_rl_edge = model_away_cover - market_away_cover
+
+            if home_rl_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
+                sizing = robinhood_kelly(model_home_cover, market_home_cover)
+                if sizing.num_contracts > 0:
+                    recs.append(BetRecommendation(
+                        sport="MLB", game=label, bet_type="Spread",
+                        pick=f"{home} {home_spread_line:+.1f}",
+                        market_prob=market_home_cover, model_prob=model_home_cover,
+                        edge=home_rl_edge, contract_price=market_home_cover,
+                        sizing=sizing,
+                        confidence=_confidence_label(home_rl_edge, len(signals), stats_available),
+                        signals=signals[:], research=research[:],
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
+            if away_rl_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
+                sizing = robinhood_kelly(model_away_cover, market_away_cover)
+                if sizing.num_contracts > 0:
+                    recs.append(BetRecommendation(
+                        sport="MLB", game=label, bet_type="Spread",
+                        pick=f"{away} {away_spread_line:+.1f}",
+                        market_prob=market_away_cover, model_prob=model_away_cover,
+                        edge=away_rl_edge, contract_price=market_away_cover,
+                        sizing=sizing,
+                        confidence=_confidence_label(away_rl_edge, len(signals), stats_available),
+                        signals=signals[:], research=research[:],
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
 
     # --- Total ---
     total = game.get("total")

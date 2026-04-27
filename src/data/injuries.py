@@ -23,14 +23,14 @@ def _parse_injuries(raw: List[Dict]) -> Dict[str, List[Dict]]:
     """Returns {team_name: [{player, status, detail}]}"""
     team_injuries: Dict[str, List[Dict]] = {}
     for entry in raw:
-        team = entry.get("team", {}).get("displayName", "Unknown")
+        team = entry.get("displayName", entry.get("team", {}).get("displayName", "Unknown"))
         for athlete in entry.get("injuries", []):
             athlete_info = athlete.get("athlete", {})
             status = athlete.get("status", "")
             detail = athlete.get("shortComment", athlete.get("longComment", ""))
             position = athlete_info.get("position", {}).get("abbreviation", "")
             # Only flag significant statuses
-            if status.lower() in ("out", "doubtful", "questionable"):
+            if status.lower() in ("out", "doubtful", "questionable", "day-to-day"):
                 team_injuries.setdefault(team, []).append({
                     "player": athlete_info.get("displayName", "Unknown"),
                     "position": position,
@@ -61,7 +61,7 @@ MLB_POSITION_IMPACT = {
     "SS": 0.015, "LF": 0.010, "CF": 0.015, "RF": 0.010, "DH": 0.012,
 }
 
-STATUS_WEIGHT = {"out": 1.0, "doubtful": 0.75, "questionable": 0.35}
+STATUS_WEIGHT = {"out": 1.0, "doubtful": 0.75, "questionable": 0.35, "day-to-day": 0.35}
 
 
 def injury_adjustment(team: str, injuries: Dict[str, List[Dict]], sport: str) -> float:
