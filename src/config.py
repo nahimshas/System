@@ -41,7 +41,8 @@ MLB_REST_BONUS_PER_DAY = 0.008
 NBA_PLAYOFF_SCORING_FACTOR = 0.94    # ~6% scoring reduction vs regular season
 NBA_PLAYOFF_PACE_FACTOR    = 0.96    # ~4% pace reduction
 NBA_PLAYOFF_RECENT_WEIGHT  = 0.55    # flip toward recent form — playoff games >> reg season
-NBA_PLAYOFF_TOTAL_STD      = 13.0    # tighter variance than regular season 14.0
+NBA_TOTAL_STD              = 20.0    # real-world NBA game total std ~20-22 pts
+NBA_PLAYOFF_TOTAL_STD      = 18.0    # tighter variance in playoffs (was 13.0; real-world ~18-20 pts)
 
 # MLB playoffs (October – early November): aces pitch more, starters pulled earlier
 MLB_PLAYOFF_SCORING_FACTOR = 0.91    # ~9% run reduction (4.5 → ~4.1 R/G)

@@ -14,7 +14,7 @@ from scipy.stats import norm
 
 from src.config import (
     NBA_HOME_ADVANTAGE, NBA_BACK_TO_BACK_PENALTY, NBA_REST_BONUS_PER_DAY,
-    NBA_RECENT_FORM_WEIGHT, MLB_HOME_ADVANTAGE, MIN_EDGE,
+    NBA_RECENT_FORM_WEIGHT, NBA_TOTAL_STD, MLB_HOME_ADVANTAGE, MIN_EDGE,
     NBA_PLAYOFF_SCORING_FACTOR, NBA_PLAYOFF_PACE_FACTOR,
     NBA_PLAYOFF_RECENT_WEIGHT, NBA_PLAYOFF_TOTAL_STD,
     MLB_PLAYOFF_SCORING_FACTOR, MLB_PLAYOFF_STARTER_IP,
@@ -27,8 +27,13 @@ from src.models.kelly import robinhood_kelly, has_positive_ev, BetSizing
 
 logger = logging.getLogger(__name__)
 
-NBA_SPREAD_STD = 12.0
-MLB_SPREAD_STD = 1.8
+# Standard deviation of game point/run differentials used in norm.cdf win-prob model.
+# NBA: real-world NBA point differential std ≈ 14 pts. Using 12 was too tight,
+#      causing the model to be overconfident on lopsided matchups.
+# MLB: real-world MLB run differential std ≈ 3.0 runs. 1.8 was far too tight,
+#      inflating all MLB edges significantly.
+NBA_SPREAD_STD = 14.0   # was 12.0
+MLB_SPREAD_STD = 3.0    # was 1.8
 
 
 def _is_nba_playoff(dt: Optional[datetime] = None) -> bool:
@@ -288,7 +293,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                 expected_total *= NBA_PLAYOFF_SCORING_FACTOR
 
             market_line = total["line"]
-            total_std   = NBA_PLAYOFF_TOTAL_STD if playoff else 14.0
+            total_std   = NBA_PLAYOFF_TOTAL_STD if playoff else NBA_TOTAL_STD
             model_over_prob = float(1 - norm.cdf(market_line, expected_total, total_std))
             market_over_prob = total["over_prob"]
             market_under_prob = total["under_prob"]
