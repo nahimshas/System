@@ -35,6 +35,17 @@ logger = logging.getLogger(__name__)
 NBA_SPREAD_STD = 14.0   # was 12.0
 MLB_SPREAD_STD = 3.0    # was 1.8
 
+# Injury credibility gate ─────────────────────────────────────────────────────
+# When a team's injury_adjustment ≥ INJURY_GATE, our season net-rating baseline
+# is stale (the injured player's contributions are baked in but unavailable
+# tonight).  We cap the model probability so it can't disagree with the market
+# by more than INJURY_CRED_MARGIN on the injured team's side.  This collapses
+# phantom edges caused by missing star players while still allowing small
+# genuine edges (e.g. a big underdog covering a spread).
+# Any bet on an injury-capped team is automatically locked to MEDIUM confidence.
+_INJURY_GATE   = 0.030   # ≈ one key starter fully out
+_INJURY_MARGIN = 0.10    # model allowed at most market_prob × (1 + 10%) for injured team
+
 
 def _is_nba_playoff(dt: Optional[datetime] = None) -> bool:
     """NBA playoffs: mid-April through mid-June."""
@@ -246,18 +257,54 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
         adjusted_home_prob = min(0.90, max(0.10, _nba_margin_to_prob(base_margin) + adj))
         adjusted_away_prob = 1 - adjusted_home_prob
 
+        # ── Injury credibility cap ────────────────────────────────────────────
+        # Season net ratings include injured players' contributions, so the model
+        # overstates a depleted team's probability.  When injury_adj ≥ _INJURY_GATE
+        # (≈ one key starter out), cap that team's probability to within
+        # _INJURY_MARGIN of the market — the market has already repriced.
+        # The cap flows into the spread calculation automatically (spread prob is
+        # derived from adjusted_home_prob via inverse-CDF below).
+        home_injury_capped = False
+        away_injury_capped = False
+
+        if home_inj >= _INJURY_GATE:
+            max_home_prob = min(market_home_prob * (1 + _INJURY_MARGIN), 0.90)
+            if adjusted_home_prob > max_home_prob:
+                adjusted_home_prob = max_home_prob
+                adjusted_away_prob = 1 - adjusted_home_prob
+                home_injury_capped = True
+                research.append(
+                    f"⚠ {home} injury credibility cap applied — season stats include "
+                    f"injured players; model probability anchored near market "
+                    f"({max_home_prob*100:.0f}% vs raw {(adjusted_home_prob)*100:.0f}%)"
+                )
+
+        if away_inj >= _INJURY_GATE:
+            max_away_prob = min(market_away_prob * (1 + _INJURY_MARGIN), 0.90)
+            if adjusted_away_prob > max_away_prob:
+                adjusted_away_prob = max_away_prob
+                adjusted_home_prob = 1 - adjusted_away_prob
+                away_injury_capped = True
+                research.append(
+                    f"⚠ {away} injury credibility cap applied — season stats include "
+                    f"injured players; model probability anchored near market "
+                    f"({max_away_prob*100:.0f}% vs raw {(adjusted_away_prob)*100:.0f}%)"
+                )
+
         home_edge = adjusted_home_prob - market_home_prob
         away_edge = adjusted_away_prob - market_away_prob
 
         if home_edge >= MIN_EDGE and has_positive_ev(adjusted_home_prob, market_home_prob):
             sizing = robinhood_kelly(adjusted_home_prob, market_home_prob)
             if sizing.num_contracts > 0:
+                conf = _confidence_label(home_edge, len(signals), stats_available)
+                if home_injury_capped:
+                    conf = "MEDIUM"
                 recs.append(BetRecommendation(
                     sport="NBA", game=label, bet_type="Moneyline", pick=home,
                     market_prob=market_home_prob, model_prob=adjusted_home_prob,
                     edge=home_edge, contract_price=market_home_prob,
-                    sizing=sizing,
-                    confidence=_confidence_label(home_edge, len(signals), stats_available),
+                    sizing=sizing, confidence=conf,
                     signals=signals[:], research=research[:],
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
@@ -266,12 +313,14 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
         if away_edge >= MIN_EDGE and has_positive_ev(adjusted_away_prob, market_away_prob):
             sizing = robinhood_kelly(adjusted_away_prob, market_away_prob)
             if sizing.num_contracts > 0:
+                conf = _confidence_label(away_edge, len(signals), stats_available)
+                if away_injury_capped:
+                    conf = "MEDIUM"
                 recs.append(BetRecommendation(
                     sport="NBA", game=label, bet_type="Moneyline", pick=away,
                     market_prob=market_away_prob, model_prob=adjusted_away_prob,
                     edge=away_edge, contract_price=market_away_prob,
-                    sizing=sizing,
-                    confidence=_confidence_label(away_edge, len(signals), stats_available),
+                    sizing=sizing, confidence=conf,
                     signals=signals[:], research=research[:],
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
@@ -284,9 +333,8 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             market_home_cover = sp.get("home_prob", 0.50)
             market_away_cover = sp.get("away_prob", 0.50)
 
-            # Derive effective point margin from win probability (inverse of _nba_margin_to_prob).
-            # This keeps the spread model consistent with every adjustment already applied
-            # (home court, rest, injuries, schedule load) without recomputing them separately.
+            # Derive effective point margin from the (already injury-capped) win probability.
+            # This keeps the spread model consistent with every adjustment already applied.
             effective_margin = float(norm.ppf(adjusted_home_prob)) * NBA_SPREAD_STD
 
             # P(home covers) = P(actual margin > −home_spread_line)
@@ -301,13 +349,15 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             if home_sp_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
                 sizing = robinhood_kelly(model_home_cover, market_home_cover)
                 if sizing.num_contracts > 0:
+                    conf = _confidence_label(home_sp_edge, len(signals), stats_available)
+                    if home_injury_capped:
+                        conf = "MEDIUM"
                     recs.append(BetRecommendation(
                         sport="NBA", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
                         market_prob=market_home_cover, model_prob=model_home_cover,
                         edge=home_sp_edge, contract_price=market_home_cover,
-                        sizing=sizing,
-                        confidence=_confidence_label(home_sp_edge, len(signals), stats_available),
+                        sizing=sizing, confidence=conf,
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
@@ -316,13 +366,15 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             if away_sp_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
                 if sizing.num_contracts > 0:
+                    conf = _confidence_label(away_sp_edge, len(signals), stats_available)
+                    if away_injury_capped:
+                        conf = "MEDIUM"
                     recs.append(BetRecommendation(
                         sport="NBA", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",
                         market_prob=market_away_cover, model_prob=model_away_cover,
                         edge=away_sp_edge, contract_price=market_away_cover,
-                        sizing=sizing,
-                        confidence=_confidence_label(away_sp_edge, len(signals), stats_available),
+                        sizing=sizing, confidence=conf,
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
@@ -619,18 +671,49 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         market_home_prob = ml["home_prob"]
         market_away_prob = ml["away_prob"]
 
+        # ── Injury credibility cap (MLB) ──────────────────────────────────────
+        # Same logic as NBA: when a team's injury adjustment ≥ _INJURY_GATE,
+        # cap its model probability near market so stale season stats don't
+        # produce phantom edges caused by missing key players.
+        home_injury_capped = False
+        away_injury_capped = False
+
+        if home_inj >= _INJURY_GATE:
+            max_home_prob = min(market_home_prob * (1 + _INJURY_MARGIN), 0.85)
+            if model_home_prob > max_home_prob:
+                model_home_prob = max_home_prob
+                model_away_prob = 1 - model_home_prob
+                home_injury_capped = True
+                research.append(
+                    f"⚠ {home} injury credibility cap applied — model probability "
+                    f"anchored near market ({max_home_prob*100:.0f}%)"
+                )
+
+        if away_inj >= _INJURY_GATE:
+            max_away_prob = min(market_away_prob * (1 + _INJURY_MARGIN), 0.85)
+            if model_away_prob > max_away_prob:
+                model_away_prob = max_away_prob
+                model_home_prob = 1 - model_away_prob
+                away_injury_capped = True
+                research.append(
+                    f"⚠ {away} injury credibility cap applied — model probability "
+                    f"anchored near market ({max_away_prob*100:.0f}%)"
+                )
+
         home_edge = model_home_prob - market_home_prob
         away_edge = model_away_prob - market_away_prob
 
         if home_edge >= MIN_EDGE and has_positive_ev(model_home_prob, market_home_prob):
             sizing = robinhood_kelly(model_home_prob, market_home_prob)
             if sizing.num_contracts > 0:
+                conf = _confidence_label(home_edge, len(signals), stats_available)
+                if home_injury_capped:
+                    conf = "MEDIUM"
                 recs.append(BetRecommendation(
                     sport="MLB", game=label, bet_type="Moneyline", pick=home,
                     market_prob=market_home_prob, model_prob=model_home_prob,
                     edge=home_edge, contract_price=market_home_prob,
-                    sizing=sizing,
-                    confidence=_confidence_label(home_edge, len(signals), stats_available),
+                    sizing=sizing, confidence=conf,
                     signals=signals[:], research=research[:],
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
@@ -639,12 +722,14 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         if away_edge >= MIN_EDGE and has_positive_ev(model_away_prob, market_away_prob):
             sizing = robinhood_kelly(model_away_prob, market_away_prob)
             if sizing.num_contracts > 0:
+                conf = _confidence_label(away_edge, len(signals), stats_available)
+                if away_injury_capped:
+                    conf = "MEDIUM"
                 recs.append(BetRecommendation(
                     sport="MLB", game=label, bet_type="Moneyline", pick=away,
                     market_prob=market_away_prob, model_prob=model_away_prob,
                     edge=away_edge, contract_price=market_away_prob,
-                    sizing=sizing,
-                    confidence=_confidence_label(away_edge, len(signals), stats_available),
+                    sizing=sizing, confidence=conf,
                     signals=signals[:], research=research[:],
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
@@ -657,7 +742,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             market_home_cover = sp.get("home_prob", 0.50)
             market_away_cover = sp.get("away_prob", 0.50)
 
-            # Derive effective run margin from win probability, consistent with all adjustments above.
+            # Derive effective run margin from the (already injury-capped) win probability.
             effective_margin = float(norm.ppf(model_home_prob)) * MLB_SPREAD_STD
 
             # P(home covers run line) = P(actual margin > −home_spread_line)
@@ -672,13 +757,15 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             if home_rl_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
                 sizing = robinhood_kelly(model_home_cover, market_home_cover)
                 if sizing.num_contracts > 0:
+                    conf = _confidence_label(home_rl_edge, len(signals), stats_available)
+                    if home_injury_capped:
+                        conf = "MEDIUM"
                     recs.append(BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
                         market_prob=market_home_cover, model_prob=model_home_cover,
                         edge=home_rl_edge, contract_price=market_home_cover,
-                        sizing=sizing,
-                        confidence=_confidence_label(home_rl_edge, len(signals), stats_available),
+                        sizing=sizing, confidence=conf,
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
@@ -687,13 +774,15 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             if away_rl_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
                 if sizing.num_contracts > 0:
+                    conf = _confidence_label(away_rl_edge, len(signals), stats_available)
+                    if away_injury_capped:
+                        conf = "MEDIUM"
                     recs.append(BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",
                         market_prob=market_away_cover, model_prob=model_away_cover,
                         edge=away_rl_edge, contract_price=market_away_cover,
-                        sizing=sizing,
-                        confidence=_confidence_label(away_rl_edge, len(signals), stats_available),
+                        sizing=sizing, confidence=conf,
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
