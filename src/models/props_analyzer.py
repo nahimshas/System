@@ -82,6 +82,11 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
             team_rest = rest_days.get(team, 1)
             opp_rest  = rest_days.get(opp, 1)
 
+            # B2B flag — computed once, applied to ALL props for this team
+            # so every prop card for the same player shows the same context.
+            is_b2b = (team_rest == 0)
+            b2b_signal = f"⚠ {team} on back-to-back — production typically reduced" if is_b2b else None
+
             # Shared research block for all props in this matchup
             base_research = [
                 f"{team}: {team_wins}W-{team_losses}L | PPG {off_rtg:.1f} | OPPG {opp_def_rtg:.1f} (opp) | Net {team_net:+.1f}",
@@ -116,7 +121,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     model_pts >= 23
                     and opp_def_rtg > 111
                     and expected_team_pts > league_avg + 4
-                    and team_rest > 0
+                    and not is_b2b
                 ) else "MEDIUM"
                 pts_margin = round(model_pts - 18.0, 1)
                 pts_signals = [
@@ -130,8 +135,8 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                         pts_signals.append("🏆 Playoffs: star usage boost applied (+5%)")
                     else:
                         pts_signals.append("🏆 Playoffs: tighter defense — verify line carefully")
-                if team_rest == 0:
-                    pts_signals.append(f"⚠ {team} on B2B — consider reducing line or fading")
+                if b2b_signal:
+                    pts_signals.append(b2b_signal)
                 picks.append(PropPick(
                     sport="NBA",
                     player=pts_name,
@@ -175,7 +180,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     signals=[
                         f"{reb_name} averages {reb_season:.1f} rebounds/game this season",
                         f"Matchup pace supports rebounding volume",
-                    ],
+                    ] + ([b2b_signal] if b2b_signal else []),
                     research=base_research[:],
                     commence_time=game_commence,
                 ))
@@ -205,7 +210,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     signals=[
                         f"{ast_name} averages {ast_season:.1f} assists/game this season",
                         f"High-scoring expected game supports assist volume",
-                    ],
+                    ] + ([b2b_signal] if b2b_signal else []),
                     research=base_research[:],
                     commence_time=game_commence,
                 ))

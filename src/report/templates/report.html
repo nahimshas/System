@@ -302,7 +302,10 @@
       <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">Model Line</div><div class="stat-value blue">{{ prop.model_line }}</div></div>
-        <div class="stat-box"><div class="stat-label">Margin</div><div class="stat-value {% if prop.model_margin >= 3 %}green{% elif prop.model_margin >= 1 %}yellow{% else %}teal{% endif %}">+{{ prop.model_margin }}</div></div>
+        <div class="stat-box" title="How far the model projects above the minimum threshold for recommending this prop">
+          <div class="stat-label">Cushion</div>
+          <div class="stat-value {% if prop.model_margin >= 3 %}green{% elif prop.model_margin >= 1 %}yellow{% else %}teal{% endif %}">+{{ prop.model_margin }}</div>
+        </div>
         <div class="stat-box"><div class="stat-label">Confidence</div><div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">{{ prop.confidence }}</div></div>
       </div>
       {% if prop.signals %}
