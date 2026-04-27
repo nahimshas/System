@@ -115,7 +115,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 05:06 PM PDT</div>
+    <div class="subtitle">Sunday, April 26, 2026 &middot; Generated April 26, 2026 at 05:15 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
       MLB: 0 games &nbsp;|&nbsp;
@@ -149,7 +149,9 @@
          data-sport="MLB"
          data-cost="24.37"
          data-profit="23.63"
-         data-confidence="HIGH">
+         data-confidence="HIGH"
+         data-edge-pct="45.4"
+         data-model-prob-pct="98.9">
       <div class="card-header">
         <div>
           <div class="card-title">
@@ -210,7 +212,9 @@
          data-sport="NBA"
          data-cost="20.66"
          data-profit="17.34"
-         data-confidence="HIGH">
+         data-confidence="HIGH"
+         data-edge-pct="40.5"
+         data-model-prob-pct="92.9">
       <div class="card-header">
         <div>
           <div class="card-title">
@@ -271,7 +275,9 @@
          data-sport="MLB"
          data-cost="17.67"
          data-profit="19.33"
-         data-confidence="HIGH">
+         data-confidence="HIGH"
+         data-edge-pct="40.1"
+         data-model-prob-pct="85.0">
       <div class="card-header">
         <div>
           <div class="card-title">
@@ -332,7 +338,9 @@
          data-sport="MLB"
          data-cost="18.31"
          data-profit="14.69"
-         data-confidence="HIGH">
+         data-confidence="HIGH"
+         data-edge-pct="34.9"
+         data-model-prob-pct="88.4">
       <div class="card-header">
         <div>
           <div class="card-title">
@@ -393,7 +401,9 @@
          data-sport="NBA"
          data-cost="14.68"
          data-profit="12.32"
-         data-confidence="HIGH">
+         data-confidence="HIGH"
+         data-edge-pct="31.4"
+         data-model-prob-pct="83.8">
       <div class="card-header">
         <div>
           <div class="card-title">
@@ -456,7 +466,9 @@
          id="bet-p1"
          data-cost="6.27"
          data-profit="18.73"
-         data-confidence="HIGH">
+         data-confidence="HIGH"
+         data-edge-pct="40.7"
+         data-model-prob-pct="63.8">
       <div class="card-header">
         <div>
           <div class="card-title" style="color:var(--purple);">
@@ -506,7 +518,9 @@
          id="bet-p2"
          data-cost="6.23"
          data-profit="13.77"
-         data-confidence="HIGH">
+         data-confidence="HIGH"
+         data-edge-pct="36.9"
+         data-model-prob-pct="66.1">
       <div class="card-header">
         <div>
           <div class="card-title" style="color:var(--purple);">
@@ -1424,19 +1438,19 @@
       
       <details style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
         <summary style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);cursor:pointer;list-style:none;padding:4px 0;">
-          ▶ Trend Charts &amp; Calibration (4 settled bets)
+          ▶ Trend Charts &amp; Calibration (<span id="chart-summary-count">4</span> settled bets)
         </summary>
         <div style="margin-top:12px;">
 
           
           <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin-bottom:6px;">
             Cumulative PnL
-            <span style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px;
+            <span id="chart-pnl-total" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px;
                          color:var(--red);">
               $-16.19 total
             </span>
           </div>
-          <svg viewBox="0 0 460 130" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+          <svg id="svg-pnl" viewBox="0 0 460 130" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
             
             <line x1="42" y1="10.0" x2="448" y2="10.0"
                   stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>
@@ -1473,7 +1487,12 @@
           </svg>
 
           
+          <div id="chart-wr-label" style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin:14px 0 6px;display:none;">
+            Rolling Win Rate <span style="font-weight:400;text-transform:none;letter-spacing:0;">(last 20 bets)</span>
+          </div>
+          <svg id="svg-wr" viewBox="0 0 460 130" style="width:100%;display:none;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
           
+          </svg>
 
           
           
@@ -1494,7 +1513,7 @@
                 <th style="text-align:center;padding:5px 6px;color:var(--muted);font-size:0.68rem;text-transform:uppercase;border-bottom:1px solid var(--border);">Delta</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="chart-cal-tbody">
               
               
               <tr>
@@ -1575,6 +1594,9 @@
 <script>
 (function () {
   "use strict";
+
+  // ── Report date (ISO) — used to tag live-settled records for chart updates ─
+  var TODAY_DATE = "2026-04-26";
 
   // ── ESPN endpoints ───────────────────────────────────────────────────────
   var ESPN = {
@@ -2259,6 +2281,208 @@
     // Show "● includes today" badge
     var badge = document.getElementById("perf-live-badge");
     if (badge) badge.style.display = "inline-block";
+
+    // ── Build liveRecords array and update charts ─────────────────────────
+    var liveRecords = [];
+    document.querySelectorAll(".card[data-home-team]").forEach(function (betCard) {
+      var result = betCard.getAttribute("data-live-result");
+      if (!result) return;
+      var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(betCard.getAttribute("data-profit") || "0");
+      liveRecords.push({
+        date:            TODAY_DATE,
+        result:          result,
+        cost:            cost,
+        actual_pnl:      result === "WON" ? profit : (result === "PUSH" ? 0 : -cost),
+        edge_pct:        parseFloat(betCard.getAttribute("data-edge-pct")        || "0"),
+        model_prob_pct:  parseFloat(betCard.getAttribute("data-model-prob-pct")  || "50"),
+        sport:           betCard.getAttribute("data-sport") || "",
+        confidence:      betCard.getAttribute("data-confidence") || "MEDIUM",
+      });
+    });
+    document.querySelectorAll(".card[data-parlay='true']").forEach(function (betCard) {
+      var result = betCard.getAttribute("data-live-result");
+      if (!result) return;
+      var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(betCard.getAttribute("data-profit") || "0");
+      liveRecords.push({
+        date:            TODAY_DATE,
+        result:          result,
+        cost:            cost,
+        actual_pnl:      result === "WON" ? profit : (result === "PUSH" ? 0 : -cost),
+        edge_pct:        parseFloat(betCard.getAttribute("data-edge-pct")        || "0"),
+        model_prob_pct:  parseFloat(betCard.getAttribute("data-model-prob-pct")  || "50"),
+        sport:           "PARLAY",
+        confidence:      betCard.getAttribute("data-confidence") || "MEDIUM",
+      });
+    });
+    if (liveRecords.length > 0) updateCharts(liveRecords);
+  }
+
+  // ── Live chart update ────────────────────────────────────────────────────
+  // SVG canvas constants — must match Python's build_chart_data() values
+  var _SVG_W = 460, _SVG_H = 130, _PAD_L = 42, _PAD_R = 12, _PAD_T = 10, _PAD_B = 28;
+  var _PLOT_W = _SVG_W - _PAD_L - _PAD_R;   // 406
+  var _PLOT_H = _SVG_H - _PAD_T - _PAD_B;   // 92
+
+  function _sx(i, n) {
+    if (n <= 1) return _PAD_L + _PLOT_W / 2;
+    return _PAD_L + (i / (n - 1)) * _PLOT_W;
+  }
+  function _sy(val, lo, hi) {
+    if (hi === lo) return _PAD_T + _PLOT_H / 2;
+    return _PAD_T + _PLOT_H * (1 - (val - lo) / (hi - lo));
+  }
+  function _pts(coords) {
+    return coords.map(function (c) { return c[0].toFixed(1) + "," + c[1].toFixed(1); }).join(" ");
+  }
+
+  function updateCharts(liveRecords) {
+    var histEl = document.getElementById("hist-data");
+    var histRecords = [];
+    if (histEl) {
+      try { histRecords = JSON.parse(histEl.textContent || "[]"); } catch (e) { }
+    }
+
+    // Combine history + today's live-settled records
+    var allRecords = histRecords.concat(liveRecords);
+    var settled = allRecords.filter(function (r) {
+      return r.result === "WON" || r.result === "LOST" || r.result === "PUSH";
+    });
+    if (settled.length < 3) return;
+
+    // ── Cumulative PnL ──────────────────────────────────────────────────
+    var cum = 0;
+    var pnlSeries = settled.map(function (r, i) {
+      cum += (r.actual_pnl || 0);
+      return { i: i, date: (r.date || ""), cum: Math.round(cum * 100) / 100 };
+    });
+    var pnlVals = pnlSeries.map(function (p) { return p.cum; });
+    var pnlLo = Math.min.apply(null, pnlVals.concat([0]));
+    var pnlHi = Math.max.apply(null, pnlVals.concat([0]));
+    if (pnlHi === pnlLo) pnlHi = pnlLo + 1;
+    var n = pnlSeries.length;
+    var pnlCoords = pnlSeries.map(function (p) { return [_sx(p.i, n), _sy(p.cum, pnlLo, pnlHi)]; });
+    var finalPnl  = pnlSeries[n - 1].cum;
+    var zeroY     = _sy(0, pnlLo, pnlHi).toFixed(1);
+    var pnlColor  = finalPnl >= 0 ? "#22c55e" : "#ef4444";
+    var lastC     = pnlCoords[n - 1];
+
+    // Y-axis labels
+    var pnlYLbls = [
+      { y: _sy(pnlHi, pnlLo, pnlHi), val: "$" + (pnlHi >= 0 ? "+" : "") + pnlHi.toFixed(0) },
+      { y: _sy(pnlLo, pnlLo, pnlHi), val: "$" + (pnlLo >= 0 ? "+" : "") + pnlLo.toFixed(0) },
+    ];
+    if (pnlLo < 0 && pnlHi > 0) {
+      pnlYLbls.splice(1, 0, { y: parseFloat(zeroY), val: "$0" });
+    }
+
+    // X-axis labels (first, mid, last)
+    var xLbls = [{ x: _sx(0, n), val: pnlSeries[0].date.slice(5) }];
+    if (n > 2) xLbls.push({ x: _sx(Math.floor(n / 2), n), val: pnlSeries[Math.floor(n / 2)].date.slice(5) });
+    xLbls.push({ x: _sx(n - 1, n), val: pnlSeries[n - 1].date.slice(5) });
+
+    // Build PnL SVG
+    var pnlHtml =
+      '<line x1="' + _PAD_L + '" y1="' + zeroY + '" x2="' + (_SVG_W - _PAD_R) + '" y2="' + zeroY +
+        '" stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<polyline points="' + _pts(pnlCoords) + '" fill="none" stroke="' + pnlColor +
+        '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + lastC[0].toFixed(1) + '" cy="' + lastC[1].toFixed(1) + '" r="3" fill="' + pnlColor + '"/>';
+    pnlYLbls.forEach(function (l) {
+      pnlHtml += '<text x="' + (_PAD_L - 4) + '" y="' + (l.y + 4).toFixed(1) +
+        '" text-anchor="end" font-size="9" fill="#94a3b8">' + l.val + '</text>';
+    });
+    xLbls.forEach(function (l) {
+      pnlHtml += '<text x="' + l.x.toFixed(1) + '" y="' + (_SVG_H - 4) +
+        '" text-anchor="middle" font-size="9" fill="#94a3b8">' + l.val + '</text>';
+    });
+
+    var pnlSvg = document.getElementById("svg-pnl");
+    if (pnlSvg) pnlSvg.innerHTML = pnlHtml;
+
+    var pnlHeader = document.getElementById("chart-pnl-total");
+    if (pnlHeader) {
+      pnlHeader.textContent = (finalPnl >= 0 ? "$+" : "$") + Math.abs(finalPnl).toFixed(2) + " total";
+      pnlHeader.style.color = pnlColor;
+    }
+
+    // ── Rolling win-rate ────────────────────────────────────────────────
+    var WINDOW = 20, MIN_SHOW = 10;
+    var wrSeries = [];
+    for (var i = MIN_SHOW - 1; i < settled.length; i++) {
+      var win = settled.slice(Math.max(0, i - WINDOW + 1), i + 1);
+      var dec = win.filter(function (r) { return r.result === "WON" || r.result === "LOST"; });
+      if (!dec.length) continue;
+      var rate = dec.filter(function (r) { return r.result === "WON"; }).length / dec.length * 100;
+      wrSeries.push({ i: i, rate: Math.round(rate * 10) / 10 });
+    }
+    var wrSvg = document.getElementById("svg-wr");
+    var wrLabel = document.getElementById("chart-wr-label");
+    if (wrSvg && wrSeries.length > 0) {
+      var nw = settled.length;
+      var ref50Y = _sy(50, 0, 100).toFixed(1);
+      var wrCoords = wrSeries.map(function (p) { return [_sx(p.i, nw), _sy(p.rate, 0, 100)]; });
+      var wrHtml =
+        '<line x1="' + _PAD_L + '" y1="' + ref50Y + '" x2="' + (_SVG_W - _PAD_R) + '" y2="' + ref50Y +
+          '" stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>' +
+        '<text x="' + (_SVG_W - 10) + '" y="' + (parseFloat(ref50Y) + 4) +
+          '" text-anchor="start" font-size="9" fill="#2d3148">50%</text>' +
+        '<polyline points="' + _pts(wrCoords) + '" fill="none" stroke="#3b82f6"' +
+          ' stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      [{ y: _sy(100, 0, 100), val: "100%" }, { y: _sy(50, 0, 100), val: "50%" }, { y: _sy(0, 0, 100), val: "0%" }]
+        .forEach(function (l) {
+          wrHtml += '<text x="' + (_PAD_L - 4) + '" y="' + (l.y + 4).toFixed(1) +
+            '" text-anchor="end" font-size="9" fill="#94a3b8">' + l.val + '</text>';
+        });
+      xLbls.forEach(function (l) {
+        wrHtml += '<text x="' + l.x.toFixed(1) + '" y="' + (_SVG_H - 4) +
+          '" text-anchor="middle" font-size="9" fill="#94a3b8">' + l.val + '</text>';
+      });
+      wrSvg.innerHTML = wrHtml;
+      wrSvg.style.display = "block";
+      if (wrLabel) wrLabel.style.display = "block";
+    }
+
+    // ── Calibration table ───────────────────────────────────────────────
+    var CAL_BUCKETS = [
+      { label: "3–5%", lo: 0.03, hi: 0.05 },
+      { label: "5–8%", lo: 0.05, hi: 0.08 },
+      { label: "8%+",  lo: 0.08, hi: 1.00 },
+    ];
+    var calTbody = document.getElementById("chart-cal-tbody");
+    if (calTbody) {
+      var calHtml = "", anyBets = false;
+      CAL_BUCKETS.forEach(function (bucket) {
+        var bets = settled.filter(function (r) {
+          var ep = (r.edge_pct || 0) / 100;
+          return ep >= bucket.lo && (bucket.hi >= 1.0 || ep < bucket.hi);
+        });
+        if (!bets.length) return;
+        anyBets = true;
+        var decisions = bets.filter(function (r) { return r.result === "WON" || r.result === "LOST"; });
+        var won3 = decisions.filter(function (r) { return r.result === "WON"; }).length;
+        var actual   = decisions.length ? Math.round(won3 / decisions.length * 1000) / 10 : null;
+        var avgModel = bets.length ? Math.round(bets.reduce(function (s, r) {
+          return s + (r.model_prob_pct || 50); }, 0) / bets.length * 10) / 10 : null;
+        var delta = (actual !== null && avgModel !== null) ? Math.round((actual - avgModel) * 10) / 10 : null;
+        var dColor = delta !== null ? (delta > 2 ? "var(--green)" : delta < -2 ? "var(--red)" : "var(--muted)") : "var(--muted)";
+        calHtml +=
+          '<tr><td style="padding:6px 6px;border-bottom:1px solid var(--border);font-weight:600;">' + bucket.label + '</td>' +
+          '<td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;color:var(--muted);">' + bets.length + '</td>' +
+          '<td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;">' +
+            (avgModel !== null ? avgModel + "%" : "—") + '</td>' +
+          '<td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;">' +
+            (actual !== null ? actual + "%" : "—") + '</td>' +
+          '<td style="padding:6px 6px;border-bottom:1px solid var(--border);text-align:center;font-weight:600;color:' + dColor + ';">' +
+            (delta !== null ? (delta >= 0 ? "+" : "") + delta + "%" : "—") + '</td></tr>';
+      });
+      if (anyBets) calTbody.innerHTML = calHtml;
+    }
+
+    // Update summary count in details label
+    var countEl = document.getElementById("chart-summary-count");
+    if (countEl) countEl.textContent = settled.length;
   }
 
   // ── Main refresh loop ────────────────────────────────────────────────────
@@ -2329,5 +2553,8 @@
   });
 })();
 </script>
+
+<script id="hist-data" type="application/json">[{"actual_pnl": -11.46, "bet_type": "Moneyline", "confidence": "HIGH", "cost": 11.46, "date": "2026-04-25", "edge_pct": 20.7, "game": "Philadelphia Phillies @ Atlanta Braves", "market_prob_pct": 58.3, "model_prob_pct": 79.0, "pick": "Atlanta Braves", "profit_if_win": 7.54, "result": "LOST", "sport": "MLB", "type": "single"}, {"actual_pnl": 0.94, "bet_type": "Total", "confidence": "MEDIUM", "cost": 1.06, "date": "2026-04-25", "edge_pct": 4.4, "game": "Philadelphia Phillies @ Atlanta Braves", "market_prob_pct": 51.2, "model_prob_pct": 55.6, "pick": "Over 8.5", "profit_if_win": 0.94, "result": "WON", "sport": "MLB", "type": "single"}, {"actual_pnl": 2.49, "bet_type": "Moneyline", "confidence": "HIGH", "cost": 2.51, "date": "2026-04-25", "edge_pct": 7.8, "game": "Denver Nuggets @ Minnesota Timberwolves", "market_prob_pct": 48.3, "model_prob_pct": 56.1, "pick": "Minnesota Timberwolves", "profit_if_win": 2.49, "result": "WON", "sport": "NBA", "type": "single"}, {"actual_pnl": -8.16, "bet_type": "Total", "confidence": "HIGH", "cost": 8.16, "date": "2026-04-25", "edge_pct": 17.6, "game": "Denver Nuggets @ Minnesota Timberwolves", "market_prob_pct": 52.4, "model_prob_pct": 69.9, "pick": "Over 228.5", "profit_if_win": 6.84, "result": "LOST", "sport": "NBA", "type": "single"}]</script>
+
 </body>
 </html>
