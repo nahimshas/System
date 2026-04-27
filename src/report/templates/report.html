@@ -720,9 +720,12 @@
   var TODAY_DATE = "{{ report.run_date_iso }}";
 
   // ── ESPN endpoints ───────────────────────────────────────────────────────
+  // Always fetch the report's own date so refreshing after midnight still
+  // finds the right games (ESPN default scoreboard returns today's games only).
+  var _espnDate = TODAY_DATE.replace(/-/g, "");   // "2026-04-27" → "20260427"
   var ESPN = {
-    NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
-    MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard"
+    NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=" + _espnDate,
+    MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate
   };
 
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
