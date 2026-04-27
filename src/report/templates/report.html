@@ -305,13 +305,6 @@
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
           {% if prop.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
           <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
-          {% if last %}
-          <span title="Previous game result ({{ last.date }}): Model {{ last.model_line }} | Actual {{ last.actual_stat }}"
-                style="font-size:0.65rem;padding:2px 7px;border-radius:99px;border:1px solid;white-space:nowrap;
-                       {% if last.hit %}color:#4ade80;border-color:#166534;background:#052e16;{% else %}color:#f87171;border-color:#7f1d1d;background:#2d0a0a;{% endif %}">
-            Prior: {% if last.hit %}✅ {{ last.actual_stat | int }}{% else %}❌ {{ last.actual_stat | int }}{% endif %}&nbsp;({{ last.date[5:] }})
-          </span>
-          {% endif %}
           <div class="prop-live-badge"></div>
         </div>
       </div>
