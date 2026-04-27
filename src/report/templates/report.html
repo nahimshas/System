@@ -1426,7 +1426,7 @@
     }
 
     // ── Rolling win-rate ────────────────────────────────────────────────
-    var WINDOW = 20, MIN_SHOW = 10;
+    var WINDOW = 20, MIN_SHOW = 3;
     var wrSeries = [];
     for (var i = MIN_SHOW - 1; i < settled.length; i++) {
       var win = settled.slice(Math.max(0, i - WINDOW + 1), i + 1);

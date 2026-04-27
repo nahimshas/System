@@ -547,9 +547,9 @@ def build_chart_data() -> Dict:
     pnl_below = _points_str([(x, y) for (x, y), p in zip(pnl_coords, pnl_series) if p["cum"] < 0])
     pnl_all   = _points_str(pnl_coords)
 
-    # ── Rolling win-rate series (window = 20, show from bet 10 onwards) ──────
+    # ── Rolling win-rate series (window = 20, show from bet 3 onwards) ───────
     WINDOW     = 20
-    MIN_SHOW   = 10
+    MIN_SHOW   = 3
     wr_series: List[Dict] = []
     for i in range(MIN_SHOW - 1, len(settled)):
         window    = settled[max(0, i - WINDOW + 1): i + 1]
