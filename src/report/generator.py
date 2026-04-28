@@ -121,6 +121,13 @@ def build_report(
                 f"⚡ Prop updated: {w['removed']} → {w['new']}. Reason: {w['reason']}"
             )
 
+    # ── Yesterday's recap (settled bets post-mortem) ─────────────────────────
+    try:
+        from src.report.recap import build_recap
+        recap = build_recap(run_date - timedelta(days=1))
+    except Exception:
+        recap = {"has_recap": False}
+
     # ── Performance summary (from settled history) ───────────────────────────
     try:
         from src.data.outcome_checker import load_performance_summary, build_chart_data, load_prop_accuracy
@@ -168,4 +175,5 @@ def build_report(
         "prop_accuracy":      prop_accuracy,
         "has_prop_accuracy":  bool(prop_accuracy.get("total", 0)),
         "prop_last_result":   prop_last_result,
+        "recap":              recap,
     }

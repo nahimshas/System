@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      no_email:
+        description: "Skip sending the email (useful for test/debug runs)"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   generate-report:
@@ -64,7 +69,11 @@ jobs:
           if [ -n "${{ github.event.inputs.league }}" ]; then
             LEAGUE_ARG="--league ${{ github.event.inputs.league }}"
           fi
-          python -m src.main $LEAGUE_ARG
+          NO_EMAIL_ARG=""
+          if [ "${{ github.event.inputs.no_email }}" = "true" ]; then
+            NO_EMAIL_ARG="--no-email"
+          fi
+          python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG
 
       - name: Commit updated report and state to repo
         run: |

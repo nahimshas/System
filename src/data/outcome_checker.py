@@ -106,6 +106,8 @@ def check_and_settle(today: date) -> int:
             "game":             pick.get("game", ""),
             "bet_type":         pick.get("bet_type", ""),
             "pick":             pick.get("pick", ""),
+            "home_team":        pick.get("home_team", ""),
+            "away_team":        pick.get("away_team", ""),
             "edge_pct":         pick.get("edge_pct", 0),
             "confidence":       pick.get("confidence", "MEDIUM"),
             "model_prob_pct":   pick.get("model_prob_pct", 0),
@@ -114,6 +116,9 @@ def check_and_settle(today: date) -> int:
             "profit_if_win":    profit,
             "result":           result,
             "actual_pnl":       round(actual_pnl, 2),
+            # Calibration: actual final scores for post-mortem analysis
+            "actual_home_score": score_data["home_score"],
+            "actual_away_score": score_data["away_score"],
         })
 
     # ── Parlays ───────────────────────────────────────────────────────────────
