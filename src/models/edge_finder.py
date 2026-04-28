@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 #      causing the model to be overconfident on lopsided matchups.
 # MLB: real-world MLB run differential std ≈ 3.0 runs. 1.8 was far too tight,
 #      inflating all MLB edges significantly.
-NBA_SPREAD_STD = 14.0   # was 12.0
+NBA_SPREAD_STD = 12.0   # model uncertainty for point margin; 14.0 was too wide (suppressed all edges)
 MLB_SPREAD_STD = 3.0    # was 1.8
 
 # Injury credibility gate ─────────────────────────────────────────────────────
