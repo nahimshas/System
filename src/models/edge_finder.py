@@ -135,6 +135,10 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
     playoff = _is_nba_playoff()
     stats_available = bool(nba_ctx["season_stats"].get(home) or nba_ctx["season_stats"].get(away))
 
+    # Pre-initialise so Total block can reference these even if ml block is skipped
+    home_rest = nba_ctx["rest_days"].get(home, 1)
+    away_rest = nba_ctx["rest_days"].get(away, 1)
+
     ml = game.get("moneyline")
     if ml:
         market_home_prob = ml["home_prob"]
