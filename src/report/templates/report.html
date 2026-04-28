@@ -1909,9 +1909,14 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
           propSummaryCache[eventId] = { data: data, isFinal: isFinal };
+          var prevHtml = liveDiv.innerHTML;
           renderPropLive(liveDiv, data, player, propType, modelLine, isFinal, battingTeam);
-          // Append game period / inning below the stat badge for in-progress games
-          liveDiv.innerHTML += gameStatusLine(ev);
+          // Only append game period/inning when renderPropLive actually rendered a badge.
+          // If stat was null (player not found in box score) it returns early without
+          // touching innerHTML, so we must not append or we accumulate duplicates.
+          if (liveDiv.innerHTML !== prevHtml) {
+            liveDiv.innerHTML += gameStatusLine(ev);
+          }
         })
         .catch(function () {});
     });
