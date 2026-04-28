@@ -256,7 +256,7 @@
       "away_team": "Los Angeles Angels",
       "commence_time": "2026-04-28T00:30:00Z",
       "edge": 0.3816178659733992,
-      "locked": false
+      "locked": true
     }
   ],
   "parlays": [
@@ -336,6 +336,54 @@
     }
   ],
   "props": [
+    {
+      "sport": "NBA",
+      "player": "Jalen Duren",
+      "team": "Detroit Pistons",
+      "opponent": "Orlando Magic",
+      "prop_type": "Rebounds Over",
+      "model_line": 10.5,
+      "model_margin": 3.5,
+      "confidence": "HIGH",
+      "note": "Search 'Jalen Duren rebounds' on Robinhood. Model line: 10.5 RPG season avg. Look for Over at or below 10.",
+      "signals": [
+        "Jalen Duren averages 10.5 rebounds/game this season",
+        "Matchup pace supports rebounding volume"
+      ],
+      "research": [
+        "Detroit Pistons: 60W-22L | PPG 117.8 | OPPG 115.1 (opp) | Net +8.2",
+        "Orlando Magic: 45W-37L | Net +0.6",
+        "Detroit Pistons recent (14d): PPG 101.3 | OPPG 102.7 | Win% 33%",
+        "Model projected team pts: 110.4 (league avg 112.0)",
+        "Rest days \u2014 Detroit Pistons: 1d | Orlando Magic: 1d"
+      ],
+      "commence_time": "2026-04-28T00:10:00Z",
+      "locked": true
+    },
+    {
+      "sport": "NBA",
+      "player": "Cade Cunningham",
+      "team": "Detroit Pistons",
+      "opponent": "Orlando Magic",
+      "prop_type": "Assists Over",
+      "model_line": 9.9,
+      "model_margin": 2.9,
+      "confidence": "HIGH",
+      "note": "Search 'Cade Cunningham assists' on Robinhood. Model line: 9.9 APG season avg. Look for Over at or below 9.",
+      "signals": [
+        "Cade Cunningham averages 9.9 assists/game this season",
+        "High-scoring expected game supports assist volume"
+      ],
+      "research": [
+        "Detroit Pistons: 60W-22L | PPG 117.8 | OPPG 115.1 (opp) | Net +8.2",
+        "Orlando Magic: 45W-37L | Net +0.6",
+        "Detroit Pistons recent (14d): PPG 101.3 | OPPG 102.7 | Win% 33%",
+        "Model projected team pts: 110.4 (league avg 112.0)",
+        "Rest days \u2014 Detroit Pistons: 1d | Orlando Magic: 1d"
+      ],
+      "commence_time": "2026-04-28T00:10:00Z",
+      "locked": true
+    },
     {
       "sport": "NBA",
       "player": "Shai Gilgeous-Alexander",
@@ -431,54 +479,6 @@
         "Rest days \u2014 Denver Nuggets: 1d | Minnesota Timberwolves: 1d"
       ],
       "commence_time": "2026-04-28T02:40:00Z",
-      "locked": false
-    },
-    {
-      "sport": "NBA",
-      "player": "Jalen Duren",
-      "team": "Detroit Pistons",
-      "opponent": "Orlando Magic",
-      "prop_type": "Rebounds Over",
-      "model_line": 10.5,
-      "model_margin": 3.5,
-      "confidence": "HIGH",
-      "note": "Search 'Jalen Duren rebounds' on Robinhood. Model line: 10.5 RPG season avg. Look for Over at or below 10.",
-      "signals": [
-        "Jalen Duren averages 10.5 rebounds/game this season",
-        "Matchup pace supports rebounding volume"
-      ],
-      "research": [
-        "Detroit Pistons: 60W-22L | PPG 117.8 | OPPG 115.1 (opp) | Net +8.2",
-        "Orlando Magic: 45W-37L | Net +0.6",
-        "Detroit Pistons recent (14d): PPG 101.3 | OPPG 102.7 | Win% 33%",
-        "Model projected team pts: 110.4 (league avg 112.0)",
-        "Rest days \u2014 Detroit Pistons: 1d | Orlando Magic: 1d"
-      ],
-      "commence_time": "2026-04-28T00:10:00Z",
-      "locked": false
-    },
-    {
-      "sport": "NBA",
-      "player": "Cade Cunningham",
-      "team": "Detroit Pistons",
-      "opponent": "Orlando Magic",
-      "prop_type": "Assists Over",
-      "model_line": 9.9,
-      "model_margin": 2.9,
-      "confidence": "HIGH",
-      "note": "Search 'Cade Cunningham assists' on Robinhood. Model line: 9.9 APG season avg. Look for Over at or below 9.",
-      "signals": [
-        "Cade Cunningham averages 9.9 assists/game this season",
-        "High-scoring expected game supports assist volume"
-      ],
-      "research": [
-        "Detroit Pistons: 60W-22L | PPG 117.8 | OPPG 115.1 (opp) | Net +8.2",
-        "Orlando Magic: 45W-37L | Net +0.6",
-        "Detroit Pistons recent (14d): PPG 101.3 | OPPG 102.7 | Win% 33%",
-        "Model projected team pts: 110.4 (league avg 112.0)",
-        "Rest days \u2014 Detroit Pistons: 1d | Orlando Magic: 1d"
-      ],
-      "commence_time": "2026-04-28T00:10:00Z",
       "locked": false
     },
     {
@@ -627,16 +627,5 @@
       "locked": false
     }
   ],
-  "warnings": [
-    {
-      "type": "single_replaced",
-      "removed_pick": "Chicago Cubs",
-      "removed_game": "Chicago Cubs @ San Diego Padres",
-      "removed_edge_pct": 15.9,
-      "new_pick": "Los Angeles Angels +1.5",
-      "new_game": "Los Angeles Angels @ Chicago White Sox",
-      "new_edge_pct": 38.2,
-      "reason": "new bet 'Los Angeles Angels +1.5' (Los Angeles Angels @ Chicago White Sox) has 38.2% edge"
-    }
-  ]
+  "warnings": []
 }
