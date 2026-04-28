@@ -427,6 +427,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             model_over_prob = float(1 - norm.cdf(market_line, expected_total, total_std))
 
             base_total_signals = [
+                f"Model projected score: {home} {expected_home_pts:.0f} — {away} {expected_away_pts:.0f}",
                 f"Model expected total: {expected_total:.1f} vs market line {market_line}",
                 f"Combined pace: {avg_pace:.1f} possessions/game",
             ]
