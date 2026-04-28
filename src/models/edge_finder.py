@@ -255,6 +255,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             research.append("No significant injuries reported for either team")
 
         # --- Model projected score (shown on all bet cards for this game) ---
+        # B2B adjustment applied here so ML/Spread/Total all show the same number.
         if home_stats and away_stats:
             _avg_pace = (home_stats.get("pace", 100) + away_stats.get("pace", 100)) / 2
             if playoff:
@@ -264,6 +265,11 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             if playoff:
                 _exp_home *= NBA_PLAYOFF_SCORING_FACTOR
                 _exp_away *= NBA_PLAYOFF_SCORING_FACTOR
+            # Apply the same -4 pt B2B penalty used in the Total block
+            if home_rest == 0:
+                _exp_home -= 4.0
+            if away_rest == 0:
+                _exp_away -= 4.0
             signals.append(f"Model projected score: {home} {_exp_home:.0f} — {away} {_exp_away:.0f}")
 
         adjusted_home_prob = min(0.90, max(0.10, _nba_margin_to_prob(base_margin) + adj))
@@ -403,28 +409,27 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                 avg_pace *= NBA_PLAYOFF_PACE_FACTOR
             expected_home_pts = (home_stats.get("off_rtg", 110) + away_stats.get("def_rtg", 110)) / 2 * avg_pace / 100
             expected_away_pts = (away_stats.get("off_rtg", 110) + home_stats.get("def_rtg", 110)) / 2 * avg_pace / 100
-            expected_total = expected_home_pts + expected_away_pts
             if playoff:
-                expected_total *= NBA_PLAYOFF_SCORING_FACTOR
+                expected_home_pts *= NBA_PLAYOFF_SCORING_FACTOR
+                expected_away_pts *= NBA_PLAYOFF_SCORING_FACTOR
+
+            # Apply B2B penalty to individual team scores so per-team projection
+            # and expected_total are always consistent with each other.
+            b2b_teams = []
+            if home_rest == 0:
+                expected_home_pts -= 4.0
+                b2b_teams.append(home)
+            if away_rest == 0:
+                expected_away_pts -= 4.0
+                b2b_teams.append(away)
+
+            expected_total = expected_home_pts + expected_away_pts   # naturally B2B-adjusted
 
             market_line = total["line"]
             total_std   = NBA_PLAYOFF_TOTAL_STD if playoff else NBA_TOTAL_STD
             model_over_prob = float(1 - norm.cdf(market_line, expected_total, total_std))
             market_over_prob = total["over_prob"]
             market_under_prob = total["under_prob"]
-
-            # Apply B2B scoring penalty directly to expected total
-            # (4% penalty per team ≈ ~4 pts off expected scoring for that team)
-            b2b_teams = []
-            if home_rest == 0:
-                expected_total -= 4.0
-                b2b_teams.append(home)
-            if away_rest == 0:
-                expected_total -= 4.0
-                b2b_teams.append(away)
-
-            # Recalculate with B2B-adjusted expected total
-            model_over_prob = float(1 - norm.cdf(market_line, expected_total, total_std))
 
             base_total_signals = [
                 f"Model projected score: {home} {expected_home_pts:.0f} — {away} {expected_away_pts:.0f}",
