@@ -1686,10 +1686,19 @@
   var MLB_PITCHING_MARKERS = ["ERA", "fullInnings.partInnings", "earnedRuns"];
   var MLB_K_KEYS = ["strikeouts", "K", "SO", "Strikeouts"];
 
-  // Flexible name comparison: handles full names, last-name-only, abbreviations
+  // Strip accent marks so "Vásquez" matches "Vasquez", etc.
+  function stripAccents(s) {
+    if (s && s.normalize) {
+      return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+    return s;
+  }
+
+  // Flexible name comparison: handles full names, last-name-only, abbreviations,
+  // and accented vs unaccented spellings (ESPN often strips accents).
   function propNameMatch(a, b) {
-    a = (a || "").toLowerCase().trim();
-    b = (b || "").toLowerCase().trim();
+    a = stripAccents((a || "").toLowerCase().trim());
+    b = stripAccents((b || "").toLowerCase().trim());
     if (!a || !b) return false;
     if (a === b) return true;
     var aParts = a.split(" "), bParts = b.split(" ");
