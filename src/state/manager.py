@@ -201,6 +201,36 @@ def _prop_key(d) -> str:
     return f"{player}|{prop_type}"
 
 
+def _dedup_cached_singles(singles: List[Dict]) -> List[Dict]:
+    """
+    Remove lower-edge duplicates where the same team appears in both ML and
+    Spread slots for the same game.  The higher-edge entry wins; if equal,
+    the locked one is preferred.  Totals are exempt (no team to key on).
+    """
+    # Sort: locked before unlocked, then higher edge first — so the first
+    # occurrence of each key is always the one we want to keep.
+    ordered = sorted(
+        singles,
+        key=lambda s: (0 if s.get("locked") else 1, -s.get("edge", 0)),
+    )
+    seen: set = set()
+    result: List[Dict] = []
+    for s in ordered:
+        if s.get("bet_type") in ("Moneyline", "Spread"):
+            home = s.get("home_team", "")
+            away = s.get("away_team", "")
+            pick = s.get("pick", "")
+            team = next((t for t in [home, away] if pick.startswith(t)), pick)
+            key = (s.get("game", ""), team)
+            if key in seen:
+                continue
+            seen.add(key)
+        result.append(s)
+    # Restore original order (started/locked first, then by edge)
+    result.sort(key=lambda s: (0 if s.get("locked") else 1, -s.get("edge", 0)))
+    return result
+
+
 def _cached_parlay_valid(d: Dict) -> bool:
     """
     Validate a cached parlay dict against current Robinhood rules.
@@ -248,7 +278,7 @@ def merge_picks(
     warnings: List[Dict] = []
 
     # ── Singles ──────────────────────────────────────────────────────────────
-    locked_singles: List[Dict] = state.get("singles", [])
+    locked_singles: List[Dict] = _dedup_cached_singles(state.get("singles", []))
     _update_lock_flags(locked_singles)
 
     started  = [p for p in locked_singles if p.get("locked")]
