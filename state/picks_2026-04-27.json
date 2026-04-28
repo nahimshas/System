@@ -212,33 +212,33 @@
     },
     {
       "sport": "NBA",
-      "game": "Oklahoma City Thunder @ Phoenix Suns",
-      "game_time": "6:40 PM PDT",
+      "game": "Minnesota Timberwolves @ Denver Nuggets",
+      "game_time": "7:40 PM PDT",
       "bet_type": "Total",
-      "pick": "Under 215.5",
-      "market_prob_pct": 52.3,
-      "model_prob_pct": 75.1,
-      "edge_pct": 22.8,
-      "contract_price": 0.5232,
-      "contract_price_cents": 52.3,
-      "num_contracts": 20,
-      "total_cost": 10.86,
-      "profit_if_win": 9.14,
-      "loss_if_lose": 10.86,
-      "expected_value": 4.15,
+      "pick": "Under 224.5",
+      "market_prob_pct": 52.5,
+      "model_prob_pct": 81.6,
+      "edge_pct": 29.1,
+      "contract_price": 0.5248,
+      "contract_price_cents": 52.5,
+      "num_contracts": 27,
+      "total_cost": 14.71,
+      "profit_if_win": 12.29,
+      "loss_if_lose": 14.71,
+      "expected_value": 7.32,
       "confidence": "MEDIUM",
       "signals": [
-        "Model expected total: 203.3 vs market line 215.5",
+        "Model expected total: 212.8 vs market line 224.5",
         "Combined pace: 96.0 possessions/game"
       ],
       "research": [
-        "Phoenix Suns OffRtg: 112.6 vs Oklahoma City Thunder DefRtg: 107.9",
-        "Oklahoma City Thunder OffRtg: 119.0 vs Phoenix Suns DefRtg: 111.1"
+        "Denver Nuggets OffRtg: 122.1 vs Minnesota Timberwolves DefRtg: 114.6",
+        "Minnesota Timberwolves OffRtg: 118.0 vs Denver Nuggets DefRtg: 116.9"
       ],
-      "home_team": "Phoenix Suns",
-      "away_team": "Oklahoma City Thunder",
-      "commence_time": "2026-04-28T01:40:00Z",
-      "edge": 0.2275514174758395,
+      "home_team": "Denver Nuggets",
+      "away_team": "Minnesota Timberwolves",
+      "commence_time": "2026-04-28T02:40:00Z",
+      "edge": 0.29114039888892573,
       "locked": false
     }
   ],
@@ -610,5 +610,16 @@
       "locked": false
     }
   ],
-  "warnings": []
+  "warnings": [
+    {
+      "type": "single_replaced",
+      "removed_pick": "Under 215.5",
+      "removed_game": "Oklahoma City Thunder @ Phoenix Suns",
+      "removed_edge_pct": 22.8,
+      "new_pick": "Under 224.5",
+      "new_game": "Minnesota Timberwolves @ Denver Nuggets",
+      "new_edge_pct": 29.1,
+      "reason": "new bet 'Under 224.5' (Minnesota Timberwolves @ Denver Nuggets) has 29.1% edge"
+    }
+  ]
 }
