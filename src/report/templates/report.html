@@ -1834,6 +1834,28 @@
     }
   }
 
+  // ── Game status line shown below the prop stat badge ─────────────────────
+  // Returns a small HTML string: "Q3 4:32" (NBA) or "Top 7th" (MLB).
+  // Returns "" for final, pre-game, or delayed games.
+  function gameStatusLine(ev) {
+    if (!ev || ev.stateId !== "2") return "";
+    if (/delay|suspend|postpone|rain|weather/.test((ev.detail || "").toLowerCase())) return "";
+    var txt = "";
+    if (ev.sport === "NBA") {
+      var mins = Math.floor(ev.clockSec / 60);
+      var secs = ev.clockSec % 60;
+      var clock = mins + ":" + (secs < 10 ? "0" : "") + secs;
+      var qtr   = ev.period <= 4 ? "Q" + ev.period : "OT" + (ev.period - 4);
+      txt = qtr + " " + clock;
+    } else if (ev.sport === "MLB") {
+      var n   = ev.period;
+      var sfx = n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th";
+      txt = (ev.isBottom ? "Bot " : "Top ") + n + sfx;
+    }
+    if (!txt) return "";
+    return '<div style="font-size:0.63rem;color:#64748b;text-align:right;margin-top:2px;letter-spacing:0.03em;">' + txt + '</div>';
+  }
+
   function applyPropCards(allEvents) {
     document.querySelectorAll(".card[data-bet-type='Prop']").forEach(function (card) {
       var homeTeam  = card.getAttribute("data-home-team")  || "";
@@ -1872,6 +1894,8 @@
         .then(function (data) {
           propSummaryCache[eventId] = { data: data, isFinal: isFinal };
           renderPropLive(liveDiv, data, player, propType, modelLine, isFinal, battingTeam);
+          // Append game period / inning below the stat badge for in-progress games
+          liveDiv.innerHTML += gameStatusLine(ev);
         })
         .catch(function () {});
     });
