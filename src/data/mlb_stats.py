@@ -70,14 +70,30 @@ def get_pitcher_stats(pitcher_id: int) -> Dict:
         k_per_9 = (k / ip * 9) if ip > 0 else 7.0
         bb_per_9 = (bb / ip * 9) if ip > 0 else 3.0
         hr_per_9 = (hr / ip * 9) if ip > 0 else 1.2
-        # Simplified FIP: (13*HR + 3*BB - 2*K) / IP + FIP_constant (~3.2)
+        # FIP: (13*HR + 3*BB - 2*K) / IP + FIP_constant (~3.2)
         fip = ((13 * hr + 3 * bb - 2 * k) / ip + 3.20) if ip > 0 else era
+
+        # xFIP: like FIP but replaces actual HR with expected HR from fly-ball rate
+        # airOuts ≈ fly balls + pop-ups (MLB API proxy for FB count)
+        # League HR/FB rate ≈ 10 %
+        air_outs = int(s.get("airOuts", 0))
+        xfip = ((13 * (air_outs * 0.10) + 3 * bb - 2 * k) / ip + 3.20) if ip > 0 else fip
+
+        # BABIP from API (e.g. ".285") — signals ERA luck when anomalously low
+        babip_raw = s.get("babip")
+        try:
+            babip = float((babip_raw or "").replace("-", "") or "0") if babip_raw else None
+        except ValueError:
+            babip = None
+
         return {
-            "era": era,
-            "fip": round(fip, 2),
-            "k_per_9": round(k_per_9, 1),
-            "bb_per_9": round(bb_per_9, 1),
-            "hr_per_9": round(hr_per_9, 2),
+            "era":             era,
+            "fip":             round(fip, 2),
+            "xfip":            round(xfip, 2),
+            "babip":           round(babip, 3) if babip is not None else None,
+            "k_per_9":         round(k_per_9, 1),
+            "bb_per_9":        round(bb_per_9, 1),
+            "hr_per_9":        round(hr_per_9, 2),
             "innings_pitched": ip,
         }
     except (KeyError, IndexError, ValueError, ZeroDivisionError) as e:
@@ -107,12 +123,16 @@ def get_team_batting_stats(team_id: int) -> Dict:
         ops = obp + slg
         runs = int(s.get("runs", 0))
         games = int(s.get("gamesPlayed", 1)) or 1
+        so = int(s.get("strikeOuts", 0))
+        pa = int(s.get("plateAppearances", 1)) or 1
+        k_pct = round(so / pa, 3)   # team strikeout rate as batters (league avg ~0.228)
         return {
-            "avg": avg,
-            "obp": obp,
-            "slg": slg,
-            "ops": ops,
+            "avg":          avg,
+            "obp":          obp,
+            "slg":          slg,
+            "ops":          ops,
             "runs_per_game": round(runs / games, 2),
+            "k_pct":        k_pct,
         }
     except (KeyError, IndexError, ValueError) as e:
         logger.warning(f"Team batting parse error (id={team_id}): {e}")

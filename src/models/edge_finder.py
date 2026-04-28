@@ -473,8 +473,29 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
 # ---------------------------------------------------------------------------
 
 def _pitcher_quality_score(stats: Dict) -> float:
-    fip = stats.get("fip", 4.20)
-    return (4.20 - fip) / 1.50
+    """
+    Returns a quality score for a starting pitcher.
+
+    Improvements:
+    - Prefers xFIP over FIP (normalises HR/FB rate, more stable early-season)
+    - Applies a small-sample blend toward league average when IP < 50:
+      a pitcher with 20 IP gets 40 % weight on actual stats, 60 % on the mean,
+      preventing an outlier ERA/FIP over a tiny sample from dominating the model.
+    """
+    LEAGUE_AVG = 4.20
+    ip   = stats.get("innings_pitched", 0)
+    xfip = stats.get("xfip")          # None when airOuts data unavailable
+    fip  = stats.get("fip", LEAGUE_AVG)
+
+    # xFIP normalises HR luck via fly-ball rate — more reliable early-season
+    base = xfip if xfip is not None else fip
+
+    # Below 50 IP the numbers are noisy — blend toward league mean
+    if ip < 50:
+        weight = max(0.0, ip / 50.0)          # 0 IP → 0 %, 50 IP → 100 %
+        base   = base * weight + LEAGUE_AVG * (1.0 - weight)
+
+    return (LEAGUE_AVG - base) / 1.50
 
 
 def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: Dict,
@@ -508,25 +529,52 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     stats_available = bool(home_pitcher_stats or away_pitcher_stats)
 
     # --- Pitcher research ---
+    def _pitcher_lines(name: str, stats: Dict, colour: str) -> None:
+        """Append research + signal lines for one starter; flag ERA traps."""
+        era   = stats.get("era", "?")
+        fip   = stats.get("fip", "?")
+        xfip  = stats.get("xfip")
+        babip = stats.get("babip")
+        k9    = stats.get("k_per_9", "?")
+        bb9   = stats.get("bb_per_9", "?")
+        ip    = stats.get("innings_pitched", "?")
+
+        fip_str  = f"FIP {fip}"
+        xfip_str = f" / xFIP {xfip:.2f}" if xfip is not None else ""
+        babip_str = f" | BABIP {babip:.3f}" if babip is not None else ""
+        ip_str   = f"{ip:.0f}" if isinstance(ip, float) else str(ip)
+
+        research.append(
+            f"{colour} {name}: ERA {era} | {fip_str}{xfip_str} | "
+            f"K/9 {k9} | BB/9 {bb9} | IP {ip_str}{babip_str}"
+        )
+        signals.append(f"{name} {fip_str}{xfip_str} | K/9: {k9}")
+
+        # ERA-trap flag: BABIP < .260 AND ERA well below FIP AND small sample
+        try:
+            if (
+                babip is not None
+                and isinstance(era, float)
+                and isinstance(fip, float)
+                and isinstance(ip, float)
+                and babip < 0.260
+                and ip < 60
+                and era < fip - 0.40
+            ):
+                signals.append(
+                    f"⚠ {name}: BABIP {babip:.3f} is unusually low — "
+                    f"ERA {era:.2f} likely overstates quality (true talent closer to FIP {fip:.2f})"
+                )
+        except Exception:
+            pass
+
     if home_pitcher_stats:
-        fip = home_pitcher_stats.get('fip', '?')
-        era = home_pitcher_stats.get('era', '?')
-        k9 = home_pitcher_stats.get('k_per_9', '?')
-        bb9 = home_pitcher_stats.get('bb_per_9', '?')
-        ip = home_pitcher_stats.get('innings_pitched', '?')
-        research.append(f"🔵 {home_pitcher_name} (home): ERA {era} | FIP {fip} | K/9 {k9} | BB/9 {bb9} | IP {ip:.0f}" if isinstance(ip, float) else f"🔵 {home_pitcher_name} (home): ERA {era} | FIP {fip} | K/9 {k9}")
-        signals.append(f"{home_pitcher_name} FIP: {fip} | K/9: {k9}")
+        _pitcher_lines(home_pitcher_name, home_pitcher_stats, "🔵")
     else:
         research.append(f"🔵 {home_pitcher_name} (home): stats unavailable")
 
     if away_pitcher_stats:
-        fip = away_pitcher_stats.get('fip', '?')
-        era = away_pitcher_stats.get('era', '?')
-        k9 = away_pitcher_stats.get('k_per_9', '?')
-        bb9 = away_pitcher_stats.get('bb_per_9', '?')
-        ip = away_pitcher_stats.get('innings_pitched', '?')
-        research.append(f"🔴 {away_pitcher_name} (away): ERA {era} | FIP {fip} | K/9 {k9} | BB/9 {bb9} | IP {ip:.0f}" if isinstance(ip, float) else f"🔴 {away_pitcher_name} (away): ERA {era} | FIP {fip} | K/9 {k9}")
-        signals.append(f"{away_pitcher_name} FIP: {fip} | K/9: {k9}")
+        _pitcher_lines(away_pitcher_name, away_pitcher_stats, "🔴")
     else:
         research.append(f"🔴 {away_pitcher_name} (away): stats unavailable")
 

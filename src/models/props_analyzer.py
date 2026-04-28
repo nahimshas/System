@@ -257,46 +257,102 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
             if not stats:
                 continue
 
-            k9  = stats.get("k_per_9", 7.0)
-            era = stats.get("era", 4.50)
-            fip = stats.get("fip", 4.20)
-            bb9 = stats.get("bb_per_9", 3.0)
-            hr9 = stats.get("hr_per_9", 1.2)
-            ip  = stats.get("innings_pitched", 0)
+            k9    = stats.get("k_per_9", 7.0)
+            era   = stats.get("era", 4.50)
+            fip   = stats.get("fip", 4.20)
+            xfip  = stats.get("xfip")          # None if unavailable
+            babip = stats.get("babip")          # None if unavailable
+            bb9   = stats.get("bb_per_9", 3.0)
+            hr9   = stats.get("hr_per_9", 1.2)
+            ip    = stats.get("innings_pitched", 0)
             expected_innings = MLB_PLAYOFF_STARTER_IP if playoff else 5.5
 
             if ip < 20:
                 continue
 
-            # Umpire K-factor adjustment (stored on game dict by main.py)
-            ump_k_factor = game.get("umpire_k_factor", 1.0)
-            k9_adj = round(k9 * ump_k_factor, 1)
+            # ── Opponent team K% adjustment ──────────────────────────────────
+            # A high-strikeout-rate lineup boosts expected Ks; a contact team suppresses them.
+            LEAGUE_K_PCT = 0.228   # MLB average batter K rate
+            opp_team_id = game.get(f"{opp_side}_team_id")
+            opp_k_pct   = LEAGUE_K_PCT
+            if opp_team_id:
+                try:
+                    from src.data.mlb_stats import get_team_batting_stats
+                    opp_bat = get_team_batting_stats(opp_team_id)
+                    opp_k_pct = opp_bat.get("k_pct", LEAGUE_K_PCT)
+                except Exception:
+                    pass
 
+            # ── ERA-trap detection ───────────────────────────────────────────
+            # Low BABIP (<.260) + small sample (<60 IP) + ERA well below FIP
+            # = pitcher likely benefiting from luck, not sustainable skill.
+            era_trap = (
+                babip is not None
+                and isinstance(babip, float)
+                and babip < 0.260
+                and ip < 60
+                and era < fip - 0.40
+            )
+
+            # ── Umpire K-factor adjustment ───────────────────────────────────
+            ump_k_factor = game.get("umpire_k_factor", 1.0)
+            ump_name     = game.get("umpire_name", "")
+
+            # Apply umpire then opponent K% multiplier
+            k9_adj = round(k9 * ump_k_factor * (opp_k_pct / LEAGUE_K_PCT), 1)
+
+            # ── Build research block ─────────────────────────────────────────
+            xfip_str  = f" | xFIP {xfip:.2f}" if xfip is not None else ""
+            babip_str = f" | BABIP {babip:.3f}" if babip is not None else ""
             pitcher_research = [
-                f"{pitcher_name}: ERA {era:.2f} | FIP {fip:.2f} | K/9 {k9:.1f} | BB/9 {bb9:.1f} | HR/9 {hr9:.2f}",
+                f"{pitcher_name}: ERA {era:.2f} | FIP {fip:.2f}{xfip_str} | "
+                f"K/9 {k9:.1f} | BB/9 {bb9:.1f} | HR/9 {hr9:.2f}{babip_str}",
                 f"Season IP: {ip:.0f} | Projected start: ~{expected_innings} inn",
                 f"Venue: {venue} (park factor {pf:.2f})" if venue else "Venue unknown",
+                f"Opponent K%: {opp_k_pct:.1%} (league avg {LEAGUE_K_PCT:.1%})",
             ]
 
-            ump_name = game.get("umpire_name", "")
             if ump_name and abs(ump_k_factor - 1.0) >= 0.03:
                 direction = "large" if ump_k_factor > 1.0 else "tight"
                 pitcher_research.append(
-                    f"👨‍⚖️ Umpire {ump_name}: {direction} zone (K factor {ump_k_factor:.2f}x) → "
-                    f"adjusted K/9 {k9} → {k9_adj}"
+                    f"👨‍⚖️ Umpire {ump_name}: {direction} zone (K factor {ump_k_factor:.2f}x)"
                 )
 
             # ── Pitcher strikeouts over ──────────────────────────────────────
             expected_ks = round(k9_adj / 9 * expected_innings, 1)
-            k_conf      = "HIGH" if (k9_adj > 9.5 and ip > 40 and fip < 4.0) else "MEDIUM"
-            k_margin    = round(k9_adj - 7.0, 1)
 
+            # Confidence: HIGH requires elite K/9, meaningful sample, and solid FIP
+            # Downgrade to MEDIUM if ERA-trap risk is detected
+            k_conf = (
+                "HIGH"
+                if (k9_adj > 9.5 and ip > 40 and fip < 4.0 and not era_trap)
+                else "MEDIUM"
+            )
+            k_margin = round(k9_adj - 7.0, 1)
+
+            # Build signals list
+            k_ump_note = (
+                f" (umpire {ump_name} {ump_k_factor:.2f}x)"
+                if ump_name and abs(ump_k_factor - 1.0) >= 0.03
+                else ""
+            )
+            k_opp_note = (
+                f" (opp K% {opp_k_pct:.1%})"
+                if abs(opp_k_pct - LEAGUE_K_PCT) >= 0.02
+                else ""
+            )
             k_signals = [
-                f"K/9: {k9:.1f}" + (f" → adjusted to {k9_adj} (umpire {ump_name})" if ump_name and abs(ump_k_factor - 1.0) >= 0.03 else "") +
-                f" → projects {expected_ks} Ks over {expected_innings} inn",
-                f"FIP {fip:.2f} ({'above' if fip > 4.20 else 'below'} league avg 4.20)",
+                f"K/9: {k9:.1f}{k_ump_note}{k_opp_note} → adjusted {k9_adj:.1f} "
+                f"→ projects {expected_ks} Ks over {expected_innings} inn",
+                f"FIP {fip:.2f}" + (f" / xFIP {xfip:.2f}" if xfip is not None else "")
+                + f" ({'above' if fip > 4.20 else 'below'} league avg 4.20)",
                 f"Season IP: {ip:.0f} — {'solid' if ip > 50 else 'limited'} sample",
             ]
+            if era_trap:
+                k_signals.append(
+                    f"⚠ ERA trap risk: BABIP {babip:.3f} suggests ERA {era:.2f} "
+                    f"is luck-driven — true talent closer to FIP {fip:.2f}"
+                )
 
             picks.append(PropPick(
                 sport="MLB",
