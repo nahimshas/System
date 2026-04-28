@@ -254,6 +254,18 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
         if not home_inj_list and not away_inj_list:
             research.append("No significant injuries reported for either team")
 
+        # --- Model projected score (shown on all bet cards for this game) ---
+        if home_stats and away_stats:
+            _avg_pace = (home_stats.get("pace", 100) + away_stats.get("pace", 100)) / 2
+            if playoff:
+                _avg_pace *= NBA_PLAYOFF_PACE_FACTOR
+            _exp_home = (home_stats.get("off_rtg", 110) + away_stats.get("def_rtg", 110)) / 2 * _avg_pace / 100
+            _exp_away = (away_stats.get("off_rtg", 110) + home_stats.get("def_rtg", 110)) / 2 * _avg_pace / 100
+            if playoff:
+                _exp_home *= NBA_PLAYOFF_SCORING_FACTOR
+                _exp_away *= NBA_PLAYOFF_SCORING_FACTOR
+            signals.append(f"Model projected score: {home} {_exp_home:.0f} — {away} {_exp_away:.0f}")
+
         adjusted_home_prob = min(0.90, max(0.10, _nba_margin_to_prob(base_margin) + adj))
         adjusted_away_prob = 1 - adjusted_home_prob
 
