@@ -512,9 +512,11 @@ def _pitcher_quality_score(stats: Dict) -> float:
     # xFIP normalises HR luck via fly-ball rate — more reliable early-season
     base = xfip if xfip is not None else fip
 
-    # Below 50 IP the numbers are noisy — blend toward league mean
-    if ip < 50:
-        weight = max(0.0, ip / 50.0)          # 0 IP → 0 %, 50 IP → 100 %
+    # Below 20 IP the numbers are very noisy — blend toward league mean.
+    # 20 IP ≈ 4-5 starts: enough to apply real signal.
+    # (Old threshold was 50 IP which was too aggressive and collapsed most edges.)
+    if ip < 20:
+        weight = max(0.0, ip / 20.0)          # 0 IP → 0 %, 20 IP → 100 %
         base   = base * weight + LEAGUE_AVG * (1.0 - weight)
 
     return (LEAGUE_AVG - base) / 1.50
