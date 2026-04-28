@@ -132,9 +132,9 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Monday, April 27, 2026 &middot; Generated April 27, 2026 at 07:45 PM PDT</div>
+    <div class="subtitle">Monday, April 27, 2026 &middot; Generated April 27, 2026 at 08:05 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
-      NBA: 1 game &nbsp;|&nbsp;
+      NBA: 0 games &nbsp;|&nbsp;
       MLB: 0 games &nbsp;|&nbsp;
       Budget: $100
     </div>
@@ -144,6 +144,10 @@
 
   
 
+  
+  <div class="card" style="margin-bottom:12px;">
+    <div class="empty-state"><div class="icon">🏀</div>No NBA games today.</div>
+  </div>
   
   
   <div class="card" style="margin-bottom:12px;">
@@ -3170,10 +3174,12 @@
               : pct >= 0.75       ? "#fb923c"
               : pct >= 0.5        ? "#facc15"
               : "#94a3b8";
-      var label = propType.replace(" Over", "");   // "Points", "Rebounds", "Assists", "Strikeouts"
+      // Strip " Over (1+)" first (Hits prop), then " Over" — leaves clean noun
+      var label = propType.replace(" Over (1+)", "").replace(" Over", "");
+      // Show floor threshold: player needs ≥ floorLine to win ("Bet Over ≤ N")
       liveDiv.innerHTML =
         '<span style="' + BADGE + 'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
-        '▶ ' + stat + ' ' + label + ' / ' + modelLine + '</span>';
+        '▶ ' + stat + ' ' + label + ' / ' + floorLine + '</span>';
     }
   }
 
