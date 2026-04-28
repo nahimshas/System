@@ -203,15 +203,22 @@ def _prop_key(d) -> str:
 
 def _dedup_cached_singles(singles: List[Dict]) -> List[Dict]:
     """
-    Remove lower-edge duplicates where the same team appears in both ML and
-    Spread slots for the same game.  The higher-edge entry wins; if equal,
-    the locked one is preferred.  Totals are exempt (no team to key on).
+    Remove duplicates where the same team appears in both ML and Spread slots
+    for the same game.  Priority (highest wins):
+      1. Locked over pre-game (never evict a bet the game has already started on)
+      2. Moneyline over Spread (purer directional bet; avoids correlated slots)
+      3. Higher edge
+    Totals are exempt — they have no single team to key on.
     """
-    # Sort: locked before unlocked, then higher edge first — so the first
-    # occurrence of each key is always the one we want to keep.
+    _BET_RANK = {"Moneyline": 0, "Total": 1, "Spread": 2}
+
     ordered = sorted(
         singles,
-        key=lambda s: (0 if s.get("locked") else 1, -s.get("edge", 0)),
+        key=lambda s: (
+            0 if s.get("locked") else 1,          # locked first
+            _BET_RANK.get(s.get("bet_type", ""), 9),  # ML before Spread
+            -s.get("edge", 0),                    # higher edge first
+        ),
     )
     seen: set = set()
     result: List[Dict] = []
@@ -226,7 +233,7 @@ def _dedup_cached_singles(singles: List[Dict]) -> List[Dict]:
                 continue
             seen.add(key)
         result.append(s)
-    # Restore original order (started/locked first, then by edge)
+    # Restore display order: locked first, then by edge descending
     result.sort(key=lambda s: (0 if s.get("locked") else 1, -s.get("edge", 0)))
     return result
 
@@ -379,6 +386,15 @@ def merge_picks(
                     "reason": "Market moved against this bet — still no better alternative found",
                 })
             final_singles.append(pick)
+
+    # Fill slots freed by dedup (pregame may be empty after removing cached
+    # duplicates, leaving fewer than MAX_SINGLE_BETS in final_singles).
+    for d in truly_new:
+        if len(final_singles) >= MAX_SINGLE_BETS:
+            break
+        if id(d) not in used_new:
+            final_singles.append(d)
+            used_new.add(id(d))
 
     # ── Parlays ───────────────────────────────────────────────────────────────
     locked_parlays: List[Dict] = [
