@@ -132,10 +132,10 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Monday, April 27, 2026 &middot; Generated April 27, 2026 at 07:35 PM PDT</div>
+    <div class="subtitle">Monday, April 27, 2026 &middot; Generated April 27, 2026 at 07:45 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
-      MLB: 1 game &nbsp;|&nbsp;
+      MLB: 0 games &nbsp;|&nbsp;
       Budget: $100
     </div>
   </div>
@@ -143,15 +143,12 @@
   
 
   
-  <div class="section">
-    <div class="section-title" style="color:var(--yellow);">⚡ Pick Changes Since Morning Run</div>
-    
-    <div class="error-card" style="background-color:#1c1a07;border-color:#713f12;color:#fde68a;">⚡ Bet updated: 'Under 224.5' (Minnesota Timberwolves @ Denver Nuggets, +29.1% edge) → 'Under 225.5' (Minnesota Timberwolves @ Denver Nuggets, +31.4% edge). Reason: new bet 'Under 225.5' (Minnesota Timberwolves @ Denver Nuggets) has 31.4% edge</div>
-    
-  </div>
-  
 
   
+  
+  <div class="card" style="margin-bottom:12px;">
+    <div class="empty-state"><div class="icon">⚾</div>No MLB games today.</div>
+  </div>
   
 
   
@@ -473,7 +470,7 @@
             <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 7:45 PM PDT</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
+            <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
             <span class="confidence-badge MEDIUM">MEDIUM</span>
           </div>
         </div>
@@ -847,7 +844,7 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
+            <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
             <span class="confidence-badge HIGH">HIGH</span>
             <div class="prop-live-badge"></div>
           </div>
@@ -909,7 +906,7 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
+            <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
             <span class="confidence-badge HIGH">HIGH</span>
             <div class="prop-live-badge"></div>
           </div>
@@ -971,7 +968,7 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
+            <span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
             <span class="confidence-badge HIGH">HIGH</span>
             <div class="prop-live-badge"></div>
           </div>
@@ -3023,10 +3020,19 @@
   var MLB_PITCHING_MARKERS = ["ERA", "fullInnings.partInnings", "earnedRuns"];
   var MLB_K_KEYS = ["strikeouts", "K", "SO", "Strikeouts"];
 
-  // Flexible name comparison: handles full names, last-name-only, abbreviations
+  // Strip accent marks so "Vásquez" matches "Vasquez", etc.
+  function stripAccents(s) {
+    if (s && s.normalize) {
+      return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+    return s;
+  }
+
+  // Flexible name comparison: handles full names, last-name-only, abbreviations,
+  // and accented vs unaccented spellings (ESPN often strips accents).
   function propNameMatch(a, b) {
-    a = (a || "").toLowerCase().trim();
-    b = (b || "").toLowerCase().trim();
+    a = stripAccents((a || "").toLowerCase().trim());
+    b = stripAccents((b || "").toLowerCase().trim());
     if (!a || !b) return false;
     if (a === b) return true;
     var aParts = a.split(" "), bParts = b.split(" ");
