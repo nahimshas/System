@@ -498,6 +498,71 @@ def _pitcher_quality_score(stats: Dict) -> float:
     return (LEAGUE_AVG - base) / 1.50
 
 
+def _era_trap_severity(stats: Dict) -> float:
+    """
+    Continuous ERA-trap severity score.
+
+    Combines three factors:
+      - ERA gap:     how much xFIP exceeds ERA  (core signal)
+      - IP weight:   smaller sample → higher uncertainty → amplifies the gap
+      - BABIP mult:  BABIP well below league average (.300) confirms luck
+
+    Rough thresholds:
+      < 0.15  → negligible (ignore)
+      0.15–0.40 → MILD   (display in research only)
+      0.40–0.80 → MODERATE (cap confidence on trap team; flag opponent edge)
+      > 0.80  → SEVERE   (strong opponent edge signal; lower edge threshold)
+    """
+    era   = stats.get("era")
+    xfip  = stats.get("xfip") or stats.get("fip", 4.20)
+    babip = stats.get("babip")
+    ip    = stats.get("innings_pitched", 0)
+
+    if not isinstance(era, float) or not isinstance(ip, float) or ip < 10:
+        return 0.0
+
+    era_gap   = max(0.0, float(xfip) - era)          # how much xFIP exceeds ERA
+    ip_weight = max(0.0, 1.0 - ip / 80.0)            # decays to 0 at 80+ IP
+
+    # BABIP penalty: pitcher league avg ≈ .300; each 0.050 below avg adds 1.0×
+    BABIP_LEAGUE_AVG = 0.300
+    babip_mult = 1.0
+    if isinstance(babip, float) and babip > 0:
+        babip_mult = 1.0 + max(0.0, (BABIP_LEAGUE_AVG - babip) / 0.050)
+
+    return round(era_gap * ip_weight * babip_mult, 3)
+
+
+def _mlb_conf(edge: float, signal_count: int, stats_available: bool,
+              own_trap_sev: float = 0.0, opp_trap_sev: float = 0.0,
+              injury_capped: bool = False) -> str:
+    """
+    MLB-specific confidence label that accounts for ERA trap severity.
+
+    own_trap_sev  — severity of the ERA trap on THIS team's starting pitcher.
+                    High → cap at MEDIUM (market is not as wrong as raw edge suggests).
+    opp_trap_sev  — severity of the ERA trap on the OPPONENT's starter.
+                    High → lower the edge threshold required for HIGH confidence
+                    (market is overvaluing the opponent; our edge is more reliable).
+    """
+    if injury_capped:
+        return "MEDIUM"
+    # Our pitcher's trap: the market edge may partly be noise from sample-size luck
+    if own_trap_sev >= 0.40:
+        return "MEDIUM"
+    # Opponent's trap lowers the bar for HIGH: the market systematically misprices
+    # teams facing a pitcher with an inflated ERA
+    if opp_trap_sev >= 0.80:
+        min_edge = 0.05   # severe opponent trap
+    elif opp_trap_sev >= 0.40:
+        min_edge = 0.06   # moderate opponent trap
+    else:
+        min_edge = 0.07   # no trap — standard
+    if edge >= min_edge and signal_count >= 3 and stats_available:
+        return "HIGH"
+    return "MEDIUM"
+
+
 def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: Dict,
                      home_batting: Dict, away_batting: Dict,
                      home_bullpen: Dict, away_bullpen: Dict,
@@ -577,6 +642,41 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         _pitcher_lines(away_pitcher_name, away_pitcher_stats, "🔴")
     else:
         research.append(f"🔴 {away_pitcher_name} (away): stats unavailable")
+
+    # --- ERA trap severity (continuous score) ---
+    # Computed here so the same values feed BOTH signal generation and
+    # the per-bet confidence logic below.
+    home_trap_sev = _era_trap_severity(home_pitcher_stats) if home_pitcher_stats else 0.0
+    away_trap_sev = _era_trap_severity(away_pitcher_stats) if away_pitcher_stats else 0.0
+
+    _TRAP_MILD = 0.15
+    _TRAP_MOD  = 0.40
+    _TRAP_SEV  = 0.80
+
+    def _trap_label(sev: float) -> str:
+        if sev >= _TRAP_SEV:  return "SEVERE"
+        if sev >= _TRAP_MOD:  return "MODERATE"
+        return "MILD"
+
+    for pitcher_name, pitcher_stats, team_name, sev in [
+        (home_pitcher_name, home_pitcher_stats, home, home_trap_sev),
+        (away_pitcher_name, away_pitcher_stats, away, away_trap_sev),
+    ]:
+        if sev < _TRAP_MILD or not pitcher_stats:
+            continue
+        era_v   = pitcher_stats.get("era", "?")
+        xfip_v  = pitcher_stats.get("xfip") or pitcher_stats.get("fip", "?")
+        ip_v    = pitcher_stats.get("innings_pitched", 0)
+        babip_v = pitcher_stats.get("babip")
+        babip_s = f" · BABIP {babip_v:.3f}" if isinstance(babip_v, float) else ""
+        xfip_s  = f"{xfip_v:.2f}" if isinstance(xfip_v, float) else str(xfip_v)
+        era_s   = f"{era_v:.2f}" if isinstance(era_v, float) else str(era_v)
+        ip_s    = f"{ip_v:.0f}" if isinstance(ip_v, float) else str(ip_v)
+        signals.append(
+            f"⚠ ERA trap [{_trap_label(sev)}] — {pitcher_name}: "
+            f"ERA {era_s} vs xFIP {xfip_s} over {ip_s} IP{babip_s} "
+            f"(severity {sev:.2f}) — {team_name} ML may be overpriced by market"
+        )
 
     # --- Batting research ---
     if home_batting:
@@ -754,9 +854,11 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         if home_edge >= MIN_EDGE and has_positive_ev(model_home_prob, market_home_prob):
             sizing = robinhood_kelly(model_home_prob, market_home_prob)
             if sizing.num_contracts > 0:
-                conf = _confidence_label(home_edge, len(signals), stats_available)
-                if home_injury_capped:
-                    conf = "MEDIUM"
+                # own_trap = home pitcher trap hurts home ML confidence
+                # opp_trap = away pitcher trap boosts home ML edge reliability
+                conf = _mlb_conf(home_edge, len(signals), stats_available,
+                                 own_trap_sev=home_trap_sev, opp_trap_sev=away_trap_sev,
+                                 injury_capped=home_injury_capped)
                 recs.append(BetRecommendation(
                     sport="MLB", game=label, bet_type="Moneyline", pick=home,
                     market_prob=market_home_prob, model_prob=model_home_prob,
@@ -770,9 +872,11 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         if away_edge >= MIN_EDGE and has_positive_ev(model_away_prob, market_away_prob):
             sizing = robinhood_kelly(model_away_prob, market_away_prob)
             if sizing.num_contracts > 0:
-                conf = _confidence_label(away_edge, len(signals), stats_available)
-                if away_injury_capped:
-                    conf = "MEDIUM"
+                # own_trap = away pitcher trap hurts away ML confidence
+                # opp_trap = home pitcher trap boosts away ML edge reliability
+                conf = _mlb_conf(away_edge, len(signals), stats_available,
+                                 own_trap_sev=away_trap_sev, opp_trap_sev=home_trap_sev,
+                                 injury_capped=away_injury_capped)
                 recs.append(BetRecommendation(
                     sport="MLB", game=label, bet_type="Moneyline", pick=away,
                     market_prob=market_away_prob, model_prob=model_away_prob,
@@ -805,9 +909,9 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             if home_rl_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
                 sizing = robinhood_kelly(model_home_cover, market_home_cover)
                 if sizing.num_contracts > 0:
-                    conf = _confidence_label(home_rl_edge, len(signals), stats_available)
-                    if home_injury_capped:
-                        conf = "MEDIUM"
+                    conf = _mlb_conf(home_rl_edge, len(signals), stats_available,
+                                     own_trap_sev=home_trap_sev, opp_trap_sev=away_trap_sev,
+                                     injury_capped=home_injury_capped)
                     recs.append(BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
@@ -822,9 +926,9 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             if away_rl_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
                 if sizing.num_contracts > 0:
-                    conf = _confidence_label(away_rl_edge, len(signals), stats_available)
-                    if away_injury_capped:
-                        conf = "MEDIUM"
+                    conf = _mlb_conf(away_rl_edge, len(signals), stats_available,
+                                     own_trap_sev=away_trap_sev, opp_trap_sev=home_trap_sev,
+                                     injury_capped=away_injury_capped)
                     recs.append(BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",

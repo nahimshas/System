@@ -715,8 +715,17 @@ def load_prop_accuracy() -> Dict:
             "avg_err":    avg_err,   # positive = we under-projected (players outperformed)
         }
 
+    # Discover all prop types present in history — no hardcoded list,
+    # so any new prop type (Hits, HRs, Steals, Blocks, etc.) appears
+    # automatically once it has at least one settled record.
+    seen_types: list = []
+    for r in records:
+        pt = r.get("prop_type", "")
+        if pt and pt not in seen_types:
+            seen_types.append(pt)
+
     by_type: Dict[str, Dict] = {}
-    for pt in ("Points Over", "Rebounds Over", "Assists Over", "Strikeouts Over"):
+    for pt in seen_types:
         subset = [r for r in records if r.get("prop_type") == pt]
         if subset:
             by_type[pt] = _acc(subset)

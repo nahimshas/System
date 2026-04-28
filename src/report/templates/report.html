@@ -544,7 +544,7 @@
         <tbody>
           {% for pt, stats in pa.by_type.items() %}
           <tr style="border-top:1px solid var(--border);">
-            <td style="padding:5px 0;color:var(--fg);">{{ pt }}</td>
+            <td style="padding:5px 0;color:var(--fg);">{{ pt.replace(" Over (1+)", "").replace(" Over", "") }}</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.total }}</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:{% if stats.hit_rate and stats.hit_rate >= 55 %}#4ade80{% elif stats.hit_rate and stats.hit_rate >= 45 %}#facc15{% else %}#f87171{% endif %};">
