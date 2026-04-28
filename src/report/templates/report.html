@@ -1836,10 +1836,12 @@
               : pct >= 0.75       ? "#fb923c"
               : pct >= 0.5        ? "#facc15"
               : "#94a3b8";
-      var label = propType.replace(" Over", "");   // "Points", "Rebounds", "Assists", "Strikeouts"
+      // Strip " Over (1+)" first (Hits prop), then " Over" — leaves clean noun
+      var label = propType.replace(" Over (1+)", "").replace(" Over", "");
+      // Show floor threshold: player needs ≥ floorLine to win ("Bet Over ≤ N")
       liveDiv.innerHTML =
         '<span style="' + BADGE + 'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
-        '▶ ' + stat + ' ' + label + ' / ' + modelLine + '</span>';
+        '▶ ' + stat + ' ' + label + ' / ' + floorLine + '</span>';
     }
   }
 
