@@ -265,7 +265,8 @@
          data-profit="{{ bet.profit_if_win }}"
          data-confidence="{{ bet.confidence }}"
          data-edge-pct="{{ bet.edge_pct }}"
-         data-model-prob-pct="{{ bet.model_prob_pct }}">
+         data-model-prob-pct="{{ bet.model_prob_pct }}"
+         data-commence-time="{{ bet.commence_time }}">
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -279,7 +280,7 @@
             {% if bet.game_time %}<div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 {{ bet.game_time }}</div>{% endif %}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            {% if bet.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+            {% if bet.locked %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
             <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
           </div>
         </div>
@@ -348,7 +349,7 @@
           <div class="card-subtitle">Combined prob: {{ par.combined_prob_pct }}% &middot; Edge: +{{ par.edge_pct }}%</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          {% if par.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+          {% if par.locked %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
           <span class="confidence-badge {{ par.confidence }}">{{ par.confidence }}</span>
         </div>
       </div>
@@ -392,7 +393,8 @@
          data-sport="{{ prop.sport }}"
          data-player="{{ prop.player }}"
          data-prop-type="{{ prop.prop_type }}"
-         data-model-line="{{ prop.model_line }}">
+         data-model-line="{{ prop.model_line }}"
+         data-commence-time="{{ prop.commence_time }}">
       {% set last = report.prop_last_result.get((prop.player, prop.prop_type)) %}
       <div class="card-toggle-header">
         <div class="card-header">
@@ -404,7 +406,7 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            {% if prop.locked %}<span style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+            {% if prop.locked %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
             <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
             <div class="prop-live-badge"></div>
           </div>
@@ -1143,6 +1145,9 @@
     var hasData = legResults.some(function (r) { return r.status !== "pre"; });
     if (!hasData) { liveDiv.innerHTML = ""; return; }
 
+    // At least one leg has started — lock the parlay
+    showLockBadge(card);
+
     // Any leg already lost → parlay is busted
     var anyLost = legResults.some(function (r) {
       return r.status === "final" && r.result === "LOST";
@@ -1173,6 +1178,33 @@
     // Otherwise: combined probability = product of all leg probabilities
     var combined = legResults.reduce(function (acc, r) { return acc * r.prob; }, 1.0);
     liveDiv.innerHTML = probHtml(combined);
+  }
+
+  // ── Dynamic lock badge ───────────────────────────────────────────────────
+  // Called whenever ESPN confirms a game has started or finished.
+  // Inserts 🔒 Locked before the confidence badge if not already present.
+  function showLockBadge(card) {
+    if (card.querySelector(".lock-badge")) return;  // already shown (server-side or prior call)
+    var confBadge = card.querySelector(".confidence-badge");
+    if (!confBadge) return;
+    var span = document.createElement("span");
+    span.className = "lock-badge";
+    span.style.cssText = "font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;";
+    span.textContent = "🔒 Locked";
+    confBadge.parentNode.insertBefore(span, confBadge);
+  }
+
+  // Props have no ESPN matching — use commence_time directly.
+  function checkPropLocks() {
+    var now = Date.now();
+    document.querySelectorAll(".prop-card[data-commence-time]").forEach(function (card) {
+      var ct = card.getAttribute("data-commence-time") || "";
+      if (!ct) return;
+      try {
+        var t = new Date(ct).getTime();
+        if (!isNaN(t) && now >= t) showLockBadge(card);
+      } catch(e) {}
+    });
   }
 
   // ── Apply live state to a card element ──────────────────────────────────
@@ -1207,6 +1239,7 @@
     var evAScore = teamMatch(ev.away, awayTeam) ? ev.awayScore : ev.homeScore;
 
     if (ev.stateId === "3") {
+      showLockBadge(card);
       // Game over — show score line + WON/LOST
       var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore);
       // Store result on the card so updatePerformance() can read it
@@ -1216,6 +1249,7 @@
         ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore + '</span>' +
         (result ? '&nbsp;&nbsp;' + outcomeHtml(result) : "");
     } else if (ev.stateId === "2") {
+      showLockBadge(card);
       card.removeAttribute("data-live-result");
       // Rain delay / suspended / postponed — don't show win probability
       var detailLower = (ev.detail || "").toLowerCase();
@@ -2030,6 +2064,9 @@
 
       // Update prop cards with live/final player stats from ESPN box scores
       applyPropCards(allEvents);
+
+      // Lock props whose commence_time has passed (no ESPN match needed)
+      checkPropLocks();
     }
 
     [
