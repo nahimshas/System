@@ -354,5 +354,141 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-04-28",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Portland Trail Blazers @ San Antonio Spurs",
+    "bet_type": "Total",
+    "pick": "Under 218.5",
+    "home_team": "San Antonio Spurs",
+    "away_team": "Portland Trail Blazers",
+    "edge_pct": 25.2,
+    "confidence": "HIGH",
+    "model_prob_pct": 77.4,
+    "market_prob_pct": 52.2,
+    "cost": 12.46,
+    "profit_if_win": 10.54,
+    "result": "WON",
+    "actual_pnl": 10.54,
+    "actual_home_score": 114.0,
+    "actual_away_score": 95.0
+  },
+  {
+    "date": "2026-04-28",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Portland Trail Blazers @ San Antonio Spurs",
+    "bet_type": "Spread",
+    "pick": "San Antonio Spurs -10.5",
+    "home_team": "San Antonio Spurs",
+    "away_team": "Portland Trail Blazers",
+    "edge_pct": 15.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 65.8,
+    "market_prob_pct": 50.4,
+    "cost": 6.82,
+    "profit_if_win": 6.18,
+    "result": "WON",
+    "actual_pnl": 6.18,
+    "actual_home_score": 114.0,
+    "actual_away_score": 95.0
+  },
+  {
+    "date": "2026-04-28",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Miami Marlins @ Los Angeles Dodgers",
+    "bet_type": "Total",
+    "pick": "Over 7.5",
+    "home_team": "Los Angeles Dodgers",
+    "away_team": "Miami Marlins",
+    "edge_pct": 13.1,
+    "confidence": "HIGH",
+    "model_prob_pct": 64.2,
+    "market_prob_pct": 51.1,
+    "cost": 5.85,
+    "profit_if_win": 5.15,
+    "result": "LOST",
+    "actual_pnl": -5.85,
+    "actual_home_score": 1.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-04-28",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Miami Marlins @ Los Angeles Dodgers",
+    "bet_type": "Spread",
+    "pick": "Miami Marlins +1.5",
+    "home_team": "Los Angeles Dodgers",
+    "away_team": "Miami Marlins",
+    "edge_pct": 6.9,
+    "confidence": "HIGH",
+    "model_prob_pct": 53.4,
+    "market_prob_pct": 46.5,
+    "cost": 1.94,
+    "profit_if_win": 2.06,
+    "result": "WON",
+    "actual_pnl": 2.06,
+    "actual_home_score": 1.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-04-28",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "San Antonio Spurs (Moneyline) + Under 218.5 (Total)",
+    "bet_type": "Parlay",
+    "pick": "San Antonio Spurs (Moneyline) + Under 218.5 (Total)",
+    "edge_pct": 27.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 69.7,
+    "market_prob_pct": 0,
+    "cost": 5.36,
+    "profit_if_win": 6.64,
+    "result": "WON",
+    "actual_pnl": 6.64,
+    "legs": [
+      {
+        "game": "Portland Trail Blazers @ San Antonio Spurs",
+        "pick": "San Antonio Spurs",
+        "result": "WON"
+      },
+      {
+        "game": "Portland Trail Blazers @ San Antonio Spurs",
+        "pick": "Under 218.5",
+        "result": "WON"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-28",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Miami Marlins +1.5 (Spread) + Over 7.5 (Total)",
+    "bet_type": "Parlay",
+    "pick": "Miami Marlins +1.5 (Spread) + Over 7.5 (Total)",
+    "edge_pct": 10.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 34.3,
+    "market_prob_pct": 0,
+    "cost": 1.29,
+    "profit_if_win": 3.71,
+    "result": "LOST",
+    "actual_pnl": -1.29,
+    "legs": [
+      {
+        "game": "Miami Marlins @ Los Angeles Dodgers",
+        "pick": "Miami Marlins +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Miami Marlins @ Los Angeles Dodgers",
+        "pick": "Over 7.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
