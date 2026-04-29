@@ -114,4 +114,19 @@ def build_parlays(singles: List[BetRecommendation]) -> List[ParlayRecommendation
         return 2 - high   # 2 HIGH → 0, 1 HIGH → 1, 0 HIGH → 2
 
     parlays.sort(key=lambda p: (_tier(p), -p.edge))
-    return parlays[:MAX_PARLAYS]
+
+    # Greedy dedup: ensure no single leg appears in more than one parlay.
+    # Without this, the two best parlays often share their strongest leg
+    # (e.g. A+B and A+C) giving the appearance of the same bet being doubled up.
+    selected: List[ParlayRecommendation] = []
+    used_leg_ids: set = set()
+    for p in parlays:
+        leg_ids = {id(l) for l in p.legs}
+        if leg_ids & used_leg_ids:   # any leg already in a selected parlay → skip
+            continue
+        selected.append(p)
+        used_leg_ids |= leg_ids
+        if len(selected) >= MAX_PARLAYS:
+            break
+
+    return selected
