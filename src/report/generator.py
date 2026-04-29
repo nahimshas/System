@@ -130,14 +130,24 @@ def build_report(
         recap = {"has_recap": False}
 
     # ── Performance summary (from settled history) ───────────────────────────
+    # Each block is independent so a chart-data failure never silences the
+    # prop accuracy table (and vice-versa).
     try:
-        from src.data.outcome_checker import load_performance_summary, build_chart_data, load_prop_accuracy
-        performance   = load_performance_summary()
-        chart_data    = build_chart_data()
+        from src.data.outcome_checker import load_performance_summary
+        performance = load_performance_summary()
+    except Exception:
+        performance = {}
+
+    try:
+        from src.data.outcome_checker import build_chart_data
+        chart_data = build_chart_data()
+    except Exception:
+        chart_data = {"has_data": False}
+
+    try:
+        from src.data.outcome_checker import load_prop_accuracy
         prop_accuracy = load_prop_accuracy()
     except Exception:
-        performance   = {}
-        chart_data    = {"has_data": False}
         prop_accuracy = {}
 
     # Build a lookup so prop cards can show the most recent settled result

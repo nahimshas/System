@@ -648,44 +648,55 @@ def build_chart_data() -> Dict:
 
 def check_and_settle_props(today: date) -> int:
     """
-    Settle yesterday's prop projections against ESPN box score actuals.
+    Settle prop projections against ESPN box score actuals.
+
+    Settles TWO windows each run:
+      1. Yesterday's props  — always attempted (primary settlement)
+      2. Today's props      — settled if games are already final in ESPN
+                              (handles same-day settlement when the workflow
+                              runs after games finish, e.g. a manual evening run)
+
     Appends new settled records to state/prop_history.json.
-    Returns the number of props settled this run.
+    Returns the total number of props newly settled this run.
     """
-    yesterday = today - timedelta(days=1)
-
     from src.state.manager import load_state
-    state = load_state(yesterday)
-    if not state:
-        logger.info(f"No state for {yesterday} — no props to settle")
-        return 0
-
-    props = state.get("props", [])
-    if not props:
-        return 0
-
     from src.data.prop_outcomes import check_prop_outcomes
-    settled = check_prop_outcomes(props, yesterday)
-    if not settled:
-        return 0
 
     existing      = _load_prop_history()
     existing_keys = {(r["date"], r["player"], r["prop_type"]) for r in existing}
-    new_records   = [
-        r for r in settled
-        if (r["date"], r["player"], r["prop_type"]) not in existing_keys
-    ]
+    all_new: List[Dict] = []
 
-    if new_records:
-        _append_to_prop_history(existing + new_records)
-        hits   = sum(1 for r in new_records if r["hit"])
-        misses = len(new_records) - hits
+    for settle_date in [today - timedelta(days=1), today]:
+        state = load_state(settle_date)
+        if not state:
+            continue
+        props = state.get("props", [])
+        if not props:
+            continue
+
+        settled = check_prop_outcomes(props, settle_date)
+        if not settled:
+            continue
+
+        new = [
+            r for r in settled
+            if (r["date"], r["player"], r["prop_type"]) not in existing_keys
+        ]
+        all_new.extend(new)
+        # Keep existing_keys current so today's records don't double-count yesterday's
+        for r in new:
+            existing_keys.add((r["date"], r["player"], r["prop_type"]))
+
+    if all_new:
+        _append_to_prop_history(existing + all_new)
+        hits   = sum(1 for r in all_new if r["hit"])
+        misses = len(all_new) - hits
         logger.info(
-            f"Prop settlement: {len(new_records)} prop(s) from {yesterday} — "
+            f"Prop settlement: {len(all_new)} prop(s) settled — "
             f"{hits} hit / {misses} miss"
         )
 
-    return len(new_records)
+    return len(all_new)
 
 
 def load_prop_accuracy() -> Dict:
