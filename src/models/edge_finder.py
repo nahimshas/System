@@ -536,6 +536,16 @@ def _era_trap_severity(stats: Dict) -> float:
       0.15–0.40 → MILD   (display in research only)
       0.40–0.80 → MODERATE (cap confidence on trap team; flag opponent edge)
       > 0.80  → SEVERE   (strong opponent edge signal; lower edge threshold)
+
+    Elite-pitcher guard:
+      When xFIP itself is below 3.20 (league-average FIP constant), the pitcher
+      has genuinely elite underlying stuff — low BABIP partly reflects contact
+      suppression skill, not pure luck.  In this case severity is capped at
+      MODERATE (0.79) regardless of the BABIP multiplier, preventing false
+      SEVERE tags on pitchers like Ohtani whose contact metrics are legitimately
+      elite (low exit velocity, low hard-hit rate) but whose BABIP still sits
+      below league average.  SEVERE is reserved for pitchers who are average-
+      or-worse by xFIP yet show an anomalously low ERA/BABIP (e.g. Cease 2026).
     """
     era   = stats.get("era")
     xfip  = stats.get("xfip") or stats.get("fip", 4.20)
@@ -545,8 +555,9 @@ def _era_trap_severity(stats: Dict) -> float:
     if not isinstance(era, float) or not isinstance(ip, float) or ip < 10:
         return 0.0
 
-    era_gap   = max(0.0, float(xfip) - era)          # how much xFIP exceeds ERA
-    ip_weight = max(0.0, 1.0 - ip / 80.0)            # decays to 0 at 80+ IP
+    xfip_val  = float(xfip)
+    era_gap   = max(0.0, xfip_val - era)              # how much xFIP exceeds ERA
+    ip_weight = max(0.0, 1.0 - ip / 80.0)             # decays to 0 at 80+ IP
 
     # BABIP penalty: pitcher league avg ≈ .300; each 0.050 below avg adds 1.0×
     BABIP_LEAGUE_AVG = 0.300
@@ -554,7 +565,14 @@ def _era_trap_severity(stats: Dict) -> float:
     if isinstance(babip, float) and babip > 0:
         babip_mult = 1.0 + max(0.0, (BABIP_LEAGUE_AVG - babip) / 0.050)
 
-    return round(era_gap * ip_weight * babip_mult, 3)
+    severity = era_gap * ip_weight * babip_mult
+
+    # Elite-pitcher guard: xFIP < 3.20 means genuinely dominant true talent.
+    # Low BABIP for elite pitchers is partly skill — cap at MODERATE.
+    if xfip_val < 3.20:
+        severity = min(severity, 0.79)
+
+    return round(severity, 3)
 
 
 def _mlb_conf(edge: float, signal_count: int, stats_available: bool,
