@@ -16,7 +16,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from src.config import ODDS_API_KEY, REPORT_DIR, REPORT_FILE, NBA_SPORT, MLB_SPORT, MAX_SINGLE_BETS
-from src.data.odds_client import get_game_odds, get_last_api_error
+from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits
 from src.data.nba_stats import get_nba_context
 from src.data.mlb_stats import (
     get_todays_games, get_pitcher_stats, get_team_batting_stats,
@@ -322,6 +322,7 @@ def run(leagues: list[str], send_email: bool = True) -> int:
         mlb_game_count=mlb_game_count,
         errors=errors,
         change_warnings=change_warnings,
+        odds_api_credits=get_api_credits(),
     )
 
     template_dir = Path(__file__).parent / "report" / "templates"

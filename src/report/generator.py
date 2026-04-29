@@ -22,6 +22,7 @@ def build_report(
     mlb_game_count: int,
     errors: List[str],
     change_warnings: Optional[List[Dict]] = None,
+    odds_api_credits: Optional[Dict] = None,
 ) -> Dict:
     change_warnings = change_warnings or []
 
@@ -176,4 +177,5 @@ def build_report(
         "has_prop_accuracy":  bool(prop_accuracy.get("total", 0)),
         "prop_last_result":   prop_last_result,
         "recap":              recap,
+        "odds_api_credits":   odds_api_credits or {},
     }

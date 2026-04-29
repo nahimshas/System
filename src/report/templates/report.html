@@ -138,6 +138,16 @@
       MLB: {{ report.mlb_game_count }} game{% if report.mlb_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       Budget: ${{ "%.0f"|format(report.daily_budget) }}
     </div>
+    {% set cr = report.odds_api_credits %}
+    {% if cr.remaining is not none %}
+    <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
+      🔑 Odds API &mdash;
+      {% if cr.used is not none %}{{ "{:,}".format(cr.used) }} used &middot; {% endif %}
+      <span style="color:{% if cr.remaining < 500 %}var(--red){% elif cr.remaining < 2000 %}var(--yellow){% else %}var(--green){% endif %};">
+        {{ "{:,}".format(cr.remaining) }} remaining
+      </span>
+    </div>
+    {% endif %}
   </div>
 
   {# ── Yesterday's Results recap ────────────────────────────────────────── #}

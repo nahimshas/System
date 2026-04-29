@@ -9,16 +9,23 @@ logger = logging.getLogger(__name__)
 
 
 _last_api_error: Optional[str] = None   # module-level; cleared each call
+_credits_used: Optional[int] = None
+_credits_remaining: Optional[int] = None
 
 
 def _get(path: str, params: Dict) -> Optional[Any]:
-    global _last_api_error
+    global _last_api_error, _credits_used, _credits_remaining
     _last_api_error = None
     params["apiKey"] = ODDS_API_KEY
     try:
         r = requests.get(f"{ODDS_API_BASE}{path}", params=params, timeout=15)
-        remaining = r.headers.get("x-requests-remaining", "?")
-        used      = r.headers.get("x-requests-used", "?")
+        try:
+            _credits_used      = int(r.headers.get("x-requests-used", 0))
+            _credits_remaining = int(r.headers.get("x-requests-remaining", 0))
+        except (ValueError, TypeError):
+            pass
+        remaining = _credits_remaining if _credits_remaining is not None else "?"
+        used      = _credits_used      if _credits_used      is not None else "?"
         logger.info(f"Odds API credits — used: {used} | remaining: {remaining}")
         if r.status_code == 401:
             _last_api_error = f"Odds API 401 Unauthorized — check ODDS_API_KEY secret in GitHub"
@@ -43,6 +50,11 @@ def _get(path: str, params: Dict) -> Optional[Any]:
 def get_last_api_error() -> Optional[str]:
     """Returns the last Odds API error message, or None if the last call succeeded."""
     return _last_api_error
+
+
+def get_api_credits() -> Dict:
+    """Returns the most recently seen credit counters from the Odds API response headers."""
+    return {"used": _credits_used, "remaining": _credits_remaining}
 
 
 def american_to_prob(odds: int) -> float:
