@@ -1342,7 +1342,7 @@
           cell.innerHTML = outcomeHtml("WON");
         } else {
           var pctP  = Math.min(99, Math.max(1, Math.round(combined * 100)));
-          var colP  = pctP >= 40 ? "#16a34a" : pctP >= 20 ? "#eab308" : "#ef4444";
+          var colP  = pctP >= 60 ? "#16a34a" : pctP >= 40 ? "#eab308" : "#ef4444";
           cell.innerHTML = '<span style="color:' + colP + ';font-weight:700;">' + pctP + '% win</span>';
         }
         return;

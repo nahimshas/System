@@ -178,6 +178,10 @@ def run(leagues: list[str], send_email: bool = True) -> int:
                     "away_team_id":      sched_game.get("away_team_id"),
                     "game_pk":           sched_game.get("game_pk"),
                 })
+                # Stamp commence_time back onto schedule game so props
+                # (generated from mlb_schedule) get the correct game start time
+                # for the client-side lock badge check.
+                sched_game["commence_time"] = game.get("commence_time", "")
 
             # Stamp umpire name + k_factor onto game dict (used by edge_finder + props)
             game_pk = game.get("game_pk")
