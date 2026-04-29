@@ -353,20 +353,10 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
         if sp:
             home_spread_line = sp.get("home_spread", 0.0)   # e.g. -6.5 means home favoured by 6.5
 
-            # Market spread baseline: take the MAX of the direct Odds-API spread price and
-            # the ML-market-derived probability (same normal formula as the model).
-            # Two failure modes exist:
-            #   • Spread market is stale/thin → direct price too cheap → phantom edge
-            #   • ML consensus diverges from the user's sportsbook → ML-derived too low → phantom edge
-            # max() on each side independently guards against both: we always use whichever
-            # source suggests the harder-to-beat baseline, keeping "mkt %" realistic.
-            _sp_home_raw = sp.get("home_prob", 0.50)
-            _ml_home = float(norm.cdf(
-                float(norm.ppf(market_home_prob)) * NBA_SPREAD_STD + home_spread_line,
-                0, NBA_SPREAD_STD,
-            ))
-            market_home_cover = max(_sp_home_raw, _ml_home)
-            market_away_cover = max(1.0 - _sp_home_raw, 1.0 - _ml_home)
+            # Market spread probability comes directly from the Odds API spread market
+            # (consensus no-vig across all books), same as the moneyline market probability.
+            market_home_cover = sp.get("home_prob", 0.50)
+            market_away_cover = sp.get("away_prob", 0.50)
 
             # Derive effective point margin from the (already injury-capped) win probability.
             # This keeps the spread model consistent with every adjustment already applied.
@@ -947,20 +937,10 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         if sp:
             home_spread_line = sp.get("home_spread", 0.0)   # almost always ±1.5 in MLB
 
-            # Market run-line baseline: take the MAX of the direct Odds-API spread price and
-            # the ML-market-derived probability (same normal formula as the model).
-            # Two failure modes exist:
-            #   • Spread market is stale/thin → direct price too cheap → phantom edge
-            #   • ML consensus diverges from the user's sportsbook → ML-derived too low → phantom edge
-            # max() on each side independently guards against both: we always use whichever
-            # source suggests the harder-to-beat baseline, keeping "mkt %" realistic.
-            _sp_home_raw = sp.get("home_prob", 0.50)
-            _ml_home = float(norm.cdf(
-                float(norm.ppf(market_home_prob)) * MLB_SPREAD_STD + home_spread_line,
-                0, MLB_SPREAD_STD,
-            ))
-            market_home_cover = max(_sp_home_raw, _ml_home)
-            market_away_cover = max(1.0 - _sp_home_raw, 1.0 - _ml_home)
+            # Market run-line probability comes directly from the Odds API spread market
+            # (consensus no-vig across all books), same as the moneyline market probability.
+            market_home_cover = sp.get("home_prob", 0.50)
+            market_away_cover = sp.get("away_prob", 0.50)
 
             # Derive effective run margin from the (already injury-capped) win probability.
             effective_margin = float(norm.ppf(model_home_prob)) * MLB_SPREAD_STD
