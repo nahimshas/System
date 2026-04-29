@@ -178,15 +178,35 @@ def _single_key(d: Dict) -> str:
     return f"{d['pick']}|{d['game']}"
 
 
+def _game_team_key(d: Dict) -> Optional[tuple]:
+    """Returns (game, team) for ML/Spread bets, None for Totals.
+    Used to detect line moves: Spurs -11.5 and Spurs -10.5 share the same key."""
+    bt = d.get("bet_type", "")
+    if bt not in ("Moneyline", "Spread"):
+        return None
+    home = d.get("home_team", "")
+    away = d.get("away_team", "")
+    pick = d.get("pick", "")
+    team = next((t for t in [home, away] if pick.startswith(t)), pick.split()[0] if pick else pick)
+    return (d.get("game", ""), team)
+
+
 def _signal_refresh_key(d: Dict) -> str:
-    """Looser key for signal/display refresh — ignores the exact line number on
-    Totals so a 0.5-point line move doesn't prevent signals from being updated."""
+    """Looser key for signal/display refresh.
+    - Totals:  ignores exact line number (Over 214 vs Over 214.5)
+    - Spreads: ignores exact line number (Spurs -11.5 vs Spurs -10.5) — uses team
+    - ML:      exact pick match"""
     game = d.get("game", "")
     bt   = d.get("bet_type", "")
     pick = d.get("pick", "")
     if bt == "Total":
         direction = "Over" if pick.startswith("Over") else "Under"
         return f"{game}|{bt}|{direction}"
+    if bt == "Spread":
+        home = d.get("home_team", "")
+        away = d.get("away_team", "")
+        team = next((t for t in [home, away] if pick.startswith(t)), pick.split()[0] if pick else pick)
+        return f"{game}|{bt}|{team}"
     return f"{game}|{bt}|{pick}"
 
 
@@ -295,12 +315,29 @@ def merge_picks(
     new_edge_map = {_single_key(d): d["edge"] for d in new_singles}
     # Signal refresh map: uses ALL fresh bets (uncapped) so bets that dropped out
     # of the top-5 since morning still get updated signals/research/probs.
-    # Looser key ignores exact line value for Totals (handles 0.5-pt line moves).
+    # Looser key ignores exact line value for Totals and Spreads.
     _refresh_pool = all_fresh_singles if all_fresh_singles is not None else new_singles
     new_pick_map  = {_signal_refresh_key(d): d for d in _refresh_pool}
 
-    # New bets not already in the locked morning set
-    truly_new = [d for d in new_singles if _single_key(d) not in locked_keys]
+    # Line-move map: same game+team but different line (e.g. Spurs -11.5 → -10.5).
+    # These are NOT "truly new" — they update an existing pre-game pick in place.
+    pregame_gt_keys = {_game_team_key(p) for p in pregame} - {None}
+    line_move_map: Dict[tuple, Dict] = {}
+    for d in new_singles:
+        if _single_key(d) in locked_keys:
+            continue
+        gt = _game_team_key(d)
+        if gt in pregame_gt_keys:
+            # Keep the highest-edge version for this game+team
+            if gt not in line_move_map or d["edge"] > line_move_map[gt]["edge"]:
+                line_move_map[gt] = d
+
+    # Truly new: different game+team from any pre-game pick (not a line move)
+    truly_new = [
+        d for d in new_singles
+        if _single_key(d) not in locked_keys
+        and _game_team_key(d) not in pregame_gt_keys
+    ]
     truly_new.sort(key=lambda d: d["edge"], reverse=True)
 
     final_singles: List[Dict] = list(started)
@@ -314,7 +351,40 @@ def merge_picks(
             and (pick["edge"] - current_edge) >= 0.02   # 2 pp drop
         )
 
-        # Best available new bet that beats this pick
+        # ── Line-move check ──────────────────────────────────────────────────
+        # If the same game+team now has a different line, treat it as an
+        # in-place update (not a replacement) so we never show two spread bets
+        # for the same team in the same game (e.g. Spurs -11.5 AND Spurs -10.5).
+        gt = _game_team_key(pick)
+        line_moved_fresh = line_move_map.get(gt) if gt else None
+        if line_moved_fresh and _single_key(line_moved_fresh) != _single_key(pick):
+            # Line moved — update pick in place to reflect the current line
+            old_line = pick["pick"]
+            morning_mkt = pick.get("market_prob", pick.get("contract_price", 0))
+            current_mkt = line_moved_fresh.get("market_prob", morning_mkt)
+            line_mv     = current_mkt - morning_mkt
+            fresh_signals = list(line_moved_fresh["signals"])
+            if abs(line_mv) >= LINE_MOVE_THRESHOLD:
+                tag = (f"📈 Line moved toward pick (+{line_mv*100:.1f}% since morning)"
+                       if line_mv > 0 else
+                       f"📉 Line faded ({line_mv*100:.1f}% since morning)")
+                fresh_signals.insert(0, tag)
+            pick = {
+                **pick,
+                "pick":            line_moved_fresh["pick"],   # updated line e.g. -10.5
+                "signals":         fresh_signals,
+                "research":        line_moved_fresh["research"],
+                "model_prob_pct":  line_moved_fresh["model_prob_pct"],
+                "market_prob_pct": line_moved_fresh["market_prob_pct"],
+                "edge":            line_moved_fresh["edge"],
+                "edge_pct":        line_moved_fresh["edge_pct"],
+            }
+            logger.info(f"Line move: '{old_line}' → '{pick['pick']}' ({pick['game']})")
+            final_singles.append(pick)
+            continue
+
+        # ── Normal replacement check ─────────────────────────────────────────
+        # Best available new bet (different game+team) that beats this pick
         best_new = next(
             (d for d in truly_new
              if id(d) not in used_new and d["edge"] > pick["edge"] + 0.005),
