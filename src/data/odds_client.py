@@ -1,4 +1,4 @@
-"""Fetches game lines from The Odds API (free tier: 500 credits/month)."""
+"""Fetches game lines from The Odds API."""
 import requests
 import logging
 from datetime import datetime, timezone, timedelta
@@ -8,17 +8,41 @@ from src.config import ODDS_API_BASE, ODDS_API_KEY, PREFERRED_BOOK, FALLBACK_BOO
 logger = logging.getLogger(__name__)
 
 
+_last_api_error: Optional[str] = None   # module-level; cleared each call
+
+
 def _get(path: str, params: Dict) -> Optional[Any]:
+    global _last_api_error
+    _last_api_error = None
     params["apiKey"] = ODDS_API_KEY
     try:
         r = requests.get(f"{ODDS_API_BASE}{path}", params=params, timeout=15)
-        r.raise_for_status()
         remaining = r.headers.get("x-requests-remaining", "?")
-        logger.info(f"Odds API credits remaining: {remaining}")
+        used      = r.headers.get("x-requests-used", "?")
+        logger.info(f"Odds API credits — used: {used} | remaining: {remaining}")
+        if r.status_code == 401:
+            _last_api_error = f"Odds API 401 Unauthorized — check ODDS_API_KEY secret in GitHub"
+            logger.error(_last_api_error)
+            return None
+        if r.status_code == 422:
+            _last_api_error = f"Odds API 422 — quota exhausted or invalid params ({r.text[:120]})"
+            logger.error(_last_api_error)
+            return None
+        if r.status_code == 429:
+            _last_api_error = f"Odds API 429 — rate limited (too many requests per minute)"
+            logger.error(_last_api_error)
+            return None
+        r.raise_for_status()
         return r.json()
     except requests.RequestException as e:
-        logger.error(f"Odds API error: {e}")
+        _last_api_error = f"Odds API request failed: {e}"
+        logger.error(_last_api_error)
         return None
+
+
+def get_last_api_error() -> Optional[str]:
+    """Returns the last Odds API error message, or None if the last call succeeded."""
+    return _last_api_error
 
 
 def american_to_prob(odds: int) -> float:

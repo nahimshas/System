@@ -16,7 +16,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from src.config import ODDS_API_KEY, REPORT_DIR, REPORT_FILE, NBA_SPORT, MLB_SPORT, MAX_SINGLE_BETS
-from src.data.odds_client import get_game_odds
+from src.data.odds_client import get_game_odds, get_last_api_error
 from src.data.nba_stats import get_nba_context
 from src.data.mlb_stats import (
     get_todays_games, get_pitcher_stats, get_team_batting_stats,
@@ -86,7 +86,12 @@ def run(leagues: list[str], send_email: bool = True) -> int:
         nba_game_count = len(nba_odds_games)
 
         if nba_game_count == 0:
-            logger.info("No NBA games today or odds unavailable")
+            api_err = get_last_api_error()
+            if api_err:
+                errors.append(f"NBA odds unavailable: {api_err}")
+                logger.error(f"NBA odds unavailable: {api_err}")
+            else:
+                logger.info("No NBA games today or odds unavailable")
         else:
             team_names_today = list({
                 t for g in nba_odds_games
@@ -130,6 +135,14 @@ def run(leagues: list[str], send_email: bool = True) -> int:
 
         mlb_schedule = get_todays_games(today)
         mlb_game_count = len(mlb_odds_games)
+
+        if mlb_game_count == 0 and ODDS_API_KEY:
+            api_err = get_last_api_error()
+            if api_err:
+                errors.append(f"MLB odds unavailable: {api_err}")
+                logger.error(f"MLB odds unavailable: {api_err}")
+            else:
+                logger.info(f"No MLB odds available today (schedule has {len(mlb_schedule)} games)")
 
         schedule_map = {g["home_team"]: g for g in mlb_schedule}
         schedule_map.update({g["away_team"]: g for g in mlb_schedule})
