@@ -1,10 +1,8 @@
 name: Daily Betting Report
 
 on:
-  schedule:
-    # Target: ~9:00 AM PDT. GitHub Actions free tier often runs 1-2 hrs late,
-    # so we schedule at 7:00 AM PDT (14:00 UTC) to land around 9 AM despite delays.
-    - cron: "0 14 * * *"
+  # schedule: disabled — GitHub cron is unreliable (1-5 hr delays on free tier).
+  # Triggered at exactly 9:00 AM PDT via cron-job.org → GitHub workflow_dispatch API.
   workflow_dispatch:
     inputs:
       league:
