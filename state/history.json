@@ -490,5 +490,113 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-04-29",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Arizona Diamondbacks @ Milwaukee Brewers",
+    "bet_type": "Spread",
+    "pick": "Milwaukee Brewers +1.5",
+    "home_team": "Milwaukee Brewers",
+    "away_team": "Arizona Diamondbacks",
+    "edge_pct": 31.4,
+    "confidence": "HIGH",
+    "model_prob_pct": 70.7,
+    "market_prob_pct": 39.3,
+    "cost": 12.39,
+    "profit_if_win": 17.61,
+    "result": "LOST",
+    "actual_pnl": -12.39,
+    "actual_home_score": 2.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-04-29",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Colorado Rockies @ Cincinnati Reds",
+    "bet_type": "Moneyline",
+    "pick": "Colorado Rockies",
+    "home_team": "Cincinnati Reds",
+    "away_team": "Colorado Rockies",
+    "edge_pct": 29.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 71.0,
+    "market_prob_pct": 41.7,
+    "cost": 11.81,
+    "profit_if_win": 15.19,
+    "result": "WON",
+    "actual_pnl": 15.19,
+    "actual_home_score": 2.0,
+    "actual_away_score": 13.0
+  },
+  {
+    "date": "2026-04-29",
+    "type": "single",
+    "sport": "MLB",
+    "game": "St. Louis Cardinals @ Pittsburgh Pirates",
+    "bet_type": "Spread",
+    "pick": "Pittsburgh Pirates +1.5",
+    "home_team": "Pittsburgh Pirates",
+    "away_team": "St. Louis Cardinals",
+    "edge_pct": 29.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 68.3,
+    "market_prob_pct": 39.3,
+    "cost": 11.15,
+    "profit_if_win": 15.85,
+    "result": "WON",
+    "actual_pnl": 15.85,
+    "actual_home_score": 4.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-04-29",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Orlando Magic @ Detroit Pistons",
+    "bet_type": "Spread",
+    "pick": "Orlando Magic +10.5",
+    "home_team": "Detroit Pistons",
+    "away_team": "Orlando Magic",
+    "edge_pct": 25.9,
+    "confidence": "HIGH",
+    "model_prob_pct": 76.2,
+    "market_prob_pct": 50.3,
+    "cost": 12.03,
+    "profit_if_win": 10.97,
+    "result": "WON",
+    "actual_pnl": 10.97,
+    "actual_home_score": 116.0,
+    "actual_away_score": 109.0
+  },
+  {
+    "date": "2026-04-29",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Orlando Magic +10.5 (Spread) + Under 211.5 (Total)",
+    "bet_type": "Parlay",
+    "pick": "Orlando Magic +10.5 (Spread) + Under 211.5 (Total)",
+    "edge_pct": 22.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 49.0,
+    "market_prob_pct": 0,
+    "cost": 3.41,
+    "profit_if_win": 8.59,
+    "result": "LOST",
+    "actual_pnl": -3.41,
+    "legs": [
+      {
+        "game": "Orlando Magic @ Detroit Pistons",
+        "pick": "Orlando Magic +10.5",
+        "result": "WON"
+      },
+      {
+        "game": "Orlando Magic @ Detroit Pistons",
+        "pick": "Under 211.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
