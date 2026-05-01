@@ -598,5 +598,161 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-04-30",
+    "type": "single",
+    "sport": "NBA",
+    "game": "New York Knicks @ Atlanta Hawks",
+    "bet_type": "Spread",
+    "pick": "New York Knicks -2.5",
+    "home_team": "Atlanta Hawks",
+    "away_team": "New York Knicks",
+    "edge_pct": 32.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 83.3,
+    "market_prob_pct": 50.4,
+    "cost": 15.73,
+    "profit_if_win": 14.27,
+    "result": "WON",
+    "actual_pnl": 14.27,
+    "actual_home_score": 89.0,
+    "actual_away_score": 140.0
+  },
+  {
+    "date": "2026-04-30",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Denver Nuggets @ Minnesota Timberwolves",
+    "bet_type": "Total",
+    "pick": "Under 224.5",
+    "home_team": "Minnesota Timberwolves",
+    "away_team": "Denver Nuggets",
+    "edge_pct": 29.2,
+    "confidence": "HIGH",
+    "model_prob_pct": 81.6,
+    "market_prob_pct": 52.4,
+    "cost": 14.68,
+    "profit_if_win": 12.32,
+    "result": "WON",
+    "actual_pnl": 12.32,
+    "actual_home_score": 110.0,
+    "actual_away_score": 98.0
+  },
+  {
+    "date": "2026-04-30",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Colorado Rockies @ Cincinnati Reds",
+    "bet_type": "Moneyline",
+    "pick": "Colorado Rockies",
+    "home_team": "Cincinnati Reds",
+    "away_team": "Colorado Rockies",
+    "edge_pct": 22.4,
+    "confidence": "HIGH",
+    "model_prob_pct": 62.9,
+    "market_prob_pct": 40.5,
+    "cost": 8.5,
+    "profit_if_win": 11.5,
+    "result": "LOST",
+    "actual_pnl": -8.5,
+    "actual_home_score": 6.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-04-30",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Boston Celtics @ Philadelphia 76ers",
+    "bet_type": "Total",
+    "pick": "Under 212.5",
+    "home_team": "Philadelphia 76ers",
+    "away_team": "Boston Celtics",
+    "edge_pct": 20.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 72.3,
+    "market_prob_pct": 51.8,
+    "cost": 9.68,
+    "profit_if_win": 8.32,
+    "result": "WON",
+    "actual_pnl": 8.32,
+    "actual_home_score": 106.0,
+    "actual_away_score": 93.0
+  },
+  {
+    "date": "2026-04-30",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Houston Astros @ Baltimore Orioles",
+    "bet_type": "Moneyline",
+    "pick": "Houston Astros",
+    "home_team": "Baltimore Orioles",
+    "away_team": "Houston Astros",
+    "edge_pct": 18.6,
+    "confidence": "HIGH",
+    "model_prob_pct": 63.9,
+    "market_prob_pct": 45.3,
+    "cost": 7.56,
+    "profit_if_win": 8.44,
+    "result": "WON",
+    "actual_pnl": 8.44,
+    "actual_home_score": 5.0,
+    "actual_away_score": 11.0
+  },
+  {
+    "date": "2026-04-30",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Knicks (Moneyline) + Boston Celtics (Moneyline)",
+    "bet_type": "Parlay",
+    "pick": "New York Knicks (Moneyline) + Boston Celtics (Moneyline)",
+    "edge_pct": 35.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 73.7,
+    "market_prob_pct": 0,
+    "cost": 6.91,
+    "profit_if_win": 10.09,
+    "result": "LOST",
+    "actual_pnl": -6.91,
+    "legs": [
+      {
+        "game": "New York Knicks @ Atlanta Hawks",
+        "pick": "New York Knicks",
+        "result": "WON"
+      },
+      {
+        "game": "Boston Celtics @ Philadelphia 76ers",
+        "pick": "Boston Celtics",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-04-30",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Knicks -2.5 (Spread) + Under 213.5 (Total)",
+    "bet_type": "Parlay",
+    "pick": "New York Knicks -2.5 (Spread) + Under 213.5 (Total)",
+    "edge_pct": 28.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 55.2,
+    "market_prob_pct": 0,
+    "cost": 4.54,
+    "profit_if_win": 11.46,
+    "result": "LOST",
+    "actual_pnl": -4.54,
+    "legs": [
+      {
+        "game": "New York Knicks @ Atlanta Hawks",
+        "pick": "New York Knicks -2.5",
+        "result": "WON"
+      },
+      {
+        "game": "New York Knicks @ Atlanta Hawks",
+        "pick": "Under 213.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
