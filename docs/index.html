@@ -132,7 +132,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, May 03, 2026 &middot; Generated May 03, 2026 at 02:16 PM PDT</div>
+    <div class="subtitle">Sunday, May 03, 2026 &middot; Generated May 03, 2026 at 03:39 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
       MLB: 1 game &nbsp;|&nbsp;
@@ -142,9 +142,9 @@
     
     <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
       🔑 Odds API &mdash;
-      54 used &middot; 
+      60 used &middot; 
       <span style="color:var(--green);">
-        19,946 remaining
+        19,940 remaining
       </span>
     </div>
     
@@ -497,7 +497,7 @@
   
 
   
-  <div class="section">
+  <div class="section" id="sec-singles">
     <div class="section-title">Singles <span style="color:var(--muted);font-weight:400;font-size:0.85rem;text-transform:none;letter-spacing:0;">(top 5 by edge)</span></div>
     
     <div class="card"
@@ -869,7 +869,7 @@
   
 
   
-  <div class="section">
+  <div class="section" id="sec-parlays">
     <div class="section-title">2-Leg Parlays <span class="badge badge-parlay">2</span></div>
     
     <div class="card parlay-card" data-parlay="true"
@@ -992,7 +992,7 @@
   
 
   
-  <div class="section">
+  <div class="section" id="sec-props">
     <div class="section-title">Props Watchlist
       <span style="color:var(--yellow);font-size:0.72rem;font-weight:400;text-transform:none;">
         — model projections only. No sportsbook line available. Search Robinhood manually before betting.
@@ -1771,7 +1771,7 @@
   
 
   
-  <div class="section">
+  <div class="section" id="sec-allocation">
     <div class="section-title">Budget Allocation</div>
     <div class="card">
       <table class="budget-table">
@@ -2030,34 +2030,32 @@
 
   
   
-  <div class="section">
+  <div class="section" id="sec-prop-accuracy">
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
       <span>Props Model Accuracy
-        <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;">
-          — how often the model's projection exceeded the actual stat
-        </span>
+        <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;">— hit rate vs actuals</span>
       </span>
       <span id="prop-acc-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;">● includes today</span>
     </div>
     <div class="card" id="prop-accuracy-card"
-         data-hist-total="81"
-         data-hist-hits="40"
-         data-hist-sum-err="-121.5">
+         data-hist-total="86"
+         data-hist-hits="45"
+         data-hist-sum-err="-94.6">
       <div class="stats-grid" style="margin-bottom:12px;">
         <div class="stat-box">
           <div class="stat-label">Props Settled</div>
-          <div class="stat-value blue" id="pa-total">81</div>
+          <div class="stat-value blue" id="pa-total">86</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Model Hit Rate</div>
           <div class="stat-value yellow" id="pa-hit-rate">
-            49.4%
+            52.3%
           </div>
         </div>
         <div class="stat-box" title="Average actual stat minus average model projection. Positive = model under-projected.">
           <div class="stat-label">Avg Error</div>
           <div class="stat-value red" id="pa-avg-err">
-            -1.5
+            -1.1
           </div>
         </div>
       </div>
@@ -2078,73 +2076,73 @@
           
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="Points Over"
-              data-type-total="19"
-              data-type-hits="6">
+              data-type-total="21"
+              data-type-hits="8">
             <td style="padding:5px 0;color:var(--fg);">Points</td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">19</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">21</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:#f87171;">
-              31.6%
+              38.1%
             </td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">27.0</td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">23.5</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">26.7</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">24.6</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:#f87171;">
-              -3.4
+              -2.0
             </td>
           </tr>
           
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="Rebounds Over"
-              data-type-total="17"
-              data-type-hits="8">
+              data-type-total="18"
+              data-type-hits="9">
             <td style="padding:5px 0;color:var(--fg);">Rebounds</td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">17</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">18</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:#facc15;">
-              47.1%
+              50.0%
             </td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">11.2</td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">9.8</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">11.1</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">10.1</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:#f87171;">
-              -1.4
+              -1.1
             </td>
           </tr>
           
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="Assists Over"
-              data-type-total="7"
-              data-type-hits="2">
+              data-type-total="8"
+              data-type-hits="3">
             <td style="padding:5px 0;color:var(--fg);">Assists</td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">7</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">8</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:#f87171;">
-              28.6%
+              37.5%
             </td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">9.9</td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">7.7</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">8.2</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:#f87171;">
-              -2.2
+              -1.6
             </td>
           </tr>
           
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="Strikeouts Over"
-              data-type-total="17"
-              data-type-hits="8">
+              data-type-total="18"
+              data-type-hits="9">
             <td style="padding:5px 0;color:var(--fg);">Strikeouts</td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">17</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">18</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:#facc15;">
-              47.1%
+              50.0%
             </td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">6.1</td>
-            <td style="text-align:right;padding:5px 6px;color:var(--muted);">4.9</td>
+            <td style="text-align:right;padding:5px 6px;color:var(--muted);">5.0</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
                        color:#f87171;">
-              -1.2
+              -1.1
             </td>
           </tr>
           
@@ -2175,28 +2173,28 @@
         
         <div style="flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
              data-conf="HIGH"
-             data-conf-total="40"
-             data-conf-hits="23"
+             data-conf-total="42"
+             data-conf-hits="25"
              data-conf-misses="17">
           <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">HIGH confidence</div>
           <div class="conf-hit-rate" style="font-size:1.1rem;font-weight:700;
                       color:#4ade80;">
-            57.5%
+            59.5%
           </div>
-          <div class="conf-count" style="font-size:0.72rem;color:var(--muted);">23H / 17M (40 settled)</div>
+          <div class="conf-count" style="font-size:0.72rem;color:var(--muted);">25H / 17M (42 settled)</div>
         </div>
         
         <div style="flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
              data-conf="MEDIUM"
-             data-conf-total="41"
-             data-conf-hits="17"
+             data-conf-total="44"
+             data-conf-hits="20"
              data-conf-misses="24">
           <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">MEDIUM confidence</div>
           <div class="conf-hit-rate" style="font-size:1.1rem;font-weight:700;
-                      color:#f87171;">
-            41.5%
+                      color:#facc15;">
+            45.5%
           </div>
-          <div class="conf-count" style="font-size:0.72rem;color:var(--muted);">17H / 24M (41 settled)</div>
+          <div class="conf-count" style="font-size:0.72rem;color:var(--muted);">20H / 24M (44 settled)</div>
         </div>
         
       </div>
@@ -4095,12 +4093,27 @@
     });
   });
 
+  // ── Collapse state helpers (localStorage) ───────────────────────────────
+  var LS_PREFIX = "collapse:";
+  function lsSave(key, collapsed) {
+    try { localStorage.setItem(LS_PREFIX + key, collapsed ? "1" : "0"); } catch(e) {}
+  }
+  function lsGet(key) {
+    try { return localStorage.getItem(LS_PREFIX + key); } catch(e) { return null; }
+  }
+
   // ── Collapsible sections ─────────────────────────────────────────────────
   document.querySelectorAll(".section-title").forEach(function (title) {
     var section = title.parentElement;
     if (!section) return;
+    var key = section.id || null;
+    // Restore saved state (sections default to expanded)
+    if (key && lsGet(key) === "1") {
+      section.classList.add("s-collapsed");
+    }
     title.addEventListener("click", function () {
       section.classList.toggle("s-collapsed");
+      if (key) lsSave(key, section.classList.contains("s-collapsed"));
     });
   });
 
@@ -4108,10 +4121,23 @@
   document.querySelectorAll(".card-toggle-header").forEach(function (header) {
     var card = header.closest(".card");
     if (!card) return;
-    card.classList.add("c-collapsed");   // start all cards collapsed
+    // Build a stable key from the card's data attributes.
+    // Bet cards:  pick name + home + away  (unique per game+bet, survives reorder)
+    // Prop cards: player + prop type
+    var key = card.dataset.pick
+              ? (card.dataset.pick + "|" + (card.dataset.homeTeam || "") + (card.dataset.awayTeam || ""))
+              : (card.dataset.player || "") + "|" + (card.dataset.propType || "");
+    var saved = key ? lsGet(key) : null;
+    // Cards default to collapsed; only expand if explicitly saved as open
+    if (saved === "0") {
+      // leave expanded — do not add c-collapsed
+    } else {
+      card.classList.add("c-collapsed");
+    }
     header.addEventListener("click", function (e) {
       if (e.target.closest("a")) return;  // let nav-link clicks pass through
       card.classList.toggle("c-collapsed");
+      if (key) lsSave(key, card.classList.contains("c-collapsed"));
     });
   });
 
