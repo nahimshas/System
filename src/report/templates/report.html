@@ -684,7 +684,7 @@
                data-hist-won="{{ ss.won }}"
                data-hist-lost="{{ ss.lost }}"
                data-hist-pnl="{{ ss.total_pnl }}">
-            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">{{ sport }}</div>
+            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">{{ "PARLAYS" if sport == "PARLAY" else sport }}</div>
             <div class="perf-sport-record" style="font-size:0.82rem;">{{ ss.won }}W–{{ ss.lost }}L
               {% if ss.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ ss.win_rate_pct }}%)</span>{% endif %}
             </div>
@@ -1727,7 +1727,7 @@
         sportCard.setAttribute("data-hist-pnl",  "0");
         sportCard.style.cssText = "flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;";
         sportCard.innerHTML =
-          '<div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">' + sport + '</div>' +
+          '<div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">' + (sport === "PARLAY" ? "PARLAYS" : sport) + '</div>' +
           '<div class="perf-sport-record" style="font-size:0.82rem;">0W–0L</div>' +
           '<div class="perf-sport-pnl" style="font-size:0.78rem;color:var(--yellow);">$+0.00</div>';
         breakdown.appendChild(sportCard);
