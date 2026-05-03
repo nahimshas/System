@@ -529,12 +529,12 @@
       <span>Props Model Accuracy
         <br><span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;letter-spacing:0;">Hit Rate vs Actuals</span>
       </span>
-      <span id="prop-acc-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;flex-shrink:0;margin-top:2px;">● includes today</span>
+      <span id="prop-acc-live-badge" style="display:{{ 'inline-block' if pa.today_total > 0 else 'none' }};font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;flex-shrink:0;margin-top:2px;">● includes today</span>
     </div>
     <div class="card" id="prop-accuracy-card"
-         data-hist-total="{{ pa.total }}"
-         data-hist-hits="{{ pa.all.hits }}"
-         data-hist-sum-err="{{ ((pa.all.avg_err or 0) * pa.total) | round(2) }}">
+         data-hist-total="{{ pa.hist_total }}"
+         data-hist-hits="{{ pa.hist_all.hits }}"
+         data-hist-sum-err="{{ ((pa.hist_all.avg_err or 0) * pa.hist_total) | round(2) }}">
       <div class="stats-grid" style="margin-bottom:12px;">
         <div class="stat-box">
           <div class="stat-label">Props Settled</div>
@@ -568,10 +568,11 @@
         </thead>
         <tbody>
           {% for pt, stats in pa.by_type.items() %}
+          {% set hst = pa.hist_by_type.get(pt, {}) %}
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="{{ pt }}"
-              data-type-total="{{ stats.total }}"
-              data-type-hits="{{ stats.hits }}">
+              data-type-total="{{ hst.get('total', 0) }}"
+              data-type-hits="{{ hst.get('hits', 0) }}">
             <td style="padding:5px 0;color:var(--fg);">{{ pt.replace(" Over (1+)", "").replace(" Over", "") }}</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.total }}</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
@@ -593,11 +594,12 @@
       {% if pa.by_conf %}
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         {% for conf, stats in pa.by_conf.items() %}
+        {% set hsc = pa.hist_by_conf.get(conf, {}) %}
         <div style="flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
              data-conf="{{ conf }}"
-             data-conf-total="{{ stats.total }}"
-             data-conf-hits="{{ stats.hits }}"
-             data-conf-misses="{{ stats.misses }}">
+             data-conf-total="{{ hsc.get('total', 0) }}"
+             data-conf-hits="{{ hsc.get('hits', 0) }}"
+             data-conf-misses="{{ hsc.get('misses', 0) }}">
           <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">{{ conf }} confidence</div>
           <div class="conf-hit-rate" style="font-size:1.1rem;font-weight:700;
                       color:{% if stats.hit_rate and stats.hit_rate >= 55 %}#4ade80{% elif stats.hit_rate and stats.hit_rate >= 45 %}#facc15{% else %}#f87171{% endif %};">

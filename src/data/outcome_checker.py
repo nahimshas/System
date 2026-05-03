@@ -703,10 +703,20 @@ def load_prop_accuracy() -> Dict:
     """
     Returns a summary of prop model accuracy for the report:
       total, hit_rate, by_type, by_conf, recent (last 20)
+
+    Also returns hist_* variants that exclude today's already-settled props.
+    These are used as the JS baseline in data-hist-* attributes so that
+    updatePropAccuracy() can add today's ESPN-confirmed results without
+    double-counting props already written to history by the morning workflow.
     """
     records = _load_prop_history()
     if not records:
         return {}
+
+    from datetime import date as _date
+    today_str     = _date.today().isoformat()
+    hist_records  = [r for r in records if r.get("date", "") < today_str]
+    today_records = [r for r in records if r.get("date", "") == today_str]
 
     def _acc(subset: List[Dict]) -> Dict:
         total  = len(subset)
@@ -736,23 +746,37 @@ def load_prop_accuracy() -> Dict:
             seen_types.append(pt)
 
     by_type: Dict[str, Dict] = {}
+    hist_by_type: Dict[str, Dict] = {}
     for pt in seen_types:
-        subset = [r for r in records if r.get("prop_type") == pt]
+        subset      = [r for r in records      if r.get("prop_type") == pt]
+        hist_subset = [r for r in hist_records if r.get("prop_type") == pt]
         if subset:
-            by_type[pt] = _acc(subset)
+            by_type[pt]      = _acc(subset)
+            hist_by_type[pt] = _acc(hist_subset)
 
     by_conf: Dict[str, Dict] = {}
+    hist_by_conf: Dict[str, Dict] = {}
     for conf in ("HIGH", "MEDIUM"):
-        subset = [r for r in records if r.get("confidence") == conf]
+        subset      = [r for r in records      if r.get("confidence") == conf]
+        hist_subset = [r for r in hist_records if r.get("confidence") == conf]
         if subset:
-            by_conf[conf] = _acc(subset)
+            by_conf[conf]      = _acc(subset)
+            hist_by_conf[conf] = _acc(hist_subset)
+
+    hist_all = _acc(hist_records)
 
     return {
-        "total":    len(records),
-        "all":      _acc(records),
-        "by_type":  by_type,
-        "by_conf":  by_conf,
-        "recent":   records[-20:],   # last 20 for display in report
+        "total":         len(records),
+        "all":           _acc(records),
+        "by_type":       by_type,
+        "by_conf":       by_conf,
+        "recent":        records[-20:],   # last 20 for display in report
+        # Before-today baselines for JS data-hist-* attributes (avoids double-count)
+        "hist_total":    len(hist_records),
+        "hist_all":      hist_all,
+        "hist_by_type":  hist_by_type,
+        "hist_by_conf":  hist_by_conf,
+        "today_total":   len(today_records),
     }
 
 
