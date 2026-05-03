@@ -1468,9 +1468,14 @@
         }
 
         // Build a compact per-leg score summary line
+        // If two legs share the same game, show the game info only once.
         var legSummaryParts = [];
+        var _seenGames = {};
         for (var ls = 0; ls < legs.length; ls++) {
           var lgl = legs[ls];
+          var _gameKey = (lgl.away_team || "") + "|" + (lgl.home_team || "");
+          if (_seenGames[_gameKey]) continue;
+          _seenGames[_gameKey] = true;
           var lev = (lgl.home_team || lgl.away_team)
                     ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
                     : null;
