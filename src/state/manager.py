@@ -290,6 +290,7 @@ def merge_picks(
     new_parlays: List[Dict],
     new_props: List[Dict],
     all_fresh_singles: Optional[List[Dict]] = None,
+    allow_replace: bool = False,
 ) -> Tuple[List[Dict], List[Dict], List[Dict], List[Dict]]:
     """
     Merge the locked morning state with fresh analysis results.
@@ -297,10 +298,16 @@ def merge_picks(
     Returns (final_singles, final_parlays, final_props, warnings).
 
     Rules:
-    ▸ Game started     → bet is fully locked, shown as-is, never replaced.
-    ▸ Pre-game bet     → replaced only if a *new* bet (not in morning picks)
-                         has a higher edge (+0.5 % threshold to avoid noise).
-    ▸ Warnings list    → one entry per substitution with reason.
+    ▸ Game started      → bet is fully locked, shown as-is, never replaced.
+    ▸ allow_replace=False (default)
+                        → signals, odds, and model probs are refreshed in-place;
+                          no pick is ever swapped out.  Use this for visual/code
+                          deploys where you don't want the slate to change.
+    ▸ allow_replace=True
+                        → unlocked picks are replaced if a better option (higher
+                          edge, +0.5 % threshold) is available.  Triggered via
+                          the "Re-evaluate picks" workflow checkbox.
+    ▸ Warnings list     → one entry per substitution with reason.
     """
     warnings: List[Dict] = []
 
@@ -384,12 +391,13 @@ def merge_picks(
             continue
 
         # ── Normal replacement check ─────────────────────────────────────────
-        # Best available new bet (different game+team) that beats this pick
+        # Best available new bet (different game+team) that beats this pick.
+        # Only considered when allow_replace=True (explicit re-evaluate run).
         best_new = next(
             (d for d in truly_new
              if id(d) not in used_new and d["edge"] > pick["edge"] + 0.005),
             None,
-        )
+        ) if allow_replace else None
 
         if best_new:
             reason_parts = []
@@ -488,7 +496,7 @@ def merge_picks(
              if id(d) not in used_new_par
              and (d["edge"] if isinstance(d, dict) else d.edge) > par["edge"] + 0.005),
             None,
-        )
+        ) if allow_replace else None
         if best_new:
             new_d = best_new if isinstance(best_new, dict) else parlay_to_dict(best_new)
             warnings.append({
@@ -539,7 +547,7 @@ def merge_picks(
              if id(d) not in used_new_props
              and _CONF_RANK.get(d["confidence"] if isinstance(d, dict) else d.confidence, 0) > prop_conf),
             None,
-        )
+        ) if allow_replace else None
         if best_new:
             new_d = best_new if isinstance(best_new, dict) else prop_to_dict(best_new)
             warnings.append({

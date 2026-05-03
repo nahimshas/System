@@ -24,6 +24,11 @@ on:
         required: false
         type: boolean
         default: false
+      reevaluate_picks:
+        description: "Re-evaluate unlocked picks and replace any that are no longer top options"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   generate-report:
@@ -71,7 +76,11 @@ jobs:
           if [ "${{ github.event.inputs.no_email }}" = "true" ]; then
             NO_EMAIL_ARG="--no-email"
           fi
-          python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG
+          REEVALUATE_ARG=""
+          if [ "${{ github.event.inputs.reevaluate_picks }}" = "true" ]; then
+            REEVALUATE_ARG="--reevaluate"
+          fi
+          python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG $REEVALUATE_ARG
 
       - name: Commit updated report and state to repo
         run: |

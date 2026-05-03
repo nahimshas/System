@@ -44,7 +44,7 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 
-def run(leagues: list[str], send_email: bool = True) -> int:
+def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -> int:
     from src.data.odds_client import _today_pacific
     today = _today_pacific()
     errors: list[str] = []
@@ -293,10 +293,12 @@ def run(leagues: list[str], send_email: bool = True) -> int:
         })
     else:
         # ── Subsequent run — merge locked picks with new analysis ────────
-        logger.info("Subsequent run — merging with morning baseline")
+        mode = "re-evaluate + replace unlocked" if reevaluate else "refresh signals only"
+        logger.info(f"Subsequent run — merging with morning baseline ({mode})")
         final_singles, final_parlays, final_props, change_warnings = merge_picks(
             state, fresh_singles, fresh_parlays, fresh_props,
             all_fresh_singles=fresh_singles_all,
+            allow_replace=reevaluate,
         )
 
         # Persist updated state (locked flags, any substitutions)
@@ -351,10 +353,12 @@ def main():
     parser = argparse.ArgumentParser(description="Sports Betting Analysis System")
     parser.add_argument("--league", choices=["nba", "mlb"], help="Run for one league only")
     parser.add_argument("--no-email", action="store_true", help="Skip email delivery")
+    parser.add_argument("--reevaluate", action="store_true",
+                        help="Re-evaluate unlocked picks and replace any no longer in the top options")
     args = parser.parse_args()
 
     leagues   = [args.league] if args.league else ["nba", "mlb"]
-    bet_count = run(leagues=leagues, send_email=not args.no_email)
+    bet_count = run(leagues=leagues, send_email=not args.no_email, reevaluate=args.reevaluate)
     logger.info(f"Done. {bet_count} bet recommendation(s) generated.")
     sys.exit(0)
 
