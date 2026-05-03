@@ -487,7 +487,7 @@
                 <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">{{ row.label }} <span class="nav-arrow">↑</span></div>
               </a>
               <div style="color:var(--muted);font-size:0.7rem;">{{ row.sport }}</div>
-              {% if row.game %}<div style="color:var(--muted);font-size:0.7rem;">{{ row.game }}</div>{% endif %}
+              {% if row.game and row.bet_type != "Parlay" %}<div style="color:var(--muted);font-size:0.7rem;">{{ row.game }}</div>{% endif %}
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
             </td>
             <td style="vertical-align:top;">
