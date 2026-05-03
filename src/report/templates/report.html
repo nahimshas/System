@@ -525,11 +525,11 @@
   {% if report.has_prop_accuracy %}
   {% set pa = report.prop_accuracy %}
   <div class="section" id="sec-prop-accuracy">
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:flex-start;">
       <span>Props Model Accuracy
-        <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;">— hit rate vs actuals</span>
+        <br><span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;letter-spacing:0;">Hit Rate vs Actuals</span>
       </span>
-      <span id="prop-acc-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;">● includes today</span>
+      <span id="prop-acc-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;flex-shrink:0;margin-top:2px;">● includes today</span>
     </div>
     <div class="card" id="prop-accuracy-card"
          data-hist-total="{{ pa.total }}"
