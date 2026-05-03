@@ -463,11 +463,15 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                 under_signals.append(f"⚠ {b2b_str} on B2B — pace reduction supports Under")
                 over_signals.append( f"⚠ {b2b_str} on B2B — model projects Over despite pace reduction")
 
+            # Use .5 lines to eliminate push risk: "Over 10" → "Over 9.5", "Under 8" → "Under 8.5"
+            _over_label  = f"Over {market_line - 0.5}"  if market_line % 1 == 0 else f"Over {market_line}"
+            _under_label = f"Under {market_line + 0.5}" if market_line % 1 == 0 else f"Under {market_line}"
+
             if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
                 sizing = robinhood_kelly(model_over_prob, market_over_prob)
                 if sizing.num_contracts > 0:
                     recs.append(BetRecommendation(
-                        sport="NBA", game=label, bet_type="Total", pick=f"Over {market_line}",
+                        sport="NBA", game=label, bet_type="Total", pick=_over_label,
                         market_prob=market_over_prob, model_prob=model_over_prob,
                         edge=over_edge, contract_price=market_over_prob,
                         sizing=sizing,
@@ -480,7 +484,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                 sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
                 if sizing.num_contracts > 0:
                     recs.append(BetRecommendation(
-                        sport="NBA", game=label, bet_type="Total", pick=f"Under {market_line}",
+                        sport="NBA", game=label, bet_type="Total", pick=_under_label,
                         market_prob=market_under_prob, model_prob=1 - model_over_prob,
                         edge=under_edge, contract_price=market_under_prob,
                         sizing=sizing,
@@ -1003,11 +1007,15 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         over_edge = model_over_prob - market_over_prob
         under_edge = (1 - model_over_prob) - market_under_prob
 
+        # Use .5 lines to eliminate push risk: "Over 10" → "Over 9.5", "Under 8" → "Under 8.5"
+        _over_label  = f"Over {market_line - 0.5}"  if market_line % 1 == 0 else f"Over {market_line}"
+        _under_label = f"Under {market_line + 0.5}" if market_line % 1 == 0 else f"Under {market_line}"
+
         if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
             sizing = robinhood_kelly(model_over_prob, market_over_prob)
             if sizing.num_contracts > 0:
                 recs.append(BetRecommendation(
-                    sport="MLB", game=label, bet_type="Total", pick=f"Over {market_line}",
+                    sport="MLB", game=label, bet_type="Total", pick=_over_label,
                     market_prob=market_over_prob, model_prob=model_over_prob,
                     edge=over_edge, contract_price=market_over_prob,
                     sizing=sizing,
@@ -1020,7 +1028,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
             if sizing.num_contracts > 0:
                 recs.append(BetRecommendation(
-                    sport="MLB", game=label, bet_type="Total", pick=f"Under {market_line}",
+                    sport="MLB", game=label, bet_type="Total", pick=_under_label,
                     market_prob=market_under_prob, model_prob=1 - model_over_prob,
                     edge=under_edge, contract_price=market_under_prob,
                     sizing=sizing,

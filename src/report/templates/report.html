@@ -511,6 +511,10 @@
         <span>${{ "%.2f"|format(report.total_allocated) }} / ${{ "%.0f"|format(report.daily_budget) }}</span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
+        <span style="color:var(--muted);">Today's Profit</span>
+        <span id="today-pnl" style="color:var(--muted);">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
         <span style="color:var(--muted);">Reserve (do not force bets)</span>
         <span style="color:#16a34a;">${{ "%.2f"|format(report.reserve) }}</span>
       </div>
@@ -629,21 +633,21 @@
         <div class="stat-box">
           <div class="stat-label">Record</div>
           {# Record colour tracks win-rate thresholds so it always matches the Win Rate box #}
-          <div class="stat-value {% if p.win_rate_pct is not none and p.win_rate_pct >= 55 %}green{% elif p.win_rate_pct is not none and p.win_rate_pct >= 45 %}yellow{% elif p.win_rate_pct is not none %}red{% endif %}" id="perf-record">{{ p.won }}W–{{ p.lost }}L</div>
+          <div class="stat-value {% if p.win_rate_pct is not none and p.win_rate_pct >= 60 %}green{% elif p.win_rate_pct is not none and p.win_rate_pct >= 45 %}yellow{% elif p.win_rate_pct is not none %}red{% endif %}" id="perf-record">{{ p.won }}W–{{ p.lost }}L</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Win Rate</div>
-          <div class="stat-value {% if p.win_rate_pct is not none and p.win_rate_pct >= 55 %}green{% elif p.win_rate_pct is not none and p.win_rate_pct >= 45 %}yellow{% elif p.win_rate_pct is not none %}red{% endif %}" id="perf-winrate">
+          <div class="stat-value {% if p.win_rate_pct is not none and p.win_rate_pct >= 60 %}green{% elif p.win_rate_pct is not none and p.win_rate_pct >= 45 %}yellow{% elif p.win_rate_pct is not none %}red{% endif %}" id="perf-winrate">
             {% if p.win_rate_pct is not none %}{{ p.win_rate_pct }}%{% else %}—{% endif %}
           </div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Total PnL</div>
-          <div class="stat-value {% if p.total_pnl > 0 %}green{% elif p.total_pnl < 0 %}red{% else %}yellow{% endif %}" id="perf-pnl">${{ "%+.2f"|format(p.total_pnl) }}</div>
+          <div class="stat-value {% if p.total_pnl > 0 %}green{% elif p.total_pnl < 0 %}red{% endif %}" id="perf-pnl">${{ "%+.2f"|format(p.total_pnl) }}</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">ROI</div>
-          <div class="stat-value {% if p.roi_pct is not none and p.roi_pct > 0 %}green{% elif p.roi_pct is not none and p.roi_pct < 0 %}red{% elif p.roi_pct is not none %}yellow{% endif %}" id="perf-roi">
+          <div class="stat-value {% if p.roi_pct is not none and p.roi_pct > 0 %}green{% elif p.roi_pct is not none and p.roi_pct < 0 %}red{% endif %}" id="perf-roi">
             {% if p.roi_pct is not none %}{{ p.roi_pct }}%{% else %}—{% endif %}
           </div>
         </div>
@@ -1646,7 +1650,7 @@
     var roi     = cost > 0         ? (pnl / cost * 100).toFixed(1)         : null;
 
     function pnlColor(v) {
-      return v > 0 ? "var(--green)" : v < 0 ? "var(--red)" : "var(--yellow)";
+      return v > 0 ? "var(--green)" : v < 0 ? "var(--red)" : "var(--text)";
     }
     function pctColor(v, hi, lo) {
       return v >= hi ? "var(--green)" : v <= lo ? "var(--red)" : "var(--yellow)";
@@ -1659,7 +1663,7 @@
     var recEl = document.getElementById("perf-record");
     var wrEl  = document.getElementById("perf-winrate");
     // Both record and win-rate share the same colour thresholds (≥55% green, ≥45% yellow, else red)
-    var winRateColor = winRate !== null ? pctColor(parseFloat(winRate), 55, 45) : "var(--text)";
+    var winRateColor = winRate !== null ? pctColor(parseFloat(winRate), 60, 45) : "var(--text)";
     if (recEl) {
       recEl.textContent = won + "W–" + lost + "L";
       recEl.style.color = winRateColor;
@@ -1677,6 +1681,13 @@
     if (roiEl) {
       roiEl.textContent = roi !== null ? roi + "%" : "—";
       if (roi !== null) roiEl.style.color = pctColor(parseFloat(roi), 0.01, -0.01);
+    }
+
+    // Update Today's Profit live row in the allocation table
+    var todayPnlEl = document.getElementById("today-pnl");
+    if (todayPnlEl) {
+      todayPnlEl.textContent = (livePnl >= 0 ? "$+" : "$") + livePnl.toFixed(2);
+      todayPnlEl.style.color = livePnl > 0 ? "var(--green)" : livePnl < 0 ? "var(--red)" : "var(--text)";
     }
 
     // Update per-confidence breakdown
