@@ -120,6 +120,56 @@ def _consensus_probs(bookmakers: List[Dict], market_key: str) -> Optional[Dict]:
     return avg
 
 
+def _consensus_probs_for_spread(
+    bookmakers: List[Dict], home: str, home_point: float
+) -> Optional[Dict]:
+    """
+    Spread-specific consensus that only averages books offering the SAME spread
+    direction for the home team as the preferred book's line.
+
+    Problem this solves: in MLB some books list the favourite at -1.5 while
+    DraftKings (preferred) may list them at +1.5 (alternate/reverse line).
+    Mixing -1.5 probability (~40%) with +1.5 probability (~60%) produces a
+    nonsensical consensus that matches neither bet.  By filtering to books with
+    a matching sign we always compare apples to apples.
+    """
+    probs_by_name: Dict[str, List[float]] = {}
+    book_count = 0
+
+    for book in bookmakers:
+        for mkt in book.get("markets", []):
+            if mkt["key"] != "spreads":
+                continue
+            outcomes = mkt["outcomes"]
+            if len(outcomes) < 2:
+                continue
+
+            # Only include this book if it offers the home team on the same
+            # side of zero as the preferred book.
+            home_o = next((o for o in outcomes if o["name"] == home), None)
+            if home_o is None:
+                break
+            book_home_point = home_o.get("point", 0)
+            if home_point > 0 and book_home_point <= 0:
+                break  # this book has home as favourite; preferred has them as underdog
+            if home_point < 0 and book_home_point >= 0:
+                break  # this book has home as underdog; preferred has them as favourite
+
+            raw = {o["name"]: american_to_prob(o["price"]) for o in outcomes}
+            names = list(raw.keys())
+            p0, p1 = remove_vig(raw[names[0]], raw[names[1]])
+            probs_by_name.setdefault(names[0], []).append(p0)
+            probs_by_name.setdefault(names[1], []).append(p1)
+            book_count += 1
+            break
+
+    if not probs_by_name or book_count == 0:
+        return None
+    avg = {n: sum(ps) / len(ps) for n, ps in probs_by_name.items()}
+    avg["book_count"] = book_count
+    return avg
+
+
 def _pacific_offset() -> int:
     month = datetime.now(timezone.utc).month
     return -7 if 3 <= month <= 10 else -8
@@ -214,15 +264,20 @@ def get_game_odds(sport: str) -> List[Dict]:
                 }
 
         # --- Spread ---
-        sp      = _pick_book_odds(bookmakers, "spreads")
-        sp_cons = _consensus_probs(bookmakers, "spreads")
+        sp = _pick_book_odds(bookmakers, "spreads")
         if sp:
             for o in sp["outcomes"]:
                 if o["name"] == home:
+                    home_point = o.get("point", 0)
+                    # Build consensus ONLY from books that offer the home team on
+                    # the same side of the line (same sign) as the preferred book.
+                    # This prevents mixing -1.5 (~40%) and +1.5 (~60%) probabilities
+                    # when books disagree on which team is the run-line favourite.
+                    sp_cons = _consensus_probs_for_spread(bookmakers, home, home_point)
                     hp_sp = sp_cons.get(home) if sp_cons else None
                     entry["spread"] = {
                         "book": sp["book"],
-                        "home_spread": o.get("point", 0),
+                        "home_spread": home_point,
                         "home_prob": hp_sp if hp_sp else american_to_prob(o["price"]),
                         "away_prob": 1 - (hp_sp if hp_sp else american_to_prob(o["price"])),
                     }
