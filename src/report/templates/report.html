@@ -221,7 +221,7 @@
   {% endif %}
 
   {% if report.change_warnings %}
-  <div class="section">
+  <div class="section" id="sec-changes">
     <div class="section-title" style="color:var(--yellow);">⚡ Pick Changes Since Morning Run</div>
     {% for w in report.change_warnings %}
     <div class="error-card" style="background-color:#1c1a07;border-color:#713f12;color:#fde68a;">{{ w }}</div>
@@ -251,7 +251,7 @@
   {% endif %}
 
   {% if report.all_singles %}
-  <div class="section">
+  <div class="section" id="sec-singles">
     <div class="section-title">Singles <span style="color:var(--muted);font-weight:400;font-size:0.85rem;text-transform:none;letter-spacing:0;">(top {{ report.all_singles|length }} by edge)</span></div>
     {% for bet in report.all_singles %}
     <div class="card"
@@ -331,7 +331,7 @@
   {% endif %}
 
   {% if report.parlays %}
-  <div class="section">
+  <div class="section" id="sec-parlays">
     <div class="section-title">2-Leg Parlays <span class="badge badge-parlay">{{ report.parlays|length }}</span></div>
     {% for par in report.parlays %}
     <div class="card parlay-card" data-parlay="true"
@@ -382,7 +382,7 @@
   {% endif %}
 
   {% if report.props %}
-  <div class="section">
+  <div class="section" id="sec-props">
     <div class="section-title">Props Watchlist
       <span style="color:var(--yellow);font-size:0.72rem;font-weight:400;text-transform:none;">
         — model projections only. No sportsbook line available. Search Robinhood manually before betting.
@@ -457,7 +457,7 @@
   {% endif %}
 
   {% if report.has_bets %}
-  <div class="section">
+  <div class="section" id="sec-allocation">
     <div class="section-title">Budget Allocation</div>
     <div class="card">
       <table class="budget-table">
@@ -524,12 +524,10 @@
 
   {% if report.has_prop_accuracy %}
   {% set pa = report.prop_accuracy %}
-  <div class="section">
+  <div class="section" id="sec-prop-accuracy">
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
       <span>Props Model Accuracy
-        <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;">
-          — how often the model's projection exceeded the actual stat
-        </span>
+        <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;">— hit rate vs actuals</span>
       </span>
       <span id="prop-acc-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;">● includes today</span>
     </div>
@@ -2406,12 +2404,27 @@
     });
   });
 
+  // ── Collapse state helpers (localStorage) ───────────────────────────────
+  var LS_PREFIX = "collapse:";
+  function lsSave(key, collapsed) {
+    try { localStorage.setItem(LS_PREFIX + key, collapsed ? "1" : "0"); } catch(e) {}
+  }
+  function lsGet(key) {
+    try { return localStorage.getItem(LS_PREFIX + key); } catch(e) { return null; }
+  }
+
   // ── Collapsible sections ─────────────────────────────────────────────────
   document.querySelectorAll(".section-title").forEach(function (title) {
     var section = title.parentElement;
     if (!section) return;
+    var key = section.id || null;
+    // Restore saved state (sections default to expanded)
+    if (key && lsGet(key) === "1") {
+      section.classList.add("s-collapsed");
+    }
     title.addEventListener("click", function () {
       section.classList.toggle("s-collapsed");
+      if (key) lsSave(key, section.classList.contains("s-collapsed"));
     });
   });
 
@@ -2419,10 +2432,23 @@
   document.querySelectorAll(".card-toggle-header").forEach(function (header) {
     var card = header.closest(".card");
     if (!card) return;
-    card.classList.add("c-collapsed");   // start all cards collapsed
+    // Build a stable key from the card's data attributes.
+    // Bet cards:  pick name + home + away  (unique per game+bet, survives reorder)
+    // Prop cards: player + prop type
+    var key = card.dataset.pick
+              ? (card.dataset.pick + "|" + (card.dataset.homeTeam || "") + (card.dataset.awayTeam || ""))
+              : (card.dataset.player || "") + "|" + (card.dataset.propType || "");
+    var saved = key ? lsGet(key) : null;
+    // Cards default to collapsed; only expand if explicitly saved as open
+    if (saved === "0") {
+      // leave expanded — do not add c-collapsed
+    } else {
+      card.classList.add("c-collapsed");
+    }
     header.addEventListener("click", function (e) {
       if (e.target.closest("a")) return;  // let nav-link clicks pass through
       card.classList.toggle("c-collapsed");
+      if (key) lsSave(key, card.classList.contains("c-collapsed"));
     });
   });
 
