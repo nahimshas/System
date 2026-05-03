@@ -397,6 +397,7 @@
          data-player="{{ prop.player }}"
          data-prop-type="{{ prop.prop_type }}"
          data-model-line="{{ prop.model_line }}"
+         data-confidence="{{ prop.confidence }}"
          data-commence-time="{{ prop.commence_time }}">
       {% set last = report.prop_last_result.get((prop.player, prop.prop_type)) %}
       <div class="card-toggle-header">
@@ -520,26 +521,32 @@
   {% if report.has_prop_accuracy %}
   {% set pa = report.prop_accuracy %}
   <div class="section">
-    <div class="section-title">Props Model Accuracy
-      <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;">
-        — how often the model's projection exceeded the actual stat
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Props Model Accuracy
+        <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;">
+          — how often the model's projection exceeded the actual stat
+        </span>
       </span>
+      <span id="prop-acc-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;">● includes today</span>
     </div>
-    <div class="card">
+    <div class="card" id="prop-accuracy-card"
+         data-hist-total="{{ pa.total }}"
+         data-hist-hits="{{ pa.all.hits }}"
+         data-hist-sum-err="{{ ((pa.all.avg_err or 0) * pa.total) | round(2) }}">
       <div class="stats-grid" style="margin-bottom:12px;">
         <div class="stat-box">
           <div class="stat-label">Props Settled</div>
-          <div class="stat-value blue">{{ pa.total }}</div>
+          <div class="stat-value blue" id="pa-total">{{ pa.total }}</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Model Hit Rate</div>
-          <div class="stat-value {% if pa.all.hit_rate and pa.all.hit_rate >= 55 %}green{% elif pa.all.hit_rate and pa.all.hit_rate >= 45 %}yellow{% else %}red{% endif %}">
+          <div class="stat-value {% if pa.all.hit_rate and pa.all.hit_rate >= 55 %}green{% elif pa.all.hit_rate and pa.all.hit_rate >= 45 %}yellow{% else %}red{% endif %}" id="pa-hit-rate">
             {{ pa.all.hit_rate }}%
           </div>
         </div>
         <div class="stat-box" title="Average actual stat minus average model projection. Positive = model under-projected.">
           <div class="stat-label">Avg Error</div>
-          <div class="stat-value {% if pa.all.avg_err and pa.all.avg_err > 0 %}green{% elif pa.all.avg_err and pa.all.avg_err < -1 %}red{% else %}teal{% endif %}">
+          <div class="stat-value {% if pa.all.avg_err and pa.all.avg_err > 0 %}green{% elif pa.all.avg_err and pa.all.avg_err < -1 %}red{% else %}teal{% endif %}" id="pa-avg-err">
             {% if pa.all.avg_err is not none %}{{ "%+.1f"|format(pa.all.avg_err) }}{% else %}—{% endif %}
           </div>
         </div>
@@ -559,7 +566,10 @@
         </thead>
         <tbody>
           {% for pt, stats in pa.by_type.items() %}
-          <tr style="border-top:1px solid var(--border);">
+          <tr style="border-top:1px solid var(--border);"
+              data-prop-type="{{ pt }}"
+              data-type-total="{{ stats.total }}"
+              data-type-hits="{{ stats.hits }}">
             <td style="padding:5px 0;color:var(--fg);">{{ pt.replace(" Over (1+)", "").replace(" Over", "") }}</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.total }}</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
@@ -581,13 +591,17 @@
       {% if pa.by_conf %}
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         {% for conf, stats in pa.by_conf.items() %}
-        <div style="flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+        <div style="flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
+             data-conf="{{ conf }}"
+             data-conf-total="{{ stats.total }}"
+             data-conf-hits="{{ stats.hits }}"
+             data-conf-misses="{{ stats.misses }}">
           <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">{{ conf }} confidence</div>
-          <div style="font-size:1.1rem;font-weight:700;
+          <div class="conf-hit-rate" style="font-size:1.1rem;font-weight:700;
                       color:{% if stats.hit_rate and stats.hit_rate >= 55 %}#4ade80{% elif stats.hit_rate and stats.hit_rate >= 45 %}#facc15{% else %}#f87171{% endif %};">
             {{ stats.hit_rate }}%
           </div>
-          <div style="font-size:0.72rem;color:var(--muted);">{{ stats.hits }}H / {{ stats.misses }}M ({{ stats.total }} settled)</div>
+          <div class="conf-count" style="font-size:0.72rem;color:var(--muted);">{{ stats.hits }}H / {{ stats.misses }}M ({{ stats.total }} settled)</div>
         </div>
         {% endfor %}
       </div>
@@ -1764,6 +1778,118 @@
     if (liveRecords.length > 0) updateCharts(liveRecords);
   }
 
+  // ── Live prop accuracy table update ─────────────────────────────────────
+  // Scans all settled prop cards (data-prop-result set by renderPropLive),
+  // adds today's results on top of the server-rendered historical baseline,
+  // and updates the accuracy table DOM elements in real time.
+  function updatePropAccuracy() {
+    var accCard = document.getElementById("prop-accuracy-card");
+    if (!accCard) return;
+
+    // Historical baseline baked in at render time
+    var histTotal  = parseInt(accCard.getAttribute("data-hist-total")   || "0", 10);
+    var histHits   = parseInt(accCard.getAttribute("data-hist-hits")    || "0", 10);
+    var histSumErr = parseFloat(accCard.getAttribute("data-hist-sum-err") || "0");
+
+    // Collect today's settled props from prop cards
+    var todayTotal = 0, todayHits = 0, todaySumErr = 0;
+    var todayByType = {};   // propType → { hits, total }
+    var todayByConf = {};   // conf     → { hits, misses }
+
+    document.querySelectorAll(".prop-card[data-prop-result]").forEach(function (card) {
+      var result   = card.getAttribute("data-prop-result");  // "HIT" or "MISS"
+      var propType = card.getAttribute("data-prop-type")   || "";
+      var conf     = card.getAttribute("data-confidence")  || "";
+      var actual   = parseFloat(card.getAttribute("data-prop-actual") || "0");
+      var proj     = parseFloat(card.getAttribute("data-model-line")  || "0");
+      var hit      = result === "HIT";
+
+      todayTotal++;
+      if (hit) todayHits++;
+      todaySumErr += (actual - proj);
+
+      if (propType) {
+        if (!todayByType[propType]) todayByType[propType] = { hits: 0, total: 0 };
+        todayByType[propType].total++;
+        if (hit) todayByType[propType].hits++;
+      }
+      if (conf) {
+        if (!todayByConf[conf]) todayByConf[conf] = { hits: 0, misses: 0 };
+        if (hit) todayByConf[conf].hits++;
+        else     todayByConf[conf].misses++;
+      }
+    });
+
+    if (todayTotal === 0) return;  // nothing settled today yet
+
+    // ── Compute updated overall stats ──────────────────────────────────────
+    var newTotal   = histTotal + todayTotal;
+    var newHits    = histHits  + todayHits;
+    var newSumErr  = histSumErr + todaySumErr;
+    var newHitRate = newTotal > 0 ? Math.round(newHits / newTotal * 1000) / 10 : 0;
+    var newAvgErr  = newTotal > 0 ? Math.round(newSumErr / newTotal * 10) / 10 : 0;
+
+    // ── Update overall stat boxes ──────────────────────────────────────────
+    var totalEl = document.getElementById("pa-total");
+    if (totalEl) totalEl.textContent = newTotal;
+
+    var hrEl = document.getElementById("pa-hit-rate");
+    if (hrEl) {
+      hrEl.textContent = newHitRate + "%";
+      hrEl.style.color = newHitRate >= 55 ? "#4ade80" : newHitRate >= 45 ? "#facc15" : "#f87171";
+    }
+
+    var errEl = document.getElementById("pa-avg-err");
+    if (errEl) {
+      errEl.textContent = (newAvgErr >= 0 ? "+" : "") + newAvgErr.toFixed(1);
+      errEl.style.color = newAvgErr > 0 ? "#4ade80" : newAvgErr < -1 ? "#f87171" : "#94a3b8";
+    }
+
+    // ── Update by_type table rows ──────────────────────────────────────────
+    Object.keys(todayByType).forEach(function (pt) {
+      var row = accCard.querySelector('tr[data-prop-type="' + pt + '"]');
+      if (!row) return;
+      var histRowTotal = parseInt(row.getAttribute("data-type-total") || "0", 10);
+      var histRowHits  = parseInt(row.getAttribute("data-type-hits")  || "0", 10);
+      var td           = todayByType[pt];
+      var newRowTotal  = histRowTotal + td.total;
+      var newRowHits   = histRowHits  + td.hits;
+      var newRowHR     = newRowTotal > 0 ? Math.round(newRowHits / newRowTotal * 1000) / 10 : 0;
+      var cells        = row.querySelectorAll("td");
+      if (cells[1]) cells[1].textContent = newRowTotal;
+      if (cells[2]) {
+        cells[2].textContent = newRowHR + "%";
+        cells[2].style.color = newRowHR >= 55 ? "#4ade80" : newRowHR >= 45 ? "#facc15" : "#f87171";
+      }
+    });
+
+    // ── Update by_conf blocks ──────────────────────────────────────────────
+    Object.keys(todayByConf).forEach(function (conf) {
+      var block = accCard.querySelector('[data-conf="' + conf + '"]');
+      if (!block) return;
+      var histCT = parseInt(block.getAttribute("data-conf-total")   || "0", 10);
+      var histCH = parseInt(block.getAttribute("data-conf-hits")    || "0", 10);
+      var histCM = parseInt(block.getAttribute("data-conf-misses")  || "0", 10);
+      var tc     = todayByConf[conf];
+      var newCH  = histCH + tc.hits;
+      var newCM  = histCM + tc.misses;
+      var newCT  = histCT + tc.hits + tc.misses;
+      var newCHR = newCT > 0 ? Math.round(newCH / newCT * 1000) / 10 : 0;
+
+      var hrEl2  = block.querySelector(".conf-hit-rate");
+      if (hrEl2) {
+        hrEl2.textContent = newCHR + "%";
+        hrEl2.style.color = newCHR >= 55 ? "#4ade80" : newCHR >= 45 ? "#facc15" : "#f87171";
+      }
+      var cntEl = block.querySelector(".conf-count");
+      if (cntEl) cntEl.textContent = newCH + "H / " + newCM + "M (" + newCT + " settled)";
+    });
+
+    // Show live badge
+    var badge = document.getElementById("prop-acc-live-badge");
+    if (badge) badge.style.display = "inline-block";
+  }
+
   // ── Live chart update ────────────────────────────────────────────────────
   // SVG canvas constants — must match Python's build_chart_data() values
   var _SVG_W = 460, _SVG_H = 130, _PAD_L = 42, _PAD_R = 12, _PAD_T = 10, _PAD_B = 28;
@@ -2090,6 +2216,12 @@
       liveDiv.innerHTML = hit
         ? '<span style="' + BADGE + 'border:1px solid #166534;background:#052e16;color:#4ade80;">✅ Hit ' + stat + '</span>'
         : '<span style="' + BADGE + 'border:1px solid #7f1d1d;background:#2d0a0a;color:#f87171;">❌ Got ' + stat + '</span>';
+      // Stamp result on the card so updatePropAccuracy() can aggregate today's results
+      var propCard = liveDiv.closest(".prop-card");
+      if (propCard) {
+        propCard.setAttribute("data-prop-result", hit ? "HIT" : "MISS");
+        propCard.setAttribute("data-prop-actual", stat);
+      }
     } else {
       // Game in progress — colour warms as player approaches the floor threshold
       var pct = floorLine > 0 ? stat / floorLine : 0;
@@ -2217,6 +2349,9 @@
 
       // Update prop cards with live/final player stats from ESPN box scores
       applyPropCards(allEvents);
+
+      // Update prop accuracy table with any props that just settled
+      updatePropAccuracy();
 
       // Lock props whose commence_time has passed (no ESPN match needed)
       checkPropLocks();
