@@ -51,7 +51,7 @@
       "away_team": "Houston Astros",
       "commence_time": "2026-05-03T17:36:00Z",
       "edge": 0.22782558910581924,
-      "locked": false
+      "locked": true
     },
     {
       "sport": "MLB",
@@ -99,7 +99,7 @@
       "away_team": "Atlanta Braves",
       "commence_time": "2026-05-03T19:11:00Z",
       "edge": 0.2235774075196656,
-      "locked": false
+      "locked": true
     },
     {
       "sport": "MLB",
@@ -154,7 +154,7 @@
       "away_team": "Arizona Diamondbacks",
       "commence_time": "2026-05-03T18:21:00Z",
       "edge": 0.18461707700117802,
-      "locked": false
+      "locked": true
     },
     {
       "sport": "MLB",
@@ -210,7 +210,7 @@
       "away_team": "Arizona Diamondbacks",
       "commence_time": "2026-05-03T18:21:00Z",
       "edge": 0.18188559523262615,
-      "locked": false
+      "locked": true
     },
     {
       "sport": "MLB",
@@ -257,7 +257,7 @@
       "away_team": "Atlanta Braves",
       "commence_time": "2026-05-03T19:11:00Z",
       "edge": 0.1557976746839037,
-      "locked": false
+      "locked": true
     }
   ],
   "parlays": [
@@ -296,7 +296,7 @@
       "expected_value": 3.42,
       "confidence": "HIGH",
       "edge": 0.2478,
-      "locked": false
+      "locked": true
     },
     {
       "label": "Colorado Rockies +1.5 (Spread) + Over 9.5 (Total)",
@@ -333,7 +333,7 @@
       "expected_value": 2.55,
       "confidence": "HIGH",
       "edge": 0.2322,
-      "locked": false
+      "locked": true
     }
   ],
   "props": [
@@ -359,7 +359,7 @@
         "Rest days \u2014 Detroit Pistons: 1d | Orlando Magic: 1d"
       ],
       "commence_time": "2026-05-03T19:40:00Z",
-      "locked": false
+      "locked": true
     },
     {
       "sport": "NBA",
@@ -383,7 +383,203 @@
         "Rest days \u2014 Detroit Pistons: 1d | Orlando Magic: 1d"
       ],
       "commence_time": "2026-05-03T19:40:00Z",
-      "locked": false
+      "locked": true
+    },
+    {
+      "sport": "NBA",
+      "player": "Cade Cunningham",
+      "team": "Detroit Pistons",
+      "opponent": "Orlando Magic",
+      "prop_type": "Points Over",
+      "model_line": 25.2,
+      "model_margin": 7.2,
+      "confidence": "MEDIUM",
+      "note": "Search 'Cade Cunningham points' on Robinhood. Model line: 25.2 pts. Look for Robinhood Over at or below 25.",
+      "signals": [
+        "Cade Cunningham season avg: 23.9 PPG",
+        "Orlando Magic allows 115.1 PPG \u2014 above avg (weak defense)",
+        "\ud83c\udfc6 Playoffs: star usage boost applied (+5%)"
+      ],
+      "research": [
+        "Detroit Pistons: 60W-22L | PPG 117.8 | OPPG 115.1 (opp) | Net +8.2",
+        "Orlando Magic: 45W-37L | Net +0.6",
+        "Detroit Pistons recent (14d): PPG 100.2 | OPPG 98.3 | Win% 50%",
+        "Model projected team pts: 109.9 (league avg 112.0)",
+        "Rest days \u2014 Detroit Pistons: 1d | Orlando Magic: 1d"
+      ],
+      "commence_time": "2026-05-03T19:40:00Z",
+      "locked": true
+    },
+    {
+      "sport": "NBA",
+      "player": "Paolo Banchero",
+      "team": "Orlando Magic",
+      "opponent": "Detroit Pistons",
+      "prop_type": "Points Over",
+      "model_line": 22.2,
+      "model_margin": 4.2,
+      "confidence": "MEDIUM",
+      "note": "Search 'Paolo Banchero points' on Robinhood. Model line: 22.2 pts. Look for Robinhood Over at or below 22.",
+      "signals": [
+        "Paolo Banchero season avg: 22.2 PPG",
+        "Detroit Pistons allows 109.6 PPG \u2014 average defense",
+        "\ud83c\udfc6 Playoffs: tighter defense \u2014 verify line carefully"
+      ],
+      "research": [
+        "Orlando Magic: 45W-37L | PPG 115.7 | OPPG 109.6 (opp) | Net +0.6",
+        "Detroit Pistons: 60W-22L | Net +8.2",
+        "Orlando Magic recent (14d): PPG 98.3 | OPPG 100.2 | Win% 50%",
+        "Model projected team pts: 106.9 (league avg 112.0)",
+        "Rest days \u2014 Orlando Magic: 1d | Detroit Pistons: 1d"
+      ],
+      "commence_time": "2026-05-03T19:40:00Z",
+      "locked": true
+    },
+    {
+      "sport": "MLB",
+      "player": "Yandy D\u00edaz",
+      "team": "Tampa Bay Rays",
+      "opponent": "San Francisco Giants",
+      "prop_type": "Hits Over (1+)",
+      "model_line": 1.0,
+      "model_margin": 1.05,
+      "confidence": "HIGH",
+      "note": "Search 'Yandy D\u00edaz hits' on Robinhood. Look for Over 0.5 (1+ hits). Facing Tyler Mahle (FIP 5.55).",
+      "signals": [
+        "Yandy D\u00edaz: .333 AVG / .422 OBP this season (135 PA)",
+        "Tyler Mahle FIP 5.55 \u2014 above avg (4.20), hitter-friendly matchup",
+        "Model projects ~3.9 total hits in 5.5 inn"
+      ],
+      "research": [
+        "Tyler Mahle: ERA 5.87 | FIP 5.55 | xFIP 3.83 | K/9 8.6 | BB/9 5.1 | HR/9 1.79",
+        "Season IP: 30 | Projected start: ~5.5 inn",
+        "Venue: Tropicana Field (park factor 0.96)",
+        "Opponent K%: 19.2% (league avg 22.8%)",
+        "FIP 5.55 > 4.50 \u2014 hitter-favorable matchup",
+        "ERA-based hit estimate: ~3.9 hits in 5.5 inn"
+      ],
+      "commence_time": "2026-05-03T17:41:00Z",
+      "locked": true
+    },
+    {
+      "sport": "MLB",
+      "player": "Braxton Ashcraft",
+      "team": "Pittsburgh Pirates",
+      "opponent": "Cincinnati Reds",
+      "prop_type": "Strikeouts Over",
+      "model_line": 6.8,
+      "model_margin": 4.2,
+      "confidence": "MEDIUM",
+      "note": "Search 'Braxton Ashcraft strikeouts' on Robinhood. Model: ~6.8 Ks in 5.5 inn. Look for Over at or below 6.",
+      "signals": [
+        "K/9: 10.3 \u2192 adjusted 11.2 \u2192 projects 6.8 Ks over 5.5 inn",
+        "FIP 3.11 / xFIP 3.07 (below league avg 4.20)",
+        "Season IP: 34 \u2014 limited sample"
+      ],
+      "research": [
+        "Braxton Ashcraft: ERA 3.71 | FIP 3.11 | xFIP 3.07 | K/9 10.3 | BB/9 3.2 | HR/9 0.79",
+        "Season IP: 34 | Projected start: ~5.5 inn",
+        "Venue: PNC Park (park factor 0.96)",
+        "Opponent K%: 24.7% (league avg 22.8%)"
+      ],
+      "commence_time": "2026-05-03T17:36:00Z",
+      "locked": true
+    },
+    {
+      "sport": "MLB",
+      "player": "Chase Burns",
+      "team": "Cincinnati Reds",
+      "opponent": "Pittsburgh Pirates",
+      "prop_type": "Strikeouts Over",
+      "model_line": 6.5,
+      "model_margin": 3.7,
+      "confidence": "MEDIUM",
+      "note": "Search 'Chase Burns strikeouts' on Robinhood. Model: ~6.5 Ks in 5.5 inn. Look for Over at or below 6.",
+      "signals": [
+        "K/9: 10.3 \u2192 adjusted 10.7 \u2192 projects 6.5 Ks over 5.5 inn",
+        "FIP 3.88 / xFIP 3.11 (below league avg 4.20)",
+        "Season IP: 34 \u2014 limited sample"
+      ],
+      "research": [
+        "Chase Burns: ERA 2.65 | FIP 3.88 | xFIP 3.11 | K/9 10.3 | BB/9 3.2 | HR/9 1.32",
+        "Season IP: 34 | Projected start: ~5.5 inn",
+        "Venue: PNC Park (park factor 0.96)",
+        "Opponent K%: 23.6% (league avg 22.8%)"
+      ],
+      "commence_time": "2026-05-03T17:36:00Z",
+      "locked": true
+    },
+    {
+      "sport": "MLB",
+      "player": "Jes\u00fas Luzardo",
+      "team": "Philadelphia Phillies",
+      "opponent": "Miami Marlins",
+      "prop_type": "Strikeouts Over",
+      "model_line": 6.4,
+      "model_margin": 3.4,
+      "confidence": "MEDIUM",
+      "note": "Search 'Jes\u00fas Luzardo strikeouts' on Robinhood. Model: ~6.4 Ks in 5.5 inn. Look for Over at or below 6.",
+      "signals": [
+        "K/9: 10.8 \u2192 adjusted 10.4 \u2192 projects 6.4 Ks over 5.5 inn",
+        "FIP 2.73 / xFIP 2.39 (below league avg 4.20)",
+        "Season IP: 34 \u2014 limited sample"
+      ],
+      "research": [
+        "Jes\u00fas Luzardo: ERA 5.50 | FIP 2.73 | xFIP 2.39 | K/9 10.8 | BB/9 2.4 | HR/9 0.79",
+        "Season IP: 34 | Projected start: ~5.5 inn",
+        "Venue: loanDepot park (park factor 0.94)",
+        "Opponent K%: 21.9% (league avg 22.8%)"
+      ],
+      "commence_time": "2026-05-03T17:41:00Z",
+      "locked": true
+    },
+    {
+      "sport": "MLB",
+      "player": "Kris Bubic",
+      "team": "Kansas City Royals",
+      "opponent": "Seattle Mariners",
+      "prop_type": "Strikeouts Over",
+      "model_line": 6.1,
+      "model_margin": 3.0,
+      "confidence": "MEDIUM",
+      "note": "Search 'Kris Bubic strikeouts' on Robinhood. Model: ~6.1 Ks in 5.5 inn. Look for Over at or below 6.",
+      "signals": [
+        "K/9: 9.5 \u2192 adjusted 10.0 \u2192 projects 6.1 Ks over 5.5 inn",
+        "FIP 3.80 / xFIP 3.84 (below league avg 4.20)",
+        "Season IP: 33 \u2014 limited sample"
+      ],
+      "research": [
+        "Kris Bubic: ERA 3.74 | FIP 3.80 | xFIP 3.84 | K/9 9.5 | BB/9 4.6 | HR/9 0.81",
+        "Season IP: 33 | Projected start: ~5.5 inn",
+        "Venue: T-Mobile Park (park factor 0.93)",
+        "Opponent K%: 24.0% (league avg 22.8%)"
+      ],
+      "commence_time": "2026-05-03T20:11:00Z",
+      "locked": true
+    },
+    {
+      "sport": "MLB",
+      "player": "Parker Messick",
+      "team": "Cleveland Guardians",
+      "opponent": "Athletics",
+      "prop_type": "Strikeouts Over",
+      "model_line": 5.7,
+      "model_margin": 2.3,
+      "confidence": "MEDIUM",
+      "note": "Search 'Parker Messick strikeouts' on Robinhood. Model: ~5.7 Ks in 5.5 inn. Look for Over at or below 5.",
+      "signals": [
+        "K/9: 9.5 \u2192 adjusted 9.3 \u2192 projects 5.7 Ks over 5.5 inn",
+        "FIP 2.29 / xFIP 2.93 (below league avg 4.20)",
+        "Season IP: 36 \u2014 limited sample"
+      ],
+      "research": [
+        "Parker Messick: ERA 1.73 | FIP 2.29 | xFIP 2.93 | K/9 9.5 | BB/9 2.5 | HR/9 0.25",
+        "Season IP: 36 | Projected start: ~5.5 inn",
+        "Venue: Sutter Health Park (park factor 1.00)",
+        "Opponent K%: 22.3% (league avg 22.8%)"
+      ],
+      "commence_time": "2026-05-03T20:06:00Z",
+      "locked": true
     },
     {
       "sport": "NBA",
@@ -412,56 +608,6 @@
     },
     {
       "sport": "NBA",
-      "player": "Cade Cunningham",
-      "team": "Detroit Pistons",
-      "opponent": "Orlando Magic",
-      "prop_type": "Points Over",
-      "model_line": 25.2,
-      "model_margin": 7.2,
-      "confidence": "MEDIUM",
-      "note": "Search 'Cade Cunningham points' on Robinhood. Model line: 25.2 pts. Look for Robinhood Over at or below 25.",
-      "signals": [
-        "Cade Cunningham season avg: 23.9 PPG",
-        "Orlando Magic allows 115.1 PPG \u2014 above avg (weak defense)",
-        "\ud83c\udfc6 Playoffs: star usage boost applied (+5%)"
-      ],
-      "research": [
-        "Detroit Pistons: 60W-22L | PPG 117.8 | OPPG 115.1 (opp) | Net +8.2",
-        "Orlando Magic: 45W-37L | Net +0.6",
-        "Detroit Pistons recent (14d): PPG 100.2 | OPPG 98.3 | Win% 50%",
-        "Model projected team pts: 109.9 (league avg 112.0)",
-        "Rest days \u2014 Detroit Pistons: 1d | Orlando Magic: 1d"
-      ],
-      "commence_time": "2026-05-03T19:40:00Z",
-      "locked": false
-    },
-    {
-      "sport": "NBA",
-      "player": "Paolo Banchero",
-      "team": "Orlando Magic",
-      "opponent": "Detroit Pistons",
-      "prop_type": "Points Over",
-      "model_line": 22.2,
-      "model_margin": 4.2,
-      "confidence": "MEDIUM",
-      "note": "Search 'Paolo Banchero points' on Robinhood. Model line: 22.2 pts. Look for Robinhood Over at or below 22.",
-      "signals": [
-        "Paolo Banchero season avg: 22.2 PPG",
-        "Detroit Pistons allows 109.6 PPG \u2014 average defense",
-        "\ud83c\udfc6 Playoffs: tighter defense \u2014 verify line carefully"
-      ],
-      "research": [
-        "Orlando Magic: 45W-37L | PPG 115.7 | OPPG 109.6 (opp) | Net +0.6",
-        "Detroit Pistons: 60W-22L | Net +8.2",
-        "Orlando Magic recent (14d): PPG 98.3 | OPPG 100.2 | Win% 50%",
-        "Model projected team pts: 106.9 (league avg 112.0)",
-        "Rest days \u2014 Orlando Magic: 1d | Detroit Pistons: 1d"
-      ],
-      "commence_time": "2026-05-03T19:40:00Z",
-      "locked": false
-    },
-    {
-      "sport": "NBA",
       "player": "Brandon Ingram",
       "team": "Toronto Raptors",
       "opponent": "Cleveland Cavaliers",
@@ -483,152 +629,6 @@
         "Rest days \u2014 Toronto Raptors: 1d | Cleveland Cavaliers: 1d"
       ],
       "commence_time": "2026-05-03T23:40:00Z",
-      "locked": false
-    },
-    {
-      "sport": "MLB",
-      "player": "Yandy D\u00edaz",
-      "team": "Tampa Bay Rays",
-      "opponent": "San Francisco Giants",
-      "prop_type": "Hits Over (1+)",
-      "model_line": 1.0,
-      "model_margin": 1.05,
-      "confidence": "HIGH",
-      "note": "Search 'Yandy D\u00edaz hits' on Robinhood. Look for Over 0.5 (1+ hits). Facing Tyler Mahle (FIP 5.55).",
-      "signals": [
-        "Yandy D\u00edaz: .333 AVG / .422 OBP this season (135 PA)",
-        "Tyler Mahle FIP 5.55 \u2014 above avg (4.20), hitter-friendly matchup",
-        "Model projects ~3.9 total hits in 5.5 inn"
-      ],
-      "research": [
-        "Tyler Mahle: ERA 5.87 | FIP 5.55 | xFIP 3.83 | K/9 8.6 | BB/9 5.1 | HR/9 1.79",
-        "Season IP: 30 | Projected start: ~5.5 inn",
-        "Venue: Tropicana Field (park factor 0.96)",
-        "Opponent K%: 19.2% (league avg 22.8%)",
-        "FIP 5.55 > 4.50 \u2014 hitter-favorable matchup",
-        "ERA-based hit estimate: ~3.9 hits in 5.5 inn"
-      ],
-      "commence_time": "2026-05-03T17:41:00Z",
-      "locked": false
-    },
-    {
-      "sport": "MLB",
-      "player": "Braxton Ashcraft",
-      "team": "Pittsburgh Pirates",
-      "opponent": "Cincinnati Reds",
-      "prop_type": "Strikeouts Over",
-      "model_line": 6.8,
-      "model_margin": 4.2,
-      "confidence": "MEDIUM",
-      "note": "Search 'Braxton Ashcraft strikeouts' on Robinhood. Model: ~6.8 Ks in 5.5 inn. Look for Over at or below 6.",
-      "signals": [
-        "K/9: 10.3 \u2192 adjusted 11.2 \u2192 projects 6.8 Ks over 5.5 inn",
-        "FIP 3.11 / xFIP 3.07 (below league avg 4.20)",
-        "Season IP: 34 \u2014 limited sample"
-      ],
-      "research": [
-        "Braxton Ashcraft: ERA 3.71 | FIP 3.11 | xFIP 3.07 | K/9 10.3 | BB/9 3.2 | HR/9 0.79",
-        "Season IP: 34 | Projected start: ~5.5 inn",
-        "Venue: PNC Park (park factor 0.96)",
-        "Opponent K%: 24.7% (league avg 22.8%)"
-      ],
-      "commence_time": "2026-05-03T17:36:00Z",
-      "locked": false
-    },
-    {
-      "sport": "MLB",
-      "player": "Chase Burns",
-      "team": "Cincinnati Reds",
-      "opponent": "Pittsburgh Pirates",
-      "prop_type": "Strikeouts Over",
-      "model_line": 6.5,
-      "model_margin": 3.7,
-      "confidence": "MEDIUM",
-      "note": "Search 'Chase Burns strikeouts' on Robinhood. Model: ~6.5 Ks in 5.5 inn. Look for Over at or below 6.",
-      "signals": [
-        "K/9: 10.3 \u2192 adjusted 10.7 \u2192 projects 6.5 Ks over 5.5 inn",
-        "FIP 3.88 / xFIP 3.11 (below league avg 4.20)",
-        "Season IP: 34 \u2014 limited sample"
-      ],
-      "research": [
-        "Chase Burns: ERA 2.65 | FIP 3.88 | xFIP 3.11 | K/9 10.3 | BB/9 3.2 | HR/9 1.32",
-        "Season IP: 34 | Projected start: ~5.5 inn",
-        "Venue: PNC Park (park factor 0.96)",
-        "Opponent K%: 23.6% (league avg 22.8%)"
-      ],
-      "commence_time": "2026-05-03T17:36:00Z",
-      "locked": false
-    },
-    {
-      "sport": "MLB",
-      "player": "Jes\u00fas Luzardo",
-      "team": "Philadelphia Phillies",
-      "opponent": "Miami Marlins",
-      "prop_type": "Strikeouts Over",
-      "model_line": 6.4,
-      "model_margin": 3.4,
-      "confidence": "MEDIUM",
-      "note": "Search 'Jes\u00fas Luzardo strikeouts' on Robinhood. Model: ~6.4 Ks in 5.5 inn. Look for Over at or below 6.",
-      "signals": [
-        "K/9: 10.8 \u2192 adjusted 10.4 \u2192 projects 6.4 Ks over 5.5 inn",
-        "FIP 2.73 / xFIP 2.39 (below league avg 4.20)",
-        "Season IP: 34 \u2014 limited sample"
-      ],
-      "research": [
-        "Jes\u00fas Luzardo: ERA 5.50 | FIP 2.73 | xFIP 2.39 | K/9 10.8 | BB/9 2.4 | HR/9 0.79",
-        "Season IP: 34 | Projected start: ~5.5 inn",
-        "Venue: loanDepot park (park factor 0.94)",
-        "Opponent K%: 21.9% (league avg 22.8%)"
-      ],
-      "commence_time": "2026-05-03T17:41:00Z",
-      "locked": false
-    },
-    {
-      "sport": "MLB",
-      "player": "Kris Bubic",
-      "team": "Kansas City Royals",
-      "opponent": "Seattle Mariners",
-      "prop_type": "Strikeouts Over",
-      "model_line": 6.1,
-      "model_margin": 3.0,
-      "confidence": "MEDIUM",
-      "note": "Search 'Kris Bubic strikeouts' on Robinhood. Model: ~6.1 Ks in 5.5 inn. Look for Over at or below 6.",
-      "signals": [
-        "K/9: 9.5 \u2192 adjusted 10.0 \u2192 projects 6.1 Ks over 5.5 inn",
-        "FIP 3.80 / xFIP 3.84 (below league avg 4.20)",
-        "Season IP: 33 \u2014 limited sample"
-      ],
-      "research": [
-        "Kris Bubic: ERA 3.74 | FIP 3.80 | xFIP 3.84 | K/9 9.5 | BB/9 4.6 | HR/9 0.81",
-        "Season IP: 33 | Projected start: ~5.5 inn",
-        "Venue: T-Mobile Park (park factor 0.93)",
-        "Opponent K%: 24.0% (league avg 22.8%)"
-      ],
-      "commence_time": "2026-05-03T20:11:00Z",
-      "locked": false
-    },
-    {
-      "sport": "MLB",
-      "player": "Parker Messick",
-      "team": "Cleveland Guardians",
-      "opponent": "Athletics",
-      "prop_type": "Strikeouts Over",
-      "model_line": 5.7,
-      "model_margin": 2.3,
-      "confidence": "MEDIUM",
-      "note": "Search 'Parker Messick strikeouts' on Robinhood. Model: ~5.7 Ks in 5.5 inn. Look for Over at or below 5.",
-      "signals": [
-        "K/9: 9.5 \u2192 adjusted 9.3 \u2192 projects 5.7 Ks over 5.5 inn",
-        "FIP 2.29 / xFIP 2.93 (below league avg 4.20)",
-        "Season IP: 36 \u2014 limited sample"
-      ],
-      "research": [
-        "Parker Messick: ERA 1.73 | FIP 2.29 | xFIP 2.93 | K/9 9.5 | BB/9 2.5 | HR/9 0.25",
-        "Season IP: 36 | Projected start: ~5.5 inn",
-        "Venue: Sutter Health Park (park factor 1.00)",
-        "Opponent K%: 22.3% (league avg 22.8%)"
-      ],
-      "commence_time": "2026-05-03T20:06:00Z",
       "locked": false
     }
   ],
