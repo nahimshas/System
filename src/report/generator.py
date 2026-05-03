@@ -66,12 +66,13 @@ def build_report(
     for j, par in enumerate(parlays, 1):
         # Build a compact legs JSON for live win-prob in the allocation table
         legs_json = json.dumps([{
-            "home_team":     l.get("home_team", ""),
-            "away_team":     l.get("away_team", ""),
-            "bet_type":      l.get("bet_type", ""),
-            "pick":          l.get("pick", ""),
-            "sport":         l.get("sport", ""),
+            "home_team":      l.get("home_team", ""),
+            "away_team":      l.get("away_team", ""),
+            "bet_type":       l.get("bet_type", ""),
+            "pick":           l.get("pick", ""),
+            "sport":          l.get("sport", ""),
             "model_prob_pct": l.get("model_prob_pct", 50),
+            "commence_time":  l.get("commence_time", ""),
         } for l in par.get("legs", [])])
 
         # Parlay is locked if any leg's game has started

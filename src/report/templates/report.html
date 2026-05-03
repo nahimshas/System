@@ -277,7 +277,7 @@
               <span class="badge {% if bet.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ bet.sport }}</span>
               &nbsp;{{ bet.bet_type }} &nbsp;&middot;&nbsp; {{ bet.game }}
             </div>
-            {% if bet.game_time %}<div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;">🕐 {{ bet.game_time }}</div>{% endif %}
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
             {% if bet.locked %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
@@ -361,9 +361,12 @@
            data-bet-type="{{ leg.bet_type }}"
            data-pick="{{ leg.pick }}"
            data-sport="{{ leg.sport }}"
-           data-model-prob="{{ leg.model_prob_pct }}">
+           data-model-prob="{{ leg.model_prob_pct }}"
+           data-commence-time="{{ leg.commence_time }}">
         <div class="pick">{{ leg.pick }} <span style="color:var(--muted);font-weight:400;">({{ leg.bet_type }})</span></div>
         <div class="meta">{{ leg.game }} &middot; Model: {{ leg.model_prob_pct }}% &middot; Edge: +{{ leg.edge_pct }}%</div>
+        <div class="leg-time" style="color:#14b8a6;font-size:0.72rem;margin-top:2px;"></div>
+        <div class="leg-score-live" style="font-size:0.72rem;color:var(--muted);margin-top:2px;"></div>
       </div>
       {% endfor %}
       <div class="action-box" style="background:var(--purple-dim);border-color:var(--purple);">
@@ -474,6 +477,7 @@
               data-bet-type="{{ row.bet_type }}"
               data-pick="{{ row.pick }}"
               data-sport="{{ row.sport }}"
+              data-commence-time="{{ row.commence_time }}"
               {% if row.bet_type == "Parlay" %}data-legs="{{ row.legs_json | e }}"{% endif %}>
             <td style="color:var(--muted);font-size:0.78rem;">{{ row.rank }}</td>
             <td>
@@ -483,7 +487,7 @@
               </a>
               <div style="color:var(--muted);font-size:0.7rem;">{{ row.sport }}</div>
               {% if row.game %}<div style="color:var(--muted);font-size:0.7rem;">{{ row.game }}</div>{% endif %}
-              {% if row.game_time %}<div style="color:#14b8a6;font-size:0.7rem;">{{ row.game_time }}</div>{% endif %}
+              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
             </td>
             <td style="vertical-align:top;">
               <div style="color:{% if row.edge_pct >= 7 %}#16a34a{% else %}#eab308{% endif %};font-weight:700;font-size:0.8rem;">+{{ row.edge_pct }}%</div>
@@ -831,6 +835,91 @@
     MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate
   };
 
+  // ── Local timezone formatting ────────────────────────────────────────────
+  // Converts a UTC ISO string to the browser's local time zone automatically.
+  // e.g. "2026-05-03T22:10:00Z" → "6:10 PM ET" (in New York) or "3:10 PM PT" (in LA)
+  function formatLocalTime(isoStr) {
+    if (!isoStr) return "";
+    try {
+      var d = new Date(isoStr);
+      if (isNaN(d.getTime())) return "";
+      return "🕐 " + d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+    } catch (e) { return ""; }
+  }
+
+  // Runs once on load — fills every game-time element with the browser's local time.
+  function initLocalTimes() {
+    // Single bet cards: read data-commence-time from the card, write into .card-time
+    document.querySelectorAll(".card[data-commence-time]").forEach(function (card) {
+      var iso = card.getAttribute("data-commence-time") || "";
+      var el  = card.querySelector(".card-time");
+      if (el && iso) el.textContent = formatLocalTime(iso);
+    });
+    // Parlay legs: data-commence-time lives on .parlay-leg itself
+    document.querySelectorAll(".parlay-leg[data-commence-time]").forEach(function (leg) {
+      var iso = leg.getAttribute("data-commence-time") || "";
+      var el  = leg.querySelector(".leg-time");
+      if (el && iso) el.textContent = formatLocalTime(iso);
+    });
+    // Allocation table rows: data-commence-time on <tr>, display in .row-time-local
+    document.querySelectorAll("tr[data-commence-time]").forEach(function (row) {
+      var iso = row.getAttribute("data-commence-time") || "";
+      var el  = row.querySelector(".row-time-local");
+      if (el && iso) el.textContent = formatLocalTime(iso);
+    });
+  }
+
+  // ── MLB base diamond renderer ────────────────────────────────────────────
+  // Returns an inline HTML string showing the base diamond + B/S/O counts.
+  // Only called for MLB in-progress games; returns "" if situation is null.
+  function renderDiamond(situation) {
+    if (!situation) return "";
+    var c1 = situation.onFirst  ? "#eab308" : "#374151";
+    var c2 = situation.onSecond ? "#eab308" : "#374151";
+    var c3 = situation.onThird  ? "#eab308" : "#374151";
+    // Bases as diamond polygons: 2nd(top), 1st(right), home(bottom), 3rd(left)
+    // SVG 36×36, centre (18,18), base half-size 5 px
+    function base(cx, cy, fill) {
+      var pts = cx+","+(cy-5)+" "+(cx+5)+","+cy+" "+cx+","+(cy+5)+" "+(cx-5)+","+cy;
+      return '<polygon points="'+pts+'" fill="'+fill+'"/>';
+    }
+    var svg =
+      '<svg width="36" height="36" viewBox="0 0 36 36" style="vertical-align:middle;margin-left:4px;">' +
+      // baselines
+      '<line x1="18" y1="11" x2="25" y2="18" stroke="#4b5563" stroke-width="0.8"/>' +
+      '<line x1="25" y1="18" x2="18" y2="25" stroke="#4b5563" stroke-width="0.8"/>' +
+      '<line x1="18" y1="25" x2="11" y2="18" stroke="#4b5563" stroke-width="0.8"/>' +
+      '<line x1="11" y1="18" x2="18" y2="11" stroke="#4b5563" stroke-width="0.8"/>' +
+      // bases
+      base(18, 6,  c2) +   // 2nd
+      base(30, 18, c1) +   // 1st
+      base(18, 30, "#6b7280") +  // home (always gray)
+      base(6,  18, c3) +   // 3rd
+      '</svg>';
+
+    var balls   = Math.min(3, situation.balls   || 0);
+    var strikes = Math.min(2, situation.strikes || 0);
+    var outs    = Math.min(2, situation.outs    || 0);
+
+    function dots(n, max, filledColor) {
+      var s = "";
+      for (var i = 0; i < max; i++) {
+        var col = i < n ? filledColor : "#374151";
+        s += '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+col+';margin-right:2px;vertical-align:middle;"></span>';
+      }
+      return s;
+    }
+
+    var bso =
+      '<span style="font-size:0.68rem;color:#94a3b8;vertical-align:middle;margin-left:2px;">' +
+      'B&nbsp;' + dots(balls, 3, "#22c55e") +
+      '&nbsp;S&nbsp;' + dots(strikes, 2, "#eab308") +
+      '&nbsp;O&nbsp;' + dots(outs, 2, "#ef4444") +
+      '</span>';
+
+    return '<span style="display:inline-flex;align-items:center;gap:2px;">' + svg + bso + '</span>';
+  }
+
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
   function normalCDF(z) {
     var t = 1 / (1 + 0.2316419 * Math.abs(z));
@@ -1072,6 +1161,7 @@
       period: period, clockSec: clockSec,
       isBottom: isBottom,
       sport: sportKey,
+      situation: comp.situation || null,   // MLB: balls/strikes/outs/onFirst/onSecond/onThird
     };
   }
 
@@ -1099,7 +1189,7 @@
     );
     if (!legEls.length) return;
 
-    // Evaluate each leg
+    // Evaluate each leg and update its inline score display
     var legResults = legEls.map(function (legEl) {
       var homeTeam  = legEl.getAttribute("data-home-team") || "";
       var awayTeam  = legEl.getAttribute("data-away-team") || "";
@@ -1107,11 +1197,13 @@
       var pick      = legEl.getAttribute("data-pick")      || "";
       var sport     = legEl.getAttribute("data-sport")     || "";
       var modelProb = parseFloat(legEl.getAttribute("data-model-prob") || "50") / 100;
+      var scoreEl   = legEl.querySelector(".leg-score-live");
 
       var ev = (homeTeam || awayTeam) ? findEvent(allEvents, homeTeam, awayTeam) : null;
 
       // Pre-game or not yet in ESPN feed — use model probability
       if (!ev || ev.stateId === "1") {
+        if (scoreEl) scoreEl.innerHTML = "";
         return { status: "pre", prob: modelProb };
       }
 
@@ -1122,6 +1214,12 @@
 
       if (ev.stateId === "3") {
         var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore);
+        if (scoreEl) {
+          scoreEl.innerHTML =
+            '<span style="color:#94a3b8;">Final</span> ' +
+            ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+            (result ? '&nbsp;' + outcomeHtml(result) : "");
+        }
         return {
           status: "final",
           result: result,
@@ -1132,12 +1230,25 @@
       // Rain delay / suspended — treat as pre-game probability (leg still open)
       var legDetailLower = (ev.detail || "").toLowerCase();
       if (/delay|suspend|postpone|rain|weather/.test(legDetailLower)) {
+        if (scoreEl) {
+          scoreEl.innerHTML =
+            '<span style="color:#eab308;">⏸ Delay</span> ' +
+            ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore;
+        }
         return { status: "delayed", prob: modelProb };
       }
 
-      // In progress — live win probability for this leg
+      // In progress — live win probability for this leg + score
       var prob = winProb(betType, pick, ourTeam, evHome, ev.away,
                          evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom);
+      if (scoreEl) {
+        scoreEl.innerHTML =
+          '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
+          ' <span style="color:#94a3b8;">' + (ev.detail || "") + '</span>' +
+          ' ' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+          (sport === "MLB" ? ' ' + renderDiamond(ev.situation) : "") +
+          '&nbsp;' + probHtml(prob);
+      }
       return { status: "live", prob: prob };
     });
 
@@ -1269,7 +1380,8 @@
           ' <span style="color:#94a3b8;font-size:0.72rem;">' + ev.detail + '</span>' +
           ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
             ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
-          '</span>&nbsp;&nbsp;' + probHtml(prob);
+          '</span>&nbsp;&nbsp;' + probHtml(prob) +
+          (sport === "MLB" ? '<br>' + renderDiamond(ev.situation) : '');
       }
     } else {
       card.removeAttribute("data-live-result");
@@ -1336,14 +1448,54 @@
           }
         }
 
+        // Build a compact per-leg score summary line
+        var legSummaryParts = [];
+        for (var ls = 0; ls < legs.length; ls++) {
+          var lgl = legs[ls];
+          var lev = (lgl.home_team || lgl.away_team)
+                    ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
+                    : null;
+          if (!lev || lev.stateId === "1") {
+            // Pre-game: show local start time if available
+            var legIso = lgl.commence_time || "";
+            if (legIso) {
+              try {
+                var legT = new Date(legIso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+                legSummaryParts.push(
+                  '<span style="color:#14b8a6;">' + (lgl.away_team ? lgl.away_team.split(" ").pop() : "?") +
+                  ' vs ' + (lgl.home_team ? lgl.home_team.split(" ").pop() : "?") +
+                  ' @ ' + legT + '</span>'
+                );
+              } catch(e) {}
+            }
+          } else if (lev.stateId === "3") {
+            var lHS = teamMatch(lev.home, lgl.home_team) ? lev.homeScore : lev.awayScore;
+            var lAS = teamMatch(lev.away, lgl.away_team) ? lev.awayScore : lev.homeScore;
+            legSummaryParts.push(
+              '<span style="color:#94a3b8;">F: ' + lev.awayAbbr + ' ' + lAS + '–' + lev.homeAbbr + ' ' + lHS + '</span>'
+            );
+          } else {
+            var lHS2 = teamMatch(lev.home, lgl.home_team) ? lev.homeScore : lev.awayScore;
+            var lAS2 = teamMatch(lev.away, lgl.away_team) ? lev.awayScore : lev.homeScore;
+            legSummaryParts.push(
+              '<span style="color:#ef4444;">●</span> ' +
+              lev.awayAbbr + ' ' + lAS2 + '–' + lev.homeAbbr + ' ' + lHS2 +
+              ' <span style="color:#94a3b8;">' + (lev.detail || "") + '</span>'
+            );
+          }
+        }
+        var legSummary = legSummaryParts.length
+          ? '<br><span style="font-size:0.65rem;">' + legSummaryParts.join(' · ') + '</span>'
+          : '';
+
         if (anyLost) {
-          cell.innerHTML = outcomeHtml("LOST");
+          cell.innerHTML = outcomeHtml("LOST") + legSummary;
         } else if (allFinal) {
-          cell.innerHTML = outcomeHtml("WON");
+          cell.innerHTML = outcomeHtml("WON") + legSummary;
         } else {
           var pctP  = Math.min(99, Math.max(1, Math.round(combined * 100)));
           var colP  = pctP >= 60 ? "#16a34a" : pctP >= 40 ? "#eab308" : "#ef4444";
-          cell.innerHTML = '<span style="color:' + colP + ';font-weight:700;">' + pctP + '% win</span>';
+          cell.innerHTML = '<span style="color:' + colP + ';font-weight:700;">' + pctP + '% win</span>' + legSummary;
         }
         return;
       }
@@ -1380,6 +1532,7 @@
             '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
             (ev.detail ? ' <span style="color:#94a3b8;font-size:0.68rem;">' + ev.detail + '</span>' : '') +
             '<br>' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+            (sport === "MLB" ? '<br>' + renderDiamond(ev.situation) : '') +
             '<br><span style="color:' + col2 + ';font-weight:700;">' + pct2 + '% win</span>';
         }
       } else {
@@ -2085,6 +2238,7 @@
     });
   }
 
+  initLocalTimes();
   refresh();
   setInterval(refresh, 60000);
 
