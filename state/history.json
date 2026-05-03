@@ -910,5 +910,161 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-05-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Atlanta Braves @ Colorado Rockies",
+    "bet_type": "Total",
+    "pick": "Over 10.0",
+    "home_team": "Colorado Rockies",
+    "away_team": "Atlanta Braves",
+    "edge_pct": 11.1,
+    "confidence": "HIGH",
+    "model_prob_pct": 62.4,
+    "market_prob_pct": 51.4,
+    "cost": 4.32,
+    "profit_if_win": 3.68,
+    "result": "PUSH",
+    "actual_pnl": 0.0,
+    "actual_home_score": 1.0,
+    "actual_away_score": 9.0
+  },
+  {
+    "date": "2026-05-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Arizona Diamondbacks @ Chicago Cubs",
+    "bet_type": "Total",
+    "pick": "Over 7.0",
+    "home_team": "Chicago Cubs",
+    "away_team": "Arizona Diamondbacks",
+    "edge_pct": 15.2,
+    "confidence": "HIGH",
+    "model_prob_pct": 65.9,
+    "market_prob_pct": 50.7,
+    "cost": 6.87,
+    "profit_if_win": 6.13,
+    "result": "LOST",
+    "actual_pnl": -6.87,
+    "actual_home_score": 2.0,
+    "actual_away_score": 0.0
+  },
+  {
+    "date": "2026-05-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Chicago White Sox @ San Diego Padres",
+    "bet_type": "Spread",
+    "pick": "Chicago White Sox +1.5",
+    "home_team": "San Diego Padres",
+    "away_team": "Chicago White Sox",
+    "edge_pct": 15.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 71.2,
+    "market_prob_pct": 55.5,
+    "cost": 8.05,
+    "profit_if_win": 5.95,
+    "result": "WON",
+    "actual_pnl": 5.95,
+    "actual_home_score": 0.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-05-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "New York Mets @ Los Angeles Angels",
+    "bet_type": "Spread",
+    "pick": "Los Angeles Angels +1.5",
+    "home_team": "Los Angeles Angels",
+    "away_team": "New York Mets",
+    "edge_pct": 15.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 74.9,
+    "market_prob_pct": 59.1,
+    "cost": 8.54,
+    "profit_if_win": 5.46,
+    "result": "WON",
+    "actual_pnl": 5.46,
+    "actual_home_score": 4.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-05-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Cleveland Guardians @ Athletics",
+    "bet_type": "Spread",
+    "pick": "Cleveland Guardians +1.5",
+    "home_team": "Athletics",
+    "away_team": "Cleveland Guardians",
+    "edge_pct": 19.6,
+    "confidence": "HIGH",
+    "model_prob_pct": 79.3,
+    "market_prob_pct": 59.7,
+    "cost": 11.13,
+    "profit_if_win": 6.87,
+    "result": "WON",
+    "actual_pnl": 6.87,
+    "actual_home_score": 6.0,
+    "actual_away_score": 14.0
+  },
+  {
+    "date": "2026-05-02",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Los Angeles Angels +1.5 (Spread) + Under 8.0 (Total)",
+    "bet_type": "Parlay",
+    "pick": "Los Angeles Angels +1.5 (Spread) + Under 8.0 (Total)",
+    "edge_pct": 16.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 47.4,
+    "market_prob_pct": 0,
+    "cost": 2.34,
+    "profit_if_win": 4.66,
+    "result": "WON",
+    "actual_pnl": 4.66,
+    "legs": [
+      {
+        "game": "New York Mets @ Los Angeles Angels",
+        "pick": "Los Angeles Angels +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "New York Mets @ Los Angeles Angels",
+        "pick": "Under 8.0",
+        "result": "WON"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-02",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Boston Celtics (Moneyline) + Cleveland Guardians (Moneyline)",
+    "bet_type": "Parlay",
+    "pick": "Boston Celtics (Moneyline) + Cleveland Guardians (Moneyline)",
+    "edge_pct": 18.1,
+    "confidence": "HIGH",
+    "model_prob_pct": 50.0,
+    "market_prob_pct": 0,
+    "cost": 2.71,
+    "profit_if_win": 5.29,
+    "result": "LOST",
+    "actual_pnl": -2.71,
+    "legs": [
+      {
+        "game": "Philadelphia 76ers @ Boston Celtics",
+        "pick": "Boston Celtics",
+        "result": "LOST"
+      },
+      {
+        "game": "Cleveland Guardians @ Athletics",
+        "pick": "Cleveland Guardians",
+        "result": "WON"
+      }
+    ]
   }
 ]
