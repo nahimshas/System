@@ -8,9 +8,9 @@
       "game_time": "11:21 AM PDT",
       "bet_type": "Moneyline",
       "pick": "Chicago Cubs",
-      "market_prob_pct": 59.4,
+      "market_prob_pct": 59.1,
       "model_prob_pct": 77.6,
-      "edge_pct": 18.2,
+      "edge_pct": 18.4,
       "contract_price": 0.5916,
       "contract_price_cents": 59.2,
       "num_contracts": 17,
@@ -54,7 +54,7 @@
       "home_team": "Chicago Cubs",
       "away_team": "Arizona Diamondbacks",
       "commence_time": "2026-05-03T18:21:00Z",
-      "edge": 0.18209507228774657,
+      "edge": 0.18425467200692203,
       "locked": false
     },
     {
@@ -114,9 +114,9 @@
       "game_time": "1:11 PM PDT",
       "bet_type": "Spread",
       "pick": "Seattle Mariners +1.5",
-      "market_prob_pct": 40.9,
+      "market_prob_pct": 43.7,
       "model_prob_pct": 67.7,
-      "edge_pct": 26.8,
+      "edge_pct": 24.0,
       "contract_price": 0.4367,
       "contract_price_cents": 43.7,
       "num_contracts": 22,
@@ -148,12 +148,13 @@
         "\u2695 Kansas City Royals \u2014 Tyson Guerrero (RP): DAY-TO-DAY",
         "\u2695 Kansas City Royals \u2014 Anthony Simonelli (SP): DAY-TO-DAY",
         "\u2695 Kansas City Royals \u2014 Javier Vaz (2B): DAY-TO-DAY",
+        "\ud83d\udc68\u200d\u2696\ufe0f HP Umpire: Clint Vondrak (near-neutral tendencies)",
         "Model expected runs: Seattle Mariners 3.83 | Kansas City Royals 3.95"
       ],
       "home_team": "Seattle Mariners",
       "away_team": "Kansas City Royals",
       "commence_time": "2026-05-03T20:11:00Z",
-      "edge": 0.2678401229457265,
+      "edge": 0.24044969098848884,
       "locked": false
     },
     {
@@ -162,9 +163,9 @@
       "game_time": "4:21 PM PDT",
       "bet_type": "Spread",
       "pick": "Detroit Tigers +1.5",
-      "market_prob_pct": 43.5,
+      "market_prob_pct": 40.9,
       "model_prob_pct": 71.2,
-      "edge_pct": 27.7,
+      "edge_pct": 30.3,
       "contract_price": 0.4359,
       "contract_price_cents": 43.6,
       "num_contracts": 25,
@@ -206,7 +207,7 @@
       "home_team": "Detroit Tigers",
       "away_team": "Texas Rangers",
       "commence_time": "2026-05-03T23:21:00Z",
-      "edge": 0.27708964254467505,
+      "edge": 0.3030940688300003,
       "locked": false
     },
     {
@@ -638,5 +639,14 @@
       "locked": false
     }
   ],
-  "warnings": []
+  "warnings": [
+    {
+      "type": "edge_dropped",
+      "pick": "Seattle Mariners +1.5",
+      "game": "Kansas City Royals @ Seattle Mariners",
+      "old_edge_pct": 26.8,
+      "new_edge_pct": 24.0,
+      "reason": "Market moved against this bet \u2014 still no better alternative found"
+    }
+  ]
 }
