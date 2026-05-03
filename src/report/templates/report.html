@@ -1504,7 +1504,7 @@
           }
         }
         var legSummary = legSummaryParts.length
-          ? '<br><span style="font-size:0.65rem;">' + legSummaryParts.join(' · ') + '</span>'
+          ? '<br><div style="font-size:0.65rem;line-height:1.6;white-space:normal;">' + legSummaryParts.join('<br>') + '</div>'
           : '';
 
         if (anyLost) {
