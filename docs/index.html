@@ -132,7 +132,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, May 03, 2026 &middot; Generated May 03, 2026 at 05:28 PM PDT</div>
+    <div class="subtitle">Sunday, May 03, 2026 &middot; Generated May 03, 2026 at 06:38 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 0 games &nbsp;|&nbsp;
       MLB: 0 games &nbsp;|&nbsp;
@@ -142,9 +142,9 @@
     
     <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
       🔑 Odds API &mdash;
-      78 used &middot; 
+      84 used &middot; 
       <span style="color:var(--green);">
-        19,922 remaining
+        19,916 remaining
       </span>
     </div>
     
@@ -4042,6 +4042,11 @@
           if (liveDiv.innerHTML !== prevHtml) {
             liveDiv.innerHTML += gameStatusLine(ev);
           }
+          // On the first poll, applyPropCards fetches are async so updatePropAccuracy()
+          // in refresh() runs before any data-prop-result attrs are set and returns early.
+          // Calling it here (inside the fetch callback) ensures the accuracy table and
+          // badge update on the first poll (~1s after load) rather than the second (~30s).
+          if (isFinal) updatePropAccuracy();
         })
         .catch(function () {});
     });
