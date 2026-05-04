@@ -2340,6 +2340,11 @@
           if (liveDiv.innerHTML !== prevHtml) {
             liveDiv.innerHTML += gameStatusLine(ev);
           }
+          // On the first poll, applyPropCards fetches are async so updatePropAccuracy()
+          // in refresh() runs before any data-prop-result attrs are set and returns early.
+          // Calling it here (inside the fetch callback) ensures the accuracy table and
+          // badge update on the first poll (~1s after load) rather than the second (~30s).
+          if (isFinal) updatePropAccuracy();
         })
         .catch(function () {});
     });
