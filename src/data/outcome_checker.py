@@ -713,8 +713,12 @@ def load_prop_accuracy() -> Dict:
     if not records:
         return {}
 
-    from datetime import date as _date
-    today_str     = _date.today().isoformat()
+    from datetime import datetime, timezone, timedelta as _td
+    def _pacific_today() -> str:
+        now_utc = datetime.now(timezone.utc)
+        offset = -7 if 3 <= now_utc.month <= 10 else -8
+        return (now_utc + _td(hours=offset)).date().isoformat()
+    today_str     = _pacific_today()
     hist_records  = [r for r in records if r.get("date", "") < today_str]
     today_records = [r for r in records if r.get("date", "") == today_str]
 
