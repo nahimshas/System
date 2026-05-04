@@ -132,19 +132,19 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, May 03, 2026 &middot; Generated May 03, 2026 at 04:11 PM PDT</div>
+    <div class="subtitle">Sunday, May 03, 2026 &middot; Generated May 03, 2026 at 05:28 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
-      NBA: 1 game &nbsp;|&nbsp;
-      MLB: 1 game &nbsp;|&nbsp;
+      NBA: 0 games &nbsp;|&nbsp;
+      MLB: 0 games &nbsp;|&nbsp;
       Budget: $100
     </div>
     
     
     <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
       🔑 Odds API &mdash;
-      72 used &middot; 
+      78 used &middot; 
       <span style="color:var(--green);">
-        19,928 remaining
+        19,922 remaining
       </span>
     </div>
     
@@ -492,6 +492,14 @@
   
 
   
+  <div class="card" style="margin-bottom:12px;">
+    <div class="empty-state"><div class="icon">🏀</div>No NBA games today.</div>
+  </div>
+  
+  
+  <div class="card" style="margin-bottom:12px;">
+    <div class="empty-state"><div class="icon">⚾</div>No MLB games today.</div>
+  </div>
   
 
   
@@ -1660,7 +1668,7 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
+            <span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
             <span class="confidence-badge MEDIUM">MEDIUM</span>
             <div class="prop-live-badge"></div>
           </div>
@@ -1724,7 +1732,7 @@
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
+            <span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
             <span class="confidence-badge MEDIUM">MEDIUM</span>
             <div class="prop-live-badge"></div>
           </div>
@@ -2035,12 +2043,12 @@
       <span>Props Model Accuracy
         <br><span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;letter-spacing:0;">Hit Rate vs Actuals</span>
       </span>
-      <span id="prop-acc-live-badge" style="display:inline-block;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;flex-shrink:0;margin-top:2px;">● includes today</span>
+      <span id="prop-acc-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;flex-shrink:0;margin-top:2px;">● includes today</span>
     </div>
     <div class="card" id="prop-accuracy-card"
-         data-hist-total="78"
-         data-hist-hits="37"
-         data-hist-sum-err="-124.8">
+         data-hist-total="87"
+         data-hist-hits="46"
+         data-hist-sum-err="-87.0">
       <div class="stats-grid" style="margin-bottom:12px;">
         <div class="stat-box">
           <div class="stat-label">Props Settled</div>
@@ -2077,8 +2085,8 @@
           
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="Points Over"
-              data-type-total="19"
-              data-type-hits="6">
+              data-type-total="21"
+              data-type-hits="8">
             <td style="padding:5px 0;color:var(--fg);">Points</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">21</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
@@ -2096,8 +2104,8 @@
           
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="Rebounds Over"
-              data-type-total="17"
-              data-type-hits="8">
+              data-type-total="18"
+              data-type-hits="9">
             <td style="padding:5px 0;color:var(--fg);">Rebounds</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">18</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
@@ -2115,8 +2123,8 @@
           
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="Assists Over"
-              data-type-total="7"
-              data-type-hits="2">
+              data-type-total="8"
+              data-type-hits="3">
             <td style="padding:5px 0;color:var(--fg);">Assists</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">8</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
@@ -2134,8 +2142,8 @@
           
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="Strikeouts Over"
-              data-type-total="14"
-              data-type-hits="5">
+              data-type-total="19"
+              data-type-hits="10">
             <td style="padding:5px 0;color:var(--fg);">Strikeouts</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">19</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;
@@ -2179,8 +2187,8 @@
         
         <div style="flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
              data-conf="HIGH"
-             data-conf-total="40"
-             data-conf-hits="23"
+             data-conf-total="42"
+             data-conf-hits="25"
              data-conf-misses="17">
           <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">HIGH confidence</div>
           <div class="conf-hit-rate" style="font-size:1.1rem;font-weight:700;
@@ -2193,8 +2201,8 @@
         
         <div style="flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
              data-conf="MEDIUM"
-             data-conf-total="38"
-             data-conf-hits="14"
+             data-conf-total="45"
+             data-conf-hits="21"
              data-conf-misses="24">
           <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">MEDIUM confidence</div>
           <div class="conf-hit-rate" style="font-size:1.1rem;font-weight:700;
