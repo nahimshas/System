@@ -362,7 +362,11 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
     for market_key in all_market_keys:
         prop_label = PROP_MARKET_LABEL.get(market_key, market_key)
 
-        # Step 1: find preferred book's Over line per player
+        # Step 1: find preferred book's Over line per player.
+        # Odds API v4 player props may use either of two outcome formats:
+        #   Format A: name=PlayerName, description="Over"/"Under"  (newer)
+        #   Format B: name="Over"/"Under", description=PlayerName  (older)
+        # We detect which format is in use from the first outcome we inspect.
         pref_lines:  Dict[str, float] = {}
         pref_prices: Dict[str, int]   = {}
         pref_book = None
@@ -373,14 +377,40 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
                 if mkt.get("key") != market_key:
                     continue
                 pref_book = bk
-                for o in mkt.get("outcomes", []):
-                    if o.get("description", "").lower() == "over":
-                        name  = o.get("name", "")
-                        line  = o.get("point")
-                        price = o.get("price")
-                        if name and line is not None and price is not None:
-                            pref_lines[name]  = float(line)
-                            pref_prices[name] = int(price)
+                outcomes = mkt.get("outcomes", [])
+                if not outcomes:
+                    break
+
+                # Detect format from first outcome
+                first = outcomes[0]
+                desc_lower = first.get("description", "").lower()
+                name_lower = first.get("name", "").lower()
+                # Format A: description is "over" or "under"
+                if desc_lower in ("over", "under"):
+                    for o in outcomes:
+                        if o.get("description", "").lower() == "over":
+                            name  = o.get("name", "")
+                            line  = o.get("point")
+                            price = o.get("price")
+                            if name and line is not None and price is not None:
+                                pref_lines[name]  = float(line)
+                                pref_prices[name] = int(price)
+                # Format B: name is "over" or "under", description is player name
+                elif name_lower in ("over", "under"):
+                    for o in outcomes:
+                        if o.get("name", "").lower() == "over":
+                            name  = o.get("description", "")
+                            line  = o.get("point")
+                            price = o.get("price")
+                            if name and line is not None and price is not None:
+                                pref_lines[name]  = float(line)
+                                pref_prices[name] = int(price)
+                else:
+                    # Unknown format — log and skip
+                    logger.debug(
+                        f"Unknown prop outcome format for {market_key}: "
+                        f"name='{first.get('name')}' description='{first.get('description')}'"
+                    )
                 break
             if pref_book:
                 break
@@ -388,7 +418,8 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
         if not pref_lines:
             continue
 
-        # Step 2: consensus no-vig probability across books with same line
+        # Step 2: consensus no-vig probability across books with same line.
+        # Must handle both formats A and B (detected per-book below).
         for player_name, pref_line in pref_lines.items():
             over_probs = []
             for book in bookmakers:
@@ -396,14 +427,34 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
                     if mkt.get("key") != market_key:
                         continue
                     outcomes = mkt.get("outcomes", [])
-                    over_o  = next((o for o in outcomes
-                                    if o.get("name") == player_name
-                                    and o.get("description", "").lower() == "over"
-                                    and o.get("point") == pref_line), None)
-                    under_o = next((o for o in outcomes
-                                    if o.get("name") == player_name
-                                    and o.get("description", "").lower() == "under"
-                                    and o.get("point") == pref_line), None)
+                    if not outcomes:
+                        break
+                    # Detect format for this book
+                    f = outcomes[0]
+                    f_name = f.get("name", "").lower()
+                    f_desc = f.get("description", "").lower()
+                    if f_desc in ("over", "under"):
+                        # Format A
+                        over_o  = next((o for o in outcomes
+                                        if o.get("name") == player_name
+                                        and o.get("description", "").lower() == "over"
+                                        and o.get("point") == pref_line), None)
+                        under_o = next((o for o in outcomes
+                                        if o.get("name") == player_name
+                                        and o.get("description", "").lower() == "under"
+                                        and o.get("point") == pref_line), None)
+                    elif f_name in ("over", "under"):
+                        # Format B
+                        over_o  = next((o for o in outcomes
+                                        if o.get("name", "").lower() == "over"
+                                        and o.get("description") == player_name
+                                        and o.get("point") == pref_line), None)
+                        under_o = next((o for o in outcomes
+                                        if o.get("name", "").lower() == "under"
+                                        and o.get("description") == player_name
+                                        and o.get("point") == pref_line), None)
+                    else:
+                        break
                     if over_o and under_o:
                         p_o = american_to_implied_prob(int(over_o["price"]))
                         p_u = american_to_implied_prob(int(under_o["price"]))
@@ -427,5 +478,13 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
                 "book":         pref_book or PREFERRED_BOOK,
             }
 
-    logger.info(f"Player props for {game_id}: {len(result)} players")
+    if result:
+        logger.info(f"Player props for {game_id}: {len(result)} players, "
+                    f"{sum(len(v) for v in result.values())} lines")
+    else:
+        logger.warning(
+            f"Player props EMPTY for {game_id} (sport={sport}) — "
+            f"bookmakers={len(bookmakers)}, "
+            f"credits_remaining={_credits_remaining}"
+        )
     return result
