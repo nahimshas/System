@@ -1242,5 +1242,161 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-05-04",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Cincinnati Reds @ Chicago Cubs",
+    "bet_type": "Total",
+    "pick": "Under 11.5",
+    "home_team": "Chicago Cubs",
+    "away_team": "Cincinnati Reds",
+    "edge_pct": 13.2,
+    "confidence": "HIGH",
+    "model_prob_pct": 66.2,
+    "market_prob_pct": 53.0,
+    "cost": 6.05,
+    "profit_if_win": 4.95,
+    "result": "WON",
+    "actual_pnl": 4.95,
+    "actual_home_score": 5.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-05-04",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Philadelphia Phillies @ Miami Marlins",
+    "bet_type": "Total",
+    "pick": "Under 8.5",
+    "home_team": "Miami Marlins",
+    "away_team": "Philadelphia Phillies",
+    "edge_pct": 11.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 63.0,
+    "market_prob_pct": 52.0,
+    "cost": 4.86,
+    "profit_if_win": 4.14,
+    "result": "WON",
+    "actual_pnl": 4.14,
+    "actual_home_score": 0.0,
+    "actual_away_score": 1.0
+  },
+  {
+    "date": "2026-05-04",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Minnesota Timberwolves @ San Antonio Spurs",
+    "bet_type": "Total",
+    "pick": "Under 220.5",
+    "home_team": "San Antonio Spurs",
+    "away_team": "Minnesota Timberwolves",
+    "edge_pct": 26.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 78.2,
+    "market_prob_pct": 52.3,
+    "cost": 14.11,
+    "profit_if_win": 11.89,
+    "result": "WON",
+    "actual_pnl": 11.89,
+    "actual_home_score": 102.0,
+    "actual_away_score": 104.0
+  },
+  {
+    "date": "2026-05-04",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Philadelphia 76ers @ New York Knicks",
+    "bet_type": "Spread",
+    "pick": "New York Knicks -7.5",
+    "home_team": "New York Knicks",
+    "away_team": "Philadelphia 76ers",
+    "edge_pct": 21.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 71.9,
+    "market_prob_pct": 50.1,
+    "cost": 9.87,
+    "profit_if_win": 9.13,
+    "result": "WON",
+    "actual_pnl": 9.13,
+    "actual_home_score": 137.0,
+    "actual_away_score": 98.0
+  },
+  {
+    "date": "2026-05-04",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Philadelphia 76ers @ New York Knicks",
+    "bet_type": "Total",
+    "pick": "Under 213.5",
+    "home_team": "New York Knicks",
+    "away_team": "Philadelphia 76ers",
+    "edge_pct": 14.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 66.7,
+    "market_prob_pct": 52.2,
+    "cost": 8.14,
+    "profit_if_win": 6.86,
+    "result": "LOST",
+    "actual_pnl": -8.14,
+    "actual_home_score": 137.0,
+    "actual_away_score": 98.0
+  },
+  {
+    "date": "2026-05-04",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Minnesota Timberwolves +9.5 (Spread) + Under 220.5 (Total)",
+    "bet_type": "Parlay",
+    "pick": "Minnesota Timberwolves +9.5 (Spread) + Under 220.5 (Total)",
+    "edge_pct": 19.3,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 45.5,
+    "market_prob_pct": 0,
+    "cost": 2.81,
+    "profit_if_win": 7.19,
+    "result": "WON",
+    "actual_pnl": 7.19,
+    "legs": [
+      {
+        "game": "Minnesota Timberwolves @ San Antonio Spurs",
+        "pick": "Minnesota Timberwolves +9.5",
+        "result": "WON"
+      },
+      {
+        "game": "Minnesota Timberwolves @ San Antonio Spurs",
+        "pick": "Under 220.5",
+        "result": "WON"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Knicks (Moneyline) + Under 213.5 (Total)",
+    "bet_type": "Parlay",
+    "pick": "New York Knicks (Moneyline) + Under 213.5 (Total)",
+    "edge_pct": 24.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 61.5,
+    "market_prob_pct": 0,
+    "cost": 4.3,
+    "profit_if_win": 6.7,
+    "result": "LOST",
+    "actual_pnl": -4.3,
+    "legs": [
+      {
+        "game": "Philadelphia 76ers @ New York Knicks",
+        "pick": "New York Knicks",
+        "result": "WON"
+      },
+      {
+        "game": "Philadelphia 76ers @ New York Knicks",
+        "pick": "Under 213.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
