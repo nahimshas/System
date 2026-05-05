@@ -354,36 +354,41 @@ def _fetch_team_roster(team_id: str) -> Dict[str, str]:
     return result
 
 
-def _fetch_athlete_stats(athlete_id: str) -> Dict:
+def _fetch_athlete_gamelog(athlete_id: str) -> Dict:
     """
-    Fetch per-game averages for a specific athlete via ESPN.
-
-    The /athletes/{id}/statistics endpoint does NOT reliably accept a
-    `season` parameter for in-progress seasons — it returns 404 when
-    the season is still ongoing.  Strategy:
-      1. No season param  → ESPN returns the current / most-recent season.
-      2. Fallback: season = current year − 1 (the start year of the season,
-         e.g. 2025 for the 2025-26 season) if step 1 yields no data.
+    Fetch per-game season averages from ESPN's gamelog endpoint.
+    Used as a fallback when the player is not a team leader in any category.
     """
-    base_url = f"{ESPN_NBA}/athletes/{athlete_id}/statistics"
-    data = _get(base_url)                           # current season (no param)
-    if not data:
-        data = _get(base_url, {"season": _espn_season() - 1})  # e.g. 2025
+    data = _get(f"{ESPN_NBA}/athletes/{athlete_id}/gamelog")
     if not data:
         return {}
 
     stat_vals: Dict[str, float] = {}
-    splits     = data.get("splits", {})
-    categories = splits.get("categories", data.get("categories", []))
-    for cat in categories:
-        for s in cat.get("stats", []):
-            k = s.get("name", "")
-            v = s.get("value")
-            if k and v is not None:
-                try:
-                    stat_vals[k] = float(v)
-                except (TypeError, ValueError):
-                    pass
+    # ESPN gamelog: {"seasonTypes": [{"categories": [...]}]}
+    for season_type in data.get("seasonTypes", []):
+        for cat in season_type.get("categories", []):
+            for s in cat.get("stats", []):
+                k = s.get("name", "")
+                v = s.get("value")
+                if k and v is not None:
+                    try:
+                        stat_vals[k] = float(v)
+                    except (TypeError, ValueError):
+                        pass
+        if stat_vals:
+            break   # regular season comes first; stop once we have data
+
+    # Also check top-level categories (some ESPN endpoints use this layout)
+    if not stat_vals:
+        for cat in data.get("categories", []):
+            for s in cat.get("stats", []):
+                k = s.get("name", "")
+                v = s.get("value")
+                if k and v is not None:
+                    try:
+                        stat_vals[k] = float(v)
+                    except (TypeError, ValueError):
+                        pass
 
     def _pick(*keys: str) -> float:
         for k in keys:
@@ -392,57 +397,146 @@ def _fetch_athlete_stats(athlete_id: str) -> Dict:
         return 0.0
 
     return {
-        "pts":      _pick("avgPoints", "points"),
-        "reb":      _pick("avgRebounds", "avgTotalRebounds", "totalRebounds"),
-        "ast":      _pick("avgAssists", "assists"),
-        "stl":      _pick("avgSteals", "steals"),
-        "blk":      _pick("avgBlocks", "blocks"),
+        "pts":      _pick("avgPoints", "points", "pointsPerGame"),
+        "reb":      _pick("avgRebounds", "avgTotalRebounds", "reboundsPerGame", "totalRebounds"),
+        "ast":      _pick("avgAssists", "assists", "assistsPerGame"),
+        "stl":      _pick("avgSteals", "steals", "stealsPerGame"),
+        "blk":      _pick("avgBlocks", "blocks", "blocksPerGame"),
         "three_pm": _pick("avgThreePointFieldGoalsMade", "avgThreesMade", "threePointFieldGoalsMade"),
         "games":    int(_pick("gamesPlayed", "games") or 1),
     }
 
 
-def get_nba_player_props_stats(player_names: List[str], team_names_today: List[str]) -> Dict[str, Dict]:
+# Category key (after _parse_leader_categories normalisation) → internal stat key
+_LEADER_CAT_TO_STAT: Dict[str, str] = {
+    "points":                   "pts",
+    "pointspergame":            "pts",
+    "rebounds":                 "reb",
+    "reboundspergame":          "reb",
+    "totalrebounds":            "reb",
+    "assists":                  "ast",
+    "assistspergame":           "ast",
+    "steals":                   "stl",
+    "stealspergame":            "stl",
+    "blocks":                   "blk",
+    "blockspergame":            "blk",
+    "threepointfieldgoalsmade": "three_pm",
+    "threepointers":            "three_pm",
+    "threes":                   "three_pm",
+    "threesmade":               "three_pm",
+}
+
+
+def get_nba_player_props_stats(
+    player_names:     List[str],
+    team_names_today: List[str],
+    nba_ctx:          Optional[Dict] = None,
+) -> Dict[str, Dict]:
     """
     Fetch per-game averages for players with Odds API prop lines.
+
+    Strategy (fastest/most-reliable first):
+      1. Extract stats from nba_ctx["team_leaders"] — data already fetched during
+         get_nba_context(), zero extra API calls.  Each category stores the
+         per-game average for the team leader in that stat.
+      2. For players not found via leaders, fall back to roster fetch +
+         /athletes/{id}/gamelog endpoint.
+
     Returns {player_name: {"stats": {pts/reb/ast/stl/blk/three_pm/games}, "team": espn_name}}
     """
     if not player_names or not team_names_today:
         return {}
 
-    id_map = _fetch_team_id_map()
+    # ── Tier 1: build player_name → partial stats from team_leaders ────────
+    # Each category in team_leaders has ONE leader (the top player).
+    # A player may lead multiple categories → we accumulate all their stat values.
+    leaders_lookup: Dict[str, Dict] = {}   # norm_name → {pts, reb, …, team}
 
-    # Build name → (athlete_id, espn_team) via today's team rosters only
-    all_rosters: Dict[str, tuple] = {}
-    for espn_name in set(team_names_today):
-        team_id = id_map.get(espn_name)
-        if not team_id:
-            continue
-        roster = _fetch_team_roster(team_id)
-        for norm_name, aid in roster.items():
-            all_rosters[norm_name] = (aid, espn_name)
-        time.sleep(0.15)
+    if nba_ctx:
+        for espn_name, categories in nba_ctx.get("team_leaders", {}).items():
+            for cat_key, cat_data in categories.items():
+                stat_key = _LEADER_CAT_TO_STAT.get(
+                    cat_key.lower().replace(" ", "").replace("-", "")
+                )
+                if not stat_key:
+                    continue
+                p_name = cat_data.get("name", "")
+                value  = float(cat_data.get("value", 0) or 0)
+                if not p_name:
+                    continue
+                norm_p = p_name.lower().strip()
+                if norm_p not in leaders_lookup:
+                    leaders_lookup[norm_p] = {
+                        "pts": 0.0, "reb": 0.0, "ast": 0.0,
+                        "stl": 0.0, "blk": 0.0, "three_pm": 0.0,
+                        "games": 40, "team": espn_name,
+                    }
+                leaders_lookup[norm_p][stat_key] = value
 
-    result: Dict[str, Dict] = {}
+    def _match_leaders(player_name: str) -> Optional[Dict]:
+        norm = player_name.lower().strip()
+        if norm in leaders_lookup:
+            return leaders_lookup[norm]
+        parts = norm.split()
+        for lk_name, data in leaders_lookup.items():
+            if all(p in lk_name for p in parts):
+                return data
+        return None
+
+    result:    Dict[str, Dict] = {}
+    remaining: List[str]       = []
+
     for player_name in player_names:
-        norm  = player_name.lower().strip()
-        entry = all_rosters.get(norm)
-        if not entry:
-            for roster_norm, val in all_rosters.items():
-                if all(part in roster_norm for part in norm.split()):
-                    entry = val
-                    break
-        if not entry:
-            logger.debug(f"No ESPN athlete ID found for prop player: {player_name}")
-            continue
+        entry = _match_leaders(player_name)
+        if entry:
+            stats = {k: v for k, v in entry.items() if k != "team"}
+            result[player_name] = {"stats": stats, "team": entry["team"]}
+        else:
+            remaining.append(player_name)
 
-        athlete_id, espn_team = entry
-        stats = _fetch_athlete_stats(athlete_id)
-        if stats.get("pts", 0) > 0 or stats.get("reb", 0) > 0 or stats.get("stl", 0) > 0:
-            result[player_name] = {"stats": stats, "team": espn_team}
-        time.sleep(0.15)
+    leaders_resolved = len(result)
+    logger.info(
+        f"NBA player props stats — leaders tier: {leaders_resolved}/{len(player_names)} resolved, "
+        f"{len(remaining)} remaining for gamelog fallback"
+    )
 
-    logger.info(f"NBA player props stats: {len(result)}/{len(player_names)} players resolved")
+    # ── Tier 2: roster + gamelog fallback for unresolved players ────────────
+    if remaining:
+        id_map = _fetch_team_id_map()
+
+        all_rosters: Dict[str, tuple] = {}
+        for espn_name in set(team_names_today):
+            team_id = id_map.get(espn_name)
+            if not team_id:
+                continue
+            roster = _fetch_team_roster(team_id)
+            for norm_name, aid in roster.items():
+                all_rosters[norm_name] = (aid, espn_name)
+            time.sleep(0.15)
+
+        gamelog_resolved = 0
+        for player_name in remaining:
+            norm  = player_name.lower().strip()
+            entry = all_rosters.get(norm)
+            if not entry:
+                for roster_norm, val in all_rosters.items():
+                    if all(part in roster_norm for part in norm.split()):
+                        entry = val
+                        break
+            if not entry:
+                logger.debug(f"No ESPN athlete ID for prop player: {player_name}")
+                continue
+
+            athlete_id, espn_team = entry
+            stats = _fetch_athlete_gamelog(athlete_id)
+            if stats.get("pts", 0) > 0 or stats.get("reb", 0) > 0 or stats.get("stl", 0) > 0:
+                result[player_name] = {"stats": stats, "team": espn_team}
+                gamelog_resolved += 1
+            time.sleep(0.15)
+
+        logger.info(f"Gamelog fallback: {gamelog_resolved}/{len(remaining)} additional players resolved")
+
+    logger.info(f"NBA player props stats: {len(result)}/{len(player_names)} players resolved total")
     return result
 
 

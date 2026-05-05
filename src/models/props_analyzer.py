@@ -202,7 +202,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
 
     team_names_today = [nba_normalize(t) for g in games
                         for t in [g["home_team"], g["away_team"]]]
-    player_data = get_nba_player_props_stats(all_player_names, team_names_today)
+    player_data = get_nba_player_props_stats(all_player_names, team_names_today, nba_ctx=nba_ctx)
 
     picks: List[PropPick] = []
 
