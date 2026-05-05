@@ -616,6 +616,43 @@
         {% endfor %}
       </div>
       {% endif %}
+
+      {% set pcd = report.prop_chart_data %}
+      {% if pcd and pcd.has_data %}
+      <details style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+        <summary style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);cursor:pointer;list-style:none;padding:4px 0;">
+          ▶ Hit Rate Trend (<span id="prop-chart-count">{{ pcd.total }}</span> settled props)
+        </summary>
+        <div style="margin-top:12px;">
+          <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin-bottom:6px;">
+            Rolling Hit Rate <span style="font-weight:400;text-transform:none;letter-spacing:0;">(last 20 props)</span>
+          </div>
+          <svg id="svg-prop-hr" viewBox="0 0 {{ pcd.svg_w }} {{ pcd.svg_h }}" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
+            {# 50% reference line #}
+            <line x1="{{ pcd.pad_l }}" y1="{{ pcd.ref50_y }}" x2="{{ pcd.svg_w - 12 }}" y2="{{ pcd.ref50_y }}"
+                  stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="{{ pcd.svg_w - 10 }}" y="{{ pcd.ref50_y + 4 }}" text-anchor="start"
+                  font-size="9" fill="#2d3148">50%</text>
+            {# Rolling hit-rate line #}
+            <polyline points="{{ pcd.wr_points }}"
+                      fill="none" stroke="#f59e0b" stroke-width="2"
+                      stroke-linejoin="round" stroke-linecap="round"/>
+            {# Y-axis labels #}
+            {% for lbl in pcd.wr_y_labels %}
+            <text x="{{ pcd.pad_l - 4 }}" y="{{ lbl.y + 4 }}" text-anchor="end"
+                  font-size="9" fill="#94a3b8">{{ lbl.val }}</text>
+            {% endfor %}
+            {# X-axis date labels #}
+            {% for lbl in pcd.x_labels %}
+            <text x="{{ lbl.x }}" y="{{ pcd.svg_h - 4 }}" text-anchor="middle"
+                  font-size="9" fill="#94a3b8">{{ lbl.val }}</text>
+            {% endfor %}
+          </svg>
+          {# Baseline data for JS live updates — hist records (before today) only #}
+          <script id="prop-hist-data" type="application/json">{{ pcd.hist_records_json | safe }}</script>
+        </div>
+      </details>
+      {% endif %}
     </div>
   </div>
   {% endif %}
@@ -1910,6 +1947,79 @@
     // Show live badge
     var badge = document.getElementById("prop-acc-live-badge");
     if (badge) badge.style.display = "inline-block";
+
+    // ── Update prop hit-rate trend chart ───────────────────────────────────
+    updatePropHitRateChart();
+  }
+
+  function updatePropHitRateChart() {
+    var svg = document.getElementById("svg-prop-hr");
+    if (!svg) return;
+
+    // Load historical baseline baked in at render time
+    var histEl = document.getElementById("prop-hist-data");
+    var histRecords = [];
+    if (histEl) {
+      try { histRecords = JSON.parse(histEl.textContent || "[]"); } catch(e) {}
+    }
+
+    // Build today's settled props from live prop cards
+    var todayRecords = [];
+    document.querySelectorAll(".prop-card[data-prop-result]").forEach(function(card) {
+      todayRecords.push({
+        date: TODAY_DATE,
+        hit:  card.getAttribute("data-prop-result") === "HIT",
+      });
+    });
+
+    var allRecords = histRecords.concat(todayRecords);
+    if (allRecords.length < 3) return;
+
+    // Rolling hit rate (window=20, min=3)
+    var WINDOW = 20, MIN_SHOW = 3;
+    var wrSeries = [];
+    for (var i = MIN_SHOW - 1; i < allRecords.length; i++) {
+      var slice = allRecords.slice(Math.max(0, i - WINDOW + 1), i + 1);
+      var hits  = slice.filter(function(r) { return r.hit; }).length;
+      wrSeries.push({ i: i, rate: Math.round(hits / slice.length * 1000) / 10 });
+    }
+    if (!wrSeries.length) return;
+
+    var n      = allRecords.length;
+    var r50y   = _sy(50, 0, 100).toFixed(1);
+    var coords = wrSeries.map(function(p) { return [_sx(p.i, n), _sy(p.rate, 0, 100)]; });
+
+    var html =
+      '<line x1="' + _PAD_L + '" y1="' + r50y + '" x2="' + (_SVG_W - 12) + '" y2="' + r50y +
+        '" stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>' +
+      '<text x="' + (_SVG_W - 10) + '" y="' + (parseFloat(r50y) + 4) +
+        '" text-anchor="start" font-size="9" fill="#2d3148">50%</text>' +
+      '<polyline points="' + _pts(coords) + '" fill="none" stroke="#f59e0b"' +
+        ' stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+
+    [{ y: _sy(100, 0, 100), v: "100%" }, { y: _sy(50, 0, 100), v: "50%" }, { y: _sy(0, 0, 100), v: "0%" }]
+      .forEach(function(l) {
+        html += '<text x="' + (_PAD_L - 4) + '" y="' + (l.y + 4).toFixed(1) +
+          '" text-anchor="end" font-size="9" fill="#94a3b8">' + l.v + '</text>';
+      });
+
+    // X-axis: first, mid, last
+    var xItems = [0];
+    if (n > 2) xItems.push(Math.floor(n / 2));
+    xItems.push(n - 1);
+    xItems.forEach(function(idx) {
+      var label = (allRecords[idx] && allRecords[idx].date)
+        ? allRecords[idx].date.slice(5)
+        : ("#" + (idx + 1));
+      html += '<text x="' + _sx(idx, n).toFixed(1) + '" y="' + (_SVG_H - 4) +
+        '" text-anchor="middle" font-size="9" fill="#94a3b8">' + label + '</text>';
+    });
+
+    svg.innerHTML = html;
+
+    // Update count in the summary label
+    var cntEl = document.getElementById("prop-chart-count");
+    if (cntEl) cntEl.textContent = n;
   }
 
   // ── Live chart update ────────────────────────────────────────────────────

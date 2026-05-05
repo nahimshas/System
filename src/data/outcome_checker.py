@@ -784,6 +784,88 @@ def load_prop_accuracy() -> Dict:
     }
 
 
+def build_prop_chart_data() -> Dict:
+    """
+    Pre-computes SVG coordinates for the prop hit-rate trend chart.
+    Uses the same SVG canvas constants as build_chart_data().
+
+    Returns:
+      has_data         — False if fewer than 3 historical props
+      wr_points        — SVG polyline points for rolling hit rate
+      ref50_y          — y-coordinate of the 50% reference line
+      wr_y_labels      — list of {y, val} for y-axis ticks
+      x_labels         — list of {x, val} for x-axis date labels
+      total            — number of hist records used
+      hist_records_json — JSON string of {date, hit} for each hist record
+                          (embedded in the page so JS can extend the chart live)
+    """
+    records = _load_prop_history()
+
+    from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+    def _pac_today() -> str:
+        now_utc = _dt.now(_tz.utc)
+        offset = -7 if 3 <= now_utc.month <= 10 else -8
+        return (now_utc + _td(hours=offset)).date().isoformat()
+
+    today_str    = _pac_today()
+    hist_records = [r for r in records if r.get("date", "") < today_str]
+
+    empty = {"has_data": False, "hist_records_json": "[]"}
+    if len(hist_records) < 3:
+        return empty
+
+    # ── Rolling hit rate (window=20, show from prop 3 onwards) ───────────────
+    WINDOW   = 20
+    MIN_SHOW = 3
+    wr_series: List[Dict] = []
+    for i in range(MIN_SHOW - 1, len(hist_records)):
+        window = hist_records[max(0, i - WINDOW + 1): i + 1]
+        hits   = sum(1 for r in window if r.get("hit"))
+        rate   = hits / len(window) * 100
+        wr_series.append({"i": i, "rate": round(rate, 1)})
+
+    if not wr_series:
+        return empty
+
+    n          = len(hist_records)
+    wr_coords  = [(_sx(p["i"], n), _sy(p["rate"], 0, 100)) for p in wr_series]
+    wr_points  = _points_str(wr_coords)
+    ref50_y    = round(_sy(50, 0, 100), 1)
+
+    wr_y_labels = [
+        {"y": round(_sy(100, 0, 100), 1), "val": "100%"},
+        {"y": round(_sy(50,  0, 100), 1), "val":  "50%"},
+        {"y": round(_sy(0,   0, 100), 1), "val":   "0%"},
+    ]
+
+    # X-axis: first, mid, last date labels
+    x_labels = [{"x": round(_sx(0, n), 1), "val": hist_records[0].get("date", "")[5:]}]
+    if n > 2:
+        mid = n // 2
+        x_labels.append({"x": round(_sx(mid, n), 1), "val": hist_records[mid].get("date", "")[5:]})
+    x_labels.append({"x": round(_sx(n - 1, n), 1), "val": hist_records[-1].get("date", "")[5:]})
+
+    # Serialize hist records for JS live update baseline (minimal fields)
+    import json as _json
+    hist_json = _json.dumps([
+        {"date": r.get("date", ""), "hit": bool(r.get("hit"))}
+        for r in hist_records
+    ])
+
+    return {
+        "has_data":          True,
+        "total":             n,
+        "svg_w":             _SVG_W,
+        "svg_h":             _SVG_H,
+        "pad_l":             _PAD_L,
+        "wr_points":         wr_points,
+        "ref50_y":           ref50_y,
+        "wr_y_labels":       wr_y_labels,
+        "x_labels":          x_labels,
+        "hist_records_json": hist_json,
+    }
+
+
 def _load_prop_history() -> List[Dict]:
     if not PROP_HISTORY_PATH.exists():
         return []

@@ -151,6 +151,12 @@ def build_report(
     except Exception:
         prop_accuracy = {}
 
+    try:
+        from src.data.outcome_checker import build_prop_chart_data
+        prop_chart_data = build_prop_chart_data()
+    except Exception:
+        prop_chart_data = {"has_data": False, "hist_records_json": "[]"}
+
     # Build a lookup so prop cards can show the most recent settled result
     # for the same player+prop_type: {(player, prop_type): record}
     prop_last_result: Dict = {}
@@ -186,6 +192,7 @@ def build_report(
         "run_date_iso":       run_date.isoformat(),
         "prop_accuracy":      prop_accuracy,
         "has_prop_accuracy":  bool(prop_accuracy.get("total", 0)),
+        "prop_chart_data":    prop_chart_data,
         "prop_last_result":   prop_last_result,
         "recap":              recap,
         "odds_api_credits":   odds_api_credits or {},
