@@ -16,7 +16,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from src.config import ODDS_API_KEY, REPORT_DIR, REPORT_FILE, NBA_SPORT, MLB_SPORT, MAX_SINGLE_BETS
-from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits
+from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits, fetch_player_props
 from src.data.nba_stats import get_nba_context
 from src.data.mlb_stats import (
     get_todays_games, get_pitcher_stats, get_team_batting_stats,
@@ -82,6 +82,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -
         nba_odds_games = []
         if ODDS_API_KEY:
             nba_odds_games = get_game_odds(NBA_SPORT)
+        # Fetch Odds API player prop lines for each NBA game
+        for _g in nba_odds_games:
+            try:
+                _g["player_props"] = fetch_player_props(_g["game_id"], NBA_SPORT)
+            except Exception as _e:
+                logger.warning(f"NBA player props fetch failed ({_g.get('home_team')}): {_e}")
+                _g["player_props"] = {}
 
         nba_game_count = len(nba_odds_games)
 
@@ -132,6 +139,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -
         mlb_odds_games = []
         if ODDS_API_KEY:
             mlb_odds_games = get_game_odds(MLB_SPORT)
+        # Fetch Odds API player prop lines for each MLB game
+        for _g in mlb_odds_games:
+            try:
+                _g["player_props"] = fetch_player_props(_g["game_id"], MLB_SPORT)
+            except Exception as _e:
+                logger.warning(f"MLB player props fetch failed ({_g.get('home_team')}): {_e}")
+                _g["player_props"] = {}
 
         mlb_schedule = get_todays_games(today)
         mlb_game_count = len(mlb_odds_games)
@@ -182,6 +196,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -
                 # (generated from mlb_schedule) get the correct game start time
                 # for the client-side lock badge check.
                 sched_game["commence_time"] = game.get("commence_time", "")
+                sched_game["player_props"] = game.get("player_props", {})
 
             # Stamp umpire name + k_factor onto game dict (used by edge_finder + props)
             game_pk = game.get("game_pk")

@@ -1,221 +1,285 @@
 """
-Statistical prop analysis — overs only (Robinhood only offers over props).
-All props are player-specific. Generates model lines from ESPN team stats +
-player leaders. User must verify Robinhood's actual line before betting.
+Player prop analysis powered by Odds API market lines.
+Each prop generates a model projection, compares to the actual book line,
+and calculates edge% exactly like the main picks model.
+
+Distributions:
+  Normal  — Points, Rebounds, Assists, Threes, Strikeouts, Hits, Total Bases, HRR
+  Poisson — Steals, Blocks, Home Runs (discrete low-count events)
 """
 import logging
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional
+
+from scipy.stats import norm as _norm, poisson as _poisson
+
 from src.models.edge_finder import _is_nba_playoff, _is_mlb_playoff
-from src.config import NBA_PLAYOFF_RECENT_WEIGHT, MLB_PLAYOFF_STARTER_IP
+from src.config import MLB_PLAYOFF_STARTER_IP
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Data class
+# ---------------------------------------------------------------------------
 
 @dataclass
 class PropPick:
-    sport: str
-    player: str       # Real player name (e.g. "Anthony Edwards") or "Team leader" fallback
-    team: str
-    opponent: str
-    prop_type: str
-    model_line: float
-    confidence: str
-    note: str
-    model_margin: float = 0.0  # how far model line is above the show threshold — used for sorting
-    signals: List[str] = field(default_factory=list)
-    research: List[str] = field(default_factory=list)
-    commence_time: str = ""   # raw UTC ISO — for game-started detection
+    sport:         str
+    player:        str
+    team:          str
+    opponent:      str
+    prop_type:     str
+    model_line:    float   # model's projected stat
+    market_line:   float   # Odds API line (e.g. 22.5)
+    market_prob:   float   # no-vig consensus P(over)
+    model_prob:    float   # model P(over market_line)
+    edge:          float   # model_prob - market_prob
+    odds_display:  str     # with-vig implied % from preferred book
+    book:          str     # e.g. "draftkings"
+    confidence:    str     # "HIGH" or "MEDIUM"
+    note:          str
+    model_margin:  float       = 0.0
+    signals:       List[str]   = field(default_factory=list)
+    research:      List[str]   = field(default_factory=list)
+    commence_time: str         = ""
 
 
 # ---------------------------------------------------------------------------
-# NBA Props — points / rebounds / assists overs (player-specific)
+# Probability helpers
+# ---------------------------------------------------------------------------
+
+_POISSON_PROPS = {"Steals Over", "Blocks Over", "Home Runs Over"}
+
+_SIGMA_COEF = {
+    "Points Over":      0.38,
+    "Rebounds Over":    0.45,
+    "Assists Over":     0.45,
+    "Threes Over":      0.70,
+    "Strikeouts Over":  0.35,
+    "Hits Over":        0.55,
+    "Total Bases Over": 0.55,
+    "HRR Over":         0.45,
+}
+_SIGMA_MIN = {
+    "Points Over":      4.0,
+    "Rebounds Over":    2.0,
+    "Assists Over":     1.5,
+    "Threes Over":      0.8,
+    "Strikeouts Over":  1.5,
+    "Hits Over":        0.5,
+    "Total Bases Over": 0.8,
+    "HRR Over":         1.0,
+}
+
+HIGH_PROP_EDGE = 0.08
+MIN_PROP_EDGE  = 0.04
+
+
+def _cover_prob(prop_type: str, model_line: float, market_line: float) -> float:
+    """P(actual stat > market_line) given model projects model_line."""
+    if prop_type in _POISSON_PROPS:
+        k   = int(market_line)       # Over 0.5 → k=0, Over 1.5 → k=1
+        lam = max(0.01, model_line)
+        return float(1 - _poisson.cdf(k, lam))
+    coef  = _SIGMA_COEF.get(prop_type, 0.40)
+    sigma = max(_SIGMA_MIN.get(prop_type, 2.0), model_line * coef)
+    return float(1 - _norm.cdf(market_line, model_line, sigma))
+
+
+def _confidence(edge: float, model_line: float, market_line: float) -> str:
+    if edge >= HIGH_PROP_EDGE and model_line > market_line:
+        return "HIGH"
+    return "MEDIUM"
+
+
+# ---------------------------------------------------------------------------
+# NBA stat projections
+# ---------------------------------------------------------------------------
+
+_NBA_LEAGUE_AVG = 112.0
+_NBA_B2B_FACTOR = 0.92
+
+
+def _project_nba_stat(
+    prop_type: str,
+    pstats:    Dict,
+    team_stats: Dict,
+    opp_stats:  Dict,
+    is_b2b:    bool,
+    playoff:   bool,
+) -> Optional[float]:
+    if prop_type == "Points Over":
+        base = pstats.get("pts", 0.0)
+        if base < 5:
+            return None
+        opp_def = opp_stats.get("def_rtg", _NBA_LEAGUE_AVG)
+        adj = base * (opp_def / _NBA_LEAGUE_AVG)
+        if playoff and base >= 23:
+            adj *= 1.05
+        if is_b2b:
+            adj *= _NBA_B2B_FACTOR
+        return round(adj, 1)
+
+    if prop_type == "Rebounds Over":
+        base = pstats.get("reb", 0.0)
+        if base < 2:
+            return None
+        return round(base * (0.95 if is_b2b else 1.0), 1)
+
+    if prop_type == "Assists Over":
+        base = pstats.get("ast", 0.0)
+        if base < 1:
+            return None
+        pace = (team_stats.get("pace", 100) + opp_stats.get("pace", 100)) / 2
+        return round(base * (pace / 100.0) * (0.95 if is_b2b else 1.0), 1)
+
+    if prop_type == "Steals Over":
+        base = pstats.get("stl", 0.0)
+        return round(base, 2) if base >= 0.3 else None
+
+    if prop_type == "Blocks Over":
+        base = pstats.get("blk", 0.0)
+        return round(base, 2) if base >= 0.3 else None
+
+    if prop_type == "Threes Over":
+        base = pstats.get("three_pm", 0.0)
+        if base < 0.5:
+            return None
+        return round(base * (0.95 if is_b2b else 1.0), 1)
+
+    return None
+
+
+# ---------------------------------------------------------------------------
+# MLB batter stat projections
+# ---------------------------------------------------------------------------
+
+def _project_mlb_batter_stat(
+    prop_type:   str,
+    bstats:      Dict,
+    pitcher_fip: float,
+    park_factor: float,
+) -> Optional[float]:
+    league_avg_fip  = 4.20
+    pitcher_quality = league_avg_fip / max(pitcher_fip, 2.0)
+
+    if prop_type == "Hits Over":
+        base = bstats.get("hits_pg", 0.0)
+        return round(base * pitcher_quality * park_factor, 2) if base >= 0.3 else None
+
+    if prop_type == "Total Bases Over":
+        base = bstats.get("tb_pg", 0.0)
+        return round(base * pitcher_quality * park_factor, 2) if base >= 0.5 else None
+
+    if prop_type == "Home Runs Over":
+        base = bstats.get("hr_pg", 0.0)
+        return round(base * pitcher_quality * park_factor, 3) if base >= 0.02 else None
+
+    if prop_type == "HRR Over":
+        base = bstats.get("hrr_pg", 0.0)
+        return round(base * pitcher_quality * park_factor, 2) if base >= 0.5 else None
+
+    return None
+
+
+# ---------------------------------------------------------------------------
+# NBA Props
 # ---------------------------------------------------------------------------
 
 def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
-    from src.data.nba_stats import normalize as nba_normalize
+    from src.data.nba_stats import normalize as nba_normalize, get_nba_player_props_stats
 
-    season_stats  = nba_ctx.get("season_stats", {})
-    recent_form   = nba_ctx.get("recent_form", {})
-    rest_days     = nba_ctx.get("rest_days", {})
-    team_leaders  = nba_ctx.get("team_leaders", {})  # {espn_name: {cat: {name, value}}}
-    playoff       = _is_nba_playoff()
+    season_stats = nba_ctx.get("season_stats", {})
+    rest_days    = nba_ctx.get("rest_days", {})
+    playoff      = _is_nba_playoff()
 
-    if not season_stats:
-        logger.warning("NBA season stats unavailable — skipping NBA props")
+    all_player_names = list(dict.fromkeys(
+        name for game in games for name in game.get("player_props", {}).keys()
+    ))
+    if not all_player_names:
+        logger.info("No Odds API player prop lines — skipping NBA props")
         return []
+
+    team_names_today = [nba_normalize(t) for g in games
+                        for t in [g["home_team"], g["away_team"]]]
+    player_data = get_nba_player_props_stats(all_player_names, team_names_today)
 
     picks: List[PropPick] = []
 
     for game in games:
-        # Normalize to ESPN names (same key scheme as season_stats)
         home = nba_normalize(game["home_team"])
         away = nba_normalize(game["away_team"])
         game_commence = game.get("commence_time", "")
+        player_props  = game.get("player_props", {})
 
-        for team, opp in [(home, away), (away, home)]:
-            team_stats = season_stats.get(team, {})
-            opp_stats  = season_stats.get(opp, {})
-            if not team_stats or not opp_stats:
+        for player_name, prop_markets in player_props.items():
+            entry = player_data.get(player_name)
+            if not entry:
                 continue
 
-            off_rtg     = team_stats.get("off_rtg", 110.0)
-            opp_def_rtg = opp_stats.get("def_rtg", 110.0)
-            team_net    = team_stats.get("net_rtg", 0.0)
-            opp_net     = opp_stats.get("net_rtg", 0.0)
-            team_wins   = team_stats.get("wins", 0)
-            team_losses = team_stats.get("losses", 1)
-            opp_wins    = opp_stats.get("wins", 0)
-            opp_losses  = opp_stats.get("losses", 1)
+            pstats    = entry["stats"]
+            espn_team = entry.get("team", "")
+            team = home if espn_team == home else (away if espn_team == away else home)
+            opp  = away if team == home else home
 
-            team_recent  = recent_form.get(team, {})
-            opp_recent   = recent_form.get(opp, {})
-            recent_off   = team_recent.get("recent_off_rtg", off_rtg)
-            recent_def_opp = opp_recent.get("recent_def_rtg", opp_def_rtg)
+            team_stats = season_stats.get(team, {})
+            opp_stats  = season_stats.get(opp, {})
+            is_b2b     = rest_days.get(team, 1) == 0
 
-            # Blended expected team scoring (60% season / 40% recent)
-            blended_off     = off_rtg     * 0.6 + recent_off      * 0.4
-            blended_opp_def = opp_def_rtg * 0.6 + recent_def_opp  * 0.4
-            expected_team_pts = (blended_off + blended_opp_def) / 2
-            league_avg = 112.0
-
-            team_rest = rest_days.get(team, 1)
-            opp_rest  = rest_days.get(opp, 1)
-
-            # B2B flag — computed once, applied to ALL props for this team
-            # so every prop card for the same player shows the same context.
-            is_b2b = (team_rest == 0)
-            b2b_signal = f"⚠ {team} on back-to-back — production typically reduced" if is_b2b else None
-
-            # Shared research block for all props in this matchup
             base_research = [
-                f"{team}: {team_wins}W-{team_losses}L | PPG {off_rtg:.1f} | OPPG {opp_def_rtg:.1f} (opp) | Net {team_net:+.1f}",
-                f"{opp}: {opp_wins}W-{opp_losses}L | Net {opp_net:+.1f}",
+                f"{team}: Net RTG {team_stats.get('net_rtg', 0):+.1f} | PPG {team_stats.get('off_rtg', 0):.1f} | OPPG {team_stats.get('def_rtg', 0):.1f}",
+                f"{opp}: Net RTG {opp_stats.get('net_rtg', 0):+.1f} | PPG {opp_stats.get('off_rtg', 0):.1f} | OPPG {opp_stats.get('def_rtg', 0):.1f}",
+                f"{player_name}: {pstats.get('pts',0):.1f} PPG / {pstats.get('reb',0):.1f} RPG / {pstats.get('ast',0):.1f} APG / "
+                f"{pstats.get('stl',0):.2f} SPG / {pstats.get('blk',0):.2f} BPG / {pstats.get('three_pm',0):.1f} 3PM "
+                f"({pstats.get('games',0)} games)",
             ]
-            if team_recent:
-                base_research.append(
-                    f"{team} recent (14d): PPG {recent_off:.1f} | OPPG {team_recent.get('recent_def_rtg', '?'):.1f} | "
-                    f"Win% {team_recent.get('recent_w_pct', 0)*100:.0f}%"
-                )
-            base_research.append(
-                f"Model projected team pts: {expected_team_pts:.1f} (league avg {league_avg})"
-            )
-            base_research.append(f"Rest days — {team}: {team_rest}d | {opp}: {opp_rest}d")
 
-            leaders = team_leaders.get(team, {})
+            for prop_label, market_info in prop_markets.items():
+                market_line  = market_info["line"]
+                market_prob  = market_info["market_prob"]
+                odds_display = market_info["odds_display"]
+                over_price   = market_info["over_price"]
+                book         = market_info["book"]
 
-            # ── Points over ──────────────────────────────────────────────────
-            pts_leader = leaders.get("points", {})
-            pts_name   = pts_leader.get("name", f"{team} leading scorer")
-            pts_season = pts_leader.get("value", 0.0)   # season PPG
+                model_line = _project_nba_stat(prop_label, pstats, team_stats, opp_stats, is_b2b, playoff)
+                if model_line is None:
+                    continue
 
-            # Adjust season PPG for today's matchup vs opponent defense
-            def_adj = (opp_def_rtg - league_avg) / league_avg * pts_season * 0.08
-            model_pts = round(pts_season + def_adj, 1) if pts_season > 0 else round(expected_team_pts * 0.30, 1)
-            # Playoff: stars (≥23 PPG) get higher usage (+5%), role players stay flat
-            if playoff and model_pts >= 23:
-                model_pts = round(model_pts * 1.05, 1)
+                model_prob = _cover_prob(prop_label, model_line, market_line)
+                edge       = model_prob - market_prob
+                if edge < MIN_PROP_EDGE:
+                    continue
 
-            if model_pts >= 18:
-                pts_conf = "HIGH" if (
-                    model_pts >= 23
-                    and opp_def_rtg > 111
-                    and expected_team_pts > league_avg + 4
-                    and not is_b2b
-                ) else "MEDIUM"
-                pts_margin = round(model_pts - 18.0, 1)
-                pts_signals = [
-                    f"{pts_name} season avg: {pts_season:.1f} PPG"
-                    + (f" (adjusted to {model_pts} vs {opp}'s defense)" if abs(def_adj) > 0.5 else ""),
-                    f"{opp} allows {opp_def_rtg:.1f} PPG — "
-                    + ("above avg (weak defense)" if opp_def_rtg > 111 else "average defense"),
+                conf = _confidence(edge, model_line, market_line)
+
+                signals = [
+                    f"Market: Over {market_line} at {odds_display} ({book})",
+                    f"Model projects {model_line} → edge {edge*100:+.1f}%",
                 ]
-                if playoff:
-                    if model_pts >= 23:
-                        pts_signals.append("🏆 Playoffs: star usage boost applied (+5%)")
-                    else:
-                        pts_signals.append("🏆 Playoffs: tighter defense — verify line carefully")
-                if b2b_signal:
-                    pts_signals.append(b2b_signal)
+                if prop_label == "Points Over":
+                    signals.append(
+                        f"{opp} allows {opp_stats.get('def_rtg',0):.1f} PPG "
+                        f"({'above' if opp_stats.get('def_rtg',112)>112 else 'below'} avg)"
+                    )
+                if is_b2b:
+                    signals.append(f"⚠ {team} on back-to-back — reduction applied")
+                if playoff and prop_label == "Points Over" and pstats.get("pts", 0) >= 23:
+                    signals.append("🏆 Playoffs: star usage boost applied (+5%)")
+
                 picks.append(PropPick(
-                    sport="NBA",
-                    player=pts_name,
-                    team=team,
-                    opponent=opp,
-                    prop_type="Points Over",
-                    model_line=model_pts,
-                    confidence=pts_conf,
-                    model_margin=pts_margin,
-                    note=(
-                        f"Search '{pts_name} points' on Robinhood. "
-                        f"Model line: {model_pts} pts. Look for Robinhood Over at or below {int(model_pts)}."
-                    ),
-                    signals=pts_signals,
+                    sport="NBA", player=player_name, team=team, opponent=opp,
+                    prop_type=prop_label,
+                    model_line=model_line, market_line=market_line,
+                    market_prob=round(market_prob, 4), model_prob=round(model_prob, 4),
+                    edge=round(edge, 4), odds_display=odds_display, book=book,
+                    confidence=conf,
+                    model_margin=round(model_line - market_line, 2),
+                    note=f"{book.title()}: Over {market_line} at {odds_display}. Model projects {model_line}.",
+                    signals=signals,
                     research=base_research[:],
                     commence_time=game_commence,
                 ))
 
-            # ── Rebounds over ────────────────────────────────────────────────
-            reb_leader = leaders.get("rebounds", {})
-            reb_name   = reb_leader.get("name", "")
-            reb_season = reb_leader.get("value", 0.0)
-
-            if reb_name and reb_season >= 7.0:
-                reb_conf = "HIGH" if reb_season >= 10.0 else "MEDIUM"
-                reb_margin = round(reb_season - 7.0, 1)
-                picks.append(PropPick(
-                    sport="NBA",
-                    player=reb_name,
-                    team=team,
-                    opponent=opp,
-                    prop_type="Rebounds Over",
-                    model_line=round(reb_season, 1),
-                    confidence=reb_conf,
-                    model_margin=reb_margin,
-                    note=(
-                        f"Search '{reb_name} rebounds' on Robinhood. "
-                        f"Model line: {reb_season:.1f} RPG season avg. "
-                        f"Look for Over at or below {int(reb_season)}."
-                    ),
-                    signals=[
-                        f"{reb_name} averages {reb_season:.1f} rebounds/game this season",
-                        f"Matchup pace supports rebounding volume",
-                    ] + ([b2b_signal] if b2b_signal else []),
-                    research=base_research[:],
-                    commence_time=game_commence,
-                ))
-
-            # ── Assists over ─────────────────────────────────────────────────
-            ast_leader = leaders.get("assists", {})
-            ast_name   = ast_leader.get("name", "")
-            ast_season = ast_leader.get("value", 0.0)
-
-            if ast_name and ast_season >= 7.0:   # tightened from 6.0 → 7.0
-                ast_conf   = "HIGH" if ast_season >= 9.0 else "MEDIUM"
-                ast_margin = round(ast_season - 7.0, 1)
-                picks.append(PropPick(
-                    sport="NBA",
-                    player=ast_name,
-                    team=team,
-                    opponent=opp,
-                    prop_type="Assists Over",
-                    model_line=round(ast_season, 1),
-                    confidence=ast_conf,
-                    model_margin=ast_margin,
-                    note=(
-                        f"Search '{ast_name} assists' on Robinhood. "
-                        f"Model line: {ast_season:.1f} APG season avg. "
-                        f"Look for Over at or below {int(ast_season)}."
-                    ),
-                    signals=[
-                        f"{ast_name} averages {ast_season:.1f} assists/game this season",
-                        f"High-scoring expected game supports assist volume",
-                    ] + ([b2b_signal] if b2b_signal else []),
-                    research=base_research[:],
-                    commence_time=game_commence,
-                ))
-
-    # Deduplicate (same player could appear from home+away loop), sort, then cap
     seen: set = set()
     deduped: List[PropPick] = []
     for p in picks:
@@ -223,16 +287,16 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
         if key not in seen:
             seen.add(key)
             deduped.append(p)
-
-    deduped.sort(key=lambda p: (0 if p.confidence == "HIGH" else 1, -p.model_margin))
+    deduped.sort(key=lambda p: (0 if p.confidence == "HIGH" else 1, -p.edge))
     return deduped[:6]
 
 
 # ---------------------------------------------------------------------------
-# MLB Props — pitcher strikeouts + batter hits (player-specific, overs only)
+# MLB Props
 # ---------------------------------------------------------------------------
 
 def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPick]:
+    from src.data.mlb_stats import get_park_factor, get_batter_props_stats, get_team_batting_stats
     playoff = _is_mlb_playoff()
     picks: List[PropPick] = []
 
@@ -241,183 +305,168 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
         away  = game.get("away_team", "")
         venue = game.get("venue", "")
         game_commence = game.get("commence_time", "")
+        player_props  = game.get("player_props", {})
+        if not player_props:
+            continue
 
-        from src.data.mlb_stats import get_park_factor
-        pf = get_park_factor(venue)
+        pf           = get_park_factor(venue)
+        home_team_id = game.get("home_team_id")
+        away_team_id = game.get("away_team_id")
+        home_pitcher = game.get("home_pitcher_name", "TBD")
+        away_pitcher = game.get("away_pitcher_name", "TBD")
+        home_p_stats = pitcher_stats_map.get(home_pitcher, {})
+        away_p_stats = pitcher_stats_map.get(away_pitcher, {})
+        ump_k_factor = game.get("umpire_k_factor", 1.0)
+        ump_name     = game.get("umpire_name", "")
 
-        for side, opp_side in [("home", "away"), ("away", "home")]:
-            pitcher_name = game.get(f"{side}_pitcher_name", "TBD")
-            team         = game.get(f"{side}_team", "")
-            opp_team     = game.get(f"{opp_side}_team", "")
+        # Pre-fetch batter stats for both teams
+        batter_names = [
+            name for name, markets in player_props.items()
+            if any(pt in markets for pt in ["Hits Over","Total Bases Over","Home Runs Over","HRR Over"])
+        ]
+        batter_stats: Dict[str, Dict] = {}
+        # Track which team each batter is on
+        batter_team:  Dict[str, str]  = {}
+        if batter_names:
+            if home_team_id:
+                home_batters = get_batter_props_stats(home_team_id, batter_names)
+                for bn in home_batters:
+                    batter_stats[bn] = home_batters[bn]
+                    batter_team[bn]  = home
+            if away_team_id:
+                away_batters = get_batter_props_stats(away_team_id, batter_names)
+                for bn in away_batters:
+                    if bn not in batter_stats:   # home takes precedence if duplicate
+                        batter_stats[bn] = away_batters[bn]
+                        batter_team[bn]  = away
 
-            if pitcher_name == "TBD" or not game.get(f"{side}_pitcher_id"):
-                continue
+        for player_name, prop_markets in player_props.items():
+            for prop_label, market_info in prop_markets.items():
+                market_line  = market_info["line"]
+                market_prob  = market_info["market_prob"]
+                odds_display = market_info["odds_display"]
+                over_price   = market_info["over_price"]
+                book         = market_info["book"]
 
-            stats = pitcher_stats_map.get(pitcher_name, {})
-            if not stats:
-                continue
+                # ── Pitcher strikeouts ──────────────────────────────────────
+                if prop_label == "Strikeouts Over":
+                    stats = pitcher_stats_map.get(player_name, {})
+                    if not stats or stats.get("innings_pitched", 0) < 20:
+                        continue
 
-            k9    = stats.get("k_per_9", 7.0)
-            era   = stats.get("era", 4.50)
-            fip   = stats.get("fip", 4.20)
-            xfip  = stats.get("xfip")          # None if unavailable
-            babip = stats.get("babip")          # None if unavailable
-            bb9   = stats.get("bb_per_9", 3.0)
-            hr9   = stats.get("hr_per_9", 1.2)
-            ip    = stats.get("innings_pitched", 0)
-            expected_innings = MLB_PLAYOFF_STARTER_IP if playoff else 5.5
+                    k9    = stats.get("k_per_9", 7.0)
+                    fip   = stats.get("fip", 4.20)
+                    xfip  = stats.get("xfip")
+                    babip = stats.get("babip")
+                    ip    = stats.get("innings_pitched", 0)
+                    era   = stats.get("era", 4.50)
+                    bb9   = stats.get("bb_per_9", 3.0)
+                    hr9   = stats.get("hr_per_9", 1.2)
+                    expected_innings = MLB_PLAYOFF_STARTER_IP if playoff else 5.5
 
-            if ip < 20:
-                continue
+                    if player_name == home_pitcher:
+                        team, opp, opp_team_id = home, away, away_team_id
+                    else:
+                        team, opp, opp_team_id = away, home, home_team_id
 
-            # ── Opponent team K% adjustment ──────────────────────────────────
-            # A high-strikeout-rate lineup boosts expected Ks; a contact team suppresses them.
-            LEAGUE_K_PCT = 0.228   # MLB average batter K rate
-            opp_team_id = game.get(f"{opp_side}_team_id")
-            opp_k_pct   = LEAGUE_K_PCT
-            if opp_team_id:
-                try:
-                    from src.data.mlb_stats import get_team_batting_stats
-                    opp_bat = get_team_batting_stats(opp_team_id)
-                    opp_k_pct = opp_bat.get("k_pct", LEAGUE_K_PCT)
-                except Exception:
-                    pass
+                    LEAGUE_K_PCT = 0.228
+                    opp_k_pct   = LEAGUE_K_PCT
+                    if opp_team_id:
+                        try:
+                            opp_bat   = get_team_batting_stats(opp_team_id)
+                            opp_k_pct = opp_bat.get("k_pct", LEAGUE_K_PCT)
+                        except Exception:
+                            pass
 
-            # ── ERA-trap detection ───────────────────────────────────────────
-            # Low BABIP (<.260) + small sample (<60 IP) + ERA well below FIP
-            # = pitcher likely benefiting from luck, not sustainable skill.
-            era_trap = (
-                babip is not None
-                and isinstance(babip, float)
-                and babip < 0.260
-                and ip < 60
-                and era < fip - 0.40
-            )
+                    era_trap = (babip is not None and isinstance(babip, float)
+                                and babip < 0.260 and ip < 60 and era < fip - 0.40)
 
-            # ── Umpire K-factor adjustment ───────────────────────────────────
-            ump_k_factor = game.get("umpire_k_factor", 1.0)
-            ump_name     = game.get("umpire_name", "")
+                    k9_adj     = round(k9 * ump_k_factor * (opp_k_pct / LEAGUE_K_PCT), 1)
+                    model_line = round(k9_adj / 9 * expected_innings, 1)
 
-            # Apply umpire then opponent K% multiplier
-            k9_adj = round(k9 * ump_k_factor * (opp_k_pct / LEAGUE_K_PCT), 1)
+                    model_prob = _cover_prob(prop_label, model_line, market_line)
+                    edge       = model_prob - market_prob
+                    if edge < MIN_PROP_EDGE:
+                        continue
 
-            # ── Build research block ─────────────────────────────────────────
-            xfip_str  = f" | xFIP {xfip:.2f}" if xfip is not None else ""
-            babip_str = f" | BABIP {babip:.3f}" if babip is not None else ""
-            pitcher_research = [
-                f"{pitcher_name}: ERA {era:.2f} | FIP {fip:.2f}{xfip_str} | "
-                f"K/9 {k9:.1f} | BB/9 {bb9:.1f} | HR/9 {hr9:.2f}{babip_str}",
-                f"Season IP: {ip:.0f} | Projected start: ~{expected_innings} inn",
-                f"Venue: {venue} (park factor {pf:.2f})" if venue else "Venue unknown",
-                f"Opponent K%: {opp_k_pct:.1%} (league avg {LEAGUE_K_PCT:.1%})",
-            ]
+                    conf     = _confidence(edge, model_line, market_line)
+                    xfip_str = f" / xFIP {xfip:.2f}" if xfip else ""
+                    babip_str= f" | BABIP {babip:.3f}" if babip else ""
 
-            if ump_name and abs(ump_k_factor - 1.0) >= 0.03:
-                direction = "large" if ump_k_factor > 1.0 else "tight"
-                pitcher_research.append(
-                    f"👨‍⚖️ Umpire {ump_name}: {direction} zone (K factor {ump_k_factor:.2f}x)"
-                )
+                    signals = [
+                        f"Market: Over {market_line} Ks at {odds_display} ({book})",
+                        f"K/9 {k9:.1f} (adj {k9_adj:.1f}) → {model_line} Ks in {expected_innings} inn | Edge {edge*100:+.1f}%",
+                        f"FIP {fip:.2f}{xfip_str}{babip_str}",
+                        f"Opp K%: {opp_k_pct:.1%} vs league avg {LEAGUE_K_PCT:.1%}",
+                    ]
+                    if ump_name and abs(ump_k_factor - 1.0) >= 0.03:
+                        signals.append(f"👨‍⚖️ Umpire {ump_name}: K factor {ump_k_factor:.2f}x")
+                    if era_trap:
+                        signals.append(f"⚠ ERA trap: BABIP {babip:.3f} — ERA likely luck-driven")
 
-            # ── Pitcher strikeouts over ──────────────────────────────────────
-            expected_ks = round(k9_adj / 9 * expected_innings, 1)
-
-            # Confidence: HIGH requires elite K/9, meaningful sample, and solid FIP
-            # Downgrade to MEDIUM if ERA-trap risk is detected
-            k_conf = (
-                "HIGH"
-                if (k9_adj > 9.5 and ip > 40 and fip < 4.0 and not era_trap)
-                else "MEDIUM"
-            )
-            k_margin = round(k9_adj - 7.0, 1)
-
-            # Build signals list
-            k_ump_note = (
-                f" (umpire {ump_name} {ump_k_factor:.2f}x)"
-                if ump_name and abs(ump_k_factor - 1.0) >= 0.03
-                else ""
-            )
-            k_opp_note = (
-                f" (opp K% {opp_k_pct:.1%})"
-                if abs(opp_k_pct - LEAGUE_K_PCT) >= 0.02
-                else ""
-            )
-            k_signals = [
-                f"K/9: {k9:.1f}{k_ump_note}{k_opp_note} → adjusted {k9_adj:.1f} "
-                f"→ projects {expected_ks} Ks over {expected_innings} inn",
-                f"FIP {fip:.2f}" + (f" / xFIP {xfip:.2f}" if xfip is not None else "")
-                + f" ({'above' if fip > 4.20 else 'below'} league avg 4.20)",
-                f"Season IP: {ip:.0f} — {'solid' if ip > 50 else 'limited'} sample",
-            ]
-            if era_trap:
-                k_signals.append(
-                    f"⚠ ERA trap risk: BABIP {babip:.3f} suggests ERA {era:.2f} "
-                    f"is luck-driven — true talent closer to FIP {fip:.2f}"
-                )
-
-            picks.append(PropPick(
-                sport="MLB",
-                player=pitcher_name,
-                team=team,
-                opponent=opp_team,
-                prop_type="Strikeouts Over",
-                model_line=expected_ks,
-                confidence=k_conf,
-                model_margin=k_margin,
-                note=(
-                    f"Search '{pitcher_name} strikeouts' on Robinhood. "
-                    f"Model: ~{expected_ks} Ks in {expected_innings} inn. "
-                    f"Look for Over at or below {int(expected_ks)}."
-                ),
-                signals=k_signals,
-                research=pitcher_research[:],
-                commence_time=game_commence,
-            ))
-
-            # ── Batter 1+ hits over (vs hittable pitcher, FIP > 4.50) ───────
-            if fip > 4.50:
-                from src.data.mlb_stats import get_team_batting_leaders
-                opp_team_id = game.get(f"{opp_side}_team_id")
-                batters = []
-                if opp_team_id:
-                    try:
-                        batters = get_team_batting_leaders(opp_team_id, top_n=3)
-                    except Exception as e:
-                        logger.warning(f"Could not fetch batting leaders for {opp_team}: {e}")
-
-                hits_margin = round(fip - 4.50, 2)
-                expected_hits = round((era / 9) * expected_innings * 1.1, 1)
-
-                for batter in batters:
-                    avg_str = f".{int(batter['avg'] * 1000):03d}"
-                    obp_str = f".{int(batter['obp'] * 1000):03d}"
-                    hits_conf = "HIGH" if (fip > 5.20 and batter["obp"] >= 0.350) else "MEDIUM"
                     picks.append(PropPick(
-                        sport="MLB",
-                        player=batter["name"],
-                        team=opp_team,
-                        opponent=team,
-                        prop_type="Hits Over (1+)",
-                        model_line=1.0,
-                        confidence=hits_conf,
-                        model_margin=hits_margin,
-                        note=(
-                            f"Search '{batter['name']} hits' on Robinhood. "
-                            f"Look for Over 0.5 (1+ hits). "
-                            f"Facing {pitcher_name} (FIP {fip:.2f})."
-                        ),
-                        signals=[
-                            f"{batter['name']}: {avg_str} AVG / {obp_str} OBP this season ({batter['pa']} PA)",
-                            f"{pitcher_name} FIP {fip:.2f} — above avg (4.20), hitter-friendly matchup",
-                            f"Model projects ~{expected_hits} total hits in {expected_innings} inn",
-                        ],
-                        research=pitcher_research + [
-                            f"FIP {fip:.2f} > 4.50 — hitter-favorable matchup",
-                            f"ERA-based hit estimate: ~{expected_hits} hits in {expected_innings} inn",
+                        sport="MLB", player=player_name, team=team, opponent=opp,
+                        prop_type=prop_label,
+                        model_line=model_line, market_line=market_line,
+                        market_prob=round(market_prob, 4), model_prob=round(model_prob, 4),
+                        edge=round(edge, 4), odds_display=odds_display, book=book,
+                        confidence=conf, model_margin=round(k9_adj - 7.0, 1),
+                        note=f"{book.title()}: Over {market_line} Ks at {odds_display}. Model: {model_line} Ks in {expected_innings} inn.",
+                        signals=signals,
+                        research=[
+                            f"{player_name}: ERA {era:.2f} | FIP {fip:.2f}{xfip_str} | K/9 {k9:.1f} | BB/9 {bb9:.1f} | HR/9 {hr9:.2f}{babip_str}",
+                            f"Season IP: {ip:.0f} | Projected start: ~{expected_innings} inn",
+                            f"Venue: {venue} (park factor {pf:.2f})" if venue else "",
                         ],
                         commence_time=game_commence,
                     ))
+                    continue
 
-    # Deduplicate, sort, then cap
+                # ── Batter props ────────────────────────────────────────────
+                bstats = batter_stats.get(player_name)
+                if not bstats:
+                    continue
+
+                team = batter_team.get(player_name, home)
+                opp  = away if team == home else home
+                facing_p_stats = away_p_stats if team == home else home_p_stats
+                facing_name    = away_pitcher if team == home else home_pitcher
+                pitcher_fip    = facing_p_stats.get("fip", 4.20)
+
+                model_line = _project_mlb_batter_stat(prop_label, bstats, pitcher_fip, pf)
+                if model_line is None:
+                    continue
+
+                model_prob = _cover_prob(prop_label, model_line, market_line)
+                edge       = model_prob - market_prob
+                if edge < MIN_PROP_EDGE:
+                    continue
+
+                conf = _confidence(edge, model_line, market_line)
+
+                picks.append(PropPick(
+                    sport="MLB", player=player_name, team=team, opponent=opp,
+                    prop_type=prop_label,
+                    model_line=round(model_line, 2), market_line=market_line,
+                    market_prob=round(market_prob, 4), model_prob=round(model_prob, 4),
+                    edge=round(edge, 4), odds_display=odds_display, book=book,
+                    confidence=conf, model_margin=round(model_line - market_line, 2),
+                    note=f"{book.title()}: Over {market_line} at {odds_display}. Model: {model_line:.2f}.",
+                    signals=[
+                        f"Market: Over {market_line} at {odds_display} ({book})",
+                        f"Model projects {model_line:.2f} → edge {edge*100:+.1f}%",
+                        f"vs {facing_name} (FIP {pitcher_fip:.2f}) at {venue} (park factor {pf:.2f})",
+                    ],
+                    research=[
+                        f"{player_name}: AVG {bstats['avg']:.3f} | OBP {bstats['obp']:.3f} | "
+                        f"H/G {bstats['hits_pg']:.2f} | TB/G {bstats['tb_pg']:.2f} | "
+                        f"HR/G {bstats['hr_pg']:.3f} | HRR/G {bstats['hrr_pg']:.2f} ({bstats['pa']} PA)",
+                        f"Facing {facing_name}: FIP {pitcher_fip:.2f}",
+                        f"Park factor {pf:.2f} at {venue}" if venue else "",
+                    ],
+                    commence_time=game_commence,
+                ))
+
     seen: set = set()
     deduped: List[PropPick] = []
     for p in picks:
@@ -425,6 +474,5 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
         if key not in seen:
             seen.add(key)
             deduped.append(p)
-
-    deduped.sort(key=lambda p: (0 if p.confidence == "HIGH" else 1, -p.model_margin))
+    deduped.sort(key=lambda p: (0 if p.confidence == "HIGH" else 1, -p.edge))
     return deduped[:6]

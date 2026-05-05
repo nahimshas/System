@@ -333,6 +333,109 @@ def _fetch_recent_form(team_id: str, today: date, days: int = 14) -> Dict:
 
 
 # ---------------------------------------------------------------------------
+# Player props stats — roster + per-athlete averages
+# ---------------------------------------------------------------------------
+
+def _fetch_team_roster(team_id: str) -> Dict[str, str]:
+    """Returns {normalized_player_name: athlete_id} for a team."""
+    data = _get(f"{ESPN_NBA}/teams/{team_id}/roster")
+    if not data:
+        return {}
+    result: Dict[str, str] = {}
+    athletes = data.get("athletes", [])
+    if not athletes:
+        for group in data.get("roster", {}).get("athletes", []):
+            athletes.extend(group.get("items", []))
+    for a in athletes:
+        name = a.get("displayName") or a.get("fullName", "")
+        aid  = str(a.get("id", ""))
+        if name and aid:
+            result[name.lower().strip()] = aid
+    return result
+
+
+def _fetch_athlete_stats(athlete_id: str) -> Dict:
+    """Fetch per-game averages for a specific athlete via ESPN."""
+    season = _espn_season()
+    data   = _get(f"{ESPN_NBA}/athletes/{athlete_id}/statistics", {"season": season})
+    if not data:
+        return {}
+
+    stat_vals: Dict[str, float] = {}
+    splits     = data.get("splits", {})
+    categories = splits.get("categories", data.get("categories", []))
+    for cat in categories:
+        for s in cat.get("stats", []):
+            k = s.get("name", "")
+            v = s.get("value")
+            if k and v is not None:
+                try:
+                    stat_vals[k] = float(v)
+                except (TypeError, ValueError):
+                    pass
+
+    def _pick(*keys: str) -> float:
+        for k in keys:
+            if k in stat_vals:
+                return stat_vals[k]
+        return 0.0
+
+    return {
+        "pts":      _pick("avgPoints", "points"),
+        "reb":      _pick("avgRebounds", "avgTotalRebounds", "totalRebounds"),
+        "ast":      _pick("avgAssists", "assists"),
+        "stl":      _pick("avgSteals", "steals"),
+        "blk":      _pick("avgBlocks", "blocks"),
+        "three_pm": _pick("avgThreePointFieldGoalsMade", "avgThreesMade", "threePointFieldGoalsMade"),
+        "games":    int(_pick("gamesPlayed", "games") or 1),
+    }
+
+
+def get_nba_player_props_stats(player_names: List[str], team_names_today: List[str]) -> Dict[str, Dict]:
+    """
+    Fetch per-game averages for players with Odds API prop lines.
+    Returns {player_name: {"stats": {pts/reb/ast/stl/blk/three_pm/games}, "team": espn_name}}
+    """
+    if not player_names or not team_names_today:
+        return {}
+
+    id_map = _fetch_team_id_map()
+
+    # Build name → (athlete_id, espn_team) via today's team rosters only
+    all_rosters: Dict[str, tuple] = {}
+    for espn_name in set(team_names_today):
+        team_id = id_map.get(espn_name)
+        if not team_id:
+            continue
+        roster = _fetch_team_roster(team_id)
+        for norm_name, aid in roster.items():
+            all_rosters[norm_name] = (aid, espn_name)
+        time.sleep(0.15)
+
+    result: Dict[str, Dict] = {}
+    for player_name in player_names:
+        norm  = player_name.lower().strip()
+        entry = all_rosters.get(norm)
+        if not entry:
+            for roster_norm, val in all_rosters.items():
+                if all(part in roster_norm for part in norm.split()):
+                    entry = val
+                    break
+        if not entry:
+            logger.debug(f"No ESPN athlete ID found for prop player: {player_name}")
+            continue
+
+        athlete_id, espn_team = entry
+        stats = _fetch_athlete_stats(athlete_id)
+        if stats.get("pts", 0) > 0 or stats.get("reb", 0) > 0 or stats.get("stl", 0) > 0:
+            result[player_name] = {"stats": stats, "team": espn_team}
+        time.sleep(0.15)
+
+    logger.info(f"NBA player props stats: {len(result)}/{len(player_names)} players resolved")
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Public interface
 # ---------------------------------------------------------------------------
 

@@ -385,7 +385,7 @@
   <div class="section" id="sec-props">
     <div class="section-title">Props Watchlist
       <span style="color:var(--yellow);font-size:0.72rem;font-weight:400;text-transform:none;">
-        — model projections only. No sportsbook line available. Search Robinhood manually before betting.
+        — 📊 Props sourced from <b style="color:#e2e8f0;">DraftKings</b> odds. Verify lines on Robinhood before betting — lines may differ slightly.
       </span>
     </div>
     {% for prop in report.props %}
@@ -398,7 +398,9 @@
          data-prop-type="{{ prop.prop_type }}"
          data-model-line="{{ prop.model_line }}"
          data-confidence="{{ prop.confidence }}"
-         data-commence-time="{{ prop.commence_time }}">
+         data-commence-time="{{ prop.commence_time }}"
+         data-market-line="{{ prop.market_line }}"
+         data-edge-pct="{{ prop.edge_pct }}">
       {% set last = report.prop_last_result.get((prop.player, prop.prop_type)) %}
       <div class="card-toggle-header">
         <div class="card-header">
@@ -416,23 +418,27 @@
           </div>
         </div>
         <div class="card-compact">
-          <span class="mkt-mdl">Proj <b style="color:var(--blue)">{{ prop.model_line }}</b> · Bet Over ≤ <b>{{ prop.model_line | int }}</b></span>
+          <span class="mkt-mdl">Over <b>{{ prop.market_line }}</b> <span style="color:#94a3b8;font-size:0.8em;">{{ prop.odds_display }}</span> &middot; Model <b style="color:var(--blue)">{{ prop.model_line }}</b> &middot; <b style="color:var(--green)">+{{ prop.edge_pct }}%</b></span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="Model's season-average projection for this player today">
-            <div class="stat-label">Projected</div>
+          <div class="stat-box" title="The book's line and implied probability including vig">
+            <div class="stat-label">Market Line</div>
+            <div class="stat-value blue">Over {{ prop.market_line }}</div>
+          </div>
+          <div class="stat-box" title="Implied probability including vig from {{ prop.book }}">
+            <div class="stat-label">Book Odds</div>
+            <div class="stat-value">{{ prop.odds_display }}</div>
+          </div>
+          <div class="stat-box" title="Model's projected stat value for this player today">
+            <div class="stat-label">Model Proj</div>
             <div class="stat-value blue">{{ prop.model_line }}</div>
           </div>
-          <div class="stat-box" title="Only take the Over if Robinhood's line is at or below this number">
-            <div class="stat-label">Bet Over ≤</div>
-            <div class="stat-value green">{{ prop.model_line | int }}</div>
-          </div>
-          <div class="stat-box" title="Signal strength based on how comfortably the projection clears the threshold">
-            <div class="stat-label">Signal</div>
-            <div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">{{ prop.confidence }}</div>
+          <div class="stat-box" title="Model edge over market's no-vig probability">
+            <div class="stat-label">Edge</div>
+            <div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">+{{ prop.edge_pct }}%</div>
           </div>
         </div>
         <div class="prop-note" style="margin-top:6px;">{{ prop.note }}</div>

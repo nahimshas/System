@@ -252,6 +252,71 @@ def get_team_batting_leaders(team_id: int, top_n: int = 3, min_pa: int = 15) -> 
     return players[:top_n]
 
 
+def get_batter_props_stats(team_id: int, player_names: List[str], min_pa: int = 30) -> Dict[str, Dict]:
+    """
+    Fetch per-game hitting stats for specific batters for prop projections.
+    Returns {player_name: {avg, obp, hits_pg, tb_pg, hr_pg, r_pg, rbi_pg, hrr_pg, pa, games}}
+    """
+    if not team_id or not player_names:
+        return {}
+    data = _get("/stats", {
+        "stats": "season", "group": "hitting", "gameType": "R",
+        "season": date.today().year, "teamId": team_id, "limit": 50,
+    })
+    if not data:
+        return {}
+
+    norm_targets = {n.lower().strip(): n for n in player_names}
+    result: Dict[str, Dict] = {}
+
+    for stat_group in data.get("stats", []):
+        for split in stat_group.get("splits", []):
+            player = split.get("player", {})
+            stat   = split.get("stat", {})
+            name   = player.get("fullName", "")
+            if not name:
+                continue
+            norm    = name.lower().strip()
+            matched = norm_targets.get(norm)
+            if not matched:
+                for tn, orig in norm_targets.items():
+                    if all(p in norm for p in tn.split()):
+                        matched = orig
+                        break
+            if not matched:
+                continue
+
+            pa    = int(stat.get("plateAppearances", 0))
+            games = int(stat.get("gamesPlayed", 1)) or 1
+            if pa < min_pa:
+                continue
+            try:
+                avg  = float(stat.get("avg",  "0").replace("-", "0") or "0")
+                obp  = float(stat.get("obp",  "0").replace("-", "0") or "0")
+                hits = int(stat.get("hits",       0))
+                tb   = int(stat.get("totalBases", 0))
+                hr   = int(stat.get("homeRuns",   0))
+                runs = int(stat.get("runs",        0))
+                rbi  = int(stat.get("rbi",         0))
+            except (ValueError, TypeError):
+                continue
+
+            result[matched] = {
+                "avg":     round(avg, 3),
+                "obp":     round(obp, 3),
+                "hits_pg": round(hits / games, 3),
+                "tb_pg":   round(tb   / games, 3),
+                "hr_pg":   round(hr   / games, 4),
+                "r_pg":    round(runs / games, 3),
+                "rbi_pg":  round(rbi  / games, 3),
+                "hrr_pg":  round((hits + runs + rbi) / games, 3),
+                "pa":      pa,
+                "games":   games,
+            }
+
+    return result
+
+
 def get_team_schedule_load(team_id: int, today: date) -> int:
     """
     Returns the number of confirmed games this team played in the last 7 days.

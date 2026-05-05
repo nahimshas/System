@@ -137,6 +137,14 @@ def prop_to_dict(prop) -> Dict:
         "note": prop.note,
         "signals": prop.signals,
         "research": prop.research,
+        # Odds API market fields
+        "market_line":  getattr(prop, "market_line", prop.model_line),
+        "market_prob":  getattr(prop, "market_prob", 0.0),
+        "model_prob":   getattr(prop, "model_prob", 0.0),
+        "edge":         getattr(prop, "edge", 0.0),
+        "edge_pct":     round(getattr(prop, "edge", 0.0) * 100, 1),
+        "odds_display": getattr(prop, "odds_display", ""),
+        "book":         getattr(prop, "book", ""),
         # State management
         "commence_time": getattr(prop, "commence_time", ""),
         "locked": False,

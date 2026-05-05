@@ -8,6 +8,37 @@ from src.config import ODDS_API_BASE, ODDS_API_KEY, PREFERRED_BOOK, FALLBACK_BOO
 logger = logging.getLogger(__name__)
 
 
+def american_to_implied_prob(price: int) -> float:
+    """Convert American odds to implied probability including vig."""
+    if price >= 0:
+        return 100.0 / (price + 100.0)
+    else:
+        return abs(price) / (abs(price) + 100.0)
+
+PROP_MARKET_LABEL = {
+    "player_points":         "Points Over",
+    "player_rebounds":       "Rebounds Over",
+    "player_assists":        "Assists Over",
+    "player_steals":         "Steals Over",
+    "player_blocks":         "Blocks Over",
+    "player_threes":         "Threes Over",
+    "pitcher_strikeouts":    "Strikeouts Over",
+    "batter_hits":           "Hits Over",
+    "batter_total_bases":    "Total Bases Over",
+    "batter_home_runs":      "Home Runs Over",
+    "batter_hits_runs_rbis": "HRR Over",
+}
+
+_NBA_PROP_MARKETS = [
+    "player_points","player_rebounds","player_assists",
+    "player_steals","player_blocks","player_threes",
+]
+_MLB_PROP_MARKETS = [
+    "pitcher_strikeouts","batter_hits","batter_total_bases",
+    "batter_home_runs","batter_hits_runs_rbis",
+]
+
+
 _last_api_error: Optional[str] = None   # module-level; cleared each call
 _credits_used: Optional[int] = None
 _credits_remaining: Optional[int] = None
@@ -304,3 +335,97 @@ def get_game_odds(sport: str) -> List[Dict]:
 
     logger.info(f"Fetched {len(games)} {sport} games from odds API")
     return games
+
+
+def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
+    """
+    Fetch player prop lines from Odds API for a specific game event.
+    Returns {player_name: {prop_label: {line, over_price, odds_display, market_prob, book}}}
+
+    - Uses preferred book (DraftKings) line as the reference line.
+    - market_prob = consensus no-vig Over probability across books with matching line.
+    - odds_display = with-vig implied % from preferred book (e.g. "-110" → "52.4%").
+    """
+    markets = ",".join(_NBA_PROP_MARKETS if "basketball" in sport else _MLB_PROP_MARKETS)
+    data = _get(f"/sports/{sport}/events/{game_id}/odds", {
+        "regions": "us", "markets": markets, "oddsFormat": "american",
+    })
+    if not data:
+        return {}
+
+    bookmakers = data.get("bookmakers", [])
+    book_map   = {b["key"]: b for b in bookmakers}
+    priority   = [PREFERRED_BOOK] + FALLBACK_BOOKS
+    result: Dict[str, Dict] = {}
+    all_market_keys = _NBA_PROP_MARKETS if "basketball" in sport else _MLB_PROP_MARKETS
+
+    for market_key in all_market_keys:
+        prop_label = PROP_MARKET_LABEL.get(market_key, market_key)
+
+        # Step 1: find preferred book's Over line per player
+        pref_lines:  Dict[str, float] = {}
+        pref_prices: Dict[str, int]   = {}
+        pref_book = None
+        for bk in priority:
+            if bk not in book_map:
+                continue
+            for mkt in book_map[bk].get("markets", []):
+                if mkt.get("key") != market_key:
+                    continue
+                pref_book = bk
+                for o in mkt.get("outcomes", []):
+                    if o.get("description", "").lower() == "over":
+                        name  = o.get("name", "")
+                        line  = o.get("point")
+                        price = o.get("price")
+                        if name and line is not None and price is not None:
+                            pref_lines[name]  = float(line)
+                            pref_prices[name] = int(price)
+                break
+            if pref_book:
+                break
+
+        if not pref_lines:
+            continue
+
+        # Step 2: consensus no-vig probability across books with same line
+        for player_name, pref_line in pref_lines.items():
+            over_probs = []
+            for book in bookmakers:
+                for mkt in book.get("markets", []):
+                    if mkt.get("key") != market_key:
+                        continue
+                    outcomes = mkt.get("outcomes", [])
+                    over_o  = next((o for o in outcomes
+                                    if o.get("name") == player_name
+                                    and o.get("description", "").lower() == "over"
+                                    and o.get("point") == pref_line), None)
+                    under_o = next((o for o in outcomes
+                                    if o.get("name") == player_name
+                                    and o.get("description", "").lower() == "under"
+                                    and o.get("point") == pref_line), None)
+                    if over_o and under_o:
+                        p_o = american_to_implied_prob(int(over_o["price"]))
+                        p_u = american_to_implied_prob(int(under_o["price"]))
+                        total = p_o + p_u
+                        if total > 0:
+                            over_probs.append(p_o / total)
+                    break
+
+            if not over_probs:
+                continue
+
+            market_prob  = sum(over_probs) / len(over_probs)
+            over_price   = pref_prices.get(player_name, -110)
+            odds_display = f"{american_to_implied_prob(over_price) * 100:.1f}%"
+
+            result.setdefault(player_name, {})[prop_label] = {
+                "line":         pref_line,
+                "over_price":   over_price,
+                "odds_display": odds_display,
+                "market_prob":  round(market_prob, 4),
+                "book":         pref_book or PREFERRED_BOOK,
+            }
+
+    logger.info(f"Player props for {game_id}: {len(result)} players")
+    return result
