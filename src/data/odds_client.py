@@ -354,6 +354,32 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
         return {}
 
     bookmakers = data.get("bookmakers", [])
+
+    # ── Diagnostic: log raw structure of first bookmaker on first call ──────
+    if bookmakers:
+        bk0 = bookmakers[0]
+        mkts0 = bk0.get("markets", [])
+        logger.info(
+            f"[props-diag] game={game_id[:8]} sport={sport} "
+            f"bookmakers={len(bookmakers)} first_book={bk0.get('key')} "
+            f"markets={[m.get('key') for m in mkts0]}"
+        )
+        for m in mkts0[:2]:   # log first two markets' first outcome
+            outs = m.get("outcomes", [])
+            if outs:
+                o0 = outs[0]
+                logger.info(
+                    f"[props-diag] market={m.get('key')} first_outcome: "
+                    f"name={o0.get('name')!r} description={o0.get('description')!r} "
+                    f"point={o0.get('point')} price={o0.get('price')}"
+                )
+    else:
+        logger.warning(
+            f"[props-diag] game={game_id[:8]} sport={sport} → "
+            f"response OK but NO bookmakers returned"
+        )
+    # ────────────────────────────────────────────────────────────────────────
+
     book_map   = {b["key"]: b for b in bookmakers}
     priority   = [PREFERRED_BOOK] + FALLBACK_BOOKS
     result: Dict[str, Dict] = {}
