@@ -589,31 +589,23 @@ def _build_team_leaders_lookup(nba_ctx: Optional[Dict]) -> Dict[str, Dict]:
 # ---------------------------------------------------------------------------
 
 def _fetch_athlete_web_stats(athlete_id: str) -> Dict:
-    """site.web.api.espn.com / common/v3 — often embeds full stat splits."""
+    """
+    Fetch per-game season averages via site.web.api.espn.com (common/v3).
+    Stats live at athlete.statsSummary.statistics — a flat list of
+    {name, value} objects (avgPoints, avgRebounds, avgAssists, …).
+    Works for ALL NBA players, not just leaders.
+    Returns pts / reb / ast (steals, blocks, 3PM not included by this endpoint).
+    """
     data = _get(f"{ESPN_NBA_WEB}/athletes/{athlete_id}")
     if not data:
         return {}
-    athlete_blob = data.get("athlete", data)
-    stats_blob   = athlete_blob.get("statistics", data.get("statistics", {}))
-    vals = _parse_stat_vals(stats_blob)
-    return _stats_from_vals(vals) if vals else {}
-
-
-def _fetch_athlete_statisticslog(athlete_id: str) -> Dict:
-    """sports.core.api.espn.com statisticslog — game-by-game or season summary."""
-    data = _get(f"{ESPN_NBA_CORE}/athletes/{athlete_id}/statisticslog")
-    if not data:
+    stats_list = (data.get("athlete", {})
+                      .get("statsSummary", {})
+                      .get("statistics", []))
+    if not stats_list:
         return {}
-    vals = _parse_stat_vals(data)
-    return _stats_from_vals(vals) if vals else {}
-
-
-def _fetch_athlete_gamelog(athlete_id: str) -> Dict:
-    """site.api.espn.com gamelog — season averages embedded in seasonTypes."""
-    data = _get(f"{ESPN_NBA}/athletes/{athlete_id}/gamelog")
-    if not data:
-        return {}
-    vals = _parse_stat_vals(data)
+    vals = {s["name"]: float(s.get("value", 0) or 0)
+            for s in stats_list if "name" in s and "value" in s}
     return _stats_from_vals(vals) if vals else {}
 
 
@@ -667,13 +659,26 @@ def get_nba_player_props_stats(
         else:
             remaining.append(player_name)
 
+    # Players found in Tier 1/2 only via stl/blk (pts=0 AND reb=0) still need
+    # their scoring/rebounding stats filled in via the web API.
+    need_supplement = [
+        p for p in player_names
+        if p in result
+        and result[p]["stats"].get("pts", 0) == 0
+        and result[p]["stats"].get("reb", 0) == 0
+    ]
+
     logger.info(
         f"NBA props — bulk tiers: {len(result)}/{len(player_names)} resolved, "
-        f"{len(remaining)} need per-athlete fallback"
+        f"{len(remaining)} unresolved + {len(need_supplement)} need stat supplement"
     )
 
-    # ── Tier 3: per-athlete fallback ─────────────────────────────────────────
-    if remaining:
+    # ── Tier 3: web API for unresolved + partial-stats players ───────────────
+    # site.web.api.espn.com/apis/common/v3/athletes/{id} returns pts/reb/ast
+    # for ALL players via athlete.statsSummary.statistics.
+    # Note: statisticslog and gamelog are both 404 during playoffs; skip them.
+    needs_tier3 = remaining + need_supplement
+    if needs_tier3:
         id_map = _fetch_team_id_map()
 
         all_rosters: Dict[str, tuple] = {}
@@ -686,8 +691,8 @@ def get_nba_player_props_stats(
                 all_rosters[norm_name] = (aid, espn_name)
             time.sleep(0.15)
 
-        fb_resolved = 0
-        for player_name in remaining:
+        fb_new = fb_supp = 0
+        for player_name in needs_tier3:
             norm  = player_name.lower().strip()
             entry = all_rosters.get(norm)
             if not entry:
@@ -700,22 +705,29 @@ def get_nba_player_props_stats(
                 continue
 
             athlete_id, espn_team = entry
-            # Try three endpoints in order of reliability
-            stats: Dict = {}
-            for fetch_fn in (_fetch_athlete_statisticslog,
-                             _fetch_athlete_web_stats,
-                             _fetch_athlete_gamelog):
-                stats = fetch_fn(athlete_id)
-                if stats.get("pts", 0) > 0 or stats.get("reb", 0) > 0:
-                    break
-                time.sleep(0.10)
-
-            if stats.get("pts", 0) > 0 or stats.get("reb", 0) > 0 or stats.get("stl", 0) > 0:
-                result[player_name] = {"stats": stats, "team": espn_team}
-                fb_resolved += 1
+            web_stats = _fetch_athlete_web_stats(athlete_id)
             time.sleep(0.15)
 
-        logger.info(f"Per-athlete fallback: {fb_resolved}/{len(remaining)} additional players resolved")
+            if not (web_stats.get("pts", 0) > 0 or web_stats.get("reb", 0) > 0):
+                continue
+
+            if player_name in result:
+                # Supplement: fill pts/reb/ast into the existing entry (keeps stl/blk from v3)
+                existing = result[player_name]["stats"]
+                for k in ("pts", "reb", "ast", "games"):
+                    if existing.get(k, 0) == 0 and web_stats.get(k, 0) > 0:
+                        existing[k] = web_stats[k]
+                if not result[player_name]["team"] and espn_team:
+                    result[player_name]["team"] = espn_team
+                fb_supp += 1
+            else:
+                result[player_name] = {"stats": web_stats, "team": espn_team}
+                fb_new += 1
+
+        logger.info(
+            f"Web API fallback: {fb_new} new players resolved, "
+            f"{fb_supp} existing entries supplemented with pts/reb/ast"
+        )
 
     logger.info(f"NBA player props stats: {len(result)}/{len(player_names)} players resolved total")
     return result
