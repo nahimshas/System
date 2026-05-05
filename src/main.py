@@ -129,7 +129,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -
                     logger.error(f"NBA game analysis error ({game.get('home_team')}): {e}")
 
             nba_props_raw = nba_player_props(nba_odds_games, nba_ctx)
-            logger.info(f"NBA: {len(nba_singles_raw)} edge(s) found across {nba_game_count} games")
+            logger.info(f"NBA: {len(nba_singles_raw)} edge(s) found across {nba_game_count} games | "
+                        f"{len(nba_props_raw)} prop pick(s)")
 
     # ------------------------------------------------------------------ #
     #  MLB
@@ -253,7 +254,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -
             sg["umpire_k_factor"] = get_umpire_tendency(ump).get("k_factor", 1.0)
 
         mlb_props_raw = mlb_player_props(mlb_schedule, pitcher_stats_map)
-        logger.info(f"MLB: {len(mlb_singles_raw)} edge(s) found across {mlb_game_count} games")
+        logger.info(f"MLB: {len(mlb_singles_raw)} edge(s) found across {mlb_game_count} games | "
+                    f"{len(mlb_props_raw)} prop pick(s)")
 
     # ------------------------------------------------------------------ #
     #  Build parlays from raw BetRecommendation objects (before serialising)

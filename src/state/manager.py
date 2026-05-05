@@ -569,6 +569,15 @@ def merge_picks(
         else:
             final_props.append(prop)
 
+    # Fill remaining prop slots — critical when the morning baseline had 0 props
+    # (e.g. first run used old code) so truly_new_props contains everything new.
+    # Analyzers already cap at 6 each; no MAX_PROPS guard needed here.
+    for d in truly_new_props:
+        if id(d) not in used_new_props:
+            new_d = d if isinstance(d, dict) else prop_to_dict(d)
+            final_props.append(new_d)
+            used_new_props.add(id(d))
+
     if warnings:
         logger.info(f"State merge: {len(warnings)} substitution(s) / warning(s)")
 
