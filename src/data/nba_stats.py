@@ -355,9 +355,20 @@ def _fetch_team_roster(team_id: str) -> Dict[str, str]:
 
 
 def _fetch_athlete_stats(athlete_id: str) -> Dict:
-    """Fetch per-game averages for a specific athlete via ESPN."""
-    season = _espn_season()
-    data   = _get(f"{ESPN_NBA}/athletes/{athlete_id}/statistics", {"season": season})
+    """
+    Fetch per-game averages for a specific athlete via ESPN.
+
+    The /athletes/{id}/statistics endpoint does NOT reliably accept a
+    `season` parameter for in-progress seasons — it returns 404 when
+    the season is still ongoing.  Strategy:
+      1. No season param  → ESPN returns the current / most-recent season.
+      2. Fallback: season = current year − 1 (the start year of the season,
+         e.g. 2025 for the 2025-26 season) if step 1 yields no data.
+    """
+    base_url = f"{ESPN_NBA}/athletes/{athlete_id}/statistics"
+    data = _get(base_url)                           # current season (no param)
+    if not data:
+        data = _get(base_url, {"season": _espn_season() - 1})  # e.g. 2025
     if not data:
         return {}
 

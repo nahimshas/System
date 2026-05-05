@@ -83,21 +83,16 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -
         if ODDS_API_KEY:
             nba_odds_games = get_game_odds(NBA_SPORT)
         # Fetch Odds API player prop lines for each NBA game
-        _nba_props_fetched = 0
         for _g in nba_odds_games:
             try:
                 _g["player_props"] = fetch_player_props(_g["game_id"], NBA_SPORT)
-                if _g["player_props"]:
-                    _nba_props_fetched += 1
             except Exception as _e:
                 logger.warning(f"NBA player props fetch failed ({_g.get('home_team')}): {_e}")
                 _g["player_props"] = {}
-            # Stop fetching if we hit an API error mid-loop (credits exhausted etc.)
-            _prop_err = get_last_api_error()
-            if _prop_err and not _g["player_props"]:
-                logger.warning(f"NBA props fetch stopped early: {_prop_err}")
-                errors.append(f"Player props unavailable (NBA): {_prop_err}")
-                break
+        # Surface any prop API error so it appears in the report
+        _prop_err = get_last_api_error()
+        if _prop_err and not any(_g.get("player_props") for _g in nba_odds_games):
+            errors.append(f"NBA player props unavailable: {_prop_err}")
 
         nba_game_count = len(nba_odds_games)
 
@@ -149,21 +144,16 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -
         if ODDS_API_KEY:
             mlb_odds_games = get_game_odds(MLB_SPORT)
         # Fetch Odds API player prop lines for each MLB game
-        _mlb_props_fetched = 0
         for _g in mlb_odds_games:
             try:
                 _g["player_props"] = fetch_player_props(_g["game_id"], MLB_SPORT)
-                if _g["player_props"]:
-                    _mlb_props_fetched += 1
             except Exception as _e:
                 logger.warning(f"MLB player props fetch failed ({_g.get('home_team')}): {_e}")
                 _g["player_props"] = {}
-            # Stop fetching if we hit an API error mid-loop (credits exhausted etc.)
-            _prop_err = get_last_api_error()
-            if _prop_err and not _g["player_props"]:
-                logger.warning(f"MLB props fetch stopped early: {_prop_err}")
-                errors.append(f"Player props unavailable (MLB): {_prop_err}")
-                break
+        # Surface any prop API error so it appears in the report
+        _prop_err = get_last_api_error()
+        if _prop_err and not any(_g.get("player_props") for _g in mlb_odds_games):
+            errors.append(f"MLB player props unavailable: {_prop_err}")
 
         mlb_schedule = get_todays_games(today)
         mlb_game_count = len(mlb_odds_games)
