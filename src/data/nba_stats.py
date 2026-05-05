@@ -16,8 +16,11 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-ESPN_NBA    = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
-ESPN_NBA_V2 = "https://site.api.espn.com/apis/v2/sports/basketball/nba"
+ESPN_NBA      = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
+ESPN_NBA_V2   = "https://site.api.espn.com/apis/v2/sports/basketball/nba"
+ESPN_NBA_V3   = "https://site.api.espn.com/apis/site/v3/sports/basketball/nba"
+ESPN_NBA_CORE = "https://sports.core.api.espn.com/v2/sports/basketball/nba"
+ESPN_NBA_WEB  = "https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba"
 
 # Odds API name  →  ESPN displayName  (only entries that differ)
 _ODDS_TO_ESPN: Dict[str, str] = {
@@ -354,46 +357,116 @@ def _fetch_team_roster(team_id: str) -> Dict[str, str]:
     return result
 
 
-def _fetch_athlete_gamelog(athlete_id: str) -> Dict:
-    """
-    Fetch per-game season averages from ESPN's gamelog endpoint.
-    Used as a fallback when the player is not a team leader in any category.
-    """
-    data = _get(f"{ESPN_NBA}/athletes/{athlete_id}/gamelog")
-    if not data:
-        return {}
+# ── v3 leaders endpoint: category name → stat key ───────────────────────────
+# ONLY maps PER-GAME category names (e.g. "pointsPerGame").
+# Plain totals like "points" are intentionally omitted to avoid picking up
+# season totals (e.g. 227 pts) instead of per-game averages (e.g. 26.3 PPG).
+_V3_CAT_TO_STAT: Dict[str, str] = {
+    "pointspergame":               "pts",
+    "reboundspergame":             "reb",
+    "totalreboundspergame":        "reb",
+    "assistspergame":              "ast",
+    "stealspergame":               "stl",
+    "blockspergame":               "blk",
+    # 3PM — v3 endpoint uses "3PointsMadePerGame" as the category name
+    "3pointsmadepergame":          "three_pm",
+    "threepointfieldgoalsmade":    "three_pm",
+    "avgthreepointfieldgoalsmade": "three_pm",
+    "threepointers":               "three_pm",
+    "threesmadepergame":           "three_pm",
+}
 
-    stat_vals: Dict[str, float] = {}
-    # ESPN gamelog: {"seasonTypes": [{"categories": [...]}]}
-    for season_type in data.get("seasonTypes", []):
-        for cat in season_type.get("categories", []):
+# ── team_leaders / generic per-category mapping ──────────────────────────────
+# Scoreboard team_leaders already strips "pergame" via _parse_leader_categories,
+# so the keys here are the short forms ("points", "rebounds" …).
+_CAT_TO_STAT: Dict[str, str] = {
+    "points":                      "pts",
+    "pointspergame":               "pts",
+    "avgpoints":                   "pts",
+    "pts":                         "pts",
+    "rebounds":                    "reb",
+    "reboundspergame":             "reb",
+    "totalrebounds":               "reb",
+    "avgtotalrebounds":            "reb",
+    "avgrebounds":                 "reb",
+    "reb":                         "reb",
+    "assists":                     "ast",
+    "assistspergame":              "ast",
+    "avgassists":                  "ast",
+    "ast":                         "ast",
+    "steals":                      "stl",
+    "stealspergame":               "stl",
+    "avgsteals":                   "stl",
+    "stl":                         "stl",
+    "blocks":                      "blk",
+    "blockspergame":               "blk",
+    "avgblocks":                   "blk",
+    "blk":                         "blk",
+    "threepointfieldgoalsmade":    "three_pm",
+    "avgthreepointfieldgoalsmade": "three_pm",
+    "threepointers":               "three_pm",
+    "avgthreepointers":            "three_pm",
+    "threes":                      "three_pm",
+    "threesmade":                  "three_pm",
+    "3pm":                         "three_pm",
+}
+
+_BLANK_STATS = lambda team="": {
+    "pts": 0.0, "reb": 0.0, "ast": 0.0,
+    "stl": 0.0, "blk": 0.0, "three_pm": 0.0,
+    "games": 40, "team": team,
+}
+
+
+def _parse_stat_vals(data: dict) -> Dict[str, float]:
+    """Collect all stat name→value pairs from common ESPN category/split layouts."""
+    vals: Dict[str, float] = {}
+
+    def _absorb(categories):
+        for cat in categories:
+            if not isinstance(cat, dict):
+                continue
             for s in cat.get("stats", []):
                 k = s.get("name", "")
                 v = s.get("value")
                 if k and v is not None:
                     try:
-                        stat_vals[k] = float(v)
-                    except (TypeError, ValueError):
-                        pass
-        if stat_vals:
-            break   # regular season comes first; stop once we have data
-
-    # Also check top-level categories (some ESPN endpoints use this layout)
-    if not stat_vals:
-        for cat in data.get("categories", []):
-            for s in cat.get("stats", []):
-                k = s.get("name", "")
-                v = s.get("value")
-                if k and v is not None:
-                    try:
-                        stat_vals[k] = float(v)
+                        vals[k] = float(v)
                     except (TypeError, ValueError):
                         pass
 
+    # Layout A: {"splits": {"categories": [...]}}
+    splits = data.get("splits", {})
+    if isinstance(splits, dict):
+        _absorb(splits.get("categories", []))
+
+    # Layout B: {"categories": [...]}
+    _absorb(data.get("categories", []))
+
+    # Layout C: {"seasonTypes": [{"categories": [...]}]}
+    for stype in data.get("seasonTypes", []):
+        _absorb(stype.get("categories", []))
+        if vals:
+            break   # regular-season comes first
+
+    # Layout D: {"entries": [{"statistics": {"splits": {"categories": [...]}}}]}
+    for entry in data.get("entries", []):
+        sdata = entry.get("statistics", {})
+        sp = sdata.get("splits", {})
+        if isinstance(sp, dict):
+            _absorb(sp.get("categories", []))
+        _absorb(sdata.get("categories", []))
+        if vals:
+            break
+
+    return vals
+
+
+def _stats_from_vals(vals: Dict[str, float]) -> Dict:
     def _pick(*keys: str) -> float:
         for k in keys:
-            if k in stat_vals:
-                return stat_vals[k]
+            if k in vals:
+                return vals[k]
         return 0.0
 
     return {
@@ -402,29 +475,161 @@ def _fetch_athlete_gamelog(athlete_id: str) -> Dict:
         "ast":      _pick("avgAssists", "assists", "assistsPerGame"),
         "stl":      _pick("avgSteals", "steals", "stealsPerGame"),
         "blk":      _pick("avgBlocks", "blocks", "blocksPerGame"),
-        "three_pm": _pick("avgThreePointFieldGoalsMade", "avgThreesMade", "threePointFieldGoalsMade"),
+        "three_pm": _pick("avgThreePointFieldGoalsMade", "avgThreesMade",
+                          "threePointFieldGoalsMade", "threePointersMade"),
         "games":    int(_pick("gamesPlayed", "games") or 1),
     }
 
 
-# Category key (after _parse_leader_categories normalisation) → internal stat key
-_LEADER_CAT_TO_STAT: Dict[str, str] = {
-    "points":                   "pts",
-    "pointspergame":            "pts",
-    "rebounds":                 "reb",
-    "reboundspergame":          "reb",
-    "totalrebounds":            "reb",
-    "assists":                  "ast",
-    "assistspergame":           "ast",
-    "steals":                   "stl",
-    "stealspergame":            "stl",
-    "blocks":                   "blk",
-    "blockspergame":            "blk",
-    "threepointfieldgoalsmade": "three_pm",
-    "threepointers":            "three_pm",
-    "threes":                   "three_pm",
-    "threesmade":               "three_pm",
-}
+# ---------------------------------------------------------------------------
+# Tier-1 source: ESPN v3 league leaders (1 call → top-25 per stat category)
+# ---------------------------------------------------------------------------
+
+def _fetch_league_leaders_v3() -> Dict[str, Dict]:
+    """
+    GET /leaders from the v3 endpoint — returns top-10 players per stat category
+    league-wide (16 categories).  One call covers almost every player who gets
+    prop lines.
+
+    Response shape:
+      {"leaders": {"categories": [{"name": "pointsPerGame", "abbreviation": "PTS",
+                                   "leaders": [{"athlete": {...}, "team": {...},
+                                               "value": 33.75}, ...]}, ...]}}
+
+    Returns {norm_player_name: {pts, reb, ast, stl, blk, three_pm, games, team}}
+    """
+    data = _get(f"{ESPN_NBA_V3}/leaders")
+    if not data:
+        logger.warning("ESPN v3 leaders: no data returned")
+        return {}
+
+    # The actual payload lives one level deep under the "leaders" key
+    leaders_blob = data.get("leaders", {})
+    if isinstance(leaders_blob, dict):
+        categories = leaders_blob.get("categories", [])
+    else:
+        # Fallback: maybe it's already a list on older API versions
+        categories = leaders_blob if isinstance(leaders_blob, list) else []
+
+    result: Dict[str, Dict] = {}
+
+    for cat in categories:
+        if not isinstance(cat, dict):
+            continue
+        # Normalise: "pointsPerGame" → "pointspergame" (keep "pergame" — used by _V3_CAT_TO_STAT
+        # to distinguish per-game from season totals like plain "points")
+        raw = (cat.get("name") or cat.get("abbreviation") or "").lower()
+        raw = raw.replace(" ", "").replace("-", "")
+        stat_key = _V3_CAT_TO_STAT.get(raw)
+        if not stat_key:
+            logger.debug(f"v3 leaders: skipping category '{raw}' (abbr={cat.get('abbreviation','')})")
+            continue
+
+        leaders_list = cat.get("leaders", [])
+        logger.debug(f"v3 leaders '{raw}' → '{stat_key}': {len(leaders_list)} players")
+
+        for entry in leaders_list:
+            if not isinstance(entry, dict):
+                continue
+            athlete  = entry.get("athlete", {})
+            p_name   = athlete.get("displayName") or athlete.get("fullName", "")
+            if not p_name:
+                continue
+            value = float(entry.get("value", 0) or 0)
+            if value == 0:
+                continue
+
+            # Team: embedded in entry (not in athlete sub-object)
+            team_obj  = entry.get("team") or {}
+            team_name = team_obj.get("displayName", "")
+
+            norm_p = p_name.lower().strip()
+            if norm_p not in result:
+                result[norm_p] = _BLANK_STATS(team_name)
+            result[norm_p][stat_key] = value
+            if team_name and not result[norm_p]["team"]:
+                result[norm_p]["team"] = team_name
+
+    logger.info(f"ESPN v3 league leaders: {len(result)} unique players across {len(categories)} stat categories")
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Tier-2 source: nba_ctx team_leaders (already fetched, 0 extra API calls)
+# ---------------------------------------------------------------------------
+
+def _build_team_leaders_lookup(nba_ctx: Optional[Dict]) -> Dict[str, Dict]:
+    """
+    Extract per-player stats from nba_ctx['team_leaders'].
+    Only covers the #1 leader per stat per team, but costs nothing extra.
+    """
+    lookup: Dict[str, Dict] = {}
+    if not nba_ctx:
+        return lookup
+    for espn_name, categories in nba_ctx.get("team_leaders", {}).items():
+        for cat_key, cat_data in categories.items():
+            raw = cat_key.lower().replace(" ", "").replace("-", "").replace("pergame", "").replace("avg", "")
+            stat_key = _CAT_TO_STAT.get(raw)
+            if not stat_key:
+                continue
+            p_name = cat_data.get("name", "")
+            value  = float(cat_data.get("value", 0) or 0)
+            if not p_name:
+                continue
+            norm_p = p_name.lower().strip()
+            if norm_p not in lookup:
+                lookup[norm_p] = _BLANK_STATS(espn_name)
+            lookup[norm_p][stat_key] = value
+    logger.debug(f"team_leaders lookup: {len(lookup)} unique players")
+    return lookup
+
+
+# ---------------------------------------------------------------------------
+# Tier-3 sources: per-athlete fallback endpoints
+# ---------------------------------------------------------------------------
+
+def _fetch_athlete_web_stats(athlete_id: str) -> Dict:
+    """site.web.api.espn.com / common/v3 — often embeds full stat splits."""
+    data = _get(f"{ESPN_NBA_WEB}/athletes/{athlete_id}")
+    if not data:
+        return {}
+    athlete_blob = data.get("athlete", data)
+    stats_blob   = athlete_blob.get("statistics", data.get("statistics", {}))
+    vals = _parse_stat_vals(stats_blob)
+    return _stats_from_vals(vals) if vals else {}
+
+
+def _fetch_athlete_statisticslog(athlete_id: str) -> Dict:
+    """sports.core.api.espn.com statisticslog — game-by-game or season summary."""
+    data = _get(f"{ESPN_NBA_CORE}/athletes/{athlete_id}/statisticslog")
+    if not data:
+        return {}
+    vals = _parse_stat_vals(data)
+    return _stats_from_vals(vals) if vals else {}
+
+
+def _fetch_athlete_gamelog(athlete_id: str) -> Dict:
+    """site.api.espn.com gamelog — season averages embedded in seasonTypes."""
+    data = _get(f"{ESPN_NBA}/athletes/{athlete_id}/gamelog")
+    if not data:
+        return {}
+    vals = _parse_stat_vals(data)
+    return _stats_from_vals(vals) if vals else {}
+
+
+# ---------------------------------------------------------------------------
+# Public: player props stats with 3-tier fallback
+# ---------------------------------------------------------------------------
+
+def _find_in_lookup(player_name: str, lookup: Dict) -> Optional[Dict]:
+    norm = player_name.lower().strip()
+    if norm in lookup:
+        return lookup[norm]
+    parts = norm.split()
+    for lk_name, data in lookup.items():
+        if all(p in lk_name for p in parts):
+            return data
+    return None
 
 
 def get_nba_player_props_stats(
@@ -433,74 +638,41 @@ def get_nba_player_props_stats(
     nba_ctx:          Optional[Dict] = None,
 ) -> Dict[str, Dict]:
     """
-    Fetch per-game averages for players with Odds API prop lines.
+    Fetch per-game season averages for players with Odds API prop lines.
 
-    Strategy (fastest/most-reliable first):
-      1. Extract stats from nba_ctx["team_leaders"] — data already fetched during
-         get_nba_context(), zero extra API calls.  Each category stores the
-         per-game average for the team leader in that stat.
-      2. For players not found via leaders, fall back to roster fetch +
-         /athletes/{id}/gamelog endpoint.
+    Tier 1 — ESPN v3 /leaders (1 call, top-25 per stat, league-wide).
+    Tier 2 — nba_ctx['team_leaders'] (0 extra calls, #1 per stat per team).
+    Tier 3 — roster lookup + per-athlete fallback endpoints:
+              statisticslog → web stats → gamelog.
 
     Returns {player_name: {"stats": {pts/reb/ast/stl/blk/three_pm/games}, "team": espn_name}}
     """
     if not player_names or not team_names_today:
         return {}
 
-    # ── Tier 1: build player_name → partial stats from team_leaders ────────
-    # Each category in team_leaders has ONE leader (the top player).
-    # A player may lead multiple categories → we accumulate all their stat values.
-    leaders_lookup: Dict[str, Dict] = {}   # norm_name → {pts, reb, …, team}
-
-    if nba_ctx:
-        for espn_name, categories in nba_ctx.get("team_leaders", {}).items():
-            for cat_key, cat_data in categories.items():
-                stat_key = _LEADER_CAT_TO_STAT.get(
-                    cat_key.lower().replace(" ", "").replace("-", "")
-                )
-                if not stat_key:
-                    continue
-                p_name = cat_data.get("name", "")
-                value  = float(cat_data.get("value", 0) or 0)
-                if not p_name:
-                    continue
-                norm_p = p_name.lower().strip()
-                if norm_p not in leaders_lookup:
-                    leaders_lookup[norm_p] = {
-                        "pts": 0.0, "reb": 0.0, "ast": 0.0,
-                        "stl": 0.0, "blk": 0.0, "three_pm": 0.0,
-                        "games": 40, "team": espn_name,
-                    }
-                leaders_lookup[norm_p][stat_key] = value
-
-    def _match_leaders(player_name: str) -> Optional[Dict]:
-        norm = player_name.lower().strip()
-        if norm in leaders_lookup:
-            return leaders_lookup[norm]
-        parts = norm.split()
-        for lk_name, data in leaders_lookup.items():
-            if all(p in lk_name for p in parts):
-                return data
-        return None
+    # ── Tier 1 + 2: bulk lookups ────────────────────────────────────────────
+    v3_lookup          = _fetch_league_leaders_v3()
+    team_leader_lookup = _build_team_leaders_lookup(nba_ctx)
 
     result:    Dict[str, Dict] = {}
     remaining: List[str]       = []
 
     for player_name in player_names:
-        entry = _match_leaders(player_name)
+        entry = _find_in_lookup(player_name, v3_lookup)
+        if not entry:
+            entry = _find_in_lookup(player_name, team_leader_lookup)
         if entry:
             stats = {k: v for k, v in entry.items() if k != "team"}
-            result[player_name] = {"stats": stats, "team": entry["team"]}
+            result[player_name] = {"stats": stats, "team": entry.get("team", "")}
         else:
             remaining.append(player_name)
 
-    leaders_resolved = len(result)
     logger.info(
-        f"NBA player props stats — leaders tier: {leaders_resolved}/{len(player_names)} resolved, "
-        f"{len(remaining)} remaining for gamelog fallback"
+        f"NBA props — bulk tiers: {len(result)}/{len(player_names)} resolved, "
+        f"{len(remaining)} need per-athlete fallback"
     )
 
-    # ── Tier 2: roster + gamelog fallback for unresolved players ────────────
+    # ── Tier 3: per-athlete fallback ─────────────────────────────────────────
     if remaining:
         id_map = _fetch_team_id_map()
 
@@ -514,27 +686,36 @@ def get_nba_player_props_stats(
                 all_rosters[norm_name] = (aid, espn_name)
             time.sleep(0.15)
 
-        gamelog_resolved = 0
+        fb_resolved = 0
         for player_name in remaining:
             norm  = player_name.lower().strip()
             entry = all_rosters.get(norm)
             if not entry:
                 for roster_norm, val in all_rosters.items():
-                    if all(part in roster_norm for part in norm.split()):
+                    if all(p in roster_norm for p in norm.split()):
                         entry = val
                         break
             if not entry:
-                logger.debug(f"No ESPN athlete ID for prop player: {player_name}")
+                logger.debug(f"No ESPN athlete ID for: {player_name}")
                 continue
 
             athlete_id, espn_team = entry
-            stats = _fetch_athlete_gamelog(athlete_id)
+            # Try three endpoints in order of reliability
+            stats: Dict = {}
+            for fetch_fn in (_fetch_athlete_statisticslog,
+                             _fetch_athlete_web_stats,
+                             _fetch_athlete_gamelog):
+                stats = fetch_fn(athlete_id)
+                if stats.get("pts", 0) > 0 or stats.get("reb", 0) > 0:
+                    break
+                time.sleep(0.10)
+
             if stats.get("pts", 0) > 0 or stats.get("reb", 0) > 0 or stats.get("stl", 0) > 0:
                 result[player_name] = {"stats": stats, "team": espn_team}
-                gamelog_resolved += 1
+                fb_resolved += 1
             time.sleep(0.15)
 
-        logger.info(f"Gamelog fallback: {gamelog_resolved}/{len(remaining)} additional players resolved")
+        logger.info(f"Per-athlete fallback: {fb_resolved}/{len(remaining)} additional players resolved")
 
     logger.info(f"NBA player props stats: {len(result)}/{len(player_names)} players resolved total")
     return result
