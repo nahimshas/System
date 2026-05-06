@@ -61,6 +61,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_parlays   = state.get("parlays", [])
             final_props     = state.get("props",   [])
             change_warnings = state.get("warnings", [])
+            saved_credits   = state.get("odds_api_credits", {})
 
             report_data = build_report(
                 run_date=today,
@@ -71,7 +72,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 mlb_game_count=0,
                 errors=errors,
                 change_warnings=change_warnings,
-                odds_api_credits={},
+                odds_api_credits=saved_credits,
             )
             template_dir = Path(__file__).parent / "report" / "templates"
             jinja_env    = Environment(loader=FileSystemLoader(str(template_dir)))
@@ -357,6 +358,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "parlays":       final_parlays,
             "props":         final_props,
             "warnings":      [],
+            "odds_api_credits": get_api_credits(),
         })
     else:
         # ── Subsequent run — merge locked picks with new analysis ────────
@@ -376,6 +378,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "parlays":       final_parlays,
             "props":         final_props,
             "warnings":      change_warnings,
+            "odds_api_credits": get_api_credits(),
         })
 
         if change_warnings:
