@@ -284,7 +284,7 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
                 "Hits Over", "Hits Over (1+)",
                 "Total Bases Over", "HRR Over", "Home Runs Over",
             }
-            if prop_type not in ("Strikeouts Over",) | MLB_BATTER_TYPES:
+            if prop_type not in ({"Strikeouts Over"} | MLB_BATTER_TYPES):
                 continue
             if mlb_events is None:
                 mlb_events = _get_scoreboard("baseball/mlb", game_date)
