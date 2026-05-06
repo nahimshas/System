@@ -18,7 +18,7 @@ from jinja2 import Environment, FileSystemLoader
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
     NBA_SPORT, MLB_SPORT, NFL_SPORT, NHL_SPORT,
-    MAX_SINGLE_BETS, SPORT_ACTIVE_MONTHS,
+    MAX_SINGLE_BETS, SPORT_ACTIVE_MONTHS, MIN_EDGE,
 )
 from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits, fetch_player_props
 from src.data.nba_stats import get_nba_context
@@ -68,10 +68,12 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_props     = state.get("props",   [])
             change_warnings = state.get("warnings", [])
             saved_credits   = state.get("odds_api_credits", {})
+            final_singles_display = state.get("singles_display", final_singles)
 
             report_data = build_report(
                 run_date=today,
                 singles=final_singles,
+                singles_display=final_singles_display,
                 parlays=final_parlays,
                 props=final_props,
                 nba_game_count=state.get("nba_game_count", 0),
@@ -124,6 +126,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # ------------------------------------------------------------------ #
     #  NBA
     # ------------------------------------------------------------------ #
+    nba_display_raw = []
     nba_singles_raw = []
     nba_game_count  = 0
     nba_props_raw   = []
@@ -174,18 +177,20 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
             for game in nba_odds_games:
                 try:
-                    recs = analyze_nba_game(game, nba_ctx, nba_injuries)
-                    nba_singles_raw.extend(recs)
+                    recs = analyze_nba_game(game, nba_ctx, nba_injuries, min_edge=0.0)
+                    nba_display_raw.extend(recs)
                 except Exception as e:
                     logger.error(f"NBA game analysis error ({game.get('home_team')}): {e}")
 
+            nba_singles_raw = [r for r in nba_display_raw if r.edge >= MIN_EDGE]
             nba_props_raw = nba_player_props(nba_odds_games, nba_ctx)
-            logger.info(f"NBA: {len(nba_singles_raw)} edge(s) found across {nba_game_count} games | "
-                        f"{len(nba_props_raw)} prop pick(s)")
+            logger.info(f"NBA: {len(nba_singles_raw)} qualifying edge(s) ({len(nba_display_raw)} total) "
+                        f"across {nba_game_count} games | {len(nba_props_raw)} prop pick(s)")
 
     # ------------------------------------------------------------------ #
     #  MLB
     # ------------------------------------------------------------------ #
+    mlb_display_raw = []
     mlb_singles_raw = []
     mlb_game_count  = 0
     mlb_props_raw   = []
@@ -292,8 +297,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                                         home_schedule_load=home_load,
                                         away_schedule_load=away_load,
                                         umpire_tendency=ump_tendency,
-                                        weather=wx)
-                mlb_singles_raw.extend(recs)
+                                        weather=wx,
+                                        min_edge=0.0)
+                mlb_display_raw.extend(recs)
             except Exception as e:
                 logger.error(f"MLB game analysis error ({home} vs {away}): {e}")
 
@@ -304,13 +310,15 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             sg["umpire_name"]     = ump
             sg["umpire_k_factor"] = get_umpire_tendency(ump).get("k_factor", 1.0)
 
+        mlb_singles_raw = [r for r in mlb_display_raw if r.edge >= MIN_EDGE]
         mlb_props_raw = mlb_player_props(mlb_schedule, pitcher_stats_map)
-        logger.info(f"MLB: {len(mlb_singles_raw)} edge(s) found across {mlb_game_count} games | "
-                    f"{len(mlb_props_raw)} prop pick(s)")
+        logger.info(f"MLB: {len(mlb_singles_raw)} qualifying edge(s) ({len(mlb_display_raw)} total) "
+                    f"across {mlb_game_count} games | {len(mlb_props_raw)} prop pick(s)")
 
     # ------------------------------------------------------------------ #
     #  NFL
     # ------------------------------------------------------------------ #
+    nfl_display_raw = []
     nfl_singles_raw = []
     nfl_game_count  = 0
 
@@ -352,16 +360,19 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
                 for game in nfl_odds_games:
                     try:
-                        recs = analyze_nfl_game(game, nfl_ctx, nfl_injuries)
-                        nfl_singles_raw.extend(recs)
+                        recs = analyze_nfl_game(game, nfl_ctx, nfl_injuries, min_edge=0.0)
+                        nfl_display_raw.extend(recs)
                     except Exception as e:
                         logger.error(f"NFL game analysis error ({game.get('home_team')}): {e}")
 
-                logger.info(f"NFL: {len(nfl_singles_raw)} edge(s) found across {nfl_game_count} games")
+                nfl_singles_raw = [r for r in nfl_display_raw if r.edge >= MIN_EDGE]
+                logger.info(f"NFL: {len(nfl_singles_raw)} qualifying edge(s) ({len(nfl_display_raw)} total) "
+                            f"across {nfl_game_count} games")
 
     # ------------------------------------------------------------------ #
     #  NHL
     # ------------------------------------------------------------------ #
+    nhl_display_raw = []
     nhl_singles_raw = []
     nhl_game_count  = 0
 
@@ -403,17 +414,22 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
                 for game in nhl_odds_games:
                     try:
-                        recs = analyze_nhl_game(game, nhl_ctx, nhl_injuries)
-                        nhl_singles_raw.extend(recs)
+                        recs = analyze_nhl_game(game, nhl_ctx, nhl_injuries, min_edge=0.0)
+                        nhl_display_raw.extend(recs)
                     except Exception as e:
                         logger.error(f"NHL game analysis error ({game.get('home_team')}): {e}")
 
-                logger.info(f"NHL: {len(nhl_singles_raw)} edge(s) found across {nhl_game_count} games")
+                nhl_singles_raw = [r for r in nhl_display_raw if r.edge >= MIN_EDGE]
+                logger.info(f"NHL: {len(nhl_singles_raw)} qualifying edge(s) ({len(nhl_display_raw)} total) "
+                            f"across {nhl_game_count} games")
 
     # ------------------------------------------------------------------ #
     #  Build parlays from raw BetRecommendation objects (before serialising)
     # ------------------------------------------------------------------ #
+    # Budget-qualifying picks only (edge >= MIN_EDGE) — used for allocation table + parlays
     all_singles_raw = nba_singles_raw + mlb_singles_raw + nfl_singles_raw + nhl_singles_raw
+    # All positive-EV picks (no min-edge threshold) — used for display in league sections
+    all_display_raw = nba_display_raw + mlb_display_raw + nfl_display_raw + nhl_display_raw
     parlays_raw     = build_parlays(all_singles_raw)
     props_raw       = nba_props_raw + mlb_props_raw
 
@@ -454,6 +470,29 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     fresh_parlays = [parlay_to_dict(p) for p in parlays_raw]
     fresh_props   = [prop_to_dict(p)   for p in props_raw]
 
+    # Display picks — all positive-EV bets (no MIN_EDGE gate), deduplicated per sport.
+    # Used for per-league section cards; budget allocation still uses fresh_singles.
+    _display_sorted = sorted(all_display_raw,
+                             key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge))
+    _display_seen: set = set()
+    _display_deduped = []
+    for _r in _display_sorted:
+        if _r.bet_type in ("Moneyline", "Spread"):
+            _team = next(
+                (t for t in [_r.home_team, _r.away_team] if _r.pick.startswith(t)),
+                _r.pick,
+            )
+            _dkey = (_r.sport, _r.game, _team)
+        elif _r.bet_type == "Total":
+            _direction = "over" if "Over" in _r.pick or "over" in _r.pick else "under"
+            _dkey = (_r.sport, _r.game, _direction)
+        else:
+            _dkey = (_r.sport, _r.game, _r.pick)
+        if _dkey not in _display_seen:
+            _display_seen.add(_dkey)
+            _display_deduped.append(_r)
+    fresh_singles_display = [bet_to_dict(r) for r in _display_deduped]
+
     # ------------------------------------------------------------------ #
     #  State management — lock morning picks, merge on subsequent runs
     # ------------------------------------------------------------------ #
@@ -471,6 +510,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "date":          today.isoformat(),
             "first_run_at":  datetime.now(timezone.utc).isoformat(),
             "singles":       final_singles,
+            "singles_display": fresh_singles_display,
             "parlays":       final_parlays,
             "props":         final_props,
             "warnings":      [],
@@ -495,6 +535,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "date":          today.isoformat(),
             "first_run_at":  state.get("first_run_at"),
             "singles":       final_singles,
+            "singles_display": fresh_singles_display,
             "parlays":       final_parlays,
             "props":         final_props,
             "warnings":      change_warnings,
@@ -516,6 +557,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     report_data = build_report(
         run_date=today,
         singles=final_singles,
+        singles_display=fresh_singles_display,
         parlays=final_parlays,
         props=final_props,
         nba_game_count=nba_game_count,

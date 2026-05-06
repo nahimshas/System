@@ -15,7 +15,7 @@ def _now_pacific_str() -> str:
 
 def build_report(
     run_date: date,
-    singles: List[Dict],          # all sports, already serialised by state manager
+    singles: List[Dict],          # budget-qualifying picks (edge >= MIN_EDGE), for allocation table
     parlays: List[Dict],
     props: List[Dict],
     nba_game_count: int,
@@ -25,13 +25,18 @@ def build_report(
     odds_api_credits: Optional[Dict] = None,
     nfl_game_count: int = 0,
     nhl_game_count: int = 0,
+    singles_display: Optional[List[Dict]] = None,  # all positive-EV picks for league section display
 ) -> Dict:
     change_warnings = change_warnings or []
+
+    # Display pool: use singles_display (all positive-EV picks) if provided,
+    # otherwise fall back to singles (budget-qualifying only).
+    _display = singles_display if singles_display is not None else singles
 
     # NHL is monitoring-only — exclude from budget allocation pool entirely.
     # All other active sports (NBA, MLB, NFL) compete for the top-5 slots.
     nhl_watchlist = sorted(
-        [s for s in singles if s.get("sport") == "NHL"],
+        [s for s in _display if s.get("sport") == "NHL"],
         key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
     )
 
@@ -60,7 +65,7 @@ def build_report(
         seen: set = set()
         out = []
         for s in sorted(
-            [s for s in singles if s.get("sport") == sport],
+            [s for s in _display if s.get("sport") == sport],
             key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
         ):
             k = (s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))

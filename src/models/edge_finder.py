@@ -124,13 +124,14 @@ def _nba_margin_to_prob(expected_margin: float) -> float:
     return float(norm.cdf(expected_margin, 0, NBA_SPREAD_STD))
 
 
-def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetRecommendation]:
+def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: float = None) -> List[BetRecommendation]:
     home = nba_normalize(game["home_team"])
     away = nba_normalize(game["away_team"])
     label = f"{away} @ {home}"
     commence_time = game.get("commence_time", "")
     game_time = _utc_to_pdt(commence_time)
     recs = []
+    _min = min_edge if min_edge is not None else MIN_EDGE
 
     playoff = _is_nba_playoff()
     stats_available = bool(nba_ctx["season_stats"].get(home) or nba_ctx["season_stats"].get(away))
@@ -316,7 +317,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
         home_edge = adjusted_home_prob - market_home_prob
         away_edge = adjusted_away_prob - market_away_prob
 
-        if home_edge >= MIN_EDGE and has_positive_ev(adjusted_home_prob, market_home_prob):
+        if home_edge >= _min and has_positive_ev(adjusted_home_prob, market_home_prob):
             sizing = robinhood_kelly(adjusted_home_prob, market_home_prob)
             if sizing.num_contracts > 0:
                 conf = _confidence_label(home_edge, len(signals), stats_available)
@@ -332,7 +333,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                     commence_time=commence_time,
                 ))
 
-        if away_edge >= MIN_EDGE and has_positive_ev(adjusted_away_prob, market_away_prob):
+        if away_edge >= _min and has_positive_ev(adjusted_away_prob, market_away_prob):
             sizing = robinhood_kelly(adjusted_away_prob, market_away_prob)
             if sizing.num_contracts > 0:
                 conf = _confidence_label(away_edge, len(signals), stats_available)
@@ -371,7 +372,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             home_sp_edge = model_home_cover - market_home_cover
             away_sp_edge = model_away_cover - market_away_cover
 
-            if home_sp_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
+            if home_sp_edge >= _min and has_positive_ev(model_home_cover, market_home_cover):
                 sizing = robinhood_kelly(model_home_cover, market_home_cover)
                 if sizing.num_contracts > 0:
                     conf = _confidence_label(home_sp_edge, len(signals), stats_available)
@@ -388,7 +389,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                         commence_time=commence_time,
                     ))
 
-            if away_sp_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
+            if away_sp_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
                 if sizing.num_contracts > 0:
                     conf = _confidence_label(away_sp_edge, len(signals), stats_available)
@@ -467,7 +468,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
             _over_label  = f"Over {market_line - 0.5}"  if market_line % 1 == 0 else f"Over {market_line}"
             _under_label = f"Under {market_line + 0.5}" if market_line % 1 == 0 else f"Under {market_line}"
 
-            if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
+            if over_edge >= _min and has_positive_ev(model_over_prob, market_over_prob):
                 sizing = robinhood_kelly(model_over_prob, market_over_prob)
                 if sizing.num_contracts > 0:
                     recs.append(BetRecommendation(
@@ -480,7 +481,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict) -> List[BetR
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
                     ))
-            if under_edge >= MIN_EDGE and has_positive_ev(1 - model_over_prob, market_under_prob):
+            if under_edge >= _min and has_positive_ev(1 - model_over_prob, market_under_prob):
                 sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
                 if sizing.num_contracts > 0:
                     recs.append(BetRecommendation(
@@ -619,7 +620,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                      home_schedule_load: int = 0,
                      away_schedule_load: int = 0,
                      umpire_tendency: Optional[Dict] = None,
-                     weather: Optional[Dict] = None) -> List[BetRecommendation]:
+                     weather: Optional[Dict] = None,
+                     min_edge: float = None) -> List[BetRecommendation]:
     from src.data.mlb_stats import get_park_factor
     from src.data.umpire import build_umpire_signals
     from src.data.weather import build_weather_signals, weather_run_adjustment
@@ -632,6 +634,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     park_factor = get_park_factor(venue)
     playoff = _is_mlb_playoff()
     recs = []
+    _min = min_edge if min_edge is not None else MIN_EDGE
     umpire_tendency = umpire_tendency or {}
     weather = weather or {}
 
@@ -900,7 +903,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         home_edge = model_home_prob - market_home_prob
         away_edge = model_away_prob - market_away_prob
 
-        if home_edge >= MIN_EDGE and has_positive_ev(model_home_prob, market_home_prob):
+        if home_edge >= _min and has_positive_ev(model_home_prob, market_home_prob):
             sizing = robinhood_kelly(model_home_prob, market_home_prob)
             if sizing.num_contracts > 0:
                 # own_trap = home pitcher trap hurts home ML confidence
@@ -918,7 +921,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     commence_time=commence_time,
                 ))
 
-        if away_edge >= MIN_EDGE and has_positive_ev(model_away_prob, market_away_prob):
+        if away_edge >= _min and has_positive_ev(model_away_prob, market_away_prob):
             sizing = robinhood_kelly(model_away_prob, market_away_prob)
             if sizing.num_contracts > 0:
                 # own_trap = away pitcher trap hurts away ML confidence
@@ -958,7 +961,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             home_rl_edge = model_home_cover - market_home_cover
             away_rl_edge = model_away_cover - market_away_cover
 
-            if home_rl_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
+            if home_rl_edge >= _min and has_positive_ev(model_home_cover, market_home_cover):
                 sizing = robinhood_kelly(model_home_cover, market_home_cover)
                 if sizing.num_contracts > 0:
                     conf = _mlb_conf(home_rl_edge, len(signals), stats_available,
@@ -975,7 +978,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                         commence_time=commence_time,
                     ))
 
-            if away_rl_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
+            if away_rl_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
                 if sizing.num_contracts > 0:
                     conf = _mlb_conf(away_rl_edge, len(signals), stats_available,
@@ -1011,7 +1014,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         _over_label  = f"Over {market_line - 0.5}"  if market_line % 1 == 0 else f"Over {market_line}"
         _under_label = f"Under {market_line + 0.5}" if market_line % 1 == 0 else f"Under {market_line}"
 
-        if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
+        if over_edge >= _min and has_positive_ev(model_over_prob, market_over_prob):
             sizing = robinhood_kelly(model_over_prob, market_over_prob)
             if sizing.num_contracts > 0:
                 recs.append(BetRecommendation(
@@ -1024,7 +1027,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
                 ))
-        if under_edge >= MIN_EDGE and has_positive_ev(1 - model_over_prob, market_under_prob):
+        if under_edge >= _min and has_positive_ev(1 - model_over_prob, market_under_prob):
             sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
             if sizing.num_contracts > 0:
                 recs.append(BetRecommendation(
@@ -1072,7 +1075,7 @@ def _nfl_margin_to_prob(expected_margin: float) -> float:
     return float(norm.cdf(expected_margin, 0, NFL_SPREAD_STD))
 
 
-def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetRecommendation]:
+def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: float = None) -> List[BetRecommendation]:
     from src.data.nfl_stats import normalize as nfl_normalize
     home = nfl_normalize(game["home_team"])
     away = nfl_normalize(game["away_team"])
@@ -1080,6 +1083,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetR
     commence_time = game.get("commence_time", "")
     game_time = _utc_to_pdt(commence_time)
     recs = []
+    _min = min_edge if min_edge is not None else MIN_EDGE
 
     playoff = _is_nfl_playoff()
     stats_available = bool(nfl_ctx["season_stats"].get(home) or nfl_ctx["season_stats"].get(away))
@@ -1206,7 +1210,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetR
         home_edge = adjusted_home_prob - market_home_prob
         away_edge = adjusted_away_prob - market_away_prob
 
-        if home_edge >= MIN_EDGE and has_positive_ev(adjusted_home_prob, market_home_prob):
+        if home_edge >= _min and has_positive_ev(adjusted_home_prob, market_home_prob):
             sizing = robinhood_kelly(adjusted_home_prob, market_home_prob)
             if sizing.num_contracts > 0:
                 conf = _confidence_label(home_edge, len(signals), stats_available)
@@ -1222,7 +1226,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetR
                     commence_time=commence_time,
                 ))
 
-        if away_edge >= MIN_EDGE and has_positive_ev(adjusted_away_prob, market_away_prob):
+        if away_edge >= _min and has_positive_ev(adjusted_away_prob, market_away_prob):
             sizing = robinhood_kelly(adjusted_away_prob, market_away_prob)
             if sizing.num_contracts > 0:
                 conf = _confidence_label(away_edge, len(signals), stats_available)
@@ -1253,7 +1257,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetR
             home_sp_edge = model_home_cover - market_home_cover
             away_sp_edge = model_away_cover - market_away_cover
 
-            if home_sp_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
+            if home_sp_edge >= _min and has_positive_ev(model_home_cover, market_home_cover):
                 sizing = robinhood_kelly(model_home_cover, market_home_cover)
                 if sizing.num_contracts > 0:
                     conf = _confidence_label(home_sp_edge, len(signals), stats_available)
@@ -1270,7 +1274,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetR
                         commence_time=commence_time,
                     ))
 
-            if away_sp_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
+            if away_sp_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
                 if sizing.num_contracts > 0:
                     conf = _confidence_label(away_sp_edge, len(signals), stats_available)
@@ -1317,7 +1321,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetR
             over_edge  = model_over_prob - market_over_prob
             under_edge = (1 - model_over_prob) - market_under_prob
 
-            if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
+            if over_edge >= _min and has_positive_ev(model_over_prob, market_over_prob):
                 sizing = robinhood_kelly(model_over_prob, market_over_prob)
                 if sizing.num_contracts > 0:
                     recs.append(BetRecommendation(
@@ -1330,7 +1334,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetR
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
                     ))
-            if under_edge >= MIN_EDGE and has_positive_ev(1 - model_over_prob, market_under_prob):
+            if under_edge >= _min and has_positive_ev(1 - model_over_prob, market_under_prob):
                 sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
                 if sizing.num_contracts > 0:
                     recs.append(BetRecommendation(
@@ -1378,7 +1382,7 @@ def _nhl_margin_to_prob(expected_margin: float) -> float:
     return float(norm.cdf(expected_margin, 0, NHL_SPREAD_STD))
 
 
-def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetRecommendation]:
+def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: float = None) -> List[BetRecommendation]:
     from src.data.nhl_stats import normalize as nhl_normalize
     home = nhl_normalize(game["home_team"])
     away = nhl_normalize(game["away_team"])
@@ -1386,6 +1390,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetR
     commence_time = game.get("commence_time", "")
     game_time = _utc_to_pdt(commence_time)
     recs = []
+    _min = min_edge if min_edge is not None else MIN_EDGE
 
     playoff = _is_nhl_playoff()
     stats_available = bool(nhl_ctx["season_stats"].get(home) or nhl_ctx["season_stats"].get(away))
@@ -1512,7 +1517,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetR
         home_edge = adjusted_home_prob - market_home_prob
         away_edge = adjusted_away_prob - market_away_prob
 
-        if home_edge >= MIN_EDGE and has_positive_ev(adjusted_home_prob, market_home_prob):
+        if home_edge >= _min and has_positive_ev(adjusted_home_prob, market_home_prob):
             sizing = robinhood_kelly(adjusted_home_prob, market_home_prob)
             if sizing.num_contracts > 0:
                 conf = _confidence_label(home_edge, len(signals), stats_available)
@@ -1528,7 +1533,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetR
                     commence_time=commence_time,
                 ))
 
-        if away_edge >= MIN_EDGE and has_positive_ev(adjusted_away_prob, market_away_prob):
+        if away_edge >= _min and has_positive_ev(adjusted_away_prob, market_away_prob):
             sizing = robinhood_kelly(adjusted_away_prob, market_away_prob)
             if sizing.num_contracts > 0:
                 conf = _confidence_label(away_edge, len(signals), stats_available)
@@ -1559,7 +1564,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetR
             home_sp_edge = model_home_cover - market_home_cover
             away_sp_edge = model_away_cover - market_away_cover
 
-            if home_sp_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
+            if home_sp_edge >= _min and has_positive_ev(model_home_cover, market_home_cover):
                 sizing = robinhood_kelly(model_home_cover, market_home_cover)
                 if sizing.num_contracts > 0:
                     conf = _confidence_label(home_sp_edge, len(signals), stats_available)
@@ -1576,7 +1581,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetR
                         commence_time=commence_time,
                     ))
 
-            if away_sp_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
+            if away_sp_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
                 if sizing.num_contracts > 0:
                     conf = _confidence_label(away_sp_edge, len(signals), stats_available)
@@ -1627,7 +1632,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetR
             over_edge  = model_over_prob - market_over_prob
             under_edge = (1 - model_over_prob) - market_under_prob
 
-            if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
+            if over_edge >= _min and has_positive_ev(model_over_prob, market_over_prob):
                 sizing = robinhood_kelly(model_over_prob, market_over_prob)
                 if sizing.num_contracts > 0:
                     recs.append(BetRecommendation(
@@ -1640,7 +1645,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetR
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
                     ))
-            if under_edge >= MIN_EDGE and has_positive_ev(1 - model_over_prob, market_under_prob):
+            if under_edge >= _min and has_positive_ev(1 - model_over_prob, market_under_prob):
                 sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
                 if sizing.num_contracts > 0:
                     recs.append(BetRecommendation(
