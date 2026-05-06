@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 
 ESPN_NBA_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
 ESPN_MLB_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/injuries"
+ESPN_NFL_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/injuries"
+ESPN_NHL_INJURIES = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries"
 
 
 def _fetch(url: str) -> List[Dict]:
@@ -48,6 +50,14 @@ def get_mlb_injuries() -> Dict[str, List[Dict]]:
     return _parse_injuries(_fetch(ESPN_MLB_INJURIES))
 
 
+def get_nfl_injuries() -> Dict[str, List[Dict]]:
+    return _parse_injuries(_fetch(ESPN_NFL_INJURIES))
+
+
+def get_nhl_injuries() -> Dict[str, List[Dict]]:
+    return _parse_injuries(_fetch(ESPN_NHL_INJURIES))
+
+
 # Impact weights by position — how much a player's absence shifts win probability
 # These are rough estimates; the system uses them as directional adjustments
 NBA_POSITION_IMPACT = {
@@ -60,13 +70,31 @@ MLB_POSITION_IMPACT = {
     "C": 0.012, "1B": 0.010, "2B": 0.012, "3B": 0.012,
     "SS": 0.015, "LF": 0.010, "CF": 0.015, "RF": 0.010, "DH": 0.012,
 }
+NFL_POSITION_IMPACT = {
+    "QB": 0.060,   # QB out = largest single-player swing in team sports
+    "WR": 0.015, "RB": 0.015, "TE": 0.015,
+    "OT": 0.012, "OG": 0.010, "C": 0.010,
+    "DE": 0.018, "DT": 0.012, "LB": 0.015, "CB": 0.018, "S": 0.015,
+}
+NHL_POSITION_IMPACT = {
+    "G": 0.045,    # Starting goalie out = massive impact
+    "C": 0.020, "LW": 0.018, "RW": 0.018, "D": 0.015,
+    "F": 0.018,    # generic forward
+}
 
 STATUS_WEIGHT = {"out": 1.0, "doubtful": 0.75, "questionable": 0.35, "day-to-day": 0.35}
+
+_SPORT_POSITION_MAP = {
+    "nba": NBA_POSITION_IMPACT,
+    "mlb": MLB_POSITION_IMPACT,
+    "nfl": NFL_POSITION_IMPACT,
+    "nhl": NHL_POSITION_IMPACT,
+}
 
 
 def injury_adjustment(team: str, injuries: Dict[str, List[Dict]], sport: str) -> float:
     """Returns negative win probability adjustment for a team based on injuries."""
-    position_map = NBA_POSITION_IMPACT if sport == "nba" else MLB_POSITION_IMPACT
+    position_map = _SPORT_POSITION_MAP.get(sport, NBA_POSITION_IMPACT)
     adjustment = 0.0
     for inj in injuries.get(team, []):
         pos = inj.get("position", "")

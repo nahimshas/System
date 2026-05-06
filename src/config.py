@@ -15,7 +15,24 @@ FALLBACK_BOOKS = ["fanduel", "betmgm", "bovada"]
 # --- Sports keys ---
 NBA_SPORT = "basketball_nba"
 MLB_SPORT = "baseball_mlb"
-SPORT_LABELS = {NBA_SPORT: "NBA", MLB_SPORT: "MLB"}
+NFL_SPORT = "americanfootball_nfl"
+NHL_SPORT = "icehockey_nhl"
+SPORT_LABELS = {
+    NBA_SPORT: "NBA",
+    MLB_SPORT: "MLB",
+    NFL_SPORT: "NFL",
+    NHL_SPORT: "NHL",
+}
+
+# --- Active-season calendar (month numbers) ---
+# Used by main.py to skip analysis for leagues not currently in-season.
+# Months are 1-indexed. Overlapping months (e.g. NBA/NHL both in Oct-Apr) are fine.
+SPORT_ACTIVE_MONTHS = {
+    "nba": list(range(10, 13)) + list(range(1, 7)),   # Oct – Jun (regular + playoffs)
+    "mlb": list(range(3, 12)),                          # Mar – Nov
+    "nfl": list(range(9, 13)) + [1, 2],                # Sep – Feb
+    "nhl": list(range(10, 13)) + list(range(1, 7)),    # Oct – Jun
+}
 
 # --- Betting parameters ---
 DAILY_BUDGET: float = float(os.environ.get("DAILY_BUDGET", "100"))

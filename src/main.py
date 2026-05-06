@@ -15,17 +15,23 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
-from src.config import ODDS_API_KEY, REPORT_DIR, REPORT_FILE, NBA_SPORT, MLB_SPORT, MAX_SINGLE_BETS
+from src.config import (
+    ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
+    NBA_SPORT, MLB_SPORT, NFL_SPORT, NHL_SPORT,
+    MAX_SINGLE_BETS, SPORT_ACTIVE_MONTHS,
+)
 from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits, fetch_player_props
 from src.data.nba_stats import get_nba_context
 from src.data.mlb_stats import (
     get_todays_games, get_pitcher_stats, get_team_batting_stats,
     get_bullpen_stats, get_team_schedule_load,
 )
-from src.data.injuries import get_nba_injuries, get_mlb_injuries
+from src.data.nfl_stats import get_nfl_context
+from src.data.nhl_stats import get_nhl_context
+from src.data.injuries import get_nba_injuries, get_mlb_injuries, get_nfl_injuries, get_nhl_injuries
 from src.data.umpire import get_home_plate_umpires, get_umpire_tendency
 from src.data.weather import get_game_weather
-from src.models.edge_finder import analyze_nba_game, analyze_mlb_game
+from src.models.edge_finder import analyze_nba_game, analyze_mlb_game, analyze_nfl_game, analyze_nhl_game
 from src.models.parlay_builder import build_parlays
 from src.models.props_analyzer import nba_player_props, mlb_player_props
 from src.state.manager import (
@@ -301,9 +307,111 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                     f"{len(mlb_props_raw)} prop pick(s)")
 
     # ------------------------------------------------------------------ #
+    #  NFL
+    # ------------------------------------------------------------------ #
+    nfl_singles_raw = []
+    nfl_game_count  = 0
+
+    if "nfl" in leagues:
+        if today.month not in SPORT_ACTIVE_MONTHS.get("nfl", []):
+            logger.info("NFL is out of season — skipping")
+        else:
+            logger.info("=== NFL Analysis ===")
+            nfl_odds_games = []
+            if ODDS_API_KEY:
+                nfl_odds_games = get_game_odds(NFL_SPORT)
+
+            nfl_game_count = len(nfl_odds_games)
+
+            if nfl_game_count == 0:
+                api_err = get_last_api_error()
+                if api_err:
+                    errors.append(f"NFL odds unavailable: {api_err}")
+                    logger.error(f"NFL odds unavailable: {api_err}")
+                else:
+                    logger.info("No NFL games today or odds unavailable")
+            else:
+                nfl_team_names = list({
+                    t for g in nfl_odds_games
+                    for t in [g["home_team"], g["away_team"]]
+                })
+                try:
+                    nfl_ctx = get_nfl_context(today, team_names=nfl_team_names)
+                except Exception as e:
+                    logger.error(f"NFL stats fetch failed: {e}")
+                    nfl_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}}
+                    errors.append(f"NFL stats partially unavailable: {e}")
+
+                try:
+                    nfl_injuries = get_nfl_injuries()
+                except Exception as e:
+                    logger.warning(f"NFL injuries unavailable: {e}")
+                    nfl_injuries = {}
+
+                for game in nfl_odds_games:
+                    try:
+                        recs = analyze_nfl_game(game, nfl_ctx, nfl_injuries)
+                        nfl_singles_raw.extend(recs)
+                    except Exception as e:
+                        logger.error(f"NFL game analysis error ({game.get('home_team')}): {e}")
+
+                logger.info(f"NFL: {len(nfl_singles_raw)} edge(s) found across {nfl_game_count} games")
+
+    # ------------------------------------------------------------------ #
+    #  NHL
+    # ------------------------------------------------------------------ #
+    nhl_singles_raw = []
+    nhl_game_count  = 0
+
+    if "nhl" in leagues:
+        if today.month not in SPORT_ACTIVE_MONTHS.get("nhl", []):
+            logger.info("NHL is out of season — skipping")
+        else:
+            logger.info("=== NHL Analysis ===")
+            nhl_odds_games = []
+            if ODDS_API_KEY:
+                nhl_odds_games = get_game_odds(NHL_SPORT)
+
+            nhl_game_count = len(nhl_odds_games)
+
+            if nhl_game_count == 0:
+                api_err = get_last_api_error()
+                if api_err:
+                    errors.append(f"NHL odds unavailable: {api_err}")
+                    logger.error(f"NHL odds unavailable: {api_err}")
+                else:
+                    logger.info("No NHL games today or odds unavailable")
+            else:
+                nhl_team_names = list({
+                    t for g in nhl_odds_games
+                    for t in [g["home_team"], g["away_team"]]
+                })
+                try:
+                    nhl_ctx = get_nhl_context(today, team_names=nhl_team_names)
+                except Exception as e:
+                    logger.error(f"NHL stats fetch failed: {e}")
+                    nhl_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}}
+                    errors.append(f"NHL stats partially unavailable: {e}")
+
+                try:
+                    nhl_injuries = get_nhl_injuries()
+                except Exception as e:
+                    logger.warning(f"NHL injuries unavailable: {e}")
+                    nhl_injuries = {}
+
+                for game in nhl_odds_games:
+                    try:
+                        recs = analyze_nhl_game(game, nhl_ctx, nhl_injuries)
+                        nhl_singles_raw.extend(recs)
+                    except Exception as e:
+                        logger.error(f"NHL game analysis error ({game.get('home_team')}): {e}")
+
+                logger.info(f"NHL: {len(nhl_singles_raw)} edge(s) found across {nhl_game_count} games")
+
+    # ------------------------------------------------------------------ #
     #  Build parlays from raw BetRecommendation objects (before serialising)
     # ------------------------------------------------------------------ #
-    all_singles_raw = nba_singles_raw + mlb_singles_raw
+    all_singles_raw = nba_singles_raw + mlb_singles_raw + nfl_singles_raw + nhl_singles_raw
     parlays_raw     = build_parlays(all_singles_raw)
     props_raw       = nba_props_raw + mlb_props_raw
 
@@ -396,6 +504,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         props=final_props,
         nba_game_count=nba_game_count,
         mlb_game_count=mlb_game_count,
+        nfl_game_count=nfl_game_count,
+        nhl_game_count=nhl_game_count,
         errors=errors,
         change_warnings=change_warnings,
         odds_api_credits=get_api_credits(),
@@ -421,7 +531,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
 def main():
     parser = argparse.ArgumentParser(description="Sports Betting Analysis System")
-    parser.add_argument("--league", choices=["nba", "mlb"], help="Run for one league only")
+    parser.add_argument("--league", choices=["nba", "mlb", "nfl", "nhl"], help="Run for one league only")
     parser.add_argument("--no-email", action="store_true", help="Skip email delivery")
     parser.add_argument("--reevaluate", action="store_true",
                         help="Re-evaluate unlocked picks and replace any no longer in the top options")
@@ -429,7 +539,7 @@ def main():
                         help="Re-render report from saved state — zero Odds API calls (for visual/template deploys)")
     args = parser.parse_args()
 
-    leagues   = [args.league] if args.league else ["nba", "mlb"]
+    leagues   = [args.league] if args.league else ["nba", "mlb", "nfl", "nhl"]
     bet_count = run(leagues=leagues, send_email=not args.no_email,
                     reevaluate=args.reevaluate, code_only=args.code_only)
     logger.info(f"Done. {bet_count} bet recommendation(s) generated.")

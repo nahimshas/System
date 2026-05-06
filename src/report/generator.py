@@ -23,6 +23,8 @@ def build_report(
     errors: List[str],
     change_warnings: Optional[List[Dict]] = None,
     odds_api_credits: Optional[Dict] = None,
+    nfl_game_count: int = 0,
+    nhl_game_count: int = 0,
 ) -> Dict:
     change_warnings = change_warnings or []
 
@@ -33,6 +35,8 @@ def build_report(
     )[:MAX_SINGLE_BETS]
     nba_singles = [s for s in all_singles if s["sport"] == "NBA"]
     mlb_singles = [s for s in all_singles if s["sport"] == "MLB"]
+    nfl_singles = [s for s in all_singles if s["sport"] == "NFL"]
+    nhl_singles = [s for s in all_singles if s["sport"] == "NHL"]
 
     total_allocated  = sum(r["total_cost"] for r in all_singles)
     parlay_allocated = sum(p["total_cost"] for p in parlays)
@@ -179,6 +183,8 @@ def build_report(
         "mlb_game_count":     mlb_game_count,
         "nba_singles":        nba_singles,
         "mlb_singles":        mlb_singles,
+        "nfl_singles":        nfl_singles,
+        "nhl_singles":        nhl_singles,
         "all_singles":        all_singles,
         "parlays":            parlays,
         "props":              props,
@@ -189,8 +195,12 @@ def build_report(
         "reserve":            round(reserve, 2),
         "errors":             errors,
         "change_warnings":    formatted_warnings,
+        "nfl_game_count":     nfl_game_count,
+        "nhl_game_count":     nhl_game_count,
         "has_nba":            nba_game_count > 0,
         "has_mlb":            mlb_game_count > 0,
+        "has_nfl":            nfl_game_count > 0,
+        "has_nhl":            nhl_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),

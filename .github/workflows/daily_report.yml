@@ -6,13 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       league:
-        description: "League to analyze (leave blank for both)"
+        description: "League to analyze (leave blank for all)"
         required: false
         type: choice
         options:
           - ""
           - nba
           - mlb
+          - nfl
+          - nhl
         default: ""
       reset_state:
         description: "Delete today's state file and rebuild picks from scratch"
@@ -57,6 +59,22 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Restore state from last Actions commit
+        run: |
+          # The user may have pushed code from a local machine whose state/ files
+          # are stale (older prop_history.json, missing picks files).  Always
+          # restore state/ from the most recent commit made by the Actions bot so
+          # Python runs with the freshest settlement data regardless of what the
+          # user pushed.
+          git fetch --unshallow 2>/dev/null || git fetch origin
+          LAST_SHA=$(git log --author="github-actions\[bot\]" --format="%H" -- state/ | head -1)
+          if [ -n "$LAST_SHA" ]; then
+            git checkout "$LAST_SHA" -- state/ 2>/dev/null || true
+            echo "Restored state/ from Actions commit $LAST_SHA"
+          else
+            echo "No previous Actions commit found for state/ — using checkout as-is"
+          fi
 
       - name: Reset state (if requested)
         if: ${{ github.event.inputs.reset_state == 'true' }}

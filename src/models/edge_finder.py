@@ -1039,3 +1039,619 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                 ))
 
     return recs
+
+
+# ---------------------------------------------------------------------------
+# NFL Edge Finder
+# ---------------------------------------------------------------------------
+
+# NFL point differential std ≈ 14 pts (covers range).  Home field ~3 pts.
+NFL_SPREAD_STD   = 14.0
+NFL_TOTAL_STD    = 10.0
+NFL_HOME_ADV     = 0.025   # ~2.5% residual beyond what market prices
+NFL_BYE_BONUS    = 0.025   # coming off a bye week (14 days rest)
+NFL_RECENT_WEIGHT = 0.35   # weight toward last-14d form vs season avg
+
+
+def _is_nfl_playoff(dt=None) -> bool:
+    """NFL playoffs: mid-January through early February."""
+    d = (dt or datetime.now(timezone.utc)).date()
+    return (d.month == 1 and d.day >= 13) or (d.month == 2 and d.day <= 15)
+
+
+def _nfl_team_strength(team: str, ctx: dict, playoff: bool = False) -> float:
+    season = ctx["season_stats"].get(team, {})
+    recent = ctx["recent_form"].get(team, {})
+    season_net = season.get("net_rtg", 0.0)
+    recent_net = recent.get("recent_net_rtg", season_net)
+    w = 0.50 if playoff else NFL_RECENT_WEIGHT
+    return (1 - w) * season_net + w * recent_net
+
+
+def _nfl_margin_to_prob(expected_margin: float) -> float:
+    return float(norm.cdf(expected_margin, 0, NFL_SPREAD_STD))
+
+
+def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict) -> List[BetRecommendation]:
+    from src.data.nfl_stats import normalize as nfl_normalize
+    home = nfl_normalize(game["home_team"])
+    away = nfl_normalize(game["away_team"])
+    label = f"{away} @ {home}"
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
+    recs = []
+
+    playoff = _is_nfl_playoff()
+    stats_available = bool(nfl_ctx["season_stats"].get(home) or nfl_ctx["season_stats"].get(away))
+
+    home_rest = nfl_ctx["rest_days"].get(home, 7)
+    away_rest = nfl_ctx["rest_days"].get(away, 7)
+
+    ml = game.get("moneyline")
+    if ml:
+        market_home_prob = ml["home_prob"]
+        market_away_prob = ml["away_prob"]
+
+        home_stats  = nfl_ctx["season_stats"].get(home, {})
+        away_stats  = nfl_ctx["season_stats"].get(away, {})
+        home_recent = nfl_ctx["recent_form"].get(home, {})
+        away_recent = nfl_ctx["recent_form"].get(away, {})
+
+        home_strength = _nfl_team_strength(home, nfl_ctx, playoff)
+        away_strength = _nfl_team_strength(away, nfl_ctx, playoff)
+        base_margin = home_strength - away_strength
+
+        signals = []
+        research = []
+        adj = 0.0
+
+        if not stats_available:
+            signals.append("⚠ NFL stats unavailable — using market baseline only")
+
+        # Home field advantage
+        adj += NFL_HOME_ADV
+        signals.append(f"Home field advantage: {home} (+{NFL_HOME_ADV*100:.0f}%)")
+
+        # Team strength research
+        if home_stats:
+            research.append(
+                f"{home}: {home_stats.get('ppg', '?'):.1f} PPG | "
+                f"{home_stats.get('oppg', '?'):.1f} OPP PPG | "
+                f"NetRtg {home_stats.get('net_rtg', '?'):.1f}"
+            )
+        if away_stats:
+            research.append(
+                f"{away}: {away_stats.get('ppg', '?'):.1f} PPG | "
+                f"{away_stats.get('oppg', '?'):.1f} OPP PPG | "
+                f"NetRtg {away_stats.get('net_rtg', '?'):.1f}"
+            )
+
+        # Recent form
+        if home_recent:
+            research.append(
+                f"{home} last 14 days: NetRtg {home_recent.get('recent_net_rtg', '?'):.1f} | "
+                f"Win% {home_recent.get('recent_w_pct', 0)*100:.0f}%"
+            )
+        if away_recent:
+            research.append(
+                f"{away} last 14 days: NetRtg {away_recent.get('recent_net_rtg', '?'):.1f} | "
+                f"Win% {away_recent.get('recent_w_pct', 0)*100:.0f}%"
+            )
+
+        # Net rating edge
+        if abs(home_strength - away_strength) > 4:
+            stronger = home if home_strength > away_strength else away
+            signals.append(
+                f"Rating edge: {stronger} (blended PPG-diff {home_strength - away_strength:+.1f})"
+            )
+
+        # Bye week bonus (14+ days rest)
+        if home_rest >= 14:
+            adj += NFL_BYE_BONUS
+            signals.append(f"Bye week: {home} coming off bye (+{NFL_BYE_BONUS*100:.0f}%)")
+        if away_rest >= 14:
+            adj -= NFL_BYE_BONUS
+            signals.append(f"Bye week: {away} coming off bye — favors {away} (+{NFL_BYE_BONUS*100:.0f}%)")
+
+        research.append(f"Rest days — {home}: {home_rest} | {away}: {away_rest}")
+
+        # Playoff context
+        if playoff:
+            signals.append("🏆 Playoffs: recent form weighted 50%")
+
+        # Injuries
+        home_inj = injury_adjustment(home, nfl_injuries, "nfl")
+        away_inj = injury_adjustment(away, nfl_injuries, "nfl")
+        home_inj_list = nfl_injuries.get(home, [])
+        away_inj_list = nfl_injuries.get(away, [])
+
+        if home_inj_list:
+            for p in home_inj_list:
+                research.append(f"⚕ {home} — {p['player']} ({p['position']}): {p['status'].upper()}")
+        if away_inj_list:
+            for p in away_inj_list:
+                research.append(f"⚕ {away} — {p['player']} ({p['position']}): {p['status'].upper()}")
+
+        if home_inj > 0.005:
+            adj -= home_inj
+            signals.append(f"{home} injury impact (-{home_inj*100:.1f}%)")
+        if away_inj > 0.005:
+            adj += away_inj
+            signals.append(f"{away} injuries benefit {home} (+{away_inj*100:.1f}%)")
+
+        if not home_inj_list and not away_inj_list:
+            research.append("No significant injuries reported for either team")
+
+        adjusted_home_prob = min(0.90, max(0.10, _nfl_margin_to_prob(base_margin) + adj))
+        adjusted_away_prob = 1 - adjusted_home_prob
+
+        # Injury credibility cap
+        home_injury_capped = False
+        away_injury_capped = False
+
+        if home_inj >= _INJURY_GATE:
+            max_home_prob = min(market_home_prob * (1 + _INJURY_MARGIN), 0.90)
+            if adjusted_home_prob > max_home_prob:
+                adjusted_home_prob = max_home_prob
+                adjusted_away_prob = 1 - adjusted_home_prob
+                home_injury_capped = True
+
+        if away_inj >= _INJURY_GATE:
+            max_away_prob = min(market_away_prob * (1 + _INJURY_MARGIN), 0.90)
+            if adjusted_away_prob > max_away_prob:
+                adjusted_away_prob = max_away_prob
+                adjusted_home_prob = 1 - adjusted_away_prob
+                away_injury_capped = True
+
+        home_edge = adjusted_home_prob - market_home_prob
+        away_edge = adjusted_away_prob - market_away_prob
+
+        if home_edge >= MIN_EDGE and has_positive_ev(adjusted_home_prob, market_home_prob):
+            sizing = robinhood_kelly(adjusted_home_prob, market_home_prob)
+            if sizing.num_contracts > 0:
+                conf = _confidence_label(home_edge, len(signals), stats_available)
+                if home_injury_capped:
+                    conf = "MEDIUM"
+                recs.append(BetRecommendation(
+                    sport="NFL", game=label, bet_type="Moneyline", pick=home,
+                    market_prob=market_home_prob, model_prob=adjusted_home_prob,
+                    edge=home_edge, contract_price=market_home_prob,
+                    sizing=sizing, confidence=conf,
+                    signals=signals[:], research=research[:],
+                    home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
+                ))
+
+        if away_edge >= MIN_EDGE and has_positive_ev(adjusted_away_prob, market_away_prob):
+            sizing = robinhood_kelly(adjusted_away_prob, market_away_prob)
+            if sizing.num_contracts > 0:
+                conf = _confidence_label(away_edge, len(signals), stats_available)
+                if away_injury_capped:
+                    conf = "MEDIUM"
+                recs.append(BetRecommendation(
+                    sport="NFL", game=label, bet_type="Moneyline", pick=away,
+                    market_prob=market_away_prob, model_prob=adjusted_away_prob,
+                    edge=away_edge, contract_price=market_away_prob,
+                    sizing=sizing, confidence=conf,
+                    signals=signals[:], research=research[:],
+                    home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
+                ))
+
+        # --- Spread ---
+        sp = game.get("spread")
+        if sp:
+            home_spread_line = sp.get("home_spread", 0.0)
+            market_home_cover = sp.get("home_prob", 0.50)
+            market_away_cover = sp.get("away_prob", 0.50)
+
+            effective_margin = float(norm.ppf(adjusted_home_prob)) * NFL_SPREAD_STD
+            model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, NFL_SPREAD_STD))
+            model_away_cover = 1.0 - model_home_cover
+            away_spread_line = -home_spread_line
+
+            home_sp_edge = model_home_cover - market_home_cover
+            away_sp_edge = model_away_cover - market_away_cover
+
+            if home_sp_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
+                sizing = robinhood_kelly(model_home_cover, market_home_cover)
+                if sizing.num_contracts > 0:
+                    conf = _confidence_label(home_sp_edge, len(signals), stats_available)
+                    if home_injury_capped:
+                        conf = "MEDIUM"
+                    recs.append(BetRecommendation(
+                        sport="NFL", game=label, bet_type="Spread",
+                        pick=f"{home} {home_spread_line:+.1f}",
+                        market_prob=market_home_cover, model_prob=model_home_cover,
+                        edge=home_sp_edge, contract_price=market_home_cover,
+                        sizing=sizing, confidence=conf,
+                        signals=signals[:], research=research[:],
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
+            if away_sp_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
+                sizing = robinhood_kelly(model_away_cover, market_away_cover)
+                if sizing.num_contracts > 0:
+                    conf = _confidence_label(away_sp_edge, len(signals), stats_available)
+                    if away_injury_capped:
+                        conf = "MEDIUM"
+                    recs.append(BetRecommendation(
+                        sport="NFL", game=label, bet_type="Spread",
+                        pick=f"{away} {away_spread_line:+.1f}",
+                        market_prob=market_away_cover, model_prob=model_away_cover,
+                        edge=away_sp_edge, contract_price=market_away_cover,
+                        sizing=sizing, confidence=conf,
+                        signals=signals[:], research=research[:],
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
+    # --- Total ---
+    total = game.get("total")
+    if total and nfl_ctx["season_stats"]:
+        home_stats = nfl_ctx["season_stats"].get(home, {})
+        away_stats = nfl_ctx["season_stats"].get(away, {})
+        if home_stats and away_stats:
+            exp_home = (home_stats.get("ppg", 21.0) + away_stats.get("oppg", 21.0)) / 2
+            exp_away = (away_stats.get("ppg", 21.0) + home_stats.get("oppg", 21.0)) / 2
+            expected_total = exp_home + exp_away
+
+            market_line = total["line"]
+            model_over_prob  = float(1 - norm.cdf(market_line, expected_total, NFL_TOTAL_STD))
+            market_over_prob  = total["over_prob"]
+            market_under_prob = total["under_prob"]
+
+            total_signals = [
+                f"Model projected score: {home} {exp_home:.0f} — {away} {exp_away:.0f}",
+                f"Model expected total: {expected_total:.1f} vs market line {market_line}",
+            ]
+            total_research = [
+                f"{home} PPG: {home_stats.get('ppg','?'):.1f} vs {away} OPP PPG: {away_stats.get('oppg','?'):.1f}",
+                f"{away} PPG: {away_stats.get('ppg','?'):.1f} vs {home} OPP PPG: {home_stats.get('oppg','?'):.1f}",
+            ]
+
+            _over_label  = f"Over {market_line - 0.5}"  if market_line % 1 == 0 else f"Over {market_line}"
+            _under_label = f"Under {market_line + 0.5}" if market_line % 1 == 0 else f"Under {market_line}"
+
+            over_edge  = model_over_prob - market_over_prob
+            under_edge = (1 - model_over_prob) - market_under_prob
+
+            if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
+                sizing = robinhood_kelly(model_over_prob, market_over_prob)
+                if sizing.num_contracts > 0:
+                    recs.append(BetRecommendation(
+                        sport="NFL", game=label, bet_type="Total", pick=_over_label,
+                        market_prob=market_over_prob, model_prob=model_over_prob,
+                        edge=over_edge, contract_price=market_over_prob,
+                        sizing=sizing,
+                        confidence=_confidence_label(over_edge, len(total_signals), stats_available),
+                        signals=total_signals, research=total_research,
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+            if under_edge >= MIN_EDGE and has_positive_ev(1 - model_over_prob, market_under_prob):
+                sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
+                if sizing.num_contracts > 0:
+                    recs.append(BetRecommendation(
+                        sport="NFL", game=label, bet_type="Total", pick=_under_label,
+                        market_prob=market_under_prob, model_prob=1 - model_over_prob,
+                        edge=under_edge, contract_price=market_under_prob,
+                        sizing=sizing,
+                        confidence=_confidence_label(under_edge, len(total_signals), stats_available),
+                        signals=total_signals, research=total_research,
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
+    return recs
+
+
+# ---------------------------------------------------------------------------
+# NHL Edge Finder
+# ---------------------------------------------------------------------------
+
+# NHL goal differential std ≈ 1.7 goals.  Puck line = always ±1.5.
+NHL_SPREAD_STD   = 1.7
+NHL_TOTAL_STD    = 1.3
+NHL_HOME_ADV     = 0.020   # ~2% residual beyond market
+NHL_B2B_PENALTY  = 0.025   # back-to-back (1 day rest) penalty
+NHL_RECENT_WEIGHT = 0.40   # NHL form is more volatile, weight recent more
+
+
+def _is_nhl_playoff(dt=None) -> bool:
+    """NHL playoffs: mid-April through mid-June."""
+    d = (dt or datetime.now(timezone.utc)).date()
+    return (d.month == 4 and d.day >= 15) or d.month in (5, 6)
+
+
+def _nhl_team_strength(team: str, ctx: dict, playoff: bool = False) -> float:
+    season = ctx["season_stats"].get(team, {})
+    recent = ctx["recent_form"].get(team, {})
+    season_net = season.get("net_rtg", 0.0)
+    recent_net = recent.get("recent_net_rtg", season_net)
+    w = 0.55 if playoff else NHL_RECENT_WEIGHT
+    return (1 - w) * season_net + w * recent_net
+
+
+def _nhl_margin_to_prob(expected_margin: float) -> float:
+    return float(norm.cdf(expected_margin, 0, NHL_SPREAD_STD))
+
+
+def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict) -> List[BetRecommendation]:
+    from src.data.nhl_stats import normalize as nhl_normalize
+    home = nhl_normalize(game["home_team"])
+    away = nhl_normalize(game["away_team"])
+    label = f"{away} @ {home}"
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
+    recs = []
+
+    playoff = _is_nhl_playoff()
+    stats_available = bool(nhl_ctx["season_stats"].get(home) or nhl_ctx["season_stats"].get(away))
+
+    home_rest = nhl_ctx["rest_days"].get(home, 2)
+    away_rest = nhl_ctx["rest_days"].get(away, 2)
+
+    ml = game.get("moneyline")
+    if ml:
+        market_home_prob = ml["home_prob"]
+        market_away_prob = ml["away_prob"]
+
+        home_stats  = nhl_ctx["season_stats"].get(home, {})
+        away_stats  = nhl_ctx["season_stats"].get(away, {})
+        home_recent = nhl_ctx["recent_form"].get(home, {})
+        away_recent = nhl_ctx["recent_form"].get(away, {})
+
+        home_strength = _nhl_team_strength(home, nhl_ctx, playoff)
+        away_strength = _nhl_team_strength(away, nhl_ctx, playoff)
+        base_margin = home_strength - away_strength
+
+        signals = []
+        research = []
+        adj = 0.0
+
+        if not stats_available:
+            signals.append("⚠ NHL stats unavailable — using market baseline only")
+
+        # Home ice advantage
+        adj += NHL_HOME_ADV
+        signals.append(f"Home ice advantage: {home} (+{NHL_HOME_ADV*100:.0f}%)")
+
+        # Team stats
+        if home_stats:
+            research.append(
+                f"{home}: {home_stats.get('gpg', '?'):.2f} GPG | "
+                f"{home_stats.get('gapg', '?'):.2f} GAPG | "
+                f"NetRtg {home_stats.get('net_rtg', '?'):.2f}"
+            )
+        if away_stats:
+            research.append(
+                f"{away}: {away_stats.get('gpg', '?'):.2f} GPG | "
+                f"{away_stats.get('gapg', '?'):.2f} GAPG | "
+                f"NetRtg {away_stats.get('net_rtg', '?'):.2f}"
+            )
+
+        # Recent form
+        if home_recent:
+            research.append(
+                f"{home} last 14 days: NetRtg {home_recent.get('recent_net_rtg', '?'):.2f} | "
+                f"Win% {home_recent.get('recent_w_pct', 0)*100:.0f}%"
+            )
+        if away_recent:
+            research.append(
+                f"{away} last 14 days: NetRtg {away_recent.get('recent_net_rtg', '?'):.2f} | "
+                f"Win% {away_recent.get('recent_w_pct', 0)*100:.0f}%"
+            )
+
+        # Net rating signal
+        if abs(home_strength - away_strength) > 0.3:
+            stronger = home if home_strength > away_strength else away
+            signals.append(
+                f"Rating edge: {stronger} (blended goal-diff {home_strength - away_strength:+.2f})"
+            )
+
+        # Back-to-back (NHL plays many B2Bs — 1 day rest is common)
+        if home_rest == 1:
+            adj -= NHL_B2B_PENALTY
+            signals.append(f"{home} on back-to-back (-{NHL_B2B_PENALTY*100:.0f}%)")
+        if away_rest == 1:
+            adj += NHL_B2B_PENALTY
+            signals.append(f"{away} on back-to-back — favors {home} (+{NHL_B2B_PENALTY*100:.0f}%)")
+
+        research.append(f"Rest days — {home}: {home_rest} | {away}: {away_rest}")
+
+        # Playoff context
+        if playoff:
+            signals.append("🏆 Playoffs: recent form weighted 55%, tighter defence expected")
+
+        # Injuries
+        home_inj = injury_adjustment(home, nhl_injuries, "nhl")
+        away_inj = injury_adjustment(away, nhl_injuries, "nhl")
+        home_inj_list = nhl_injuries.get(home, [])
+        away_inj_list = nhl_injuries.get(away, [])
+
+        if home_inj_list:
+            for p in home_inj_list:
+                research.append(f"⚕ {home} — {p['player']} ({p['position']}): {p['status'].upper()}")
+        if away_inj_list:
+            for p in away_inj_list:
+                research.append(f"⚕ {away} — {p['player']} ({p['position']}): {p['status'].upper()}")
+
+        if home_inj > 0.005:
+            adj -= home_inj
+            signals.append(f"{home} injury impact (-{home_inj*100:.1f}%)")
+        if away_inj > 0.005:
+            adj += away_inj
+            signals.append(f"{away} injuries benefit {home} (+{away_inj*100:.1f}%)")
+
+        if not home_inj_list and not away_inj_list:
+            research.append("No significant injuries reported for either team")
+
+        adjusted_home_prob = min(0.90, max(0.10, _nhl_margin_to_prob(base_margin) + adj))
+        adjusted_away_prob = 1 - adjusted_home_prob
+
+        # Injury credibility cap
+        home_injury_capped = False
+        away_injury_capped = False
+
+        if home_inj >= _INJURY_GATE:
+            max_home_prob = min(market_home_prob * (1 + _INJURY_MARGIN), 0.90)
+            if adjusted_home_prob > max_home_prob:
+                adjusted_home_prob = max_home_prob
+                adjusted_away_prob = 1 - adjusted_home_prob
+                home_injury_capped = True
+
+        if away_inj >= _INJURY_GATE:
+            max_away_prob = min(market_away_prob * (1 + _INJURY_MARGIN), 0.90)
+            if adjusted_away_prob > max_away_prob:
+                adjusted_away_prob = max_away_prob
+                adjusted_home_prob = 1 - adjusted_away_prob
+                away_injury_capped = True
+
+        home_edge = adjusted_home_prob - market_home_prob
+        away_edge = adjusted_away_prob - market_away_prob
+
+        if home_edge >= MIN_EDGE and has_positive_ev(adjusted_home_prob, market_home_prob):
+            sizing = robinhood_kelly(adjusted_home_prob, market_home_prob)
+            if sizing.num_contracts > 0:
+                conf = _confidence_label(home_edge, len(signals), stats_available)
+                if home_injury_capped:
+                    conf = "MEDIUM"
+                recs.append(BetRecommendation(
+                    sport="NHL", game=label, bet_type="Moneyline", pick=home,
+                    market_prob=market_home_prob, model_prob=adjusted_home_prob,
+                    edge=home_edge, contract_price=market_home_prob,
+                    sizing=sizing, confidence=conf,
+                    signals=signals[:], research=research[:],
+                    home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
+                ))
+
+        if away_edge >= MIN_EDGE and has_positive_ev(adjusted_away_prob, market_away_prob):
+            sizing = robinhood_kelly(adjusted_away_prob, market_away_prob)
+            if sizing.num_contracts > 0:
+                conf = _confidence_label(away_edge, len(signals), stats_available)
+                if away_injury_capped:
+                    conf = "MEDIUM"
+                recs.append(BetRecommendation(
+                    sport="NHL", game=label, bet_type="Moneyline", pick=away,
+                    market_prob=market_away_prob, model_prob=adjusted_away_prob,
+                    edge=away_edge, contract_price=market_away_prob,
+                    sizing=sizing, confidence=conf,
+                    signals=signals[:], research=research[:],
+                    home_team=home, away_team=away, game_time=game_time,
+                    commence_time=commence_time,
+                ))
+
+        # --- Puck line (NHL spread = always ±1.5) ---
+        sp = game.get("spread")
+        if sp:
+            home_spread_line = sp.get("home_spread", -1.5)
+            market_home_cover = sp.get("home_prob", 0.50)
+            market_away_cover = sp.get("away_prob", 0.50)
+
+            effective_margin = float(norm.ppf(adjusted_home_prob)) * NHL_SPREAD_STD
+            model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, NHL_SPREAD_STD))
+            model_away_cover = 1.0 - model_home_cover
+            away_spread_line = -home_spread_line
+
+            home_sp_edge = model_home_cover - market_home_cover
+            away_sp_edge = model_away_cover - market_away_cover
+
+            if home_sp_edge >= MIN_EDGE and has_positive_ev(model_home_cover, market_home_cover):
+                sizing = robinhood_kelly(model_home_cover, market_home_cover)
+                if sizing.num_contracts > 0:
+                    conf = _confidence_label(home_sp_edge, len(signals), stats_available)
+                    if home_injury_capped:
+                        conf = "MEDIUM"
+                    recs.append(BetRecommendation(
+                        sport="NHL", game=label, bet_type="Spread",
+                        pick=f"{home} {home_spread_line:+.1f}",
+                        market_prob=market_home_cover, model_prob=model_home_cover,
+                        edge=home_sp_edge, contract_price=market_home_cover,
+                        sizing=sizing, confidence=conf,
+                        signals=signals[:], research=research[:],
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
+            if away_sp_edge >= MIN_EDGE and has_positive_ev(model_away_cover, market_away_cover):
+                sizing = robinhood_kelly(model_away_cover, market_away_cover)
+                if sizing.num_contracts > 0:
+                    conf = _confidence_label(away_sp_edge, len(signals), stats_available)
+                    if away_injury_capped:
+                        conf = "MEDIUM"
+                    recs.append(BetRecommendation(
+                        sport="NHL", game=label, bet_type="Spread",
+                        pick=f"{away} {away_spread_line:+.1f}",
+                        market_prob=market_away_cover, model_prob=model_away_cover,
+                        edge=away_sp_edge, contract_price=market_away_cover,
+                        sizing=sizing, confidence=conf,
+                        signals=signals[:], research=research[:],
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
+    # --- Total (goals) ---
+    total = game.get("total")
+    if total and nhl_ctx["season_stats"]:
+        home_stats = nhl_ctx["season_stats"].get(home, {})
+        away_stats = nhl_ctx["season_stats"].get(away, {})
+        if home_stats and away_stats:
+            exp_home = (home_stats.get("gpg", 3.0) + away_stats.get("gapg", 3.0)) / 2
+            exp_away = (away_stats.get("gpg", 3.0) + home_stats.get("gapg", 3.0)) / 2
+            if home_rest == 1:
+                exp_home -= 0.20
+            if away_rest == 1:
+                exp_away -= 0.20
+            expected_total = exp_home + exp_away
+
+            market_line = total["line"]
+            model_over_prob  = float(1 - norm.cdf(market_line, expected_total, NHL_TOTAL_STD))
+            market_over_prob  = total["over_prob"]
+            market_under_prob = total["under_prob"]
+
+            total_signals = [
+                f"Model projected score: {home} {exp_home:.1f} — {away} {exp_away:.1f}",
+                f"Model expected total: {expected_total:.1f} vs market line {market_line}",
+            ]
+            total_research = [
+                f"{home} GPG: {home_stats.get('gpg','?'):.2f} vs {away} GAPG: {away_stats.get('gapg','?'):.2f}",
+                f"{away} GPG: {away_stats.get('gpg','?'):.2f} vs {home} GAPG: {home_stats.get('gapg','?'):.2f}",
+            ]
+
+            _over_label  = f"Over {market_line - 0.5}"  if market_line % 1 == 0 else f"Over {market_line}"
+            _under_label = f"Under {market_line + 0.5}" if market_line % 1 == 0 else f"Under {market_line}"
+
+            over_edge  = model_over_prob - market_over_prob
+            under_edge = (1 - model_over_prob) - market_under_prob
+
+            if over_edge >= MIN_EDGE and has_positive_ev(model_over_prob, market_over_prob):
+                sizing = robinhood_kelly(model_over_prob, market_over_prob)
+                if sizing.num_contracts > 0:
+                    recs.append(BetRecommendation(
+                        sport="NHL", game=label, bet_type="Total", pick=_over_label,
+                        market_prob=market_over_prob, model_prob=model_over_prob,
+                        edge=over_edge, contract_price=market_over_prob,
+                        sizing=sizing,
+                        confidence=_confidence_label(over_edge, len(total_signals), stats_available),
+                        signals=total_signals, research=total_research,
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+            if under_edge >= MIN_EDGE and has_positive_ev(1 - model_over_prob, market_under_prob):
+                sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
+                if sizing.num_contracts > 0:
+                    recs.append(BetRecommendation(
+                        sport="NHL", game=label, bet_type="Total", pick=_under_label,
+                        market_prob=market_under_prob, model_prob=1 - model_over_prob,
+                        edge=under_edge, contract_price=market_under_prob,
+                        sizing=sizing,
+                        confidence=_confidence_label(under_edge, len(total_signals), stats_available),
+                        signals=total_signals, research=total_research,
+                        home_team=home, away_team=away, game_time=game_time,
+                        commence_time=commence_time,
+                    ))
+
+    return recs

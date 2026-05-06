@@ -666,7 +666,8 @@ def check_and_settle_props(today: date) -> int:
     existing_keys = {(r["date"], r["player"], r["prop_type"]) for r in existing}
     all_new: List[Dict] = []
 
-    for settle_date in [today - timedelta(days=1), today]:
+    for settle_date in [today - timedelta(days=3), today - timedelta(days=2),
+                        today - timedelta(days=1), today]:
         state = load_state(settle_date)
         if not state:
             continue
