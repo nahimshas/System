@@ -252,12 +252,23 @@ def _dedup_cached_singles(singles: List[Dict]) -> List[Dict]:
     seen: set = set()
     result: List[Dict] = []
     for s in ordered:
-        if s.get("bet_type") in ("Moneyline", "Spread"):
+        bt = s.get("bet_type", "")
+        if bt in ("Moneyline", "Spread"):
             home = s.get("home_team", "")
             away = s.get("away_team", "")
             pick = s.get("pick", "")
             team = next((t for t in [home, away] if pick.startswith(t)), pick)
             key = (s.get("game", ""), team)
+            if key in seen:
+                continue
+            seen.add(key)
+        elif bt == "Total":
+            # Dedup same-game same-direction Totals (e.g. Under 214.5 and Under 216.5
+            # for the same game are the same underlying bet — keep the higher-edge one,
+            # which is already first due to the sort above).
+            pick = s.get("pick", "")
+            direction = "over" if pick.lower().startswith("over") else "under"
+            key = (s.get("game", ""), "total_" + direction)
             if key in seen:
                 continue
             seen.add(key)
