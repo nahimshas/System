@@ -2991,12 +2991,13 @@
   }
 
   // ── Collapsible sub-sections (Singles / Props within league) ────────────
-  function toggleSubSection(id) {
+  // Must be on window so inline onclick="toggleSubSection(...)" can reach it
+  window.toggleSubSection = function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     el.classList.toggle("sub-collapsed");
     lsSave("sub-" + id, el.classList.contains("sub-collapsed"));
-  }
+  };
   // Restore sub-section collapse states on load (default: expanded)
   ["sub-nba-singles","sub-nba-props","sub-mlb-singles","sub-mlb-props","sub-nfl-singles","sub-nhl-singles"].forEach(function(id) {
     if (lsGet("sub-" + id) === "1") {
