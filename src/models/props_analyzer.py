@@ -110,42 +110,83 @@ def _project_nba_stat(
 ) -> Optional[float]:
     if prop_type == "Points Over":
         base = pstats.get("pts", 0.0)
-        if base < 5:
+        min_base = 12.0 if playoff else 5.0
+        if base < min_base:
             return None
         opp_def = opp_stats.get("def_rtg", _NBA_LEAGUE_AVG)
         adj = base * (opp_def / _NBA_LEAGUE_AVG)
-        if playoff and base >= 23:
-            adj *= 1.05
+        if playoff:
+            if base >= 23:
+                adj *= 1.05    # stars: elevated usage in playoffs
+            elif base >= 15:
+                adj *= 0.96    # starters: slight reduction (tighter defense)
+            else:
+                adj *= 0.88    # role players: significant reduction
         if is_b2b:
             adj *= _NBA_B2B_FACTOR
         return round(adj, 1)
 
     if prop_type == "Rebounds Over":
         base = pstats.get("reb", 0.0)
-        if base < 2:
+        min_base = 5.0 if playoff else 2.0
+        if base < min_base:
             return None
-        return round(base * (0.95 if is_b2b else 1.0), 1)
+        if playoff:
+            if base >= 10:
+                adj = base * 1.03  # elite rebounders: slightly more in playoff battle
+            elif base >= 7:
+                adj = base * 0.97  # solid rebounders: minor reduction
+            else:
+                adj = base * 0.90  # role players: reduced minutes/opportunities
+        else:
+            adj = base
+        return round(adj * (0.95 if is_b2b else 1.0), 1)
 
     if prop_type == "Assists Over":
         base = pstats.get("ast", 0.0)
-        if base < 1:
+        min_base = 4.0 if playoff else 1.0
+        if base < min_base:
             return None
         pace = (team_stats.get("pace", 100) + opp_stats.get("pace", 100)) / 2
-        return round(base * (pace / 100.0) * (0.95 if is_b2b else 1.0), 1)
+        adj = base * (pace / 100.0)
+        if playoff:
+            if base >= 7:
+                adj *= 1.03   # elite playmakers: usage stays high
+            elif base >= 5:
+                adj *= 0.96   # solid playmakers: slightly tighter playoff defense
+            else:
+                adj *= 0.90   # marginal passers: fewer opportunities
+        return round(adj * (0.95 if is_b2b else 1.0), 1)
 
     if prop_type == "Steals Over":
         base = pstats.get("stl", 0.0)
-        return round(base, 2) if base >= 0.3 else None
+        min_base = 0.5 if playoff else 0.3
+        if base < min_base:
+            return None
+        return round(base, 2)
 
     if prop_type == "Blocks Over":
         base = pstats.get("blk", 0.0)
-        return round(base, 2) if base >= 0.3 else None
+        min_base = 0.5 if playoff else 0.3
+        if base < min_base:
+            return None
+        return round(base, 2)
 
     if prop_type == "Threes Over":
         base = pstats.get("three_pm", 0.0)
-        if base < 0.5:
+        min_base = 1.5 if playoff else 0.5
+        if base < min_base:
             return None
-        return round(base * (0.95 if is_b2b else 1.0), 1)
+        if playoff:
+            if base >= 3.0:
+                adj = base * 1.02   # elite shooters: looks for them in playoffs
+            elif base >= 2.0:
+                adj = base * 0.96   # solid shooters: tighter contest
+            else:
+                adj = base * 0.90   # role shooters: reduced opportunities
+        else:
+            adj = base
+        return round(adj * (0.95 if is_b2b else 1.0), 1)
 
     return None
 
@@ -263,8 +304,14 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
                     )
                 if is_b2b:
                     signals.append(f"⚠ {team} on back-to-back — reduction applied")
-                if playoff and prop_label == "Points Over" and pstats.get("pts", 0) >= 23:
-                    signals.append("🏆 Playoffs: star usage boost applied (+5%)")
+                if playoff and prop_label == "Points Over":
+                    pts = pstats.get("pts", 0)
+                    if pts >= 23:
+                        signals.append("🏆 Playoffs: star usage boost applied (+5%)")
+                    elif pts >= 15:
+                        signals.append("🏆 Playoffs: starter adjustment applied (-4%)")
+                    else:
+                        signals.append("🏆 Playoffs: role player reduction applied (-12%)")
 
                 picks.append(PropPick(
                     sport="NBA", player=player_name, team=team, opponent=opp,

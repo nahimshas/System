@@ -2200,6 +2200,9 @@
     "Points Over":   "points",
     "Rebounds Over": "rebounds",
     "Assists Over":  "assists",
+    "Steals Over":   "steals",
+    "Blocks Over":   "blocks",
+    "Threes Over":   "threePointFieldGoalsMade",
   };
   // ESPN MLB pitching group has no name — detect by pitching-specific keys
   var MLB_PITCHING_MARKERS = ["ERA", "fullInnings.partInnings", "earnedRuns"];
@@ -2271,6 +2274,37 @@
     return null;
   }
 
+  // Returns a dict of batting stats for a named batter from the boxscore.
+  // Keys: hits, runs, homeRuns, rbi, doubles, triples, atBats
+  function getMlbBatterAllStats(summary, batterName) {
+    var playerGroups = (summary.boxscore || {}).players || [];
+    for (var t = 0; t < playerGroups.length; t++) {
+      var statGroups = playerGroups[t].statistics || [];
+      for (var s = 0; s < statGroups.length; s++) {
+        var keys = statGroups[s].keys || [];
+        if (keys.indexOf("hits") === -1) continue;
+        var isPitch = MLB_PITCHING_MARKERS.some(function (mk) { return keys.indexOf(mk) !== -1; });
+        if (isPitch) continue;
+        var athletes = statGroups[s].athletes || [];
+        for (var a = 0; a < athletes.length; a++) {
+          var name = (athletes[a].athlete || {}).displayName || "";
+          if (!propNameMatch(name, batterName)) continue;
+          var stats = athletes[a].stats || [];
+          var result = {};
+          ["hits", "runs", "homeRuns", "rbi", "doubles", "triples", "atBats"].forEach(function(k) {
+            var idx = keys.indexOf(k);
+            if (idx !== -1) {
+              var v = parseFloat(stats[idx]);
+              if (!isNaN(v)) result[k] = v;
+            }
+          });
+          if (Object.keys(result).length > 0) return result;
+        }
+      }
+    }
+    return null;
+  }
+
   function getMlbPitcherKs(summary, pitcherName) {
     var playerGroups = (summary.boxscore || {}).players || [];
     for (var t = 0; t < playerGroups.length; t++) {
@@ -2330,14 +2364,39 @@
   function renderPropLive(liveDiv, summary, player, propType, modelLine, isFinal, battingTeam) {
     var BADGE = 'font-size:0.65rem;padding:2px 7px;border-radius:99px;white-space:nowrap;';
 
-    // ── Stat lookup: NBA, MLB pitcher Ks, MLB batter hits ───────────────────
+    // ── Stat lookup: NBA, MLB pitcher Ks, MLB batter props ──────────────────
     var stat = null;
+    var statLabel = null;  // override display label for composite stats
     if (PROP_STAT_KEY[propType]) {
       stat = getNbaPlayerStat(summary, player, PROP_STAT_KEY[propType]);
     } else if (propType === "Strikeouts Over") {
       stat = getMlbPitcherKs(summary, player);
-    } else if (propType === "Hits Over (1+)") {
+    } else if (propType === "Hits Over" || propType === "Hits Over (1+)") {
       stat = getMlbBatterHits(summary, player);
+      statLabel = "Hits";
+    } else if (propType === "Total Bases Over") {
+      var bs = getMlbBatterAllStats(summary, player);
+      if (bs !== null) {
+        // TB = singles + 2*2B + 3*3B + 4*HR
+        var h  = bs.hits      || 0;
+        var d  = bs.doubles   || 0;
+        var tr = bs.triples   || 0;
+        var hr = bs.homeRuns  || 0;
+        stat = (h - d - tr - hr) + 2*d + 3*tr + 4*hr;
+        statLabel = "TB";
+      }
+    } else if (propType === "HRR Over") {
+      var bs = getMlbBatterAllStats(summary, player);
+      if (bs !== null) {
+        stat = (bs.hits || 0) + (bs.runs || 0) + (bs.rbi || 0);
+        statLabel = "HRR";
+      }
+    } else if (propType === "Home Runs Over") {
+      var bs = getMlbBatterAllStats(summary, player);
+      if (bs !== null) {
+        stat = bs.homeRuns || 0;
+        statLabel = "HR";
+      }
     }
     if (stat === null) return;
 
@@ -2361,8 +2420,8 @@
               : pct >= 0.75       ? "#fb923c"
               : pct >= 0.5        ? "#facc15"
               : "#94a3b8";
-      // Strip " Over (1+)" first (Hits prop), then " Over" — leaves clean noun
-      var label = propType.replace(" Over (1+)", "").replace(" Over", "");
+      // Use explicit statLabel if available (composite stats), otherwise derive from prop type
+      var label = statLabel || propType.replace(" Over (1+)", "").replace(" Over", "");
       // Show floor threshold: player needs ≥ floorLine to win ("Bet Over ≤ N")
       liveDiv.innerHTML =
         '<span style="' + BADGE + 'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
