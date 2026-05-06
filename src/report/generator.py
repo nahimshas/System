@@ -28,15 +28,22 @@ def build_report(
 ) -> Dict:
     change_warnings = change_warnings or []
 
+    # NHL is monitoring-only — exclude from budget allocation pool entirely.
+    # All other active sports (NBA, MLB, NFL) compete for the top-5 slots.
+    nhl_watchlist = sorted(
+        [s for s in singles if s.get("sport") == "NHL"],
+        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+    )
+
     # Top picks: HIGH confidence first, then by edge within each tier
     all_singles = sorted(
-        singles,
+        [s for s in singles if s.get("sport") != "NHL"],
         key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
     )[:MAX_SINGLE_BETS]
     nba_singles = [s for s in all_singles if s["sport"] == "NBA"]
     mlb_singles = [s for s in all_singles if s["sport"] == "MLB"]
     nfl_singles = [s for s in all_singles if s["sport"] == "NFL"]
-    nhl_singles = [s for s in all_singles if s["sport"] == "NHL"]
+    nhl_singles = [s for s in all_singles if s["sport"] == "NHL"]  # always empty (filtered above)
 
     total_allocated  = sum(r["total_cost"] for r in all_singles)
     parlay_allocated = sum(p["total_cost"] for p in parlays)
@@ -185,6 +192,7 @@ def build_report(
         "mlb_singles":        mlb_singles,
         "nfl_singles":        nfl_singles,
         "nhl_singles":        nhl_singles,
+        "nhl_watchlist":      nhl_watchlist,
         "all_singles":        all_singles,
         "parlays":            parlays,
         "props":              props,

@@ -38,6 +38,8 @@
     .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; font-weight: 600; vertical-align: middle; }
     .badge-nba { background: #1d4ed8; color: #fff; }
     .badge-mlb { background: #991b1b; color: #fff; }
+    .badge-nfl { background: #7c3aed; color: #fff; }
+    .badge-nhl { background: #0d9488; color: #fff; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
@@ -136,6 +138,8 @@
     <div class="subtitle" style="margin-top:6px;">
       NBA: {{ report.nba_game_count }} game{% if report.nba_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       MLB: {{ report.mlb_game_count }} game{% if report.mlb_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
+      {% if report.has_nfl %}NFL: {{ report.nfl_game_count }} game{% if report.nfl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
+      {% if report.has_nhl %}NHL: {{ report.nhl_game_count }} game{% if report.nhl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
       Budget: ${{ "%.0f"|format(report.daily_budget) }}
     </div>
     {% set cr = report.odds_api_credits %}
@@ -172,7 +176,9 @@
           <span class="badge badge-nba">NBA</span>
           {% elif item.sport == 'MLB' %}
           <span class="badge badge-mlb">MLB</span>
-          {% elif item.sport == 'PARLAY' %}
+          {% elif item.sport == 'NFL' %}
+          <span class="badge badge-nfl">NFL</span>
+          {% elif item.sport == 'Parlay' %}
           <span class="badge badge-parlay">PARLAY</span>
           {% else %}
           <span class="badge" style="background:#374151;color:#d1d5db;">{{ item.sport }}</span>
@@ -274,7 +280,7 @@
               <a href="#alloc-{{ loop.index }}" class="nav-link" title="Jump to allocation table">{{ bet.pick }} <span class="nav-arrow">↓</span></a>
             </div>
             <div class="card-subtitle">
-              <span class="badge {% if bet.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ bet.sport }}</span>
+              <span class="badge {% if bet.sport == 'NBA' %}badge-nba{% elif bet.sport == 'MLB' %}badge-mlb{% elif bet.sport == 'NFL' %}badge-nfl{% else %}badge-nhl{% endif %}">{{ bet.sport }}</span>
               {% if bet.bet_type == "Moneyline" %}&nbsp;ML &nbsp;&middot;&nbsp; {% endif %}{{ bet.game }}
             </div>
             <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
@@ -407,7 +413,7 @@
           <div>
             <div class="card-title">{{ prop.player }}</div>
             <div class="card-subtitle">
-              <span class="badge {% if prop.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ prop.sport }}</span>
+              <span class="badge {% if prop.sport == 'NBA' %}badge-nba{% elif prop.sport == 'MLB' %}badge-mlb{% elif prop.sport == 'NFL' %}badge-nfl{% else %}badge-nhl{% endif %}">{{ prop.sport }}</span>
               &nbsp;{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} &middot; {{ prop.prop_type }}
             </div>
           </div>
@@ -456,6 +462,75 @@
           </details>
         </div>
         {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if report.nhl_watchlist %}
+  <div class="section" id="sec-nhl">
+    <div class="section-title">
+      🏒 NHL Watchlist
+      <span style="color:var(--muted);font-size:0.72rem;font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px;">
+        — Monitoring only &middot; not counted in budget or performance tables
+      </span>
+    </div>
+    {% for bet in report.nhl_watchlist %}
+    <div class="card nhl-watchlist-card"
+         id="nhl-{{ loop.index }}"
+         data-home-team="{{ bet.home_team }}"
+         data-away-team="{{ bet.away_team }}"
+         data-bet-type="{{ bet.bet_type }}"
+         data-pick="{{ bet.pick }}"
+         data-sport="NHL"
+         data-edge-pct="{{ bet.edge_pct }}"
+         data-model-prob-pct="{{ bet.model_prob_pct }}"
+         data-commence-time="{{ bet.commence_time }}">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">{{ bet.pick }}</div>
+            <div class="card-subtitle">
+              <span class="badge badge-nhl">NHL</span>
+              {% if bet.bet_type == "Moneyline" %}&nbsp;ML &nbsp;&middot;&nbsp; {% endif %}{{ bet.game }}
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
+          <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
+        </div>
+        {% if bet.signals %}
+        <div class="signals">
+          <div class="signals-title">Key Signals</div>
+          {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
+        </div>
+        {% endif %}
+        {% if bet.research %}
+        <div class="research-section">
+          <details>
+            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
+            {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
+          </details>
+        </div>
+        {% endif %}
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
+          🔭 Watchlist only — results not tracked in performance tables until NHL testing is complete.
+        </div>
       </div>
     </div>
     {% endfor %}
@@ -894,7 +969,8 @@
   var _espnDate = TODAY_DATE.replace(/-/g, "");   // "2026-04-27" → "20260427"
   var ESPN = {
     NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=" + _espnDate,
-    MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate
+    MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate,
+    NHL: "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=" + _espnDate
   };
 
   // ── Local timezone formatting ────────────────────────────────────────────
@@ -1038,6 +1114,12 @@
       var clockMin = Math.max(0, clock / 60);     // minutes left in current quarter
       var otMin    = period > 4 ? 5 : 0;          // if we're in OT, 5-min period
       remUnits = periRem * 12 + clockMin + otMin; // total minutes remaining
+    } else if (sport === "NHL") {
+      // NHL: 3 × 20-min periods. OT = 5 min (regular season) / 20 min (playoffs).
+      var periRem2 = Math.max(0, 3 - period);
+      var clockMin2 = Math.max(0, clock / 60);
+      var otMin2   = period > 3 ? (period === 4 ? 5 : 0) : 0;
+      remUnits = periRem2 * 20 + clockMin2 + otMin2;
     } else {
       // MLB: half-innings remaining.
       // isBottom=1 means bottom of inning is in progress (top already played).
@@ -1060,6 +1142,10 @@
         // Score-change std ≈ sqrt(min_remaining * 5) for the differential
         var std = Math.sqrt(remUnits * 5);
         return 1 - normalCDF(-curMargin / (std || 0.1));
+      } else if (sport === "NHL") {
+        // NHL: ~0.15 goals/min per team → differential variance ≈ rem * 0.30
+        var stdN = Math.sqrt(remUnits * 0.30);
+        return 1 - normalCDF(-curMargin / (stdN || 0.1));
       } else {
         // MLB: runs per half-inning ≈ 0.5 per team → differential std ≈ sqrt(rem * 0.6)
         var std2 = Math.sqrt(remUnits * 0.6);
@@ -1083,6 +1169,13 @@
         var stdRem = Math.sqrt(remUnits * 10.1);
         var pOver  = 1 - normalCDF((needed - expRem) / (stdRem || 0.1));
         return parsed.dir === "over" ? pOver : 1 - pOver;
+      } else if (sport === "NHL") {
+        // NHL: line / 60 min × rem = expected goals still to be scored
+        // Full-game std ≈ 1.5 goals → variance per minute = 1.5²/60 ≈ 0.0375
+        var expRemN = (lineVal / 60) * remUnits;
+        var stdRemN = Math.sqrt(remUnits * 0.0375);
+        var pOverN  = 1 - normalCDF((needed - expRemN) / (stdRemN || 0.1));
+        return parsed.dir === "over" ? pOverN : 1 - pOverN;
       } else {
         // MLB: line / 18 half-innings = expected runs per half-inning for this game.
         // Full-game std ≈ 3 runs → variance per half-inning = 3²/18 = 0.5
@@ -1093,7 +1186,7 @@
       }
     }
 
-    // --- Spread ---
+    // --- Spread / Puck Line ---
     if (betType === "Spread") {
       var parsed3 = parsePick(pick, "Spread");
       if (!parsed3) return 0.5;
@@ -1107,6 +1200,9 @@
       if (sport === "NBA") {
         var std3 = Math.sqrt(remUnits * 5);
         return 1 - normalCDF(needed3 / (std3 || 0.1));
+      } else if (sport === "NHL") {
+        var std3N = Math.sqrt(remUnits * 0.30);
+        return 1 - normalCDF(needed3 / (std3N || 0.1));
       } else {
         var std4 = Math.sqrt(remUnits * 0.6);
         return 1 - normalCDF(needed3 / (std4 || 0.1));
@@ -1626,7 +1722,7 @@
     var sportLive = {};   // { NBA: {won,lost,pnl}, MLB: {won,lost,pnl}, ... }
 
     // Singles
-    document.querySelectorAll(".card[data-home-team]").forEach(function (betCard) {
+    document.querySelectorAll(".card[data-home-team]:not(.nhl-watchlist-card)").forEach(function (betCard) {
       var result = betCard.getAttribute("data-live-result");
       if (!result) return;
 
@@ -1802,7 +1898,7 @@
 
     // ── Build liveRecords array and update charts ─────────────────────────
     var liveRecords = [];
-    document.querySelectorAll(".card[data-home-team]").forEach(function (betCard) {
+    document.querySelectorAll(".card[data-home-team]:not(.nhl-watchlist-card)").forEach(function (betCard) {
       var result = betCard.getAttribute("data-live-result");
       if (!result) return;
       var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
@@ -2565,9 +2661,9 @@
     function onFetch(events) {
       allEvents = allEvents.concat(events);
       done++;
-      if (done < 2) return;
+      if (done < 3) return;
 
-      // Update all bet cards (singles and parlays)
+      // Update all bet cards (singles, parlays, and NHL watchlist)
       document.querySelectorAll(".card[data-home-team], .card[data-parlay='true']").forEach(function (card) {
         applyCard(card, allEvents);
       });
@@ -2591,6 +2687,7 @@
     [
       { url: ESPN.NBA, sport: "NBA" },
       { url: ESPN.MLB, sport: "MLB" },
+      { url: ESPN.NHL, sport: "NHL" },
     ].forEach(function (item) {
       fetch(item.url)
         .then(function (r) { return r.json(); })
