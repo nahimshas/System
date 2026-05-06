@@ -423,22 +423,28 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     _sorted_raw   = sorted(all_singles_raw,
                            key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge))
 
-    # Dedup: one bet per (game, team) — if both ML and Spread for the same
-    # team make the rankings, keep only the higher-edge one.
-    # Totals are exempt (no single team to deduplicate against).
-    _seen_game_team: set = set()
+    # Dedup: one bet per (game, team/direction) — keep only the higher-edge one
+    # when the same underlying bet appears twice (e.g. after a line move).
+    # • ML/Spread: keyed by (game, team-we're-backing)
+    # • Total:     keyed by (game, "over"/"under") — line moves create a new pick
+    #              label but it's still the same over/under bet on the same game.
+    _seen_game_bet: set = set()
     _deduped_raw = []
     for _r in _sorted_raw:
         if _r.bet_type in ("Moneyline", "Spread"):
-            # Identify which team we're backing
             _team = next(
                 (t for t in [_r.home_team, _r.away_team] if _r.pick.startswith(t)),
                 _r.pick,
             )
             _key = (_r.game, _team)
-            if _key in _seen_game_team:
-                continue
-            _seen_game_team.add(_key)
+        elif _r.bet_type == "Total":
+            _direction = "over" if "Over" in _r.pick or "over" in _r.pick else "under"
+            _key = (_r.game, _direction)
+        else:
+            _key = (_r.game, _r.pick)   # fallback — exact match
+        if _key in _seen_game_bet:
+            continue
+        _seen_game_bet.add(_key)
         _deduped_raw.append(_r)
 
     fresh_singles = [bet_to_dict(r) for r in _deduped_raw[:MAX_SINGLE_BETS]]

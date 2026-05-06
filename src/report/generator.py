@@ -35,31 +35,45 @@ def build_report(
         key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
     )
 
-    # Top picks: HIGH confidence first, then by edge within each tier
-    all_singles = sorted(
+    # Top picks: HIGH confidence first, then by edge within each tier.
+    # Deduplicate by (sport, home_team, away_team, bet_type) — a line move creates
+    # a new pick label but it's the same bet; keep the first (highest-edge) occurrence.
+    _seen_game_bets: set = set()
+    _deduped_pool = []
+    for s in sorted(
         [s for s in singles if s.get("sport") != "NHL"],
         key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
-    )[:MAX_SINGLE_BETS]
+    ):
+        _key = (s.get("sport", ""), s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
+        if _key not in _seen_game_bets:
+            _seen_game_bets.add(_key)
+            _deduped_pool.append(s)
+    all_singles = _deduped_pool[:MAX_SINGLE_BETS]
     nba_singles = [s for s in all_singles if s["sport"] == "NBA"]
     mlb_singles = [s for s in all_singles if s["sport"] == "MLB"]
     nfl_singles = [s for s in all_singles if s["sport"] == "NFL"]
     nhl_singles = [s for s in all_singles if s["sport"] == "NHL"]  # always empty (filtered above)
 
     # ── Per-league top-5 singles for display in league sections ─────────────
-    nba_top_singles_raw = sorted(
-        [s for s in singles if s.get("sport") == "NBA"],
-        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
-    )[:MAX_SINGLE_BETS]
+    def _top_singles_for_sport(sport: str) -> List[Dict]:
+        """Sort by edge, deduplicate by game+bet_type, cap at MAX_SINGLE_BETS."""
+        seen: set = set()
+        out = []
+        for s in sorted(
+            [s for s in singles if s.get("sport") == sport],
+            key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+        ):
+            k = (s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
+            if k not in seen:
+                seen.add(k)
+                out.append(s)
+            if len(out) == MAX_SINGLE_BETS:
+                break
+        return out
 
-    mlb_top_singles_raw = sorted(
-        [s for s in singles if s.get("sport") == "MLB"],
-        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
-    )[:MAX_SINGLE_BETS]
-
-    nfl_top_singles_raw = sorted(
-        [s for s in singles if s.get("sport") == "NFL"],
-        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
-    )[:MAX_SINGLE_BETS]
+    nba_top_singles_raw = _top_singles_for_sport("NBA")
+    mlb_top_singles_raw = _top_singles_for_sport("MLB")
+    nfl_top_singles_raw = _top_singles_for_sport("NFL")
 
     # Tag which singles are in the budget allocation pool (rank 1-5)
     _alloc_rank_map = {(r["pick"], r["game"]): i for i, r in enumerate(all_singles, 1)}
