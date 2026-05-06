@@ -68,7 +68,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_props     = state.get("props",   [])
             change_warnings = state.get("warnings", [])
             saved_credits   = state.get("odds_api_credits", {})
-            final_singles_display = state.get("singles_display", final_singles)
+            final_singles_display = state.get("singles_display") or final_singles
+            final_props_display   = state.get("props_display")   or final_props
 
             report_data = build_report(
                 run_date=today,
@@ -76,6 +77,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 singles_display=final_singles_display,
                 parlays=final_parlays,
                 props=final_props,
+                props_display=final_props_display,
                 nba_game_count=state.get("nba_game_count", 0),
                 mlb_game_count=state.get("mlb_game_count", 0),
                 nfl_game_count=state.get("nfl_game_count", 0),
@@ -130,6 +132,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     nba_singles_raw = []
     nba_game_count  = 0
     nba_props_raw   = []
+    nba_props_display_raw = []
 
     if "nba" in leagues:
         logger.info("=== NBA Analysis ===")
@@ -184,6 +187,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
             nba_singles_raw = [r for r in nba_display_raw if r.edge >= MIN_EDGE]
             nba_props_raw = nba_player_props(nba_odds_games, nba_ctx)
+            nba_props_display_raw = nba_player_props(nba_odds_games, nba_ctx, min_edge=0.0)
             logger.info(f"NBA: {len(nba_singles_raw)} qualifying edge(s) ({len(nba_display_raw)} total) "
                         f"across {nba_game_count} games | {len(nba_props_raw)} prop pick(s)")
 
@@ -193,6 +197,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     mlb_display_raw = []
     mlb_singles_raw = []
     mlb_game_count  = 0
+    mlb_props_display_raw = []
     mlb_props_raw   = []
 
     if "mlb" in leagues:
@@ -312,6 +317,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         mlb_singles_raw = [r for r in mlb_display_raw if r.edge >= MIN_EDGE]
         mlb_props_raw = mlb_player_props(mlb_schedule, pitcher_stats_map)
+        mlb_props_display_raw = mlb_player_props(mlb_schedule, pitcher_stats_map, min_edge=0.0)
         logger.info(f"MLB: {len(mlb_singles_raw)} qualifying edge(s) ({len(mlb_display_raw)} total) "
                     f"across {mlb_game_count} games | {len(mlb_props_raw)} prop pick(s)")
 
@@ -429,9 +435,10 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # Budget-qualifying picks only (edge >= MIN_EDGE) — used for allocation table + parlays
     all_singles_raw = nba_singles_raw + mlb_singles_raw + nfl_singles_raw + nhl_singles_raw
     # All positive-EV picks (no min-edge threshold) — used for display in league sections
-    all_display_raw = nba_display_raw + mlb_display_raw + nfl_display_raw + nhl_display_raw
-    parlays_raw     = build_parlays(all_singles_raw)
-    props_raw       = nba_props_raw + mlb_props_raw
+    all_display_raw      = nba_display_raw + mlb_display_raw + nfl_display_raw + nhl_display_raw
+    parlays_raw          = build_parlays(all_singles_raw)
+    props_raw            = nba_props_raw + mlb_props_raw
+    props_display_raw    = nba_props_display_raw + mlb_props_display_raw
 
     # ------------------------------------------------------------------ #
     #  Serialise to dicts (template-ready + state-storable)
@@ -493,6 +500,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             _display_deduped.append(_r)
     fresh_singles_display = [bet_to_dict(r) for r in _display_deduped]
 
+    # Display props — all positive-EV props (no MIN_PROP_EDGE gate).
+    fresh_props_display = [prop_to_dict(p) for p in props_display_raw]
+
     # ------------------------------------------------------------------ #
     #  State management — lock morning picks, merge on subsequent runs
     # ------------------------------------------------------------------ #
@@ -513,6 +523,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "singles_display": fresh_singles_display,
             "parlays":       final_parlays,
             "props":         final_props,
+            "props_display": fresh_props_display,
             "warnings":      [],
             "odds_api_credits": get_api_credits(),
             "nba_game_count": nba_game_count,
@@ -538,6 +549,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "singles_display": fresh_singles_display,
             "parlays":       final_parlays,
             "props":         final_props,
+            "props_display": fresh_props_display,
             "warnings":      change_warnings,
             "odds_api_credits": get_api_credits(),
             "nba_game_count": nba_game_count,
@@ -560,6 +572,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         singles_display=fresh_singles_display,
         parlays=final_parlays,
         props=final_props,
+        props_display=fresh_props_display,
         nba_game_count=nba_game_count,
         mlb_game_count=mlb_game_count,
         nfl_game_count=nfl_game_count,

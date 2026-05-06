@@ -122,6 +122,13 @@
     .section.s-collapsed .section-title::after { transform: rotate(-90deg); }
     .section.s-collapsed > *:not(.section-title) { display: none; }
 
+    /* ── Collapsible sub-sections (Singles / Props within a league) ──────── */
+    .sub-section-header { display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; }
+    .sub-section-header .league-sub-label { margin-bottom:0 !important; margin-top:0 !important; pointer-events:none; }
+    .sub-chevron { font-size:0.6rem; opacity:0.5; transition:transform 0.18s; }
+    .sub-section.sub-collapsed .sub-chevron { transform:rotate(-90deg); }
+    .sub-section.sub-collapsed .sub-body { display:none; }
+
     /* ── Collapsible bet / prop cards ─────────────────────────────────────── */
     .card-toggle-header { cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
     .card-compact { display: flex; align-items: center; gap: 8px; padding: 4px 0 6px; font-size: 0.8rem; }
@@ -272,7 +279,11 @@
     </div>
 
     {% if report.nba_top_singles %}
-    <div class="league-sub-label">Singles</div>
+    <div class="sub-section" id="sub-nba-singles">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-nba-singles')">
+      <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
     {% for bet in report.nba_top_singles %}
     <div class="card{% if bet.alloc_rank %} budget-single{% endif %}"
          id="{{ 'bet-' + bet.alloc_rank|string if bet.alloc_rank else 'nba-' + loop.index|string }}"
@@ -346,10 +357,16 @@
       </div>
     </div>
     {% endfor %}
+    </div><!-- sub-body nba-singles -->
+    </div><!-- sub-section nba-singles -->
     {% endif %}
 
     {% if report.nba_props %}
-    <div class="league-sub-label" style="margin-top:14px;">Props</div>
+    <div class="sub-section" id="sub-nba-props" style="margin-top:14px;">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-nba-props')">
+      <div class="league-sub-label">Props</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
     {% for prop in report.nba_props %}
     {% set last = report.prop_last_result.get((prop.player, prop.prop_type)) %}
     <div class="card prop-card"
@@ -409,6 +426,8 @@
       </div>
     </div>
     {% endfor %}
+    </div><!-- sub-body nba-props -->
+    </div><!-- sub-section nba-props -->
     {% endif %}
   </div>
   {% endif %}
@@ -422,7 +441,11 @@
     </div>
 
     {% if report.mlb_top_singles %}
-    <div class="league-sub-label">Singles</div>
+    <div class="sub-section" id="sub-mlb-singles">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-mlb-singles')">
+      <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
     {% for bet in report.mlb_top_singles %}
     <div class="card{% if bet.alloc_rank %} budget-single{% endif %}"
          id="{{ 'bet-' + bet.alloc_rank|string if bet.alloc_rank else 'mlb-' + loop.index|string }}"
@@ -496,10 +519,16 @@
       </div>
     </div>
     {% endfor %}
+    </div><!-- sub-body mlb-singles -->
+    </div><!-- sub-section mlb-singles -->
     {% endif %}
 
     {% if report.mlb_props %}
-    <div class="league-sub-label" style="margin-top:14px;">Props</div>
+    <div class="sub-section" id="sub-mlb-props" style="margin-top:14px;">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-mlb-props')">
+      <div class="league-sub-label">Props</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
     {% for prop in report.mlb_props %}
     {% set last = report.prop_last_result.get((prop.player, prop.prop_type)) %}
     <div class="card prop-card"
@@ -559,6 +588,8 @@
       </div>
     </div>
     {% endfor %}
+    </div><!-- sub-body mlb-props -->
+    </div><!-- sub-section mlb-props -->
     {% endif %}
   </div>
   {% endif %}
@@ -570,7 +601,11 @@
         {{ report.nfl_top_singles|length }} pick{% if report.nfl_top_singles|length != 1 %}s{% endif %} &middot; monitoring only
       </span>
     </div>
-    <div class="league-sub-label">Singles</div>
+    <div class="sub-section" id="sub-nfl-singles">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-nfl-singles')">
+      <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
     {% for bet in report.nfl_top_singles %}
     <div class="card"
          id="nfl-{{ loop.index }}"
@@ -629,6 +664,8 @@
       </div>
     </div>
     {% endfor %}
+    </div><!-- sub-body nfl-singles -->
+    </div><!-- sub-section nfl-singles -->
   </div>
   {% endif %}
 
@@ -639,7 +676,11 @@
         {{ report.nhl_watchlist|length }} pick{% if report.nhl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only
       </span>
     </div>
-    <div class="league-sub-label">Singles</div>
+    <div class="sub-section" id="sub-nhl-singles">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-nhl-singles')">
+      <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
     {% for bet in report.nhl_watchlist %}
     <div class="card nhl-watchlist-card"
          id="nhl-{{ loop.index }}"
@@ -698,6 +739,8 @@
       </div>
     </div>
     {% endfor %}
+    </div><!-- sub-body nhl-singles -->
+    </div><!-- sub-section nhl-singles -->
   </div>
   {% endif %}
 
@@ -742,6 +785,7 @@
               <div style="color:var(--muted);font-size:0.7rem;">{{ row.sport }}</div>
               {% if row.game and row.bet_type != "Parlay" %}<div style="color:var(--muted);font-size:0.7rem;">{{ row.game }}</div>{% endif %}
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+              {% if row.locked %}<div style="margin-top:3px;"><span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span></div>{% endif %}
             </td>
             <td style="vertical-align:top;">
               <div style="color:{% if row.edge_pct >= 7 %}#16a34a{% else %}#eab308{% endif %};font-weight:700;font-size:0.8rem;">+{{ row.edge_pct }}%</div>
@@ -2945,6 +2989,21 @@
   function lsGet(key) {
     try { return localStorage.getItem(LS_PREFIX + key); } catch(e) { return null; }
   }
+
+  // ── Collapsible sub-sections (Singles / Props within league) ────────────
+  function toggleSubSection(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle("sub-collapsed");
+    lsSave("sub-" + id, el.classList.contains("sub-collapsed"));
+  }
+  // Restore sub-section collapse states on load (default: expanded)
+  ["sub-nba-singles","sub-nba-props","sub-mlb-singles","sub-mlb-props","sub-nfl-singles","sub-nhl-singles"].forEach(function(id) {
+    if (lsGet("sub-" + id) === "1") {
+      var el = document.getElementById(id);
+      if (el) el.classList.add("sub-collapsed");
+    }
+  });
 
   // ── Collapsible sections ─────────────────────────────────────────────────
   document.querySelectorAll(".section-title").forEach(function (title) {

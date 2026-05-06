@@ -25,13 +25,16 @@ def build_report(
     odds_api_credits: Optional[Dict] = None,
     nfl_game_count: int = 0,
     nhl_game_count: int = 0,
-    singles_display: Optional[List[Dict]] = None,  # all positive-EV picks for league section display
+    singles_display: Optional[List[Dict]] = None,   # all positive-EV picks for league section display
+    props_display: Optional[List[Dict]] = None,     # all positive-EV props for league section display
 ) -> Dict:
     change_warnings = change_warnings or []
 
-    # Display pool: use singles_display (all positive-EV picks) if provided,
+    # Display pool: use singles_display (all positive-EV picks) if provided and non-empty,
     # otherwise fall back to singles (budget-qualifying only).
-    _display = singles_display if singles_display is not None else singles
+    # NOTE: an empty list means the new code hasn't run yet (old state) or no games today;
+    # in both cases falling back to singles is the right thing to do.
+    _display = singles_display if singles_display else singles
 
     # NHL is monitoring-only — exclude from budget allocation pool entirely.
     # All other active sports (NBA, MLB, NFL) compete for the top-5 slots.
@@ -61,19 +64,32 @@ def build_report(
 
     # ── Per-league top-5 singles for display in league sections ─────────────
     def _top_singles_for_sport(sport: str) -> List[Dict]:
-        """Sort by edge, deduplicate by game+bet_type, cap at MAX_SINGLE_BETS."""
+        """Sort by edge, deduplicate by game+bet_type, cap at MAX_SINGLE_BETS.
+        Locked budget picks (game has started) are always included first so they
+        remain visible even after the Odds API stops returning their game."""
         seen: set = set()
         out = []
-        for s in sorted(
-            [s for s in _display if s.get("sport") == sport],
-            key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
-        ):
+        # 1. Locked budget picks go first — they must always show in their section.
+        locked_budget = sorted(
+            [s for s in singles if s.get("sport") == sport and s.get("locked")],
+            key=lambda r: -r["edge"],
+        )
+        for s in locked_budget:
             k = (s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
             if k not in seen:
                 seen.add(k)
                 out.append(s)
-            if len(out) == MAX_SINGLE_BETS:
+        # 2. Fill remaining slots with display pool (sorted by confidence + edge).
+        for s in sorted(
+            [s for s in _display if s.get("sport") == sport],
+            key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+        ):
+            if len(out) >= MAX_SINGLE_BETS:
                 break
+            k = (s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
+            if k not in seen:
+                seen.add(k)
+                out.append(s)
         return out
 
     nba_top_singles_raw = _top_singles_for_sport("NBA")
@@ -95,15 +111,17 @@ def build_report(
     # nhl_watchlist: never in budget, no alloc_rank needed
 
     # ── Per-league top-6 props for display ───────────────────────────────────
+    # Use props_display (no-threshold pool) if provided, else fall back to props.
     from src.config import MAX_PROPS_PER_SPORT
+    _props_pool = props_display if props_display else props
     nba_props_display = sorted(
-        [p for p in props if p.get("sport") == "NBA"],
-        key=lambda p: -p.get("edge_pct", 0),
+        [p for p in _props_pool if p.get("sport") == "NBA"],
+        key=lambda p: (0 if p.get("confidence") == "HIGH" else 1, -p.get("edge_pct", 0)),
     )[:MAX_PROPS_PER_SPORT]
 
     mlb_props_display = sorted(
-        [p for p in props if p.get("sport") == "MLB"],
-        key=lambda p: -p.get("edge_pct", 0),
+        [p for p in _props_pool if p.get("sport") == "MLB"],
+        key=lambda p: (0 if p.get("confidence") == "HIGH" else 1, -p.get("edge_pct", 0)),
     )[:MAX_PROPS_PER_SPORT]
 
     total_allocated  = sum(r["total_cost"] for r in all_singles)
@@ -322,6 +340,8 @@ def build_report(
         "nfl_top_singles":         nfl_top_singles,
         "nba_props":               nba_props_display,
         "mlb_props":               mlb_props_display,
+        "has_nba_props":           len(nba_props_display) > 0,
+        "has_mlb_props":           len(mlb_props_display) > 0,
         "has_nba_singles":         len(nba_top_singles) > 0,
         "has_mlb_singles":         len(mlb_top_singles) > 0,
         "has_nfl_singles":         len(nfl_top_singles) > 0,

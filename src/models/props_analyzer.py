@@ -227,8 +227,9 @@ def _project_mlb_batter_stat(
 # NBA Props
 # ---------------------------------------------------------------------------
 
-def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
+def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -> List[PropPick]:
     from src.data.nba_stats import normalize as nba_normalize, get_nba_player_props_stats
+    _min = min_edge if min_edge is not None else MIN_PROP_EDGE
 
     season_stats = nba_ctx.get("season_stats", {})
     rest_days    = nba_ctx.get("rest_days", {})
@@ -288,7 +289,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
 
                 model_prob = _cover_prob(prop_label, model_line, market_line)
                 edge       = model_prob - market_prob
-                if edge < MIN_PROP_EDGE:
+                if edge < _min:
                     continue
 
                 conf = _confidence(edge, model_line, market_line)
@@ -335,15 +336,18 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict) -> List[PropPick]:
             seen.add(key)
             deduped.append(p)
     deduped.sort(key=lambda p: (0 if p.confidence == "HIGH" else 1, -p.edge))
-    return deduped[:6]
+    # When called for display (min_edge explicitly set), don't cap here —
+    # the generator applies its own MAX_PROPS_PER_SPORT cap.
+    return deduped if min_edge is not None else deduped[:6]
 
 
 # ---------------------------------------------------------------------------
 # MLB Props
 # ---------------------------------------------------------------------------
 
-def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPick]:
+def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float = None) -> List[PropPick]:
     from src.data.mlb_stats import get_park_factor, get_batter_props_stats, get_team_batting_stats
+    _min = min_edge if min_edge is not None else MIN_PROP_EDGE
     playoff = _is_mlb_playoff()
     picks: List[PropPick] = []
 
@@ -433,7 +437,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
 
                     model_prob = _cover_prob(prop_label, model_line, market_line)
                     edge       = model_prob - market_prob
-                    if edge < MIN_PROP_EDGE:
+                    if edge < _min:
                         continue
 
                     conf     = _confidence(edge, model_line, market_line)
@@ -486,7 +490,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
 
                 model_prob = _cover_prob(prop_label, model_line, market_line)
                 edge       = model_prob - market_prob
-                if edge < MIN_PROP_EDGE:
+                if edge < _min:
                     continue
 
                 conf = _confidence(edge, model_line, market_line)
@@ -522,4 +526,4 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict) -> List[PropPic
             seen.add(key)
             deduped.append(p)
     deduped.sort(key=lambda p: (0 if p.confidence == "HIGH" else 1, -p.edge))
-    return deduped[:6]
+    return deduped if min_edge is not None else deduped[:6]
