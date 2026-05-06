@@ -139,7 +139,7 @@
       Budget: ${{ "%.0f"|format(report.daily_budget) }}
     </div>
     {% set cr = report.odds_api_credits %}
-    {% if cr.remaining is not none %}
+    {% if cr and cr.remaining is defined and cr.remaining is not none %}
     <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
       🔑 Odds API &mdash;
       {% if cr.used is not none %}{{ "{:,}".format(cr.used) }} used &middot; {% endif %}

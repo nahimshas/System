@@ -71,7 +71,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 mlb_game_count=0,
                 errors=errors,
                 change_warnings=change_warnings,
-                odds_api_credits=None,
+                odds_api_credits={},
             )
             template_dir = Path(__file__).parent / "report" / "templates"
             jinja_env    = Environment(loader=FileSystemLoader(str(template_dir)))
