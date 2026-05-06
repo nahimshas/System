@@ -44,10 +44,52 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 
-def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False) -> int:
+def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
+        code_only: bool = False) -> int:
     from src.data.odds_client import _today_pacific
     today = _today_pacific()
     errors: list[str] = []
+
+    # ------------------------------------------------------------------ #
+    #  Code-only mode: re-render from saved state, zero API calls
+    # ------------------------------------------------------------------ #
+    if code_only:
+        state = load_state(today)
+        if state is not None:
+            logger.info("Code-only mode — re-rendering report from saved state (no API calls)")
+            final_singles   = state.get("singles", [])
+            final_parlays   = state.get("parlays", [])
+            final_props     = state.get("props",   [])
+            change_warnings = state.get("warnings", [])
+
+            report_data = build_report(
+                run_date=today,
+                singles=final_singles,
+                parlays=final_parlays,
+                props=final_props,
+                nba_game_count=0,
+                mlb_game_count=0,
+                errors=errors,
+                change_warnings=change_warnings,
+                odds_api_credits=None,
+            )
+            template_dir = Path(__file__).parent / "report" / "templates"
+            jinja_env    = Environment(loader=FileSystemLoader(str(template_dir)))
+            template     = jinja_env.get_template("report.html")
+            html         = template.render(report=report_data)
+
+            out_dir  = Path(REPORT_DIR)
+            out_dir.mkdir(exist_ok=True)
+            out_path = out_dir / REPORT_FILE
+            out_path.write_text(html, encoding="utf-8")
+            logger.info(f"Report written to {out_path} (code-only)")
+
+            bet_count = len(final_singles) + len(final_parlays)
+            if send_email:
+                send_report(html, today, bet_count)
+            return bet_count
+        else:
+            logger.warning("Code-only mode requested but no state file found for today — running full analysis")
 
     # ------------------------------------------------------------------ #
     #  Settle yesterday's picks (idempotent — skips already-settled bets)
@@ -380,10 +422,13 @@ def main():
     parser.add_argument("--no-email", action="store_true", help="Skip email delivery")
     parser.add_argument("--reevaluate", action="store_true",
                         help="Re-evaluate unlocked picks and replace any no longer in the top options")
+    parser.add_argument("--code-only", action="store_true",
+                        help="Re-render report from saved state — zero Odds API calls (for visual/template deploys)")
     args = parser.parse_args()
 
     leagues   = [args.league] if args.league else ["nba", "mlb"]
-    bet_count = run(leagues=leagues, send_email=not args.no_email, reevaluate=args.reevaluate)
+    bet_count = run(leagues=leagues, send_email=not args.no_email,
+                    reevaluate=args.reevaluate, code_only=args.code_only)
     logger.info(f"Done. {bet_count} bet recommendation(s) generated.")
     sys.exit(0)
 

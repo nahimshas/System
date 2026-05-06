@@ -29,6 +29,11 @@ on:
         required: false
         type: boolean
         default: false
+      code_only:
+        description: "Re-render report from saved state only — no Odds API calls (use for visual/template deploys)"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   generate-report:
@@ -80,7 +85,11 @@ jobs:
           if [ "${{ github.event.inputs.reevaluate_picks }}" = "true" ]; then
             REEVALUATE_ARG="--reevaluate"
           fi
-          python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG $REEVALUATE_ARG
+          CODE_ONLY_ARG=""
+          if [ "${{ github.event.inputs.code_only }}" = "true" ]; then
+            CODE_ONLY_ARG="--code-only"
+          fi
+          python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG $REEVALUATE_ARG $CODE_ONLY_ARG
 
       - name: Commit updated report and state to repo
         run: |
