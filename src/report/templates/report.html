@@ -1905,8 +1905,28 @@
     }
 
     // ── Update by_type table rows ──────────────────────────────────────────
+    var tbody = accCard.querySelector("tbody");
     Object.keys(todayByType).forEach(function (pt) {
       var row = accCard.querySelector('tr[data-prop-type="' + pt + '"]');
+
+      // If no existing row (prop type not yet in history), insert one
+      if (!row && tbody) {
+        var label = pt.replace(" Over (1+)", "").replace(" Over", "");
+        row = document.createElement("tr");
+        row.style.borderTop = "1px solid var(--border)";
+        row.setAttribute("data-prop-type", pt);
+        row.setAttribute("data-type-total", "0");
+        row.setAttribute("data-type-hits",  "0");
+        row.innerHTML =
+          '<td style="padding:5px 0;color:var(--fg);">' + label + '</td>' +
+          '<td style="text-align:right;padding:5px 6px;color:var(--muted);">0</td>' +
+          '<td style="text-align:right;padding:5px 6px;font-weight:600;">—</td>' +
+          '<td style="text-align:right;padding:5px 6px;color:var(--muted);">—</td>' +
+          '<td style="text-align:right;padding:5px 6px;color:var(--muted);">—</td>' +
+          '<td style="text-align:right;padding:5px 6px;font-weight:600;">—</td>';
+        tbody.appendChild(row);
+      }
+
       if (!row) return;
       var histRowTotal = parseInt(row.getAttribute("data-type-total") || "0", 10);
       var histRowHits  = parseInt(row.getAttribute("data-type-hits")  || "0", 10);

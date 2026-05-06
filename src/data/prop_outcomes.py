@@ -136,24 +136,67 @@ def _get_mlb_batter_hits(summary: Dict, batter_name: str) -> Optional[float]:
     Extract a batter's hit count from a MLB game summary.
     Finds the batting stat group (has 'hits' key but NOT pitching markers).
     """
+    row = _get_mlb_batter_row(summary, batter_name)
+    if row is None:
+        return None
+    return row.get("hits")
+
+
+def _get_mlb_batter_row(summary: Dict, batter_name: str) -> Optional[Dict]:
+    """
+    Return a dict of batting stats for a named batter.
+    Keys: hits, runs, homeRuns, rbi, doubles, triples (whatever ESPN provides).
+    Returns None if the batter is not found.
+    """
+    BATTING_KEYS = ["hits", "runs", "homeRuns", "rbi", "doubles", "triples", "atBats"]
     for team_data in summary.get("boxscore", {}).get("players", []):
         for stat_group in team_data.get("statistics", []):
             keys = stat_group.get("keys", [])
             if "hits" not in keys:
                 continue
-            # Skip the pitching group which also has a "hits" (hits allowed) key
+            # Skip the pitching group (also has a "hits" = hits allowed key)
             if any(m in keys for m in MLB_PITCHING_MARKERS):
                 continue
-            idx = keys.index("hits")
             for athlete_entry in stat_group.get("athletes", []):
                 name = athlete_entry.get("athlete", {}).get("displayName", "")
-                if _name_match(name, batter_name):
-                    stats = athlete_entry.get("stats", [])
-                    if idx < len(stats):
-                        try:
-                            return float(stats[idx])
-                        except (ValueError, TypeError):
-                            pass
+                if not _name_match(name, batter_name):
+                    continue
+                stats = athlete_entry.get("stats", [])
+                row: Dict = {}
+                for k in BATTING_KEYS:
+                    if k in keys:
+                        idx = keys.index(k)
+                        if idx < len(stats):
+                            try:
+                                row[k] = float(stats[idx])
+                            except (ValueError, TypeError):
+                                pass
+                if row:
+                    return row
+    return None
+
+
+def _get_mlb_batter_stat(summary: Dict, batter_name: str, prop_type: str) -> Optional[float]:
+    """
+    Compute the relevant actual stat for a MLB batter prop type.
+    Supported: Hits Over, Total Bases Over, HRR Over, Home Runs Over.
+    """
+    row = _get_mlb_batter_row(summary, batter_name)
+    if row is None:
+        return None
+    if prop_type in ("Hits Over", "Hits Over (1+)"):
+        return row.get("hits")
+    if prop_type == "Total Bases Over":
+        h  = row.get("hits",     0.0)
+        d  = row.get("doubles",  0.0)
+        tr = row.get("triples",  0.0)
+        hr = row.get("homeRuns", 0.0)
+        # TB = singles + 2×2B + 3×3B + 4×HR
+        return (h - d - tr - hr) + 2*d + 3*tr + 4*hr
+    if prop_type == "HRR Over":
+        return row.get("hits", 0.0) + row.get("runs", 0.0) + row.get("rbi", 0.0)
+    if prop_type == "Home Runs Over":
+        return row.get("homeRuns")
     return None
 
 
@@ -237,7 +280,11 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
 
         # ── MLB ───────────────────────────────────────────────────────────────
         elif sport == "MLB":
-            if prop_type not in ("Strikeouts Over", "Hits Over (1+)"):
+            MLB_BATTER_TYPES = {
+                "Hits Over", "Hits Over (1+)",
+                "Total Bases Over", "HRR Over", "Home Runs Over",
+            }
+            if prop_type not in ("Strikeouts Over",) | MLB_BATTER_TYPES:
                 continue
             if mlb_events is None:
                 mlb_events = _get_scoreboard("baseball/mlb", game_date)
@@ -252,8 +299,8 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
                 continue
             if prop_type == "Strikeouts Over":
                 actual_stat = _get_mlb_pitcher_ks(summary, player)
-            else:  # Hits Over (1+) — real player name from batting leaders
-                actual_stat = _get_mlb_batter_hits(summary, player)
+            else:
+                actual_stat = _get_mlb_batter_stat(summary, player, prop_type)
 
         if actual_stat is None:
             logger.debug(f"Stat not found in box score: {player} ({prop_type})")
