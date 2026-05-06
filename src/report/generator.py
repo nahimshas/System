@@ -45,6 +45,48 @@ def build_report(
     nfl_singles = [s for s in all_singles if s["sport"] == "NFL"]
     nhl_singles = [s for s in all_singles if s["sport"] == "NHL"]  # always empty (filtered above)
 
+    # ── Per-league top-5 singles for display in league sections ─────────────
+    nba_top_singles_raw = sorted(
+        [s for s in singles if s.get("sport") == "NBA"],
+        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+    )[:MAX_SINGLE_BETS]
+
+    mlb_top_singles_raw = sorted(
+        [s for s in singles if s.get("sport") == "MLB"],
+        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+    )[:MAX_SINGLE_BETS]
+
+    nfl_top_singles_raw = sorted(
+        [s for s in singles if s.get("sport") == "NFL"],
+        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+    )[:MAX_SINGLE_BETS]
+
+    # Tag which singles are in the budget allocation pool (rank 1-5)
+    _alloc_rank_map = {(r["pick"], r["game"]): i for i, r in enumerate(all_singles, 1)}
+
+    def _tag_alloc(lst):
+        out = []
+        for rec in lst:
+            out.append({**rec, "alloc_rank": _alloc_rank_map.get((rec["pick"], rec["game"]))})
+        return out
+
+    nba_top_singles = _tag_alloc(nba_top_singles_raw)
+    mlb_top_singles = _tag_alloc(mlb_top_singles_raw)
+    nfl_top_singles = _tag_alloc(nfl_top_singles_raw)
+    # nhl_watchlist: never in budget, no alloc_rank needed
+
+    # ── Per-league top-6 props for display ───────────────────────────────────
+    from src.config import MAX_PROPS_PER_SPORT
+    nba_props_display = sorted(
+        [p for p in props if p.get("sport") == "NBA"],
+        key=lambda p: -p.get("edge_pct", 0),
+    )[:MAX_PROPS_PER_SPORT]
+
+    mlb_props_display = sorted(
+        [p for p in props if p.get("sport") == "MLB"],
+        key=lambda p: -p.get("edge_pct", 0),
+    )[:MAX_PROPS_PER_SPORT]
+
     total_allocated  = sum(r["total_cost"] for r in all_singles)
     parlay_allocated = sum(p["total_cost"] for p in parlays)
     grand_total      = total_allocated + parlay_allocated
@@ -72,6 +114,10 @@ def build_report(
             # Needed by JS for win-prob / WON-LOST
             "bet_type":      rec["bet_type"],
             "pick":          rec["pick"],
+            "contract_price_cents": rec.get("contract_price_cents", 0),
+            "loss_if_lose":         rec.get("loss_if_lose", rec.get("total_cost", 0)),
+            "expected_value":       rec.get("expected_value", 0),
+            "conf_label":           rec.get("confidence", "MEDIUM"),
         })
 
     for j, par in enumerate(parlays, 1):
@@ -113,6 +159,10 @@ def build_report(
             "bet_type":      "Parlay",
             "pick":          par["label"],
             "legs_json":     legs_json,
+            "contract_price_cents": par.get("contract_price_cents", 0),
+            "loss_if_lose":         par.get("total_cost", 0),
+            "expected_value":       par.get("expected_value", 0),
+            "conf_label":           par.get("confidence", "MEDIUM"),
         })
 
     # ── Format change warnings for template ──────────────────────────────────
@@ -182,6 +232,33 @@ def build_report(
         key = (rec.get("player", ""), rec.get("prop_type", ""))
         prop_last_result[key] = rec   # later records overwrite earlier → most recent wins
 
+    # ── Prop accuracy split by sport ─────────────────────────────────────────
+    _pa_by_sport: Dict = {}
+    for _rec in prop_accuracy.get("recent", []):
+        _sp = _rec.get("sport", "")
+        if not _sp:
+            continue
+        if _sp not in _pa_by_sport:
+            _pa_by_sport[_sp] = {"hits": 0, "misses": 0, "total": 0, "sum_err": 0.0}
+        _pa_by_sport[_sp]["total"] += 1
+        if _rec.get("hit"):
+            _pa_by_sport[_sp]["hits"] += 1
+        else:
+            _pa_by_sport[_sp]["misses"] += 1
+        _err = float(_rec.get("actual_stat", 0) or 0) - float(_rec.get("model_line", 0) or 0)
+        _pa_by_sport[_sp]["sum_err"] += _err
+
+    prop_accuracy_by_sport: Dict = {}
+    for _sp, _d in _pa_by_sport.items():
+        _t = _d["total"]
+        prop_accuracy_by_sport[_sp] = {
+            "total":    _t,
+            "hits":     _d["hits"],
+            "misses":   _d["misses"],
+            "hit_rate": round(_d["hits"] / _t * 100, 1) if _t else None,
+            "avg_err":  round(_d["sum_err"] / _t, 2) if _t else None,
+        }
+
     return {
         "generated_at":       _now_pacific_str(),
         "run_date":           run_date.strftime("%A, %B %d, %Y"),
@@ -221,4 +298,13 @@ def build_report(
         "prop_last_result":   prop_last_result,
         "recap":              recap,
         "odds_api_credits":   odds_api_credits or {},
+        "nba_top_singles":         nba_top_singles,
+        "mlb_top_singles":         mlb_top_singles,
+        "nfl_top_singles":         nfl_top_singles,
+        "nba_props":               nba_props_display,
+        "mlb_props":               mlb_props_display,
+        "has_nba_singles":         len(nba_top_singles) > 0,
+        "has_mlb_singles":         len(mlb_top_singles) > 0,
+        "has_nfl_singles":         len(nfl_top_singles) > 0,
+        "prop_accuracy_by_sport":  prop_accuracy_by_sport,
     }
