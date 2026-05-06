@@ -732,9 +732,13 @@
               {% if row.bet_type == "Parlay" %}data-legs="{{ row.legs_json | e }}"{% endif %}>
             <td style="color:var(--muted);font-size:0.78rem;">{{ row.rank }}</td>
             <td>
-              <a href="#{{ 'bet-' + row.rank|string if row.bet_type != 'Parlay' else 'alloc-p' + row.rank|string|replace('p','') }}" class="nav-link" title="Jump to bet details">
+              {% if row.bet_type != 'Parlay' %}
+              <a href="#bet-{{ row.rank }}" class="nav-link" title="Jump to bet card">
                 <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">{{ row.label }} <span class="nav-arrow">↑</span></div>
               </a>
+              {% else %}
+              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">{{ row.label }}</div>
+              {% endif %}
               <div style="color:var(--muted);font-size:0.7rem;">{{ row.sport }}</div>
               {% if row.game and row.bet_type != "Parlay" %}<div style="color:var(--muted);font-size:0.7rem;">{{ row.game }}</div>{% endif %}
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
