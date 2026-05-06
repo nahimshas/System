@@ -34,7 +34,11 @@ class ParlayRecommendation:
 
     @property
     def label(self) -> str:
-        return " + ".join(f"{l.pick} ({l.bet_type})" for l in self.legs)
+        def _leg_label(l) -> str:
+            if l.bet_type == "Moneyline":
+                return f"{l.pick} (ML)"
+            return l.pick  # Spread/Total: pick text already contains the line
+        return " + ".join(_leg_label(l) for l in self.legs)
 
     @property
     def game_labels(self) -> List[str]:

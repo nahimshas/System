@@ -76,9 +76,16 @@ def build_report(
         } for l in par.get("legs", [])])
 
         # Parlay is locked if any leg's game has started
+        def _clean_parlay_label(raw: str) -> str:
+            """Strip/replace bet_type suffixes baked into saved state labels."""
+            import re
+            raw = re.sub(r'\s*\(Moneyline\)', ' (ML)', raw)
+            raw = re.sub(r'\s*\((Spread|Total)\)', '', raw)
+            return raw.strip(" +").strip()
+
         allocation_rows.append({
             "rank":          f"P{j}",
-            "label":         par["label"],
+            "label":         _clean_parlay_label(par["label"]),
             "game":          " / ".join(l["game"] for l in par.get("legs", [])),
             "game_time":     "",
             "sport":         "Parlay",
