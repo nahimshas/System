@@ -784,8 +784,7 @@
               {% endif %}
               <div style="color:var(--muted);font-size:0.7rem;">{{ row.sport }}</div>
               {% if row.game and row.bet_type != "Parlay" %}<div style="color:var(--muted);font-size:0.7rem;">{{ row.game }}</div>{% endif %}
-              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
-              {% if row.locked %}<div style="margin-top:3px;"><span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span></div>{% endif %}
+              {% if not row.locked %}<div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>{% endif %}
             </td>
             <td style="vertical-align:top;">
               <div style="color:{% if row.edge_pct >= 7 %}#16a34a{% else %}#eab308{% endif %};font-weight:700;font-size:0.8rem;">+{{ row.edge_pct }}%</div>
@@ -800,6 +799,7 @@
                 <div>
                   <div style="font-size:0.8rem;">${{ "%.2f"|format(row.cost) }}</div>
                   <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+${{ "%.2f"|format(row.profit_if_win) }}</div>
+                  {% if row.locked %}<div style="margin-top:4px;"><span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span></div>{% endif %}
                 </div>
                 <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
               </div>
@@ -1266,10 +1266,18 @@
       if (el && iso) el.textContent = formatLocalTime(iso);
     });
     // Allocation table rows: data-commence-time on <tr>, display in .row-time-local
+    // Hide the time element entirely once the game has started (lock badge takes its place).
     document.querySelectorAll("tr[data-commence-time]").forEach(function (row) {
       var iso = row.getAttribute("data-commence-time") || "";
       var el  = row.querySelector(".row-time-local");
-      if (el && iso) el.textContent = formatLocalTime(iso);
+      if (!el || !iso) return;
+      try {
+        if (new Date(iso).getTime() <= Date.now()) {
+          el.style.display = "none";   // game started — hide time
+          return;
+        }
+      } catch(e) {}
+      el.textContent = formatLocalTime(iso);
     });
   }
 
