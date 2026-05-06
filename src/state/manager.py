@@ -12,11 +12,12 @@ Subsequent runs       →
 """
 import json
 import logging
+from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from src.config import MAX_SINGLE_BETS, MAX_PARLAYS, LINE_MOVE_THRESHOLD
+from src.config import MAX_SINGLE_BETS, MAX_PARLAYS, MAX_PROPS_PER_SPORT, LINE_MOVE_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
@@ -569,13 +570,20 @@ def merge_picks(
         else:
             final_props.append(prop)
 
-    # Fill remaining prop slots — critical when the morning baseline had 0 props
-    # (e.g. first run used old code) so truly_new_props contains everything new.
-    # Analyzers already cap at 6 each; no MAX_PROPS guard needed here.
+    # Fill remaining prop slots — only up to MAX_PROPS_PER_SPORT per sport.
+    # This is critical when the morning baseline had 0 props (first run with
+    # new code), but must NOT add extras when slots are already full.
+    sport_counts = Counter(
+        p.get("sport", "NBA") for p in final_props
+    )
     for d in truly_new_props:
         if id(d) not in used_new_props:
+            sport = d.get("sport", "NBA") if isinstance(d, dict) else getattr(d, "sport", "NBA")
+            if sport_counts[sport] >= MAX_PROPS_PER_SPORT:
+                continue
             new_d = d if isinstance(d, dict) else prop_to_dict(d)
             final_props.append(new_d)
+            sport_counts[sport] += 1
             used_new_props.add(id(d))
 
     if warnings:

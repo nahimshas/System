@@ -24,6 +24,7 @@ KELLY_FRACTION: float = 0.25          # 1/4 Kelly to reduce variance
 MIN_EDGE: float = 0.03                # minimum 3% edge to recommend
 MAX_SINGLE_BETS: int = 5              # max single-game bets per day
 MAX_PARLAYS: int = 2                  # max 2-leg parlay recommendations
+MAX_PROPS_PER_SPORT: int = 6          # max props per sport (NBA/MLB); mirrors analyzer cap
 MIN_PARLAY_LEG_EDGE: float = 0.025   # each parlay leg must have ≥ 2.5% edge
 
 # --- Adjustment weights for probability model ---
