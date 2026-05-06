@@ -132,19 +132,19 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Tuesday, May 05, 2026 &middot; Generated May 05, 2026 at 06:17 PM PDT</div>
+    <div class="subtitle">Tuesday, May 05, 2026 &middot; Generated May 05, 2026 at 06:47 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 0 games &nbsp;|&nbsp;
-      MLB: 4 games &nbsp;|&nbsp;
+      MLB: 0 games &nbsp;|&nbsp;
       Budget: $100
     </div>
     
     
     <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
       🔑 Odds API &mdash;
-      896 used &middot; 
+      902 used &middot; 
       <span style="color:var(--green);">
-        19,104 remaining
+        19,098 remaining
       </span>
     </div>
     
@@ -455,6 +455,10 @@
     <div class="empty-state"><div class="icon">🏀</div>No NBA games today.</div>
   </div>
   
+  
+  <div class="card" style="margin-bottom:12px;">
+    <div class="empty-state"><div class="icon">⚾</div>No MLB games today.</div>
+  </div>
   
 
   
@@ -3640,8 +3644,28 @@
     }
 
     // ── Update by_type table rows ──────────────────────────────────────────
+    var tbody = accCard.querySelector("tbody");
     Object.keys(todayByType).forEach(function (pt) {
       var row = accCard.querySelector('tr[data-prop-type="' + pt + '"]');
+
+      // If no existing row (prop type not yet in history), insert one
+      if (!row && tbody) {
+        var label = pt.replace(" Over (1+)", "").replace(" Over", "");
+        row = document.createElement("tr");
+        row.style.borderTop = "1px solid var(--border)";
+        row.setAttribute("data-prop-type", pt);
+        row.setAttribute("data-type-total", "0");
+        row.setAttribute("data-type-hits",  "0");
+        row.innerHTML =
+          '<td style="padding:5px 0;color:var(--fg);">' + label + '</td>' +
+          '<td style="text-align:right;padding:5px 6px;color:var(--muted);">0</td>' +
+          '<td style="text-align:right;padding:5px 6px;font-weight:600;">—</td>' +
+          '<td style="text-align:right;padding:5px 6px;color:var(--muted);">—</td>' +
+          '<td style="text-align:right;padding:5px 6px;color:var(--muted);">—</td>' +
+          '<td style="text-align:right;padding:5px 6px;font-weight:600;">—</td>';
+        tbody.appendChild(row);
+      }
+
       if (!row) return;
       var histRowTotal = parseInt(row.getAttribute("data-type-total") || "0", 10);
       var histRowHits  = parseInt(row.getAttribute("data-type-hits")  || "0", 10);
