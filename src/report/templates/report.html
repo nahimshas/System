@@ -178,7 +178,7 @@
           <span class="badge" style="background:#374151;color:#d1d5db;">{{ item.sport }}</span>
           {% endif %}
           <span style="font-weight:700;font-size:0.92rem;margin-left:6px;">{{ item.pick }}</span>
-          <span style="color:var(--muted);font-size:0.75rem;margin-left:6px;">{{ item.bet_type }}</span>
+          {% if item.bet_type == "Moneyline" %}<span style="color:var(--muted);font-size:0.75rem;margin-left:6px;">ML</span>{% endif %}
           {% if item.edge_pct %}
           <span style="color:var(--muted);font-size:0.75rem;">&middot; +{{ item.edge_pct }}% edge</span>
           {% endif %}
@@ -275,7 +275,7 @@
             </div>
             <div class="card-subtitle">
               <span class="badge {% if bet.sport == 'NBA' %}badge-nba{% else %}badge-mlb{% endif %}">{{ bet.sport }}</span>
-              &nbsp;{{ bet.bet_type }} &nbsp;&middot;&nbsp; {{ bet.game }}
+              {% if bet.bet_type == "Moneyline" %}&nbsp;ML &nbsp;&middot;&nbsp; {% endif %}{{ bet.game }}
             </div>
             <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
           </div>
@@ -363,7 +363,7 @@
            data-sport="{{ leg.sport }}"
            data-model-prob="{{ leg.model_prob_pct }}"
            data-commence-time="{{ leg.commence_time }}">
-        <div class="pick">{{ leg.pick }} <span style="color:var(--muted);font-weight:400;">({{ leg.bet_type }})</span></div>
+        <div class="pick">{{ leg.pick }}{% if leg.bet_type == "Moneyline" %} <span style="color:var(--muted);font-weight:400;">(ML)</span>{% endif %}</div>
         <div class="meta">{{ leg.game }} &middot; Model: {{ leg.model_prob_pct }}% &middot; Edge: +{{ leg.edge_pct }}%</div>
         <div class="leg-time" style="color:#14b8a6;font-size:0.72rem;margin-top:2px;"></div>
         <div class="leg-score-live" style="font-size:0.72rem;color:var(--muted);margin-top:2px;"></div>
@@ -2381,7 +2381,7 @@
     return null;
   }
 
-  function renderPropLive(liveDiv, summary, player, propType, modelLine, isFinal, battingTeam) {
+  function renderPropLive(liveDiv, summary, player, propType, modelLine, isFinal, battingTeam, marketLine) {
     var BADGE = 'font-size:0.65rem;padding:2px 7px;border-radius:99px;white-space:nowrap;';
 
     // ── Stat lookup: NBA, MLB pitcher Ks, MLB batter props ──────────────────
@@ -2420,13 +2420,17 @@
     }
     if (stat === null) return;
 
-    // Hit threshold = floor of model line (matches the "Bet Over ≤ N" we display)
-    var floorLine = Math.floor(modelLine);
+    // Win threshold = minimum integer needed to beat the market line.
+    // For Over X.5: need X+1 (e.g. Over 1.5 → need 2; Over 8.5 → need 9).
+    // For Over X.0: need X+1 as well (e.g. Over 2 → need 3).
+    // Math.ceil handles .5 lines correctly; add tiny epsilon for whole-number lines.
+    var mktLine  = (marketLine && marketLine > 0) ? marketLine : modelLine;
+    var needLine = Math.ceil(mktLine + 0.0001);  // minimum integer to win the Over
     if (isFinal) {
-      var hit = stat >= floorLine;
+      var hit = stat >= needLine;
       liveDiv.innerHTML = hit
-        ? '<span style="' + BADGE + 'border:1px solid #166534;background:#052e16;color:#4ade80;">✅ Hit ' + stat + '</span>'
-        : '<span style="' + BADGE + 'border:1px solid #7f1d1d;background:#2d0a0a;color:#f87171;">❌ Got ' + stat + '</span>';
+        ? '<span style="' + BADGE + 'border:1px solid #166534;background:#052e16;color:#4ade80;">✅ ' + stat + ' / ' + needLine + '</span>'
+        : '<span style="' + BADGE + 'border:1px solid #7f1d1d;background:#2d0a0a;color:#f87171;">❌ ' + stat + ' / ' + needLine + '</span>';
       // Stamp result on the card so updatePropAccuracy() can aggregate today's results
       var propCard = liveDiv.closest(".prop-card");
       if (propCard) {
@@ -2434,18 +2438,17 @@
         propCard.setAttribute("data-prop-actual", stat);
       }
     } else {
-      // Game in progress — colour warms as player approaches the floor threshold
-      var pct = floorLine > 0 ? stat / floorLine : 0;
-      var col = stat >= floorLine ? "#4ade80"
-              : pct >= 0.75       ? "#fb923c"
-              : pct >= 0.5        ? "#facc15"
+      // Game in progress — colour warms as player approaches the win threshold
+      var pct = needLine > 0 ? stat / needLine : 0;
+      var col = stat >= needLine ? "#4ade80"
+              : pct >= 0.75     ? "#fb923c"
+              : pct >= 0.5      ? "#facc15"
               : "#94a3b8";
       // Use explicit statLabel if available (composite stats), otherwise derive from prop type
       var label = statLabel || propType.replace(" Over (1+)", "").replace(" Over", "");
-      // Show floor threshold: player needs ≥ floorLine to win ("Bet Over ≤ N")
       liveDiv.innerHTML =
         '<span style="' + BADGE + 'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
-        '▶ ' + stat + ' ' + label + ' / ' + floorLine + '</span>';
+        '▶ ' + stat + ' ' + label + ' / ' + needLine + '</span>';
     }
   }
 
@@ -2483,8 +2486,9 @@
       var sport     = (card.getAttribute("data-sport")     || "").toUpperCase();
       var player    = card.getAttribute("data-player")     || "";
       var propType  = card.getAttribute("data-prop-type")  || "";
-      var modelLine = parseFloat(card.getAttribute("data-model-line") || "0");
-      var liveDiv   = card.querySelector(".prop-live-badge");
+      var modelLine  = parseFloat(card.getAttribute("data-model-line")  || "0");
+      var marketLine = parseFloat(card.getAttribute("data-market-line") || "0");
+      var liveDiv    = card.querySelector(".prop-live-badge");
 
       if (!liveDiv || !player || !propType) return;
 
@@ -2512,7 +2516,7 @@
       // For final games, use cached summary to avoid repeat fetches
       var cached = propSummaryCache[eventId];
       if (cached && cached.isFinal) {
-        renderPropLive(liveDiv, cached.data, player, propType, modelLine, true, battingTeam);
+        renderPropLive(liveDiv, cached.data, player, propType, modelLine, true, battingTeam, marketLine);
         return;
       }
 
@@ -2525,7 +2529,7 @@
         .then(function (data) {
           propSummaryCache[eventId] = { data: data, isFinal: isFinal };
           var prevHtml = liveDiv.innerHTML;
-          renderPropLive(liveDiv, data, player, propType, modelLine, isFinal, battingTeam);
+          renderPropLive(liveDiv, data, player, propType, modelLine, isFinal, battingTeam, marketLine);
           // Only append game period/inning when renderPropLive actually rendered a badge.
           // If stat was null (player not found in box score) it returns early without
           // touching innerHTML, so we must not append or we accumulate duplicates.

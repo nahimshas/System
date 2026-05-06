@@ -306,11 +306,12 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
             logger.debug(f"Stat not found in box score: {player} ({prop_type})")
             continue
 
-        # Hit = player reached the integer floor of the projection.
-        # We display "Bet Over ≤ N" where N = int(model_line), so getting
-        # exactly N (e.g. 6 when model is 6.2) counts as a hit — the bet
-        # wins if the Robinhood line was 5.5 and pushes at 6 (not a loss).
-        hit = actual_stat >= int(model_line)
+        # Hit = actual stat beats the market (betting) line, not the model projection.
+        # "Over 1.5 HRR" wins when actual > 1.5, i.e., actual >= 2.
+        # Using strict > so a push (exact tie on a whole-number line) counts as a miss,
+        # which is the standard sportsbook rule.
+        market_line = float(prop.get("market_line", model_line))
+        hit = actual_stat > market_line
 
         record = {
             "date":        game_date.isoformat(),
