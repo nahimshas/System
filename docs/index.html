@@ -94,6 +94,11 @@
     .budget-table td { padding: 9px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
     .budget-table tr:last-child td { border-bottom: none; }
     .budget-total { display: flex; justify-content: space-between; padding: 12px 6px 0; font-weight: 700; border-top: 2px solid var(--border); margin-top: 4px; }
+    .league-sub-label { font-size:0.72rem; font-weight:600; text-transform:uppercase; color:var(--muted); letter-spacing:0.05em; margin:-2px 0 8px; }
+    .alloc-detail-row { display:none; }
+    .alloc-detail-row.adr-open { display:table-row; }
+    .alloc-expand-btn { background:none; border:1px solid var(--border); border-radius:4px; color:var(--muted); cursor:pointer; font-size:0.7rem; padding:1px 5px; line-height:1.4; flex-shrink:0; transition:transform 0.15s; }
+    .alloc-main-row.adr-open .alloc-expand-btn { transform:rotate(90deg); }
 
     .empty-state { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 0.9rem; }
     .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
@@ -134,7 +139,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Wednesday, May 06, 2026 &middot; Generated May 06, 2026 at 10:41 AM PDT</div>
+    <div class="subtitle">Wednesday, May 06, 2026 &middot; Generated May 06, 2026 at 01:54 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 2 games &nbsp;|&nbsp;
       MLB: 13 games &nbsp;|&nbsp;
@@ -471,83 +476,19 @@
   
 
   
-  <div class="section" id="sec-singles">
-    <div class="section-title">Singles <span style="color:var(--muted);font-weight:400;font-size:0.85rem;text-transform:none;letter-spacing:0;">(top 5 by edge)</span></div>
-    
-    <div class="card"
-         id="bet-1"
-         data-home-team="Colorado Rockies"
-         data-away-team="New York Mets"
-         data-bet-type="Spread"
-         data-pick="Colorado Rockies +1.5"
-         data-sport="MLB"
-         data-cost="14.76"
-         data-profit="13.24"
-         data-confidence="HIGH"
-         data-edge-pct="30.0"
-         data-model-prob-pct="80.7"
-         data-commence-time="2026-05-07T01:21:00Z">
-      <div class="card-toggle-header">
-        <div class="card-header">
-          <div>
-            <div class="card-title">
-              <a href="#alloc-1" class="nav-link" title="Jump to allocation table">Colorado Rockies +1.5 <span class="nav-arrow">↓</span></a>
-            </div>
-            <div class="card-subtitle">
-              <span class="badge badge-mlb">MLB</span>
-              New York Mets @ Colorado Rockies
-            </div>
-            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
-            <span class="confidence-badge HIGH">HIGH</span>
-          </div>
-        </div>
-        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
-        <div class="card-compact">
-          <span class="mkt-mdl">Mkt 50.7% → Model <b style="color:var(--blue)">80.7%</b></span>
-          <span class="edge-chip green">+30.0% edge</span>
-          <span class="card-chevron">▾</span>
-        </div>
-      </div>
-      <div class="card-details">
-        <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">50.7%</div></div>
-          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">80.7%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+30.0%</div></div>
-        </div>
-        
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Michael Lorenzen FIP 4.88 / xFIP 3.88 | K/9: 6.4</div><div class="signal-item">Freddy Peralta FIP 3.62 / xFIP 3.55 | K/9: 9.9</div><div class="signal-item">Park factor 1.30 (hitter-friendly: Coors Field)</div><div class="signal-item">Colorado Rockies injury impact (-2.3%)</div><div class="signal-item">New York Mets injury impact (-5.0%)</div><div class="signal-item">🌡️ Cold (30°F) at Denver — ball doesn't carry, Under lean (−0.5 runs)</div><div class="signal-item">⚠ Colorado Rockies schedule load: 7 games in 7 days</div><div class="signal-item">⚠ New York Mets schedule load: 7 games in 7 days</div><div class="signal-item">Model projected score: Colorado Rockies 5.1 — New York Mets 4.3</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">🔵 Michael Lorenzen: ERA 6.09 | FIP 4.88 / xFIP 3.88 | K/9 6.4 | BB/9 2.4 | IP 34</div><div class="research-item">🔴 Freddy Peralta: ERA 3.52 | FIP 3.62 / xFIP 3.55 | K/9 9.9 | BB/9 3.8 | IP 38</div><div class="research-item">Colorado Rockies offense: OPS 0.719 | AVG 0.250 | R/G 4.22</div><div class="research-item">New York Mets offense: OPS 0.629 | AVG 0.224 | R/G 3.49</div><div class="research-item">Bullpen ERA — Colorado Rockies: 4.59 | New York Mets: 3.91</div><div class="research-item">Venue: Coors Field — park factor 1.30 (hitter-friendly)</div><div class="research-item">⚕ Colorado Rockies — Case Williams (SP): DAY-TO-DAY</div><div class="research-item">⚕ Colorado Rockies — Brayan Castillo (RP): DAY-TO-DAY</div><div class="research-item">⚕ Colorado Rockies — Jared Thomas (CF): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Jose Rojas (3B): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Nick Burdi (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Joe Jacques (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Kevin Herget (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Mike Tauchman (RF): OUT</div><div class="research-item">⚕ New York Mets — Nate Lavender (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Robert Stock (RP): OUT</div><div class="research-item">⚕ New York Mets — Grae Kessinger (3B): OUT</div><div class="research-item">🌤 Weather (Denver): 30°F | Wind 9 mph N (blowing in) | Precip 0%</div><div class="research-item">Model expected runs: Colorado Rockies 5.13 | New York Mets 4.28</div>
-          </details>
-        </div>
-        
-        <div class="action-box">
-          <div class="action-title">Robinhood Action</div>
-          <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢50.7</span></div>
-          <div class="action-row"><span class="label">Buy contracts</span><span class="value">28</span></div>
-          <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$14.76</span></div>
-          <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$13.24</span></div>
-          <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$14.76</span></div>
-          <div class="action-row"><span class="label">Expected value</span>
-            <span class="value" style="color:#16a34a">
-              +$7.82
-            </span>
-          </div>
-        </div>
-      </div>
+
+  
+  <div class="section" id="sec-nba">
+    <div class="section-title">🏀 NBA
+      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
+        3 picks &middot; 6 props
+      </span>
     </div>
+
     
-    <div class="card"
+    <div class="league-sub-label">Singles</div>
+    
+    <div class="card budget-single"
          id="bet-2"
          data-home-team="New York Knicks"
          data-away-team="Philadelphia 76ers"
@@ -559,7 +500,8 @@
          data-confidence="HIGH"
          data-edge-pct="22.4"
          data-model-prob-pct="74.6"
-         data-commence-time="2026-05-06T23:10:00Z">
+         data-commence-time="2026-05-06T23:10:00Z"
+         data-in-budget="true">
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -604,23 +546,17 @@
           </details>
         </div>
         
-        <div class="action-box">
-          <div class="action-title">Robinhood Action</div>
-          <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢52.3</span></div>
-          <div class="action-row"><span class="label">Buy contracts</span><span class="value">20</span></div>
-          <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$10.85</span></div>
-          <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$9.15</span></div>
-          <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$10.85</span></div>
-          <div class="action-row"><span class="label">Expected value</span>
-            <span class="value" style="color:#16a34a">
-              +$4.08
-            </span>
-          </div>
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-2" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #2 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
         </div>
+        
       </div>
     </div>
     
-    <div class="card"
+    <div class="card budget-single"
          id="bet-3"
          data-home-team="New York Knicks"
          data-away-team="Philadelphia 76ers"
@@ -632,7 +568,8 @@
          data-confidence="HIGH"
          data-edge-pct="22.4"
          data-model-prob-pct="74.6"
-         data-commence-time="2026-05-06T23:10:00Z">
+         data-commence-time="2026-05-06T23:10:00Z"
+         data-in-budget="true">
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -677,96 +614,17 @@
           </details>
         </div>
         
-        <div class="action-box">
-          <div class="action-title">Robinhood Action</div>
-          <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢52.2</span></div>
-          <div class="action-row"><span class="label">Buy contracts</span><span class="value">22</span></div>
-          <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$11.93</span></div>
-          <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$10.07</span></div>
-          <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$11.93</span></div>
-          <div class="action-row"><span class="label">Expected value</span>
-            <span class="value" style="color:#16a34a">
-              +$5.02
-            </span>
-          </div>
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-3" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #3 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
         </div>
+        
       </div>
     </div>
     
-    <div class="card"
-         id="bet-4"
-         data-home-team="Houston Astros"
-         data-away-team="Los Angeles Dodgers"
-         data-bet-type="Spread"
-         data-pick="Houston Astros +1.5"
-         data-sport="MLB"
-         data-cost="7.7"
-         data-profit="8.3"
-         data-confidence="HIGH"
-         data-edge-pct="20.8"
-         data-model-prob-pct="66.4"
-         data-commence-time="2026-05-06T18:11:00Z">
-      <div class="card-toggle-header">
-        <div class="card-header">
-          <div>
-            <div class="card-title">
-              <a href="#alloc-4" class="nav-link" title="Jump to allocation table">Houston Astros +1.5 <span class="nav-arrow">↓</span></a>
-            </div>
-            <div class="card-subtitle">
-              <span class="badge badge-mlb">MLB</span>
-              Los Angeles Dodgers @ Houston Astros
-            </div>
-            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
-            <span class="confidence-badge HIGH">HIGH</span>
-          </div>
-        </div>
-        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
-        <div class="card-compact">
-          <span class="mkt-mdl">Mkt 45.6% → Model <b style="color:var(--blue)">66.4%</b></span>
-          <span class="edge-chip green">+20.8% edge</span>
-          <span class="card-chevron">▾</span>
-        </div>
-      </div>
-      <div class="card-details">
-        <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">45.6%</div></div>
-          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">66.4%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+20.8%</div></div>
-        </div>
-        
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Lance McCullers Jr. FIP 4.39 / xFIP 3.85 | K/9: 9.5</div><div class="signal-item">Tyler Glasnow FIP 3.12 / xFIP 2.88 | K/9: 11.1</div><div class="signal-item">⚠ ERA trap [MILD] — Tyler Glasnow: ERA 2.56 vs xFIP 2.88 over 38 IP (severity 0.17) — Los Angeles Dodgers ML may be overpriced by market</div><div class="signal-item">⚠ Houston Astros schedule load: 8 games in 7 days</div><div class="signal-item">⚠ Los Angeles Dodgers schedule load: 6 games in 7 days</div><div class="signal-item">Model projected score: Houston Astros 4.3 — Los Angeles Dodgers 4.5</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">🔵 Lance McCullers Jr.: ERA 6.32 | FIP 4.39 / xFIP 3.85 | K/9 9.5 | BB/9 4.9 | IP 31</div><div class="research-item">🔴 Tyler Glasnow: ERA 2.56 | FIP 3.12 / xFIP 2.88 | K/9 11.1 | BB/9 3.1 | IP 38</div><div class="research-item">Houston Astros offense: OPS 0.775 | AVG 0.264 | R/G 4.95</div><div class="research-item">Los Angeles Dodgers offense: OPS 0.788 | AVG 0.271 | R/G 5.11</div><div class="research-item">Bullpen ERA — Houston Astros: 5.65 | Los Angeles Dodgers: 3.19</div><div class="research-item">Venue: Daikin Park — neutral park</div><div class="research-item">⚕ Houston Astros — Lucas Spence (OF): DAY-TO-DAY</div><div class="research-item">⚕ Houston Astros — Walker Janek (C): DAY-TO-DAY</div><div class="research-item">👨‍⚖️ HP Umpire: Edwin Jimenez (near-neutral tendencies)</div><div class="research-item">🌤 Weather (Daikin): 63°F | Wind 9 mph S (cross wind) | Precip 0%</div><div class="research-item">Model expected runs: Houston Astros 4.30 | Los Angeles Dodgers 4.51</div>
-          </details>
-        </div>
-        
-        <div class="action-box">
-          <div class="action-title">Robinhood Action</div>
-          <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢46.1</span></div>
-          <div class="action-row"><span class="label">Buy contracts</span><span class="value">16</span></div>
-          <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$7.70</span></div>
-          <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$8.30</span></div>
-          <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.70</span></div>
-          <div class="action-row"><span class="label">Expected value</span>
-            <span class="value" style="color:#16a34a">
-              +$2.70
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="card"
+    <div class="card budget-single"
          id="bet-5"
          data-home-team="New York Knicks"
          data-away-team="Philadelphia 76ers"
@@ -778,7 +636,8 @@
          data-confidence="HIGH"
          data-edge-pct="15.6"
          data-model-prob-pct="65.8"
-         data-commence-time="2026-05-06T23:10:00Z">
+         data-commence-time="2026-05-06T23:10:00Z"
+         data-in-budget="true">
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -823,155 +682,21 @@
           </details>
         </div>
         
-        <div class="action-box">
-          <div class="action-title">Robinhood Action</div>
-          <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢50.4</span></div>
-          <div class="action-row"><span class="label">Buy contracts</span><span class="value">22</span></div>
-          <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$11.53</span></div>
-          <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$10.47</span></div>
-          <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$11.53</span></div>
-          <div class="action-row"><span class="label">Expected value</span>
-            <span class="value" style="color:#16a34a">
-              +$4.84
-            </span>
-          </div>
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-5" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #5 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
         </div>
+        
       </div>
     </div>
     
-  </div>
-  
+    
 
-  
-  <div class="section" id="sec-parlays">
-    <div class="section-title">2-Leg Parlays <span class="badge badge-parlay">2</span></div>
     
-    <div class="card parlay-card" data-parlay="true"
-         id="bet-p1"
-         data-cost="4.32"
-         data-profit="8.68"
-         data-confidence="HIGH"
-         data-edge-pct="26.6"
-         data-model-prob-pct="57.8">
-      <div class="card-header">
-        <div>
-          <div class="card-title" style="color:var(--purple);">
-            <a href="#alloc-p1" class="nav-link" style="color:var(--purple);" title="Jump to allocation table">Parlay #1 <span class="nav-arrow">↓</span></a>
-          </div>
-          <div class="card-subtitle">Combined prob: 57.8% &middot; Edge: +26.6%</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          
-          <span class="confidence-badge HIGH">HIGH</span>
-        </div>
-      </div>
-      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
-      
-      <div class="parlay-leg"
-           data-home-team="New York Knicks"
-           data-away-team="Philadelphia 76ers"
-           data-bet-type="Moneyline"
-           data-pick="New York Knicks"
-           data-sport="NBA"
-           data-model-prob="90.0"
-           data-commence-time="2026-05-06T23:10:00Z">
-        <div class="pick">New York Knicks <span style="color:var(--muted);font-weight:400;">(ML)</span></div>
-        <div class="meta">Philadelphia 76ers @ New York Knicks &middot; Model: 90.0% &middot; Edge: +11.8%</div>
-        <div class="leg-time" style="color:#14b8a6;font-size:0.72rem;margin-top:2px;"></div>
-        <div class="leg-score-live" style="font-size:0.72rem;color:var(--muted);margin-top:2px;"></div>
-      </div>
-      
-      <div class="parlay-leg"
-           data-home-team="Colorado Rockies"
-           data-away-team="New York Mets"
-           data-bet-type="Moneyline"
-           data-pick="Colorado Rockies"
-           data-sport="MLB"
-           data-model-prob="64.3"
-           data-commence-time="2026-05-07T01:21:00Z">
-        <div class="pick">Colorado Rockies <span style="color:var(--muted);font-weight:400;">(ML)</span></div>
-        <div class="meta">New York Mets @ Colorado Rockies &middot; Model: 64.3% &middot; Edge: +24.4%</div>
-        <div class="leg-time" style="color:#14b8a6;font-size:0.72rem;margin-top:2px;"></div>
-        <div class="leg-score-live" style="font-size:0.72rem;color:var(--muted);margin-top:2px;"></div>
-      </div>
-      
-      <div class="action-box" style="background:var(--purple-dim);border-color:var(--purple);">
-        <div class="action-title" style="color:var(--purple);">Robinhood Action</div>
-        <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢31.2</span></div>
-        <div class="action-row"><span class="label">Buy contracts</span><span class="value">13</span></div>
-        <div class="action-row"><span class="label">Total cost</span><span class="value">$4.32</span></div>
-        <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$8.68</span></div>
-      </div>
-    </div>
+    <div class="league-sub-label" style="margin-top:14px;">Props</div>
     
-    <div class="card parlay-card" data-parlay="true"
-         id="bet-p2"
-         data-cost="5.94"
-         data-profit="9.06"
-         data-confidence="HIGH"
-         data-edge-pct="31.7"
-         data-model-prob-pct="69.3">
-      <div class="card-header">
-        <div>
-          <div class="card-title" style="color:var(--purple);">
-            <a href="#alloc-p2" class="nav-link" style="color:var(--purple);" title="Jump to allocation table">Parlay #2 <span class="nav-arrow">↓</span></a>
-          </div>
-          <div class="card-subtitle">Combined prob: 69.3% &middot; Edge: +31.7%</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-          
-          <span class="confidence-badge HIGH">HIGH</span>
-        </div>
-      </div>
-      <div class="live-status" style="font-size:0.78rem;margin-bottom:8px;min-height:1em;"></div>
-      
-      <div class="parlay-leg"
-           data-home-team="New York Knicks"
-           data-away-team="Philadelphia 76ers"
-           data-bet-type="Moneyline"
-           data-pick="New York Knicks"
-           data-sport="NBA"
-           data-model-prob="90.0"
-           data-commence-time="2026-05-06T23:10:00Z">
-        <div class="pick">New York Knicks <span style="color:var(--muted);font-weight:400;">(ML)</span></div>
-        <div class="meta">Philadelphia 76ers @ New York Knicks &middot; Model: 90.0% &middot; Edge: +17.9%</div>
-        <div class="leg-time" style="color:#14b8a6;font-size:0.72rem;margin-top:2px;"></div>
-        <div class="leg-score-live" style="font-size:0.72rem;color:var(--muted);margin-top:2px;"></div>
-      </div>
-      
-      <div class="parlay-leg"
-           data-home-team="New York Knicks"
-           data-away-team="Philadelphia 76ers"
-           data-bet-type="Total"
-           data-pick="Under 216.5"
-           data-sport="NBA"
-           data-model-prob="77.0"
-           data-commence-time="2026-05-06T23:10:00Z">
-        <div class="pick">Under 216.5</div>
-        <div class="meta">Philadelphia 76ers @ New York Knicks &middot; Model: 77.0% &middot; Edge: +24.8%</div>
-        <div class="leg-time" style="color:#14b8a6;font-size:0.72rem;margin-top:2px;"></div>
-        <div class="leg-score-live" style="font-size:0.72rem;color:var(--muted);margin-top:2px;"></div>
-      </div>
-      
-      <div class="action-box" style="background:var(--purple-dim);border-color:var(--purple);">
-        <div class="action-title" style="color:var(--purple);">Robinhood Action</div>
-        <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢37.6</span></div>
-        <div class="action-row"><span class="label">Buy contracts</span><span class="value">15</span></div>
-        <div class="action-row"><span class="label">Total cost</span><span class="value">$5.94</span></div>
-        <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$9.06</span></div>
-      </div>
-    </div>
-    
-  </div>
-  
-
-  
-  <div class="section" id="sec-props">
-    <div class="section-title">Props Watchlist
-      <span style="color:var(--yellow);font-size:0.72rem;font-weight:400;text-transform:none;">
-        — 📊 Props sourced from <b style="color:#e2e8f0;">DraftKings</b> odds. Verify lines on Robinhood before betting — lines may differ slightly.
-      </span>
-    </div>
     
     <div class="card prop-card"
          data-home-team="Philadelphia 76ers"
@@ -985,7 +710,6 @@
          data-commence-time="2026-05-06T23:10:00Z"
          data-market-line="3.5"
          data-edge-pct="43.6">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1008,22 +732,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 3.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">51.5%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">8.2</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+43.6%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 3.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">51.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">8.2</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+43.6%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 3.5 at 46.7%. Model projects 8.2.</div>
         
@@ -1043,75 +755,6 @@
       </div>
     </div>
     
-    <div class="card prop-card"
-         data-home-team="Philadelphia 76ers"
-         data-away-team="New York Knicks"
-         data-bet-type="Prop"
-         data-sport="NBA"
-         data-player="Quentin Grimes"
-         data-prop-type="Points Over"
-         data-model-line="11.6"
-         data-confidence="HIGH"
-         data-commence-time="2026-05-06T23:10:00Z"
-         data-market-line="8.5"
-         data-edge-pct="28.1">
-      
-      <div class="card-toggle-header">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Quentin Grimes</div>
-            <div class="card-subtitle">
-              <span class="badge badge-nba">NBA</span>
-              &nbsp;Philadelphia 76ers vs New York Knicks &middot; Points Over
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
-            <span class="confidence-badge HIGH">HIGH</span>
-            <div class="prop-live-badge"></div>
-          </div>
-        </div>
-        <div class="card-compact">
-          <span class="mkt-mdl">Over <b>8.5</b> <span style="color:#94a3b8;font-size:0.8em;">51.0%</span> &middot; Model <b style="color:var(--blue)">11.6</b> &middot; <b style="color:var(--green)">+28.1%</b></span>
-          <span class="card-chevron">▾</span>
-        </div>
-      </div>
-      <div class="card-details">
-        <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 8.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">51.0%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">11.6</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+28.1%</div>
-          </div>
-        </div>
-        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 5.5 at 57.3%. Model projects 11.6.</div>
-        
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 8.5 at 51.0% (draftkings)</div><div class="signal-item">Model projects 11.6 → edge +28.1%</div><div class="signal-item">New York Knicks allows 110.1 PPG (below avg)</div><div class="signal-item">🏆 Playoffs: role player reduction applied (-12%)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Philadelphia 76ers: Net RTG -0.2 | PPG 115.9 | OPPG 116.1</div><div class="research-item">New York Knicks: Net RTG +6.3 | PPG 116.5 | OPPG 110.1</div><div class="research-item">Quentin Grimes: 13.4 PPG / 3.6 RPG / 3.3 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
-          </details>
-        </div>
-        
-      </div>
-    </div>
     
     <div class="card prop-card"
          data-home-team="Minnesota Timberwolves"
@@ -1125,7 +768,6 @@
          data-commence-time="2026-05-07T01:40:00Z"
          data-market-line="20.5"
          data-edge-pct="29.2">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1148,22 +790,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 20.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">51.7%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">30.1</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+29.2%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 20.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">51.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">30.1</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+29.2%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 21.5 at 50.7%. Model projects 30.1.</div>
         
@@ -1183,6 +813,65 @@
       </div>
     </div>
     
+    
+    <div class="card prop-card"
+         data-home-team="Philadelphia 76ers"
+         data-away-team="New York Knicks"
+         data-bet-type="Prop"
+         data-sport="NBA"
+         data-player="Quentin Grimes"
+         data-prop-type="Points Over"
+         data-model-line="11.6"
+         data-confidence="HIGH"
+         data-commence-time="2026-05-06T23:10:00Z"
+         data-market-line="8.5"
+         data-edge-pct="28.1">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Quentin Grimes</div>
+            <div class="card-subtitle">
+              <span class="badge badge-nba">NBA</span>
+              &nbsp;Philadelphia 76ers vs New York Knicks &middot; Points Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>8.5</b> <span style="color:#94a3b8;font-size:0.8em;">51.0%</span> &middot; Model <b style="color:var(--blue)">11.6</b> &middot; <b style="color:var(--green)">+28.1%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 8.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">51.0%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">11.6</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+28.1%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 5.5 at 57.3%. Model projects 11.6.</div>
+        
+        <div class="signals" style="margin-top:8px;">
+          <div class="signals-title">Key Signals</div>
+          <div class="signal-item">Market: Over 8.5 at 51.0% (draftkings)</div><div class="signal-item">Model projects 11.6 → edge +28.1%</div><div class="signal-item">New York Knicks allows 110.1 PPG (below avg)</div><div class="signal-item">🏆 Playoffs: role player reduction applied (-12%)</div>
+        </div>
+        
+        
+        <div class="research-section">
+          <details>
+            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
+            <div class="research-item">Philadelphia 76ers: Net RTG -0.2 | PPG 115.9 | OPPG 116.1</div><div class="research-item">New York Knicks: Net RTG +6.3 | PPG 116.5 | OPPG 110.1</div><div class="research-item">Quentin Grimes: 13.4 PPG / 3.6 RPG / 3.3 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
+          </details>
+        </div>
+        
+      </div>
+    </div>
+    
+    
     <div class="card prop-card"
          data-home-team="San Antonio Spurs"
          data-away-team="Minnesota Timberwolves"
@@ -1195,7 +884,6 @@
          data-commence-time="2026-05-07T01:40:00Z"
          data-market-line="9.5"
          data-edge-pct="23.1">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1218,22 +906,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 9.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">50.5%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">11.9</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+23.1%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 9.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">50.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">11.9</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+23.1%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 9.5 at 50.5%. Model projects 11.9.</div>
         
@@ -1253,6 +929,7 @@
       </div>
     </div>
     
+    
     <div class="card prop-card"
          data-home-team="San Antonio Spurs"
          data-away-team="Minnesota Timberwolves"
@@ -1265,7 +942,6 @@
          data-commence-time="2026-05-07T01:40:00Z"
          data-market-line="3.5"
          data-edge-pct="21.8">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1288,22 +964,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 3.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">54.3%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">4.8</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+21.8%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 3.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">54.3%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">4.8</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+21.8%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 3.5 at 54.3%. Model projects 4.8.</div>
         
@@ -1323,6 +987,7 @@
       </div>
     </div>
     
+    
     <div class="card prop-card"
          data-home-team="New York Knicks"
          data-away-team="Philadelphia 76ers"
@@ -1335,7 +1000,6 @@
          data-commence-time="2026-05-06T23:10:00Z"
          data-market-line="0.5"
          data-edge-pct="20.3">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1358,22 +1022,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 0.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">65.8%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">1.71</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+20.3%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 0.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">65.8%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">1.71</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+20.3%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 0.5 at 66.2%. Model projects 1.71.</div>
         
@@ -1393,75 +1045,162 @@
       </div>
     </div>
     
-    <div class="card prop-card"
-         data-home-team="Athletics"
-         data-away-team="Philadelphia Phillies"
-         data-bet-type="Prop"
+    
+  </div>
+  
+
+  
+  <div class="section" id="sec-mlb">
+    <div class="section-title">⚾ MLB
+      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
+        2 picks &middot; 6 props
+      </span>
+    </div>
+
+    
+    <div class="league-sub-label">Singles</div>
+    
+    <div class="card budget-single"
+         id="bet-1"
+         data-home-team="Colorado Rockies"
+         data-away-team="New York Mets"
+         data-bet-type="Spread"
+         data-pick="Colorado Rockies +1.5"
          data-sport="MLB"
-         data-player="Jacob Wilson"
-         data-prop-type="Hits Over"
-         data-model-line="2.82"
+         data-cost="14.76"
+         data-profit="13.24"
          data-confidence="HIGH"
-         data-commence-time="2026-05-06T22:41:00Z"
-         data-market-line="1.5"
-         data-edge-pct="46.8">
-      
+         data-edge-pct="30.0"
+         data-model-prob-pct="80.7"
+         data-commence-time="2026-05-07T01:21:00Z"
+         data-in-budget="true">
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
-            <div class="card-title">Jacob Wilson</div>
+            <div class="card-title">
+              <a href="#alloc-1" class="nav-link" title="Jump to allocation table">Colorado Rockies +1.5 <span class="nav-arrow">↓</span></a>
+            </div>
             <div class="card-subtitle">
               <span class="badge badge-mlb">MLB</span>
-              &nbsp;Athletics vs Philadelphia Phillies &middot; Hits Over
+              New York Mets @ Colorado Rockies
             </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
             
             <span class="confidence-badge HIGH">HIGH</span>
-            <div class="prop-live-badge"></div>
           </div>
         </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
         <div class="card-compact">
-          <span class="mkt-mdl">Over <b>1.5</b> <span style="color:#94a3b8;font-size:0.8em;">35.3%</span> &middot; Model <b style="color:var(--blue)">2.82</b> &middot; <b style="color:var(--green)">+46.8%</b></span>
+          <span class="mkt-mdl">Mkt 50.7% → Model <b style="color:var(--blue)">80.7%</b></span>
+          <span class="edge-chip green">+30.0% edge</span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 1.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">35.3%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">2.82</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+46.8%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">50.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">80.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+30.0%</div></div>
         </div>
-        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 35.3%. Model: 2.82.</div>
         
-        <div class="signals" style="margin-top:8px;">
+        <div class="signals">
           <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 1.5 at 35.3% (draftkings)</div><div class="signal-item">Model projects 2.82 → edge +46.8%</div><div class="signal-item">vs Zack Wheeler (FIP 2.02) at Citizens Bank Park (park factor 1.10)</div>
+          <div class="signal-item">Michael Lorenzen FIP 4.88 / xFIP 3.88 | K/9: 6.4</div><div class="signal-item">Freddy Peralta FIP 3.62 / xFIP 3.55 | K/9: 9.9</div><div class="signal-item">Park factor 1.30 (hitter-friendly: Coors Field)</div><div class="signal-item">Colorado Rockies injury impact (-2.3%)</div><div class="signal-item">New York Mets injury impact (-5.0%)</div><div class="signal-item">🌡️ Cold (30°F) at Denver — ball doesn't carry, Under lean (−0.5 runs)</div><div class="signal-item">⚠ Colorado Rockies schedule load: 7 games in 7 days</div><div class="signal-item">⚠ New York Mets schedule load: 7 games in 7 days</div><div class="signal-item">Model projected score: Colorado Rockies 5.1 — New York Mets 4.3</div>
         </div>
         
         
         <div class="research-section">
           <details>
             <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Jacob Wilson: AVG 0.296 | OBP 0.313 | H/G 1.24 | TB/G 1.65 | HR/G 0.059 | HRR/G 2.15 (148 PA)</div><div class="research-item">Facing Zack Wheeler: FIP 2.02</div><div class="research-item">Park factor 1.10 at Citizens Bank Park</div>
+            <div class="research-item">🔵 Michael Lorenzen: ERA 6.09 | FIP 4.88 / xFIP 3.88 | K/9 6.4 | BB/9 2.4 | IP 34</div><div class="research-item">🔴 Freddy Peralta: ERA 3.52 | FIP 3.62 / xFIP 3.55 | K/9 9.9 | BB/9 3.8 | IP 38</div><div class="research-item">Colorado Rockies offense: OPS 0.719 | AVG 0.250 | R/G 4.22</div><div class="research-item">New York Mets offense: OPS 0.629 | AVG 0.224 | R/G 3.49</div><div class="research-item">Bullpen ERA — Colorado Rockies: 4.59 | New York Mets: 3.91</div><div class="research-item">Venue: Coors Field — park factor 1.30 (hitter-friendly)</div><div class="research-item">⚕ Colorado Rockies — Case Williams (SP): DAY-TO-DAY</div><div class="research-item">⚕ Colorado Rockies — Brayan Castillo (RP): DAY-TO-DAY</div><div class="research-item">⚕ Colorado Rockies — Jared Thomas (CF): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Jose Rojas (3B): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Nick Burdi (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Joe Jacques (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Kevin Herget (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Mike Tauchman (RF): OUT</div><div class="research-item">⚕ New York Mets — Nate Lavender (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Robert Stock (RP): OUT</div><div class="research-item">⚕ New York Mets — Grae Kessinger (3B): OUT</div><div class="research-item">🌤 Weather (Denver): 30°F | Wind 9 mph N (blowing in) | Precip 0%</div><div class="research-item">Model expected runs: Colorado Rockies 5.13 | New York Mets 4.28</div>
           </details>
+        </div>
+        
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-1" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #1 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
         </div>
         
       </div>
     </div>
+    
+    <div class="card budget-single"
+         id="bet-4"
+         data-home-team="Houston Astros"
+         data-away-team="Los Angeles Dodgers"
+         data-bet-type="Spread"
+         data-pick="Houston Astros +1.5"
+         data-sport="MLB"
+         data-cost="7.7"
+         data-profit="8.3"
+         data-confidence="HIGH"
+         data-edge-pct="20.8"
+         data-model-prob-pct="66.4"
+         data-commence-time="2026-05-06T18:11:00Z"
+         data-in-budget="true">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <a href="#alloc-4" class="nav-link" title="Jump to allocation table">Houston Astros +1.5 <span class="nav-arrow">↓</span></a>
+            </div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              Los Angeles Dodgers @ Houston Astros
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 45.6% → Model <b style="color:var(--blue)">66.4%</b></span>
+          <span class="edge-chip green">+20.8% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">45.6%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">66.4%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+20.8%</div></div>
+        </div>
+        
+        <div class="signals">
+          <div class="signals-title">Key Signals</div>
+          <div class="signal-item">Lance McCullers Jr. FIP 4.39 / xFIP 3.85 | K/9: 9.5</div><div class="signal-item">Tyler Glasnow FIP 3.12 / xFIP 2.88 | K/9: 11.1</div><div class="signal-item">⚠ ERA trap [MILD] — Tyler Glasnow: ERA 2.56 vs xFIP 2.88 over 38 IP (severity 0.17) — Los Angeles Dodgers ML may be overpriced by market</div><div class="signal-item">⚠ Houston Astros schedule load: 8 games in 7 days</div><div class="signal-item">⚠ Los Angeles Dodgers schedule load: 6 games in 7 days</div><div class="signal-item">Model projected score: Houston Astros 4.3 — Los Angeles Dodgers 4.5</div>
+        </div>
+        
+        
+        <div class="research-section">
+          <details>
+            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
+            <div class="research-item">🔵 Lance McCullers Jr.: ERA 6.32 | FIP 4.39 / xFIP 3.85 | K/9 9.5 | BB/9 4.9 | IP 31</div><div class="research-item">🔴 Tyler Glasnow: ERA 2.56 | FIP 3.12 / xFIP 2.88 | K/9 11.1 | BB/9 3.1 | IP 38</div><div class="research-item">Houston Astros offense: OPS 0.775 | AVG 0.264 | R/G 4.95</div><div class="research-item">Los Angeles Dodgers offense: OPS 0.788 | AVG 0.271 | R/G 5.11</div><div class="research-item">Bullpen ERA — Houston Astros: 5.65 | Los Angeles Dodgers: 3.19</div><div class="research-item">Venue: Daikin Park — neutral park</div><div class="research-item">⚕ Houston Astros — Lucas Spence (OF): DAY-TO-DAY</div><div class="research-item">⚕ Houston Astros — Walker Janek (C): DAY-TO-DAY</div><div class="research-item">👨‍⚖️ HP Umpire: Edwin Jimenez (near-neutral tendencies)</div><div class="research-item">🌤 Weather (Daikin): 63°F | Wind 9 mph S (cross wind) | Precip 0%</div><div class="research-item">Model expected runs: Houston Astros 4.30 | Los Angeles Dodgers 4.51</div>
+          </details>
+        </div>
+        
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-4" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #4 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+
+    
+    <div class="league-sub-label" style="margin-top:14px;">Props</div>
+    
     
     <div class="card prop-card"
          data-home-team="Athletics"
@@ -1475,7 +1214,6 @@
          data-commence-time="2026-05-06T22:41:00Z"
          data-market-line="1.5"
          data-edge-pct="47.5">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1498,22 +1236,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 1.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">47.4%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">4.37</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+47.5%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 1.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">47.4%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">4.37</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+47.5%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 47.4%. Model: 4.37.</div>
         
@@ -1533,6 +1259,65 @@
       </div>
     </div>
     
+    
+    <div class="card prop-card"
+         data-home-team="Athletics"
+         data-away-team="Philadelphia Phillies"
+         data-bet-type="Prop"
+         data-sport="MLB"
+         data-player="Jacob Wilson"
+         data-prop-type="Hits Over"
+         data-model-line="2.82"
+         data-confidence="HIGH"
+         data-commence-time="2026-05-06T22:41:00Z"
+         data-market-line="1.5"
+         data-edge-pct="46.8">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Jacob Wilson</div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;Athletics vs Philadelphia Phillies &middot; Hits Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>1.5</b> <span style="color:#94a3b8;font-size:0.8em;">35.3%</span> &middot; Model <b style="color:var(--blue)">2.82</b> &middot; <b style="color:var(--green)">+46.8%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 1.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">35.3%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">2.82</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+46.8%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 35.3%. Model: 2.82.</div>
+        
+        <div class="signals" style="margin-top:8px;">
+          <div class="signals-title">Key Signals</div>
+          <div class="signal-item">Market: Over 1.5 at 35.3% (draftkings)</div><div class="signal-item">Model projects 2.82 → edge +46.8%</div><div class="signal-item">vs Zack Wheeler (FIP 2.02) at Citizens Bank Park (park factor 1.10)</div>
+        </div>
+        
+        
+        <div class="research-section">
+          <details>
+            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
+            <div class="research-item">Jacob Wilson: AVG 0.296 | OBP 0.313 | H/G 1.24 | TB/G 1.65 | HR/G 0.059 | HRR/G 2.15 (148 PA)</div><div class="research-item">Facing Zack Wheeler: FIP 2.02</div><div class="research-item">Park factor 1.10 at Citizens Bank Park</div>
+          </details>
+        </div>
+        
+      </div>
+    </div>
+    
+    
     <div class="card prop-card"
          data-home-team="Athletics"
          data-away-team="Philadelphia Phillies"
@@ -1545,7 +1330,6 @@
          data-commence-time="2026-05-06T22:41:00Z"
          data-market-line="1.5"
          data-edge-pct="46.4">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1568,22 +1352,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 1.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">43.9%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">3.67</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+46.4%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 1.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">43.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">3.67</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+46.4%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 43.9%. Model: 3.67.</div>
         
@@ -1603,6 +1375,7 @@
       </div>
     </div>
     
+    
     <div class="card prop-card"
          data-home-team="Athletics"
          data-away-team="Philadelphia Phillies"
@@ -1615,7 +1388,6 @@
          data-commence-time="2026-05-06T22:41:00Z"
          data-market-line="1.5"
          data-edge-pct="45.9">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1638,22 +1410,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 1.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">43.9%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">3.77</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+45.9%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 1.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">43.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">3.77</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+45.9%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 43.9%. Model: 3.77.</div>
         
@@ -1673,6 +1433,7 @@
       </div>
     </div>
     
+    
     <div class="card prop-card"
          data-home-team="Arizona Diamondbacks"
          data-away-team="Pittsburgh Pirates"
@@ -1685,7 +1446,6 @@
          data-commence-time="2026-05-07T01:41:00Z"
          data-market-line="1.5"
          data-edge-pct="45.9">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1708,22 +1468,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 1.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">49.8%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">4.17</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+45.9%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 1.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">49.8%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">4.17</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+45.9%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 49.8%. Model: 4.17.</div>
         
@@ -1743,6 +1491,7 @@
       </div>
     </div>
     
+    
     <div class="card prop-card"
          data-home-team="Athletics"
          data-away-team="Philadelphia Phillies"
@@ -1755,7 +1504,6 @@
          data-commence-time="2026-05-06T22:41:00Z"
          data-market-line="1.5"
          data-edge-pct="45.8">
-      
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1778,22 +1526,10 @@
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box" title="The book's line and implied probability including vig">
-            <div class="stat-label">Market Line</div>
-            <div class="stat-value blue">Over 1.5</div>
-          </div>
-          <div class="stat-box" title="Implied probability including vig from draftkings">
-            <div class="stat-label">Book Odds</div>
-            <div class="stat-value">48.5%</div>
-          </div>
-          <div class="stat-box" title="Model's projected stat value for this player today">
-            <div class="stat-label">Model Proj</div>
-            <div class="stat-value blue">4.37</div>
-          </div>
-          <div class="stat-box" title="Model edge over market's no-vig probability">
-            <div class="stat-label">Edge</div>
-            <div class="stat-value green">+45.8%</div>
-          </div>
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 1.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">48.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">4.37</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+45.8%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 48.5%. Model: 4.37.</div>
         
@@ -1813,14 +1549,21 @@
       </div>
     </div>
     
+    
   </div>
   
 
   
 
   
+
+  
   <div class="section" id="sec-allocation">
-    <div class="section-title">Budget Allocation</div>
+    <div class="section-title">Budget Allocation
+      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
+        top 5 picks &middot; 2 parlays
+      </span>
+    </div>
     <div class="card">
       <table class="budget-table">
         <thead>
@@ -1835,6 +1578,7 @@
         <tbody>
           
           <tr id="alloc-1"
+              class="alloc-main-row"
               data-home-team="Colorado Rockies"
               data-away-team="New York Mets"
               data-bet-type="Spread"
@@ -1844,10 +1588,11 @@
               >
             <td style="color:var(--muted);font-size:0.78rem;">1</td>
             <td>
-              <a href="#bet-1"
-                 class="nav-link" title="Jump to bet details">
+              
+              <a href="#bet-1" class="nav-link" title="Jump to bet card">
                 <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Colorado Rockies +1.5 <span class="nav-arrow">↑</span></div>
               </a>
+              
               <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
               <div style="color:var(--muted);font-size:0.7rem;">New York Mets @ Colorado Rockies</div>
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
@@ -1861,12 +1606,39 @@
               <span style="color:var(--muted);font-size:0.7rem;">14.8%</span>
             </td>
             <td style="vertical-align:top;">
-              <div style="font-size:0.8rem;">$14.76</div>
-              <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$13.24</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div>
+                  <div style="font-size:0.8rem;">$14.76</div>
+                  <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$13.24</div>
+                </div>
+                <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-1">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Colorado Rockies +1.5</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢50.7</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">28</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$14.76</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$13.24</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$14.76</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$7.82
+                  </span>
+                </div>
+                
+              </div>
             </td>
           </tr>
           
           <tr id="alloc-2"
+              class="alloc-main-row"
               data-home-team="New York Knicks"
               data-away-team="Philadelphia 76ers"
               data-bet-type="Total"
@@ -1876,10 +1648,11 @@
               >
             <td style="color:var(--muted);font-size:0.78rem;">2</td>
             <td>
-              <a href="#bet-2"
-                 class="nav-link" title="Jump to bet details">
+              
+              <a href="#bet-2" class="nav-link" title="Jump to bet card">
                 <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Under 215.5 <span class="nav-arrow">↑</span></div>
               </a>
+              
               <div style="color:var(--muted);font-size:0.7rem;">NBA</div>
               <div style="color:var(--muted);font-size:0.7rem;">Philadelphia 76ers @ New York Knicks</div>
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
@@ -1893,12 +1666,39 @@
               <span style="color:var(--muted);font-size:0.7rem;">10.8%</span>
             </td>
             <td style="vertical-align:top;">
-              <div style="font-size:0.8rem;">$10.85</div>
-              <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$9.15</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div>
+                  <div style="font-size:0.8rem;">$10.85</div>
+                  <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$9.15</div>
+                </div>
+                <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-2">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Under 215.5</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢52.3</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">20</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$10.85</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$9.15</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$10.85</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$4.08
+                  </span>
+                </div>
+                
+              </div>
             </td>
           </tr>
           
           <tr id="alloc-3"
+              class="alloc-main-row"
               data-home-team="New York Knicks"
               data-away-team="Philadelphia 76ers"
               data-bet-type="Total"
@@ -1908,10 +1708,11 @@
               >
             <td style="color:var(--muted);font-size:0.78rem;">3</td>
             <td>
-              <a href="#bet-3"
-                 class="nav-link" title="Jump to bet details">
+              
+              <a href="#bet-3" class="nav-link" title="Jump to bet card">
                 <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Under 216.5 <span class="nav-arrow">↑</span></div>
               </a>
+              
               <div style="color:var(--muted);font-size:0.7rem;">NBA</div>
               <div style="color:var(--muted);font-size:0.7rem;">Philadelphia 76ers @ New York Knicks</div>
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
@@ -1925,12 +1726,39 @@
               <span style="color:var(--muted);font-size:0.7rem;">11.9%</span>
             </td>
             <td style="vertical-align:top;">
-              <div style="font-size:0.8rem;">$11.93</div>
-              <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$10.07</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div>
+                  <div style="font-size:0.8rem;">$11.93</div>
+                  <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$10.07</div>
+                </div>
+                <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-3">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Under 216.5</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢52.2</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">22</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$11.93</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$10.07</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$11.93</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$5.02
+                  </span>
+                </div>
+                
+              </div>
             </td>
           </tr>
           
           <tr id="alloc-4"
+              class="alloc-main-row"
               data-home-team="Houston Astros"
               data-away-team="Los Angeles Dodgers"
               data-bet-type="Spread"
@@ -1940,10 +1768,11 @@
               >
             <td style="color:var(--muted);font-size:0.78rem;">4</td>
             <td>
-              <a href="#bet-4"
-                 class="nav-link" title="Jump to bet details">
+              
+              <a href="#bet-4" class="nav-link" title="Jump to bet card">
                 <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Houston Astros +1.5 <span class="nav-arrow">↑</span></div>
               </a>
+              
               <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
               <div style="color:var(--muted);font-size:0.7rem;">Los Angeles Dodgers @ Houston Astros</div>
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
@@ -1957,12 +1786,39 @@
               <span style="color:var(--muted);font-size:0.7rem;">7.7%</span>
             </td>
             <td style="vertical-align:top;">
-              <div style="font-size:0.8rem;">$7.70</div>
-              <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$8.30</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div>
+                  <div style="font-size:0.8rem;">$7.70</div>
+                  <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$8.30</div>
+                </div>
+                <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-4">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Houston Astros +1.5</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢46.1</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">16</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$7.70</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$8.30</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.70</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$2.70
+                  </span>
+                </div>
+                
+              </div>
             </td>
           </tr>
           
           <tr id="alloc-5"
+              class="alloc-main-row"
               data-home-team="New York Knicks"
               data-away-team="Philadelphia 76ers"
               data-bet-type="Spread"
@@ -1972,10 +1828,11 @@
               >
             <td style="color:var(--muted);font-size:0.78rem;">5</td>
             <td>
-              <a href="#bet-5"
-                 class="nav-link" title="Jump to bet details">
+              
+              <a href="#bet-5" class="nav-link" title="Jump to bet card">
                 <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">New York Knicks -10.5 <span class="nav-arrow">↑</span></div>
               </a>
+              
               <div style="color:var(--muted);font-size:0.7rem;">NBA</div>
               <div style="color:var(--muted);font-size:0.7rem;">Philadelphia 76ers @ New York Knicks</div>
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
@@ -1989,12 +1846,39 @@
               <span style="color:var(--muted);font-size:0.7rem;">11.5%</span>
             </td>
             <td style="vertical-align:top;">
-              <div style="font-size:0.8rem;">$11.53</div>
-              <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$10.47</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div>
+                  <div style="font-size:0.8rem;">$11.53</div>
+                  <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$10.47</div>
+                </div>
+                <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-5">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — New York Knicks -10.5</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢50.4</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">22</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$11.53</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$10.47</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$11.53</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$4.84
+                  </span>
+                </div>
+                
+              </div>
             </td>
           </tr>
           
           <tr id="alloc-p1"
+              class="alloc-main-row"
               data-home-team=""
               data-away-team=""
               data-bet-type="Parlay"
@@ -2004,10 +1888,9 @@
               data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 90.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}, {&#34;home_team&#34;: &#34;Colorado Rockies&#34;, &#34;away_team&#34;: &#34;New York Mets&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Colorado Rockies&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 64.3, &#34;commence_time&#34;: &#34;2026-05-07T01:21:00Z&#34;}]">
             <td style="color:var(--muted);font-size:0.78rem;">P1</td>
             <td>
-              <a href="#bet-p1"
-                 class="nav-link" title="Jump to bet details">
-                <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">New York Knicks (ML) + Colorado Rockies (ML) <span class="nav-arrow">↑</span></div>
-              </a>
+              
+              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">New York Knicks (ML) + Colorado Rockies (ML)</div>
+              
               <div style="color:var(--muted);font-size:0.7rem;">Parlay</div>
               
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
@@ -2021,12 +1904,32 @@
               <span style="color:var(--muted);font-size:0.7rem;">4.3%</span>
             </td>
             <td style="vertical-align:top;">
-              <div style="font-size:0.8rem;">$4.32</div>
-              <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$8.68</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div>
+                  <div style="font-size:0.8rem;">$4.32</div>
+                  <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$8.68</div>
+                </div>
+                <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-p1">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — New York Knicks (ML) + Colorado Rockies (ML)</div>
+                
+                <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢31.2</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">13</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$4.32</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$8.68</span></div>
+                
+              </div>
             </td>
           </tr>
           
           <tr id="alloc-p2"
+              class="alloc-main-row"
               data-home-team=""
               data-away-team=""
               data-bet-type="Parlay"
@@ -2036,10 +1939,9 @@
               data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 90.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}, {&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Total&#34;, &#34;pick&#34;: &#34;Under 216.5&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 77.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}]">
             <td style="color:var(--muted);font-size:0.78rem;">P2</td>
             <td>
-              <a href="#bet-p2"
-                 class="nav-link" title="Jump to bet details">
-                <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">New York Knicks (ML) + Under 216.5 <span class="nav-arrow">↑</span></div>
-              </a>
+              
+              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">New York Knicks (ML) + Under 216.5</div>
+              
               <div style="color:var(--muted);font-size:0.7rem;">Parlay</div>
               
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
@@ -2053,8 +1955,27 @@
               <span style="color:var(--muted);font-size:0.7rem;">5.9%</span>
             </td>
             <td style="vertical-align:top;">
-              <div style="font-size:0.8rem;">$5.94</div>
-              <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$9.06</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div>
+                  <div style="font-size:0.8rem;">$5.94</div>
+                  <div style="color:#16a34a;font-size:0.75rem;margin-top:2px;">+$9.06</div>
+                </div>
+                <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-p2">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — New York Knicks (ML) + Under 216.5</div>
+                
+                <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢37.6</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">15</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$5.94</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$9.06</span></div>
+                
+              </div>
             </td>
           </tr>
           
@@ -2290,6 +2211,41 @@
           <div class="conf-count" style="font-size:0.72rem;color:var(--muted);">22H / 27M (49 settled)</div>
         </div>
         
+      </div>
+      
+
+      
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin-bottom:10px;">By League</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          
+          <div style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.68rem;margin-bottom:4px;">
+              <span class="badge badge-mlb">MLB</span>
+            </div>
+            <div style="font-size:1.1rem;font-weight:700;color:#f87171;">
+              25.0%
+            </div>
+            <div style="font-size:0.72rem;color:var(--muted);">2H / 6M (8 settled)</div>
+            
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Avg err: <span style="color:#f87171;">-2.4</span></div>
+            
+          </div>
+          
+          <div style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.68rem;margin-bottom:4px;">
+              <span class="badge badge-nba">NBA</span>
+            </div>
+            <div style="font-size:1.1rem;font-weight:700;color:#f87171;">
+              25.0%
+            </div>
+            <div style="font-size:0.72rem;color:var(--muted);">3H / 9M (12 settled)</div>
+            
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Avg err: <span style="color:#f87171;">-5.4</span></div>
+            
+          </div>
+          
+        </div>
       </div>
       
 
@@ -3433,7 +3389,7 @@
     var sportLive = {};   // { NBA: {won,lost,pnl}, MLB: {won,lost,pnl}, ... }
 
     // Singles
-    document.querySelectorAll(".card[data-home-team]:not(.nhl-watchlist-card)").forEach(function (betCard) {
+    document.querySelectorAll(".card[data-home-team][data-in-budget='true']").forEach(function (betCard) {
       var result = betCard.getAttribute("data-live-result");
       if (!result) return;
 
@@ -3609,7 +3565,7 @@
 
     // ── Build liveRecords array and update charts ─────────────────────────
     var liveRecords = [];
-    document.querySelectorAll(".card[data-home-team]:not(.nhl-watchlist-card)").forEach(function (betCard) {
+    document.querySelectorAll(".card[data-home-team][data-in-budget='true']").forEach(function (betCard) {
       var result = betCard.getAttribute("data-live-result");
       if (!result) return;
       var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
@@ -4474,19 +4430,38 @@
     });
   });
 
-  // ── Anchor nav: flash highlight on the target element when a nav link is clicked ──
+  // ── Anchor nav: auto-expand collapsed sections, flash highlight ──────────
   document.querySelectorAll("a.nav-link").forEach(function (link) {
     link.addEventListener("click", function () {
       var targetId = link.getAttribute("href").replace("#", "");
       var target   = document.getElementById(targetId);
       if (!target) return;
-      // Remove then re-add the class so repeated clicks re-trigger the animation
+      // Auto-expand parent .section if collapsed
+      var parentSection = target.closest(".section");
+      if (parentSection && parentSection.classList.contains("s-collapsed")) {
+        parentSection.classList.remove("s-collapsed");
+        var sKey = parentSection.id;
+        if (sKey) lsSave(sKey, false);
+      }
+      // Flash highlight
       target.classList.remove("nav-highlight");
-      void target.offsetWidth;   // force reflow
+      void target.offsetWidth;
       target.classList.add("nav-highlight");
       target.addEventListener("animationend", function () {
         target.classList.remove("nav-highlight");
       }, { once: true });
+    });
+  });
+
+  // ── Allocation table row expand (Robinhood action panel) ─────────────────
+  document.querySelectorAll(".alloc-expand-btn").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var mainRow   = btn.closest("tr.alloc-main-row");
+      var detailRow = mainRow ? mainRow.nextElementSibling : null;
+      if (!detailRow || !detailRow.classList.contains("alloc-detail-row")) return;
+      var open = detailRow.classList.toggle("adr-open");
+      mainRow.classList.toggle("adr-open", open);
     });
   });
 })();
