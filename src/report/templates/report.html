@@ -1856,7 +1856,8 @@
     var todayByConf = {};   // conf     → { hits, misses }
 
     document.querySelectorAll(".prop-card[data-prop-result]").forEach(function (card) {
-      var result   = card.getAttribute("data-prop-result");  // "HIT" or "MISS"
+      var result   = card.getAttribute("data-prop-result");  // "HIT", "MISS", or "DNP"
+      if (result === "DNP") return;  // DNP cards don't count toward accuracy
       var propType = card.getAttribute("data-prop-type")   || "";
       var conf     = card.getAttribute("data-confidence")  || "";
       var actual   = parseFloat(card.getAttribute("data-prop-actual") || "0");
@@ -1986,6 +1987,7 @@
     // Build today's settled props from live prop cards
     var todayRecords = [];
     document.querySelectorAll(".prop-card[data-prop-result]").forEach(function(card) {
+      if (card.getAttribute("data-prop-result") === "DNP") return;  // exclude DNPs from chart
       todayRecords.push({
         date: TODAY_DATE,
         hit:  card.getAttribute("data-prop-result") === "HIT",
@@ -2418,7 +2420,16 @@
         statLabel = "HR";
       }
     }
-    if (stat === null) return;
+    if (stat === null) {
+      // Player not found in a completed game = DNP (scratched / inactive)
+      if (isFinal) {
+        liveDiv.innerHTML =
+          '<span style="' + BADGE + 'border:1px solid #374151;background:#111827;color:#6b7280;">⚫ DNP</span>';
+        var dnpCard = liveDiv.closest(".prop-card");
+        if (dnpCard) dnpCard.setAttribute("data-prop-result", "DNP");
+      }
+      return;
+    }
 
     // Win threshold = minimum integer needed to beat the market line.
     // For Over X.5: need X+1 (e.g. Over 1.5 → need 2; Over 8.5 → need 9).
