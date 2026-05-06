@@ -44,7 +44,7 @@ def build_report(
     for i, rec in enumerate(all_singles, 1):
         allocation_rows.append({
             "rank":          i,
-            "label":         f"{rec['pick']} ({rec['bet_type']})",
+            "label":         f"{rec['pick']}" + (" (ML)" if rec['bet_type'] == "Moneyline" else ""),
             "game":          rec["game"],
             "game_time":     rec.get("game_time", ""),
             "sport":         rec["sport"],
