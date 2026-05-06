@@ -534,15 +534,37 @@ def merge_picks(
     locked_props: List[Dict] = state.get("props", [])
     _update_lock_flags(locked_props)
 
+    # Enforce per-sport cap on load — fixes state files that accumulated extras
+    # from a previous bug.  Priority: locked > confidence > edge.
+    _sport_tally = Counter(p.get("sport", "NBA") for p in locked_props)
+    if any(v > MAX_PROPS_PER_SPORT for v in _sport_tally.values()):
+        locked_props.sort(key=lambda p: (
+            0 if p.get("locked") else 1,
+            -_CONF_RANK.get(p.get("confidence", "MEDIUM"), 1),
+            -p.get("edge", 0.0),
+        ))
+        _seen_sports: Counter = Counter()
+        _trimmed: List[Dict] = []
+        for p in locked_props:
+            _s = p.get("sport", "NBA")
+            if _seen_sports[_s] < MAX_PROPS_PER_SPORT:
+                _trimmed.append(p)
+                _seen_sports[_s] += 1
+        locked_props = _trimmed
+        logger.info(f"State: trimmed props to {MAX_PROPS_PER_SPORT}/sport (was over cap)")
+
     started_pr = [p for p in locked_props if p.get("locked")]
     pregame_pr = [p for p in locked_props if not p.get("locked")]
     locked_prop_keys = {_prop_key(p) for p in locked_props}
+
+    # Build a fast lookup for signal/odds refresh (same-player same-prop_type)
+    new_prop_map = {_prop_key(d): d for d in new_props}
 
     truly_new_props = [d for d in new_props if _prop_key(d) not in locked_prop_keys]
     truly_new_props.sort(
         key=lambda d: (
             -_CONF_RANK.get(d["confidence"] if isinstance(d, dict) else d.confidence, 0),
-            -(d["model_margin"] if isinstance(d, dict) else getattr(d, "model_margin", 0.0)),
+            -(d["edge"] if isinstance(d, dict) else getattr(d, "edge", 0.0)),
         ),
     )
 
@@ -551,23 +573,56 @@ def merge_picks(
 
     for prop in pregame_pr:
         prop_conf = _CONF_RANK.get(prop.get("confidence", "MEDIUM"), 1)
+        prop_edge = prop.get("edge", 0.0)
+
+        # Replacement criteria (only when allow_replace=True):
+        #   1. Confidence upgrade (MEDIUM → HIGH), OR
+        #   2. Same confidence but meaningfully better edge (≥ 0.5 pp, same as singles)
         best_new = next(
             (d for d in truly_new_props
              if id(d) not in used_new_props
-             and _CONF_RANK.get(d["confidence"] if isinstance(d, dict) else d.confidence, 0) > prop_conf),
+             and (
+                 _CONF_RANK.get(d["confidence"] if isinstance(d, dict) else d.confidence, 0) > prop_conf
+                 or (d["edge"] if isinstance(d, dict) else getattr(d, "edge", 0.0)) > prop_edge + 0.005
+             )),
             None,
         ) if allow_replace else None
+
         if best_new:
             new_d = best_new if isinstance(best_new, dict) else prop_to_dict(best_new)
+            new_conf = new_d["confidence"]
+            new_edge = new_d.get("edge", 0.0)
+            reason = (
+                "Confidence upgrade to HIGH"
+                if _CONF_RANK.get(new_conf, 0) > prop_conf
+                else f"Better edge: {new_edge*100:.1f}% vs {prop_edge*100:.1f}%"
+            )
             warnings.append({
                 "type": "prop_replaced",
                 "removed": f"{prop['player']} — {prop['prop_type']}",
                 "new": f"{new_d['player']} — {new_d['prop_type']}",
-                "reason": "Higher-confidence prop identified",
+                "reason": reason,
             })
             used_new_props.add(id(best_new))
             final_props.append(new_d)
         else:
+            # Keep pick; refresh signals/odds/model numbers in-place (same as singles)
+            fresh = new_prop_map.get(_prop_key(prop))
+            if fresh:
+                fresh_d = fresh if isinstance(fresh, dict) else prop_to_dict(fresh)
+                prop = {
+                    **prop,
+                    "signals":      fresh_d.get("signals", prop.get("signals", [])),
+                    "research":     fresh_d.get("research", prop.get("research", [])),
+                    "model_line":   fresh_d.get("model_line", prop.get("model_line")),
+                    "model_prob":   fresh_d.get("model_prob", prop.get("model_prob", 0.0)),
+                    "market_prob":  fresh_d.get("market_prob", prop.get("market_prob", 0.0)),
+                    "market_line":  fresh_d.get("market_line", prop.get("market_line")),
+                    "edge":         fresh_d.get("edge", prop.get("edge", 0.0)),
+                    "edge_pct":     fresh_d.get("edge_pct", prop.get("edge_pct", 0.0)),
+                    "odds_display": fresh_d.get("odds_display", prop.get("odds_display", "")),
+                    "confidence":   fresh_d.get("confidence", prop.get("confidence")),
+                }
             final_props.append(prop)
 
     # Fill remaining prop slots — only up to MAX_PROPS_PER_SPORT per sport.
