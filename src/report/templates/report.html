@@ -1837,9 +1837,10 @@
         try { legs = JSON.parse(legsJson); } catch(e) { return; }
         if (!legs.length) return;
 
-        var allFinal = true;
-        var anyLost  = false;
-        var combined = 1;
+        var allFinal   = true;
+        var anyLost    = false;
+        var anyStarted = false;
+        var combined   = 1;
 
         for (var li = 0; li < legs.length; li++) {
           var leg       = legs[li];
@@ -1856,6 +1857,7 @@
             combined *= legModel;
             allFinal  = false;
           } else if (legEv.stateId === "3") {
+            anyStarted = true;
             // Final — check outcome
             var legOurTeam = (legBT === "Moneyline" || legBT === "Spread") ? legPick : legHT;
             var legEvHome  = teamMatch(legEv.home, legHT) ? legEv.home : legEv.away;
@@ -1867,6 +1869,7 @@
             // WON leg: multiplier stays 1 (already hit)
           } else {
             // In-progress — compute live win prob
+            anyStarted = true;
             var legOurTeam2 = (legBT === "Moneyline" || legBT === "Spread") ? legPick : legHT;
             var legEvHome2  = teamMatch(legEv.home, legHT) ? legEv.home : legEv.away;
             var legHS2      = teamMatch(legEv.home, legHT) ? legEv.homeScore : legEv.awayScore;
@@ -1923,9 +1926,9 @@
           ? '<br><div style="font-size:0.65rem;line-height:1.6;white-space:normal;">' + legSummaryParts.join('<br>') + '</div>'
           : '';
 
-        // Show lock emoji as soon as any leg has started
+        // Show lock emoji only once a leg has actually started
         var parlayLockEl = row.querySelector(".alloc-lock-emoji");
-        if (parlayLockEl) parlayLockEl.style.display = "inline";
+        if (parlayLockEl && anyStarted) parlayLockEl.style.display = "inline";
 
         if (anyLost) {
           cell.innerHTML = outcomeHtml("LOST") + legSummary;
