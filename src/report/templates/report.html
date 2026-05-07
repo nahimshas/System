@@ -797,11 +797,11 @@
               {{ row.contracts }}<br>
               <span style="color:var(--muted);font-size:0.7rem;">{{ row.pct_of_budget }}%</span>
             </td>
-            <td style="vertical-align:top;">
-              <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;">
+            <td style="vertical-align:top;text-align:right;">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <div style="font-size:0.8rem;">${{ "%.2f"|format(row.cost) }}</div>
                 <div style="color:#16a34a;font-size:0.75rem;">+${{ "%.2f"|format(row.profit_if_win) }}</div>
-                {% if row.locked %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
+                {% if row.locked %}<span class="lock-badge" style="font-size:0.7rem;color:#94a3b8;">🔒</span>{% endif %}
                 <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
               </div>
             </td>
