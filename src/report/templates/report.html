@@ -760,9 +760,9 @@
           <tr>
             <th>#</th>
             <th>Bet &amp; Game</th>
-            <th>Edge<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Score</span></th>
-            <th>Qty</th>
-            <th>Cost<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Profit</span></th>
+            <th style="text-align:center;">Edge<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Score</span></th>
+            <th style="text-align:center;">Qty</th>
+            <th style="text-align:right;">Cost<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Profit</span></th>
           </tr>
         </thead>
         <tbody>
@@ -789,11 +789,11 @@
               {% if row.game and row.bet_type != "Parlay" %}<div style="color:var(--muted);font-size:0.7rem;">{{ row.game }}</div>{% endif %}
               {% if not row.locked %}<div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>{% endif %}
             </td>
-            <td style="vertical-align:top;">
+            <td style="vertical-align:top;text-align:center;">
               <div style="color:{% if row.edge_pct >= 7 %}#16a34a{% else %}#eab308{% endif %};font-weight:700;font-size:0.8rem;">+{{ row.edge_pct }}%</div>
               <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
             </td>
-            <td style="font-size:0.8rem;vertical-align:top;">
+            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
               {{ row.contracts }}<br>
               <span style="color:var(--muted);font-size:0.7rem;">{{ row.pct_of_budget }}%</span>
             </td>
