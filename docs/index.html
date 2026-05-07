@@ -149,7 +149,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Wednesday, May 06, 2026 &middot; Generated May 06, 2026 at 06:34 PM PDT</div>
+    <div class="subtitle">Wednesday, May 06, 2026 &middot; Generated May 06, 2026 at 07:17 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 2 games &nbsp;|&nbsp;
       MLB: 4 games &nbsp;|&nbsp;
@@ -2190,7 +2190,7 @@
               data-pick="New York Knicks (ML) + Colorado Rockies (ML)"
               data-sport="Parlay"
               data-commence-time=""
-              data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 90.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}, {&#34;home_team&#34;: &#34;Colorado Rockies&#34;, &#34;away_team&#34;: &#34;New York Mets&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Colorado Rockies&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 64.3, &#34;commence_time&#34;: &#34;2026-05-07T01:21:00Z&#34;}]">
+              data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 90.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}, {&#34;home_team&#34;: &#34;Colorado Rockies&#34;, &#34;away_team&#34;: &#34;New York Mets&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Colorado Rockies&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 64.3, &#34;commence_time&#34;: &#34;2026-05-07T01:21:00Z&#34;}]" data-cost="4.32" data-profit="8.68" data-confidence="HIGH">
             <td style="color:var(--muted);font-size:0.78rem;">P1</td>
             <td>
               
@@ -2240,7 +2240,7 @@
               data-pick="New York Knicks (ML) + Under 216.5"
               data-sport="Parlay"
               data-commence-time=""
-              data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 90.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}, {&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Total&#34;, &#34;pick&#34;: &#34;Under 216.5&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 77.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}]">
+              data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 90.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}, {&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Philadelphia 76ers&#34;, &#34;bet_type&#34;: &#34;Total&#34;, &#34;pick&#34;: &#34;Under 216.5&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 77.0, &#34;commence_time&#34;: &#34;2026-05-06T23:10:00Z&#34;}]" data-cost="5.94" data-profit="9.06" data-confidence="HIGH">
             <td style="color:var(--muted);font-size:0.78rem;">P2</td>
             <td>
               
@@ -3628,12 +3628,15 @@
 
         if (anyLost) {
           cell.innerHTML = outcomeHtml("LOST") + legSummary;
+          row.setAttribute("data-live-result", "LOST");
         } else if (allFinal) {
           cell.innerHTML = outcomeHtml("WON") + legSummary;
+          row.setAttribute("data-live-result", "WON");
         } else {
           var pctP  = Math.min(99, Math.max(1, Math.round(combined * 100)));
           var colP  = pctP >= 60 ? "#16a34a" : pctP >= 40 ? "#eab308" : "#ef4444";
           cell.innerHTML = '<span style="color:' + colP + ';font-weight:700;">' + pctP + '% win</span>' + legSummary;
+          row.removeAttribute("data-live-result");
         }
         return;
       }
@@ -3729,14 +3732,15 @@
       }
     });
 
-    // Parlays — counted as sport "PARLAY", confidence from card attr
-    document.querySelectorAll(".card[data-parlay='true']").forEach(function (betCard) {
-      var result = betCard.getAttribute("data-live-result");
+    // Parlays — read from allocation table <tr> rows (no standalone card exists).
+    // data-live-result is stamped by applyTable() once all legs are final.
+    document.querySelectorAll("tr.alloc-main-row[data-bet-type='Parlay']").forEach(function (row) {
+      var result = row.getAttribute("data-live-result");
       if (!result) return;
 
-      var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
-      var profit = parseFloat(betCard.getAttribute("data-profit") || "0");
-      var conf   = betCard.getAttribute("data-confidence") || "MEDIUM";
+      var cost   = parseFloat(row.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(row.getAttribute("data-profit") || "0");
+      var conf   = row.getAttribute("data-confidence") || "HIGH";
       var pnl    = result === "WON" ? profit : (result === "PUSH" ? 0 : -cost);
 
       if (result === "WON")       liveWon++;
@@ -3892,20 +3896,20 @@
         confidence:      betCard.getAttribute("data-confidence") || "MEDIUM",
       });
     });
-    document.querySelectorAll(".card[data-parlay='true']").forEach(function (betCard) {
-      var result = betCard.getAttribute("data-live-result");
+    document.querySelectorAll("tr.alloc-main-row[data-bet-type='Parlay']").forEach(function (row) {
+      var result = row.getAttribute("data-live-result");
       if (!result) return;
-      var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
-      var profit = parseFloat(betCard.getAttribute("data-profit") || "0");
+      var cost   = parseFloat(row.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(row.getAttribute("data-profit") || "0");
       liveRecords.push({
         date:            TODAY_DATE,
         result:          result,
         cost:            cost,
         actual_pnl:      result === "WON" ? profit : (result === "PUSH" ? 0 : -cost),
-        edge_pct:        parseFloat(betCard.getAttribute("data-edge-pct")        || "0"),
-        model_prob_pct:  parseFloat(betCard.getAttribute("data-model-prob-pct")  || "50"),
+        edge_pct:        parseFloat(row.getAttribute("data-edge-pct")        || "0"),
+        model_prob_pct:  50,
         sport:           "PARLAY",
-        confidence:      betCard.getAttribute("data-confidence") || "MEDIUM",
+        confidence:      row.getAttribute("data-confidence") || "HIGH",
       });
     });
     if (liveRecords.length > 0) updateCharts(liveRecords);
