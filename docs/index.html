@@ -149,7 +149,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Wednesday, May 06, 2026 &middot; Generated May 06, 2026 at 07:17 PM PDT</div>
+    <div class="subtitle">Wednesday, May 06, 2026 &middot; Generated May 06, 2026 at 07:30 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 2 games &nbsp;|&nbsp;
       MLB: 4 games &nbsp;|&nbsp;
@@ -1978,7 +1978,7 @@
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <div style="font-size:0.8rem;">$14.76</div>
                 <div style="color:#16a34a;font-size:0.75rem;">+$13.24</div>
-                
+                <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
                 <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
               </div>
             </td>
@@ -2037,7 +2037,7 @@
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <div style="font-size:0.8rem;">$10.35</div>
                 <div style="color:#16a34a;font-size:0.75rem;">+$8.65</div>
-                
+                <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
                 <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
               </div>
             </td>
@@ -2096,7 +2096,7 @@
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <div style="font-size:0.8rem;">$7.70</div>
                 <div style="color:#16a34a;font-size:0.75rem;">+$8.30</div>
-                <span class="lock-badge" style="font-size:0.7rem;color:#94a3b8;">🔒</span>
+                <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:inline;">🔒</span>
                 <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
               </div>
             </td>
@@ -2155,7 +2155,7 @@
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <div style="font-size:0.8rem;">$9.26</div>
                 <div style="color:#16a34a;font-size:0.75rem;">+$7.74</div>
-                <span class="lock-badge" style="font-size:0.7rem;color:#94a3b8;">🔒</span>
+                <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:inline;">🔒</span>
                 <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
               </div>
             </td>
@@ -2212,7 +2212,7 @@
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <div style="font-size:0.8rem;">$4.32</div>
                 <div style="color:#16a34a;font-size:0.75rem;">+$8.68</div>
-                <span class="lock-badge" style="font-size:0.7rem;color:#94a3b8;">🔒</span>
+                <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:inline;">🔒</span>
                 <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
               </div>
             </td>
@@ -2262,7 +2262,7 @@
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <div style="font-size:0.8rem;">$5.94</div>
                 <div style="color:#16a34a;font-size:0.75rem;">+$9.06</div>
-                <span class="lock-badge" style="font-size:0.7rem;color:#94a3b8;">🔒</span>
+                <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:inline;">🔒</span>
                 <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
               </div>
             </td>
@@ -3626,6 +3626,10 @@
           ? '<br><div style="font-size:0.65rem;line-height:1.6;white-space:normal;">' + legSummaryParts.join('<br>') + '</div>'
           : '';
 
+        // Show lock emoji as soon as any leg has started
+        var parlayLockEl = row.querySelector(".alloc-lock-emoji");
+        if (parlayLockEl) parlayLockEl.style.display = "inline";
+
         if (anyLost) {
           cell.innerHTML = outcomeHtml("LOST") + legSummary;
           row.setAttribute("data-live-result", "LOST");
@@ -3650,6 +3654,12 @@
       var evHScore = teamMatch(ev.home, homeTeam) ? ev.homeScore : ev.awayScore;
       var evAScore = teamMatch(ev.away, awayTeam) ? ev.awayScore : ev.homeScore;
       var evHome   = teamMatch(ev.home, homeTeam) ? ev.home : ev.away;
+
+      // Show lock emoji as soon as game is live or final
+      var singleLockEl = row.querySelector(".alloc-lock-emoji");
+      if (ev.stateId === "2" || ev.stateId === "3") {
+        if (singleLockEl) singleLockEl.style.display = "inline";
+      }
 
       if (ev.stateId === "3") {
         var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore);
