@@ -775,7 +775,7 @@
               data-pick="{{ row.pick }}"
               data-sport="{{ row.sport }}"
               data-commence-time="{{ row.commence_time }}"
-              {% if row.bet_type == "Parlay" %}data-legs="{{ row.legs_json | e }}"{% endif %}>
+              {% if row.bet_type == "Parlay" %}data-legs="{{ row.legs_json | e }}" data-cost="{{ row.cost }}" data-profit="{{ row.profit_if_win }}" data-confidence="{{ row.conf_label }}"{% endif %}>
             <td style="color:var(--muted);font-size:0.78rem;">{{ row.rank }}</td>
             <td>
               {% if row.bet_type != 'Parlay' %}
@@ -1925,12 +1925,15 @@
 
         if (anyLost) {
           cell.innerHTML = outcomeHtml("LOST") + legSummary;
+          row.setAttribute("data-live-result", "LOST");
         } else if (allFinal) {
           cell.innerHTML = outcomeHtml("WON") + legSummary;
+          row.setAttribute("data-live-result", "WON");
         } else {
           var pctP  = Math.min(99, Math.max(1, Math.round(combined * 100)));
           var colP  = pctP >= 60 ? "#16a34a" : pctP >= 40 ? "#eab308" : "#ef4444";
           cell.innerHTML = '<span style="color:' + colP + ';font-weight:700;">' + pctP + '% win</span>' + legSummary;
+          row.removeAttribute("data-live-result");
         }
         return;
       }
@@ -2026,14 +2029,15 @@
       }
     });
 
-    // Parlays — counted as sport "PARLAY", confidence from card attr
-    document.querySelectorAll(".card[data-parlay='true']").forEach(function (betCard) {
-      var result = betCard.getAttribute("data-live-result");
+    // Parlays — read from allocation table <tr> rows (no standalone card exists).
+    // data-live-result is stamped by applyTable() once all legs are final.
+    document.querySelectorAll("tr.alloc-main-row[data-bet-type='Parlay']").forEach(function (row) {
+      var result = row.getAttribute("data-live-result");
       if (!result) return;
 
-      var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
-      var profit = parseFloat(betCard.getAttribute("data-profit") || "0");
-      var conf   = betCard.getAttribute("data-confidence") || "MEDIUM";
+      var cost   = parseFloat(row.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(row.getAttribute("data-profit") || "0");
+      var conf   = row.getAttribute("data-confidence") || "HIGH";
       var pnl    = result === "WON" ? profit : (result === "PUSH" ? 0 : -cost);
 
       if (result === "WON")       liveWon++;
@@ -2189,20 +2193,20 @@
         confidence:      betCard.getAttribute("data-confidence") || "MEDIUM",
       });
     });
-    document.querySelectorAll(".card[data-parlay='true']").forEach(function (betCard) {
-      var result = betCard.getAttribute("data-live-result");
+    document.querySelectorAll("tr.alloc-main-row[data-bet-type='Parlay']").forEach(function (row) {
+      var result = row.getAttribute("data-live-result");
       if (!result) return;
-      var cost   = parseFloat(betCard.getAttribute("data-cost")   || "0");
-      var profit = parseFloat(betCard.getAttribute("data-profit") || "0");
+      var cost   = parseFloat(row.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(row.getAttribute("data-profit") || "0");
       liveRecords.push({
         date:            TODAY_DATE,
         result:          result,
         cost:            cost,
         actual_pnl:      result === "WON" ? profit : (result === "PUSH" ? 0 : -cost),
-        edge_pct:        parseFloat(betCard.getAttribute("data-edge-pct")        || "0"),
-        model_prob_pct:  parseFloat(betCard.getAttribute("data-model-prob-pct")  || "50"),
+        edge_pct:        parseFloat(row.getAttribute("data-edge-pct")        || "0"),
+        model_prob_pct:  50,
         sport:           "PARLAY",
-        confidence:      betCard.getAttribute("data-confidence") || "MEDIUM",
+        confidence:      row.getAttribute("data-confidence") || "HIGH",
       });
     });
     if (liveRecords.length > 0) updateCharts(liveRecords);
