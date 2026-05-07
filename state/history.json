@@ -1554,5 +1554,161 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-05-06",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ Houston Astros",
+    "bet_type": "Spread",
+    "pick": "Houston Astros +1.5",
+    "home_team": "Houston Astros",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 20.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 66.4,
+    "market_prob_pct": 45.6,
+    "cost": 7.7,
+    "profit_if_win": 8.3,
+    "result": "LOST",
+    "actual_pnl": -7.7,
+    "actual_home_score": 2.0,
+    "actual_away_score": 12.0
+  },
+  {
+    "date": "2026-05-06",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Philadelphia 76ers @ New York Knicks",
+    "bet_type": "Total",
+    "pick": "Under 214.5",
+    "home_team": "New York Knicks",
+    "away_team": "Philadelphia 76ers",
+    "edge_pct": 19.6,
+    "confidence": "HIGH",
+    "model_prob_pct": 72.1,
+    "market_prob_pct": 52.5,
+    "cost": 9.26,
+    "profit_if_win": 7.74,
+    "result": "WON",
+    "actual_pnl": 7.74,
+    "actual_home_score": 108.0,
+    "actual_away_score": 102.0
+  },
+  {
+    "date": "2026-05-06",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Minnesota Timberwolves @ San Antonio Spurs",
+    "bet_type": "Total",
+    "pick": "Under 217.5",
+    "home_team": "San Antonio Spurs",
+    "away_team": "Minnesota Timberwolves",
+    "edge_pct": 21.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 73.4,
+    "market_prob_pct": 52.1,
+    "cost": 10.35,
+    "profit_if_win": 8.65,
+    "result": "LOST",
+    "actual_pnl": -10.35,
+    "actual_home_score": 133.0,
+    "actual_away_score": 95.0
+  },
+  {
+    "date": "2026-05-06",
+    "type": "single",
+    "sport": "MLB",
+    "game": "New York Mets @ Colorado Rockies",
+    "bet_type": "Spread",
+    "pick": "Colorado Rockies +1.5",
+    "home_team": "Colorado Rockies",
+    "away_team": "New York Mets",
+    "edge_pct": 28.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 80.7,
+    "market_prob_pct": 52.4,
+    "cost": 14.76,
+    "profit_if_win": 13.24,
+    "result": "LOST",
+    "actual_pnl": -14.76,
+    "actual_home_score": 5.0,
+    "actual_away_score": 10.0
+  },
+  {
+    "date": "2026-05-06",
+    "type": "single",
+    "sport": "NBA",
+    "game": "Philadelphia 76ers @ New York Knicks",
+    "bet_type": "Total",
+    "pick": "Under 213.5",
+    "home_team": "New York Knicks",
+    "away_team": "Philadelphia 76ers",
+    "edge_pct": 17.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 69.5,
+    "market_prob_pct": 52.0,
+    "cost": 8.1,
+    "profit_if_win": 6.9,
+    "result": "WON",
+    "actual_pnl": 6.9,
+    "actual_home_score": 108.0,
+    "actual_away_score": 102.0
+  },
+  {
+    "date": "2026-05-06",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Knicks (ML) + Colorado Rockies (ML)",
+    "bet_type": "Parlay",
+    "pick": "New York Knicks (ML) + Colorado Rockies (ML)",
+    "edge_pct": 26.6,
+    "confidence": "HIGH",
+    "model_prob_pct": 57.8,
+    "market_prob_pct": 0,
+    "cost": 4.32,
+    "profit_if_win": 8.68,
+    "result": "LOST",
+    "actual_pnl": -4.32,
+    "legs": [
+      {
+        "game": "Philadelphia 76ers @ New York Knicks",
+        "pick": "New York Knicks",
+        "result": "WON"
+      },
+      {
+        "game": "New York Mets @ Colorado Rockies",
+        "pick": "Colorado Rockies",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-06",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Knicks (ML) + Under 216.5",
+    "bet_type": "Parlay",
+    "pick": "New York Knicks (ML) + Under 216.5",
+    "edge_pct": 31.7,
+    "confidence": "HIGH",
+    "model_prob_pct": 69.3,
+    "market_prob_pct": 0,
+    "cost": 5.94,
+    "profit_if_win": 9.06,
+    "result": "WON",
+    "actual_pnl": 9.06,
+    "legs": [
+      {
+        "game": "Philadelphia 76ers @ New York Knicks",
+        "pick": "New York Knicks",
+        "result": "WON"
+      },
+      {
+        "game": "Philadelphia 76ers @ New York Knicks",
+        "pick": "Under 216.5",
+        "result": "WON"
+      }
+    ]
   }
 ]
