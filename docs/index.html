@@ -40,6 +40,7 @@
     .badge-mlb { background: #991b1b; color: #fff; }
     .badge-nfl { background: #7c3aed; color: #fff; }
     .badge-nhl { background: #0d9488; color: #fff; }
+    .badge-ipl { background: #d97706; color: #fff; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
@@ -149,12 +150,13 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, May 10, 2026 &middot; Generated May 10, 2026 at 09:12 AM PDT</div>
+    <div class="subtitle">Sunday, May 10, 2026 &middot; Generated May 10, 2026 at 10:03 AM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 2 games &nbsp;|&nbsp;
       MLB: 15 games &nbsp;|&nbsp;
       
       NHL: 2 games &nbsp;|&nbsp; 
+      
       Budget: $100
     </div>
     
@@ -1979,6 +1981,8 @@
   
 
   
+
+  
   <div class="section" id="sec-allocation">
     <div class="section-title">Today's Card
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
@@ -2871,6 +2875,55 @@
             </div>
           </div>
           
+          
+        </div>
+      </div>
+      
+
+      
+      
+      
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+        <div class="signals-title">Watchlist Tracking
+          <span style="font-size:0.68rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">&nbsp;— no budget allocated, W-L only</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          
+          
+          <div id="wl-tile-NHL"
+               data-hist-won="0"
+               data-hist-lost="0"
+               style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.68rem;margin-bottom:6px;">
+              <span class="badge badge-nhl">🏒 NHL</span>
+            </div>
+            <div class="wl-record" style="font-size:0.9rem;font-weight:700;
+                        color:var(--muted);">
+              0W–0L
+              
+            </div>
+            
+            <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">No picks settled yet</div>
+            
+          </div>
+          
+          
+          <div id="wl-tile-IPL"
+               data-hist-won="0"
+               data-hist-lost="0"
+               style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.68rem;margin-bottom:6px;">
+              <span class="badge badge-ipl">🏏 IPL</span>
+            </div>
+            <div class="wl-record" style="font-size:0.9rem;font-weight:700;
+                        color:var(--muted);">
+              0W–0L
+              
+            </div>
+            
+            <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">No picks settled yet</div>
+            
+          </div>
           
         </div>
       </div>
