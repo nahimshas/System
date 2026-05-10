@@ -9,7 +9,7 @@ import json
 import logging
 import re
 import requests
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -29,6 +29,17 @@ WATCHLIST_HISTORY_PATH = Path("state/watchlist_history.json")
 ESPN_WATCHLIST_PATHS = {
     "NHL": "hockey/nhl",
     "IPL": "cricket/ipl",
+}
+
+# Rolling pending list for leagues whose games finish AFTER the morning run.
+# Key = sport string, value = expected game duration in hours (used as settlement gate).
+# Sports not listed here (NHL) settle date-based via check_and_settle_watchlist().
+# Add future leagues here without touching any other constants:
+#   "EPL": 2.5   — European soccer (~2h game + 30 min buffer)
+#   "BBL": 4.5   — Big Bash League (same timing profile as IPL)
+WATCHLIST_PENDING_PATH = Path("state/watchlist_pending.json")
+WATCHLIST_PENDING_SPORTS: Dict[str, float] = {
+    "IPL": 4.5,   # ~3.5 hr match + 1 hr buffer for rain delays / super overs
 }
 
 HISTORY_PATH = Path(HISTORY_FILE)
@@ -1017,17 +1028,22 @@ def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
 
 def check_and_settle_watchlist(today: date) -> int:
     """
-    Settle yesterday's NHL and IPL watchlist picks against ESPN final scores.
+    Settle yesterday's NHL watchlist picks against ESPN final scores.
+    NHL games always finish before the 9am PST morning run, so date-based
+    settlement (look at yesterday's state) is correct.
+
+    IPL (and other WATCHLIST_PENDING_SPORTS) are settled by
+    settle_watchlist_pending() instead, which uses the rolling pending file.
+
     Appends new WON/LOST records to state/watchlist_history.json.
     Returns the number of newly settled picks.
     """
-    from datetime import timedelta
     yesterday = today - timedelta(days=1)
 
     from src.state.manager import load_state
     state = load_state(yesterday)
     if not state:
-        logger.info(f"No state for {yesterday} — no watchlist picks to settle")
+        logger.info(f"No state for {yesterday} — no NHL watchlist picks to settle")
         return 0
 
     existing = _load_watchlist_history()
@@ -1069,28 +1085,141 @@ def check_and_settle_watchlist(today: date) -> int:
         })
         logger.info(f"NHL watchlist settled: {pick.get('pick')} → {result}")
 
-    # ── IPL ──────────────────────────────────────────────────────────────────
-    ipl_picks = state.get("ipl_display") or []
-    ipl_scores = _fetch_watchlist_final_scores("IPL", yesterday) if ipl_picks else {}
+    if new_records:
+        _save_watchlist_history(existing + new_records)
 
-    for pick in ipl_picks:
-        key = (yesterday.isoformat(), "IPL", pick.get("pick", ""), pick.get("game", ""))
-        if key in settled_keys:
+    return len(new_records)
+
+
+# ---------------------------------------------------------------------------
+# Rolling pending watchlist — for leagues whose games finish after the
+# morning run (IPL starts at 7am PST, ends ~11am; run is at 9am PST).
+# ---------------------------------------------------------------------------
+
+def _load_watchlist_pending() -> List[Dict]:
+    """Load the rolling pending pick list from state/watchlist_pending.json."""
+    if not WATCHLIST_PENDING_PATH.exists():
+        return []
+    try:
+        with open(WATCHLIST_PENDING_PATH) as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception as e:
+        logger.error(f"Failed to load watchlist pending: {e}")
+        return []
+
+
+def _save_watchlist_pending(records: List[Dict]) -> None:
+    """Persist the rolling pending pick list."""
+    WATCHLIST_PENDING_PATH.parent.mkdir(exist_ok=True)
+    try:
+        with open(WATCHLIST_PENDING_PATH, "w") as f:
+            json.dump(records, f, indent=2, default=str)
+        logger.info(
+            f"Watchlist pending saved → {WATCHLIST_PENDING_PATH} "
+            f"({len(records)} unsettled pick(s))"
+        )
+    except Exception as e:
+        logger.error(f"Failed to write watchlist pending: {e}")
+
+
+def load_watchlist_pending() -> List[Dict]:
+    """Public accessor — load the rolling pending list (called from main.py)."""
+    return _load_watchlist_pending()
+
+
+def save_watchlist_pending(records: List[Dict]) -> None:
+    """Public accessor — persist the rolling pending list (called from main.py)."""
+    _save_watchlist_pending(records)
+
+
+def settle_watchlist_pending(now_utc: datetime) -> int:
+    """
+    Attempt to settle any pending watchlist picks whose games should now be final.
+
+    A pick is eligible for settlement when:
+        commence_time + WATCHLIST_PENDING_SPORTS[sport] hours < now_utc
+
+    Uses ESPN scoreboard (completed=True gate) to confirm the game is final.
+    Also checks the calendar day after the game date in case a match ran past midnight.
+
+    Settled picks are written to watchlist_history.json and removed from the
+    pending list.  Picks whose games are still in progress are left untouched.
+
+    Adding a new sport (e.g. EPL) requires only an entry in WATCHLIST_PENDING_SPORTS
+    and ESPN_WATCHLIST_PATHS — no other code changes.
+
+    Returns the count of picks newly settled this run.
+    """
+    pending = _load_watchlist_pending()
+    if not pending:
+        return 0
+
+    existing = _load_watchlist_history()
+    settled_keys = {(r["date"], r["sport"], r["pick"], r["game"]) for r in existing}
+    new_records: List[Dict] = []
+    still_pending: List[Dict] = []
+
+    for pick in pending:
+        sport = pick.get("sport", "IPL")
+        duration_hrs = WATCHLIST_PENDING_SPORTS.get(sport)
+        if duration_hrs is None:
+            # Sport not in pending system — leave it alone
+            still_pending.append(pick)
             continue
-        score_data = _find_game_score(ipl_scores, pick.get("home_team", ""), pick.get("away_team", ""))
+
+        commence_str = pick.get("commence_time", "")
+        try:
+            commence_dt = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
+        except Exception:
+            logger.warning(f"Pending pick has unparseable commence_time '{commence_str}' — keeping")
+            still_pending.append(pick)
+            continue
+
+        expected_end = commence_dt + timedelta(hours=duration_hrs)
+        if now_utc < expected_end:
+            # Game not expected to be finished yet — keep pending
+            still_pending.append(pick)
+            continue
+
+        # Game should be done — try ESPN for a completed result
+        game_date = commence_dt.date()
+        scores = _fetch_watchlist_final_scores(sport, game_date)
+        if not scores:
+            # Try the next calendar day (covers late-finishing / rain-delayed matches)
+            scores = _fetch_watchlist_final_scores(sport, game_date + timedelta(days=1))
+
+        score_data = _find_game_score(
+            scores, pick.get("home_team", ""), pick.get("away_team", "")
+        )
         if not score_data:
-            logger.debug(f"IPL watchlist: score not found for {pick.get('game')} on {yesterday}")
+            # ESPN doesn't show it as completed yet — keep pending
+            logger.debug(
+                f"{sport} pending: score not final for {pick.get('game')} "
+                f"(game_date={game_date}) — retaining"
+            )
+            still_pending.append(pick)
             continue
+
+        key = (game_date.isoformat(), sport, pick.get("pick", ""), pick.get("game", ""))
+        if key in settled_keys:
+            # Already in history (e.g. from a previous run) — just drop from pending
+            logger.debug(f"{sport} pending: {pick.get('pick')} already settled — removing from pending")
+            continue
+
         result = _determine_outcome(
             pick.get("pick", ""), pick.get("bet_type", ""),
             pick.get("home_team", ""), pick.get("away_team", ""),
             score_data["home_score"], score_data["away_score"],
         )
         if result not in ("WON", "LOST"):
+            # PUSH or UNKNOWN — keep pending for now
+            still_pending.append(pick)
             continue
+
         new_records.append({
-            "date":            yesterday.isoformat(),
-            "sport":           "IPL",
+            "date":            game_date.isoformat(),
+            "sport":           sport,
             "game":            pick.get("game", ""),
             "pick":            pick.get("pick", ""),
             "bet_type":        pick.get("bet_type", "Moneyline"),
@@ -1102,11 +1231,13 @@ def check_and_settle_watchlist(today: date) -> int:
             "market_prob_pct": pick.get("market_prob_pct", 0),
             "result":          result,
         })
-        logger.info(f"IPL watchlist settled: {pick.get('pick')} → {result}")
+        settled_keys.add(key)
+        logger.info(f"{sport} pending pick settled: {pick.get('pick')} → {result}")
 
     if new_records:
         _save_watchlist_history(existing + new_records)
 
+    _save_watchlist_pending(still_pending)
     return len(new_records)
 
 

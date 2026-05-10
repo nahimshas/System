@@ -780,7 +780,19 @@
               <span class="badge badge-ipl">IPL</span>
               &nbsp;Match Winner &nbsp;&middot;&nbsp; {{ bet.game }}
             </div>
+            {# ── Status badge: in-play vs upcoming ── #}
+            {% if bet.status == 'in_progress' %}
+            <div class="card-time" style="color:#ef4444;font-size:0.78rem;font-weight:600;margin-top:3px;">
+              🔴 In Progress — result pending
+            </div>
+            {% elif bet.commence_time %}
+            <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"
+                 data-ipl-commence="{{ bet.commence_time }}">
+              📅 loading…
+            </div>
+            {% else %}
             <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+            {% endif %}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
             <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
@@ -3126,6 +3138,31 @@
   function refresh() {
     var allEvents = [];
     var done      = 0;
+
+    // ── IPL upcoming card time display ───────────────────────────────────────
+    // Converts the ISO UTC commence_time stored in data-ipl-commence into a
+    // human-readable Pacific time string shown on the card.
+    // Called once on load (no ESPN fetch needed — pure client-side formatting).
+    function renderIplCommenceTimes() {
+      document.querySelectorAll("[data-ipl-commence]").forEach(function (el) {
+        var iso = el.getAttribute("data-ipl-commence");
+        if (!iso) return;
+        try {
+          var dt = new Date(iso);
+          // Format in Pacific time (respects DST automatically via the browser)
+          var opts = {
+            timeZone: "America/Los_Angeles",
+            month: "short", day: "numeric",
+            hour: "numeric", minute: "2-digit",
+            hour12: true,
+          };
+          el.textContent = "📅 " + dt.toLocaleString("en-US", opts) + " PT";
+        } catch (e) {
+          el.textContent = "📅 " + iso.slice(0, 10);
+        }
+      });
+    }
+    renderIplCommenceTimes();
 
     function onFetch(events) {
       allEvents = allEvents.concat(events);

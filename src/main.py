@@ -39,7 +39,12 @@ from src.state.manager import (
     load_state, save_state, merge_picks,
     bet_to_dict, parlay_to_dict, prop_to_dict,
 )
-from src.data.outcome_checker import check_and_settle, check_and_settle_props, check_and_settle_watchlist
+from src.data.outcome_checker import (
+    check_and_settle, check_and_settle_props,
+    check_and_settle_watchlist,      # NHL date-based settlement
+    settle_watchlist_pending,        # IPL (+ future leagues) rolling pending settlement
+    load_watchlist_pending, save_watchlist_pending,
+)
 from src.report.generator import build_report
 from src.report.email_sender import send_report
 
@@ -125,12 +130,22 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     except Exception as e:
         logger.warning(f"Prop settlement failed (non-fatal): {e}")
 
+    # NHL: date-based settlement (games finish overnight, well before 9am run)
     try:
-        settled_watchlist = check_and_settle_watchlist(today)
-        if settled_watchlist:
-            logger.info(f"Watchlist settlement: {settled_watchlist} NHL/IPL pick(s) closed from yesterday")
+        settled_nhl = check_and_settle_watchlist(today)
+        if settled_nhl:
+            logger.info(f"NHL watchlist settlement: {settled_nhl} pick(s) closed from yesterday")
     except Exception as e:
-        logger.warning(f"Watchlist settlement failed (non-fatal): {e}")
+        logger.warning(f"NHL watchlist settlement failed (non-fatal): {e}")
+
+    # IPL (+ future rolling-pending leagues): settle any picks whose games are now final
+    _now_utc = datetime.now(timezone.utc)
+    try:
+        settled_pending = settle_watchlist_pending(_now_utc)
+        if settled_pending:
+            logger.info(f"Rolling pending settlement: {settled_pending} pick(s) settled")
+    except Exception as e:
+        logger.warning(f"Rolling pending settlement failed (non-fatal): {e}")
 
     if not ODDS_API_KEY:
         logger.error("ODDS_API_KEY is not set.")
@@ -566,6 +581,63 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     fresh_ipl_display = [bet_to_dict(r) for r in sorted(
         ipl_display_raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
     )]
+
+    # ------------------------------------------------------------------ #
+    #  IPL rolling pending management
+    #  New upcoming picks from today's odds run are merged into the
+    #  persistent pending list (state/watchlist_pending.json).  The full
+    #  pending list — which may contain both an in-play pick (started but
+    #  not yet settled) and a fresh upcoming pick — becomes fresh_ipl_display
+    #  so the report always shows the correct live picture.
+    # ------------------------------------------------------------------ #
+    if "ipl" in leagues and today.month in SPORT_ACTIVE_MONTHS.get("ipl", []):
+        _wl_pending  = load_watchlist_pending()
+        _pending_keys = {p.get("game_key", "") for p in _wl_pending}
+
+        # Add any new upcoming picks the odds run found today (dedup by game_key)
+        for _bet in fresh_ipl_display:
+            _commence_str = _bet.get("commence_time", "")
+            _game_date_str = _commence_str[:10] if len(_commence_str) >= 10 else today.isoformat()
+            _game_key = f"{_game_date_str}|{_bet.get('game', '')}"
+
+            if _game_key in _pending_keys:
+                continue  # Already being tracked
+
+            # Only add games that haven't started yet — in-progress games would
+            # have been added on a prior run; if they're missing from pending it
+            # means they were already settled or came from a different API window.
+            try:
+                _cdt = datetime.fromisoformat(_commence_str.replace("Z", "+00:00"))
+                if _cdt <= _now_utc:
+                    continue
+            except Exception:
+                pass
+
+            _wl_pending.append({**_bet, "game_key": _game_key, "sport": "IPL"})
+            _pending_keys.add(_game_key)
+            logger.info(f"IPL pending: added upcoming pick → {_bet.get('pick')} ({_game_key})")
+
+        # Annotate each pending pick with its current status so the template
+        # and JS can show the right badge without extra computation.
+        for _p in _wl_pending:
+            try:
+                _cdt = datetime.fromisoformat(
+                    _p.get("commence_time", "").replace("Z", "+00:00")
+                )
+                _p["status"] = "upcoming" if _cdt > _now_utc else "in_progress"
+            except Exception:
+                _p["status"] = "in_progress"
+
+        save_watchlist_pending(_wl_pending)
+
+        # The report shows ALL unsettled picks (in-play + upcoming)
+        fresh_ipl_display = _wl_pending
+        ipl_game_count    = len(_wl_pending)
+        logger.info(
+            f"IPL pending: {ipl_game_count} unsettled pick(s) "
+            f"({sum(1 for p in _wl_pending if p.get('status')=='in_progress')} in-play, "
+            f"{sum(1 for p in _wl_pending if p.get('status')=='upcoming')} upcoming)"
+        )
 
     # ------------------------------------------------------------------ #
     #  State management — lock morning picks, merge on subsequent runs
