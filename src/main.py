@@ -682,24 +682,29 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             allow_replace=reevaluate,
         )
 
-        # ── Preserve morning display picks for sports where the re-run got
-        # 0 games (odds temporarily unavailable or no afternoon lines posted).
-        # This prevents the NHL watchlist from going blank when The Odds API
-        # stops listing NHL lines after games start.
-        _sport_game_counts = {
-            "NBA": nba_game_count, "MLB": mlb_game_count,
-            "NFL": nfl_game_count, "NHL": nhl_game_count,
+        # ── Preserve morning display picks for sports where the re-run produced
+        # no display picks despite having live odds (game_count > 0).
+        # Two common causes:
+        #   • Analysis context fetch failed (nhl_ctx errors) → zero picks returned
+        #   • The Odds API dropped NHL lines after games started → game_count = 0
+        # Rule: if a sport had morning display picks AND games exist in the odds
+        # (game_count > 0) but the fresh analysis produced nothing, keep morning.
+        # If game_count = 0 (no games today / off-season), do NOT preserve.
+        _sports_with_games = {
+            sp for sp, cnt in [
+                ("NBA", nba_game_count), ("MLB", mlb_game_count),
+                ("NFL", nfl_game_count), ("NHL", nhl_game_count),
+            ] if cnt > 0
         }
         _morning_display = state.get("singles_display") or []
+        _morning_sports  = {r.get("sport") for r in _morning_display if r.get("sport")}
         _fresh_sports    = {r.get("sport") for r in fresh_singles_display if r.get("sport")}
-        _preserve_sports = {
-            sp for sp in {r.get("sport") for r in _morning_display if r.get("sport")}
-            if _sport_game_counts.get(sp, 0) == 0 and sp not in _fresh_sports
-        }
+        # Preserve: had morning picks + games exist in odds today + zero fresh display picks
+        _preserve_sports = (_morning_sports & _sports_with_games) - _fresh_sports
         if _preserve_sports:
             logger.info(
                 f"Subsequent run: preserving morning display picks for {_preserve_sports} "
-                f"(no fresh odds available for those sports)"
+                f"(games in odds but analysis produced no display picks)"
             )
         _preserved_display = [r for r in _morning_display if r.get("sport") in _preserve_sports]
         final_singles_display = fresh_singles_display + _preserved_display
