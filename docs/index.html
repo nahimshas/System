@@ -3929,7 +3929,58 @@
       sportLive["PARLAY"].pnl += pnl;
     });
 
-    // No live outcomes yet — leave the table as-is
+    // ── Watchlist W-L tiles (NHL + IPL — no budget, no PnL) ─────────────
+    // Runs independently of budget outcomes so tiles update even on days
+    // where there are zero budget bets in play.
+    (function updateWatchlistTiles() {
+      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 } };
+
+      document.querySelectorAll(
+        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result]"
+      ).forEach(function (wlCard) {
+        var result = wlCard.getAttribute("data-live-result");
+        if (!result) return;
+        var sport = wlCard.getAttribute("data-sport") || "";
+        if (!wlLive[sport]) return;
+        if      (result === "WON")  wlLive[sport].won++;
+        else if (result === "LOST") wlLive[sport].lost++;
+      });
+
+      ["NHL", "IPL"].forEach(function (sp) {
+        var lw = wlLive[sp].won;
+        var ll = wlLive[sp].lost;
+        if (lw + ll === 0) return;   // nothing settled live for this sport
+
+        var tile = document.getElementById("wl-tile-" + sp);
+        if (!tile) return;
+
+        var hw    = parseInt(tile.getAttribute("data-hist-won")  || "0", 10);
+        var hl    = parseInt(tile.getAttribute("data-hist-lost") || "0", 10);
+        var tw    = hw + lw;
+        var tl    = hl + ll;
+        var total = tw + tl;
+        var wr    = total > 0 ? (tw / total * 100).toFixed(1) : null;
+        var color = wr !== null
+          ? (parseFloat(wr) >= 55 ? "#4ade80"
+             : parseFloat(wr) >= 45 ? "#facc15" : "#f87171")
+          : "var(--muted)";
+
+        var recDiv = tile.querySelector(".wl-record");
+        if (recDiv) {
+          recDiv.style.color = color;
+          recDiv.innerHTML = tw + "W–" + tl + "L" +
+            (wr !== null
+              ? '<span style="font-size:0.78rem;font-weight:400;"> (' + wr + '%)</span>'
+              : "");
+        }
+        var picksDiv = tile.querySelector(".wl-picks");
+        if (picksDiv) {
+          picksDiv.textContent = total + " pick" + (total !== 1 ? "s" : "") + " tracked";
+        }
+      });
+    })();
+
+    // No live budget outcomes yet — leave budget performance tables as-is
     if (liveWon + liveLost + livePush === 0) return;
 
     // Combined totals
