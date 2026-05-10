@@ -777,6 +777,19 @@ def load_prop_accuracy() -> Dict:
             by_conf[conf]      = _acc(subset)
             hist_by_conf[conf] = _acc(hist_subset)
 
+    # Break down by sport across ALL settled records (not just recent-20)
+    seen_sports: list = []
+    for r in records:
+        sp = r.get("sport", "")
+        if sp and sp not in seen_sports:
+            seen_sports.append(sp)
+
+    by_sport: Dict[str, Dict] = {}
+    for sp in seen_sports:
+        subset = [r for r in records if r.get("sport") == sp]
+        if subset:
+            by_sport[sp] = _acc(subset)
+
     hist_all = _acc(hist_records)
 
     return {
@@ -784,6 +797,7 @@ def load_prop_accuracy() -> Dict:
         "all":           _acc(records),
         "by_type":       by_type,
         "by_conf":       by_conf,
+        "by_sport":      by_sport,
         "recent":        records[-20:],   # last 20 for display in report
         # Before-today baselines for JS data-hist-* attributes (avoids double-count)
         "hist_total":    len(hist_records),

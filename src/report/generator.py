@@ -270,31 +270,10 @@ def build_report(
         prop_last_result[key] = rec   # later records overwrite earlier → most recent wins
 
     # ── Prop accuracy split by sport ─────────────────────────────────────────
-    _pa_by_sport: Dict = {}
-    for _rec in prop_accuracy.get("recent", []):
-        _sp = _rec.get("sport", "")
-        if not _sp:
-            continue
-        if _sp not in _pa_by_sport:
-            _pa_by_sport[_sp] = {"hits": 0, "misses": 0, "total": 0, "sum_err": 0.0}
-        _pa_by_sport[_sp]["total"] += 1
-        if _rec.get("hit"):
-            _pa_by_sport[_sp]["hits"] += 1
-        else:
-            _pa_by_sport[_sp]["misses"] += 1
-        _err = float(_rec.get("actual_stat", 0) or 0) - float(_rec.get("model_line", 0) or 0)
-        _pa_by_sport[_sp]["sum_err"] += _err
-
-    prop_accuracy_by_sport: Dict = {}
-    for _sp, _d in _pa_by_sport.items():
-        _t = _d["total"]
-        prop_accuracy_by_sport[_sp] = {
-            "total":    _t,
-            "hits":     _d["hits"],
-            "misses":   _d["misses"],
-            "hit_rate": round(_d["hits"] / _t * 100, 1) if _t else None,
-            "avg_err":  round(_d["sum_err"] / _t, 2) if _t else None,
-        }
+    # load_prop_accuracy() computes by_sport across ALL settled records.
+    # We previously iterated only over "recent" (last 20), which caused the
+    # by-league counts to be much lower than the true totals.
+    prop_accuracy_by_sport: Dict = prop_accuracy.get("by_sport", {})
 
     return {
         "generated_at":       _now_pacific_str(),
