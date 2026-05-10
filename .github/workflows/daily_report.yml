@@ -61,20 +61,23 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Restore state from last Actions commit
+      - name: Restore state from most recent commit
         run: |
-          # The user may have pushed code from a local machine whose state/ files
-          # are stale (older prop_history.json, missing picks files).  Always
-          # restore state/ from the most recent commit made by the Actions bot so
-          # Python runs with the freshest settlement data regardless of what the
-          # user pushed.
+          # Restore state/ from whichever commit touched it most recently —
+          # bot OR user.  This means:
+          #   • Normal runs: bot's last report commit is newest → used as-is.
+          #   • After a manual state fix pushed by the user: user's commit is
+          #     newer than the last bot commit → user's fix wins correctly.
+          # The original bot-only filter caused user state patches to be silently
+          # discarded.  Using the overall latest commit is strictly correct because
+          # git history is linear: whoever committed last has the freshest data.
           git fetch --unshallow 2>/dev/null || git fetch origin
-          LAST_SHA=$(git log --author="github-actions\[bot\]" --format="%H" -- state/ | head -1)
+          LAST_SHA=$(git log --format="%H" -- state/ | head -1)
           if [ -n "$LAST_SHA" ]; then
             git checkout "$LAST_SHA" -- state/ 2>/dev/null || true
-            echo "Restored state/ from Actions commit $LAST_SHA"
+            echo "Restored state/ from commit $LAST_SHA"
           else
-            echo "No previous Actions commit found for state/ — using checkout as-is"
+            echo "No previous commit found for state/ — using checkout as-is"
           fi
 
       - name: Reset state (if requested)
