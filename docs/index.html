@@ -2589,7 +2589,7 @@
                data-hist-won="19"
                data-hist-lost="11"
                data-hist-pnl="78.91">
-            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">NBA</div>
+            <div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;"><span class="badge badge-nba">🏀 NBA</span></div>
             <div class="perf-sport-record" style="font-size:0.82rem;">19W–11L
               <span style="color:var(--muted);font-size:0.75rem;"> (63.3%)</span>
             </div>
@@ -2603,7 +2603,7 @@
                data-hist-won="26"
                data-hist-lost="16"
                data-hist-pnl="31.19">
-            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">MLB</div>
+            <div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;"><span class="badge badge-mlb">⚾ MLB</span></div>
             <div class="perf-sport-record" style="font-size:0.82rem;">26W–16L
               <span style="color:var(--muted);font-size:0.75rem;"> (61.9%)</span>
             </div>
@@ -2617,7 +2617,7 @@
                data-hist-won="13"
                data-hist-lost="14"
                data-hist-pnl="80.51">
-            <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">PARLAYS</div>
+            <div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;color:var(--muted);">PARLAYS</div>
             <div class="perf-sport-record" style="font-size:0.82rem;">13W–14L
               <span style="color:var(--muted);font-size:0.75rem;"> (48.1%)</span>
             </div>
@@ -3875,8 +3875,15 @@
         sportCard.setAttribute("data-hist-lost", "0");
         sportCard.setAttribute("data-hist-pnl",  "0");
         sportCard.style.cssText = "flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;";
+        var sportBadgeHtml = {
+          NBA: '<span class="badge badge-nba">🏀 NBA</span>',
+          MLB: '<span class="badge badge-mlb">⚾ MLB</span>',
+          NFL: '<span class="badge badge-nfl">🏈 NFL</span>',
+          NHL: '<span class="badge badge-nhl">🏒 NHL</span>',
+          IPL: '<span class="badge badge-ipl">🏏 IPL</span>'
+        }[sport] || '<span style="color:var(--muted);">PARLAYS</span>';
         sportCard.innerHTML =
-          '<div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;color:var(--muted);">' + (sport === "PARLAY" ? "PARLAYS" : sport) + '</div>' +
+          '<div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;">' + sportBadgeHtml + '</div>' +
           '<div class="perf-sport-record" style="font-size:0.82rem;">0W–0L</div>' +
           '<div class="perf-sport-pnl" style="font-size:0.78rem;color:var(--yellow);">$+0.00</div>';
         breakdown.appendChild(sportCard);
