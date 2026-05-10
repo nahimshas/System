@@ -222,12 +222,30 @@ def _pacific_today_utc_window():
     return start_utc.strftime("%Y-%m-%dT%H:%M:%SZ"), end_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def get_game_odds(sport: str) -> List[Dict]:
-    """Returns list of TODAY's games with parsed moneyline, spread, and total odds."""
-    commence_from, commence_to = _pacific_today_utc_window()
+def get_game_odds(sport: str, hours_lookahead: Optional[int] = None) -> List[Dict]:
+    """
+    Returns games with parsed moneyline, spread, and total odds.
+
+    hours_lookahead=None (default): today's Pacific-date games only.
+    hours_lookahead=N: all upcoming games starting within the next N hours,
+        regardless of calendar date.  Used for leagues whose games start
+        after the morning run (e.g. IPL at 7am PST → fetch tomorrow's game
+        with hours_lookahead=36).
+    """
+    now_utc = datetime.now(timezone.utc)
+
+    if hours_lookahead is not None:
+        # Wide window: from now until now + N hours (any calendar date)
+        commence_from = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+        commence_to   = (now_utc + timedelta(hours=hours_lookahead)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        markets = "h2h"   # watchlist-only sports (IPL): moneyline only
+    else:
+        commence_from, commence_to = _pacific_today_utc_window()
+        markets = "h2h,spreads,totals"
+
     data = _get(f"/sports/{sport}/odds", {
         "regions": "us",
-        "markets": "h2h,spreads,totals",
+        "markets": markets,
         "oddsFormat": "american",
         "commenceTimeFrom": commence_from,
         "commenceTimeTo": commence_to,
@@ -235,7 +253,6 @@ def get_game_odds(sport: str) -> List[Dict]:
     if not data:
         return []
 
-    now_utc = datetime.now(timezone.utc)
     today_pacific = _today_pacific()
     games = []
     for game in data:
@@ -246,11 +263,12 @@ def get_game_odds(sport: str) -> List[Dict]:
             if commence_dt <= now_utc:
                 logger.info(f"Skipping started: {game.get('home_team')} vs {game.get('away_team')}")
                 continue
-            # Skip games not on today's Pacific date
-            game_pacific_date = (commence_dt + timedelta(hours=_pacific_offset())).date()
-            if game_pacific_date != today_pacific:
-                logger.info(f"Skipping non-today game ({game_pacific_date}): {game.get('home_team')} vs {game.get('away_team')}")
-                continue
+            # In today-only mode, also skip games on a different Pacific date
+            if hours_lookahead is None:
+                game_pacific_date = (commence_dt + timedelta(hours=_pacific_offset())).date()
+                if game_pacific_date != today_pacific:
+                    logger.info(f"Skipping non-today game ({game_pacific_date}): {game.get('home_team')} vs {game.get('away_team')}")
+                    continue
         except (ValueError, AttributeError):
             pass
 

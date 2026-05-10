@@ -468,7 +468,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             logger.info("=== IPL Analysis ===")
             ipl_odds_games = []
             if ODDS_API_KEY:
-                ipl_odds_games = get_game_odds(IPL_SPORT)
+                # IPL games start at ~7am PST and finish ~11am — after the 9am run.
+                # Use a 36-hour lookahead so tomorrow's match is always captured.
+                ipl_odds_games = get_game_odds(IPL_SPORT, hours_lookahead=36)
 
             ipl_game_count = len(ipl_odds_games)
 
@@ -647,16 +649,17 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     if state is None:
         # ── First run of the day ─────────────────────────────────────────
         logger.info("First run today — saving picks as morning baseline")
-        final_singles    = fresh_singles
-        final_parlays    = fresh_parlays
-        final_props      = fresh_props
-        change_warnings  = []
+        final_singles         = fresh_singles
+        final_parlays         = fresh_parlays
+        final_props           = fresh_props
+        final_singles_display = fresh_singles_display
+        change_warnings       = []
 
         save_state(today, {
             "date":          today.isoformat(),
             "first_run_at":  datetime.now(timezone.utc).isoformat(),
             "singles":       final_singles,
-            "singles_display": fresh_singles_display,
+            "singles_display": final_singles_display,
             "parlays":       final_parlays,
             "props":         final_props,
             "props_display": fresh_props_display,
@@ -679,12 +682,34 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             allow_replace=reevaluate,
         )
 
+        # ── Preserve morning display picks for sports where the re-run got
+        # 0 games (odds temporarily unavailable or no afternoon lines posted).
+        # This prevents the NHL watchlist from going blank when The Odds API
+        # stops listing NHL lines after games start.
+        _sport_game_counts = {
+            "NBA": nba_game_count, "MLB": mlb_game_count,
+            "NFL": nfl_game_count, "NHL": nhl_game_count,
+        }
+        _morning_display = state.get("singles_display") or []
+        _fresh_sports    = {r.get("sport") for r in fresh_singles_display if r.get("sport")}
+        _preserve_sports = {
+            sp for sp in {r.get("sport") for r in _morning_display if r.get("sport")}
+            if _sport_game_counts.get(sp, 0) == 0 and sp not in _fresh_sports
+        }
+        if _preserve_sports:
+            logger.info(
+                f"Subsequent run: preserving morning display picks for {_preserve_sports} "
+                f"(no fresh odds available for those sports)"
+            )
+        _preserved_display = [r for r in _morning_display if r.get("sport") in _preserve_sports]
+        final_singles_display = fresh_singles_display + _preserved_display
+
         # Persist updated state (locked flags, any substitutions)
         save_state(today, {
             "date":          today.isoformat(),
             "first_run_at":  state.get("first_run_at"),
             "singles":       final_singles,
-            "singles_display": fresh_singles_display,
+            "singles_display": final_singles_display,
             "parlays":       final_parlays,
             "props":         final_props,
             "props_display": fresh_props_display,
@@ -709,7 +734,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     report_data = build_report(
         run_date=today,
         singles=final_singles,
-        singles_display=fresh_singles_display,
+        singles_display=final_singles_display,
         parlays=final_parlays,
         props=final_props,
         props_display=fresh_props_display,
