@@ -25,6 +25,8 @@ def build_report(
     odds_api_credits: Optional[Dict] = None,
     nfl_game_count: int = 0,
     nhl_game_count: int = 0,
+    ipl_game_count: int = 0,
+    ipl_display: Optional[List[Dict]] = None,       # all positive-EV IPL picks (watchlist only)
     singles_display: Optional[List[Dict]] = None,   # all positive-EV picks for league section display
     props_display: Optional[List[Dict]] = None,     # all positive-EV props for league section display
 ) -> Dict:
@@ -41,6 +43,12 @@ def build_report(
     nhl_watchlist = sorted(
         [s for s in _display if s.get("sport") == "NHL"],
         key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+    )
+
+    # IPL is watchlist-only — never enters budget allocation or parlays.
+    ipl_watchlist = sorted(
+        ipl_display or [],
+        key=lambda r: (0 if r.get("confidence") == "HIGH" else 1, -r.get("edge", 0)),
     )
 
     # Top picks: HIGH confidence first, then by edge within each tier.
@@ -298,10 +306,13 @@ def build_report(
         "change_warnings":    formatted_warnings,
         "nfl_game_count":     nfl_game_count,
         "nhl_game_count":     nhl_game_count,
+        "ipl_game_count":     ipl_game_count,
         "has_nba":            nba_game_count > 0,
         "has_mlb":            mlb_game_count > 0,
         "has_nfl":            nfl_game_count > 0,
         "has_nhl":            nhl_game_count > 0,
+        "ipl_watchlist":      ipl_watchlist,
+        "has_ipl":            ipl_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),

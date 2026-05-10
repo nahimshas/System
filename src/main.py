@@ -17,7 +17,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
-    NBA_SPORT, MLB_SPORT, NFL_SPORT, NHL_SPORT,
+    NBA_SPORT, MLB_SPORT, NFL_SPORT, NHL_SPORT, IPL_SPORT,
     MAX_SINGLE_BETS, SPORT_ACTIVE_MONTHS, MIN_EDGE,
 )
 from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits, fetch_player_props
@@ -28,10 +28,11 @@ from src.data.mlb_stats import (
 )
 from src.data.nfl_stats import get_nfl_context
 from src.data.nhl_stats import get_nhl_context
+from src.data.ipl_stats import get_ipl_context
 from src.data.injuries import get_nba_injuries, get_mlb_injuries, get_nfl_injuries, get_nhl_injuries
 from src.data.umpire import get_home_plate_umpires, get_umpire_tendency
 from src.data.weather import get_game_weather
-from src.models.edge_finder import analyze_nba_game, analyze_mlb_game, analyze_nfl_game, analyze_nhl_game
+from src.models.edge_finder import analyze_nba_game, analyze_mlb_game, analyze_nfl_game, analyze_nhl_game, analyze_ipl_game
 from src.models.parlay_builder import build_parlays
 from src.models.props_analyzer import nba_player_props, mlb_player_props
 from src.state.manager import (
@@ -70,6 +71,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             saved_credits   = state.get("odds_api_credits", {})
             final_singles_display = state.get("singles_display") or final_singles
             final_props_display   = state.get("props_display")   or final_props
+            final_ipl_display     = state.get("ipl_display", [])
 
             report_data = build_report(
                 run_date=today,
@@ -82,6 +84,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 mlb_game_count=state.get("mlb_game_count", 0),
                 nfl_game_count=state.get("nfl_game_count", 0),
                 nhl_game_count=state.get("nhl_game_count", 0),
+                ipl_game_count=state.get("ipl_game_count", 0),
+                ipl_display=final_ipl_display,
                 errors=errors,
                 change_warnings=change_warnings,
                 odds_api_credits=saved_credits,
@@ -430,12 +434,60 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                             f"across {nhl_game_count} games")
 
     # ------------------------------------------------------------------ #
+    #  IPL (watchlist only — never enters budget allocation or parlays)
+    # ------------------------------------------------------------------ #
+    ipl_display_raw = []
+    ipl_game_count  = 0
+
+    if "ipl" in leagues:
+        if today.month not in SPORT_ACTIVE_MONTHS.get("ipl", []):
+            logger.info("IPL is out of season — skipping")
+        else:
+            logger.info("=== IPL Analysis ===")
+            ipl_odds_games = []
+            if ODDS_API_KEY:
+                ipl_odds_games = get_game_odds(IPL_SPORT)
+
+            ipl_game_count = len(ipl_odds_games)
+
+            if ipl_game_count == 0:
+                api_err = get_last_api_error()
+                if api_err:
+                    errors.append(f"IPL odds unavailable: {api_err}")
+                    logger.error(f"IPL odds unavailable: {api_err}")
+                else:
+                    logger.info("No IPL games today or odds unavailable")
+            else:
+                ipl_team_names = list({
+                    t for g in ipl_odds_games
+                    for t in [g["home_team"], g["away_team"]]
+                })
+                try:
+                    ipl_ctx = get_ipl_context(today, team_names=ipl_team_names)
+                except Exception as e:
+                    logger.error(f"IPL stats fetch failed: {e}")
+                    ipl_ctx = {"season_form": {}, "rest_days": {}}
+                    errors.append(f"IPL stats partially unavailable: {e}")
+
+                for game in ipl_odds_games:
+                    try:
+                        recs = analyze_ipl_game(game, ipl_ctx, min_edge=0.0)
+                        ipl_display_raw.extend(recs)
+                    except Exception as e:
+                        logger.error(f"IPL game analysis error ({game.get('home_team')}): {e}")
+
+                ipl_qualifying = [r for r in ipl_display_raw if r.edge >= MIN_EDGE]
+                logger.info(f"IPL: {len(ipl_qualifying)} qualifying edge(s) ({len(ipl_display_raw)} total) "
+                            f"across {ipl_game_count} games")
+
+    # ------------------------------------------------------------------ #
     #  Build parlays from raw BetRecommendation objects (before serialising)
     # ------------------------------------------------------------------ #
     # Budget-qualifying picks only (edge >= MIN_EDGE) — used for allocation table + parlays
+    # IPL is excluded — it is watchlist-only and never enters budget allocation
     all_singles_raw = nba_singles_raw + mlb_singles_raw + nfl_singles_raw + nhl_singles_raw
     # All positive-EV picks (no min-edge threshold) — used for display in league sections
-    all_display_raw      = nba_display_raw + mlb_display_raw + nfl_display_raw + nhl_display_raw
+    all_display_raw = nba_display_raw + mlb_display_raw + nfl_display_raw + nhl_display_raw
     parlays_raw          = build_parlays(all_singles_raw)
     props_raw            = nba_props_raw + mlb_props_raw
     props_display_raw    = nba_props_display_raw + mlb_props_display_raw
@@ -503,6 +555,11 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # Display props — all positive-EV props (no MIN_PROP_EDGE gate).
     fresh_props_display = [prop_to_dict(p) for p in props_display_raw]
 
+    # IPL display picks — serialised separately (never enter budget pool).
+    fresh_ipl_display = [bet_to_dict(r) for r in sorted(
+        ipl_display_raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
+    )]
+
     # ------------------------------------------------------------------ #
     #  State management — lock morning picks, merge on subsequent runs
     # ------------------------------------------------------------------ #
@@ -530,6 +587,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "mlb_game_count": mlb_game_count,
             "nfl_game_count": nfl_game_count,
             "nhl_game_count": nhl_game_count,
+            "ipl_game_count": ipl_game_count,
+            "ipl_display":    fresh_ipl_display,
         })
     else:
         # ── Subsequent run — merge locked picks with new analysis ────────
@@ -556,6 +615,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "mlb_game_count": mlb_game_count,
             "nfl_game_count": nfl_game_count,
             "nhl_game_count": nhl_game_count,
+            "ipl_game_count": ipl_game_count,
+            "ipl_display":    fresh_ipl_display,
         })
 
         if change_warnings:
@@ -577,6 +638,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         mlb_game_count=mlb_game_count,
         nfl_game_count=nfl_game_count,
         nhl_game_count=nhl_game_count,
+        ipl_game_count=ipl_game_count,
+        ipl_display=fresh_ipl_display,
         errors=errors,
         change_warnings=change_warnings,
         odds_api_credits=get_api_credits(),
@@ -602,7 +665,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
 def main():
     parser = argparse.ArgumentParser(description="Sports Betting Analysis System")
-    parser.add_argument("--league", choices=["nba", "mlb", "nfl", "nhl"], help="Run for one league only")
+    parser.add_argument("--league", choices=["nba", "mlb", "nfl", "nhl", "ipl"], help="Run for one league only")
     parser.add_argument("--no-email", action="store_true", help="Skip email delivery")
     parser.add_argument("--reevaluate", action="store_true",
                         help="Re-evaluate unlocked picks and replace any no longer in the top options")
@@ -610,7 +673,7 @@ def main():
                         help="Re-render report from saved state — zero Odds API calls (for visual/template deploys)")
     args = parser.parse_args()
 
-    leagues   = [args.league] if args.league else ["nba", "mlb", "nfl", "nhl"]
+    leagues   = [args.league] if args.league else ["nba", "mlb", "nfl", "nhl", "ipl"]
     bet_count = run(leagues=leagues, send_email=not args.no_email,
                     reevaluate=args.reevaluate, code_only=args.code_only)
     logger.info(f"Done. {bet_count} bet recommendation(s) generated.")

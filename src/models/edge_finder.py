@@ -1659,4 +1659,154 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                         commence_time=commence_time,
                     ))
 
+
+# ---------------------------------------------------------------------------
+# IPL — Indian Premier League cricket (moneyline / match-winner only)
+# ---------------------------------------------------------------------------
+
+# IPL home advantage: T20 home-pitch knowledge + crowd effect.
+# Raw historical home win rate ≈ 55–57%; residual beyond market ≈ 2.5%.
+IPL_HOME_ADV      = 0.025
+# Form weight: T20 is highly volatile — tilt heavily toward recent form.
+IPL_RECENT_WEIGHT = 0.65
+
+
+def _ipl_team_strength(team: str, ctx: dict) -> float:
+    """
+    Blended win rate for an IPL team.
+    If we have recent data (last 7 days), blend 65% recent / 35% season.
+    Falls back to 0.5 (coin flip) when no data is available.
+    """
+    form = ctx["season_form"].get(team, {})
+    if not form:
+        return 0.5
+    season_wpct = form.get("win_pct", 0.5)
+    recent_wpct = form.get("recent_win_pct", season_wpct)
+    recent_n    = form.get("recent_total", 0)
+    # Only use the recent window if it has at least 2 games
+    w = IPL_RECENT_WEIGHT if recent_n >= 2 else 0.0
+    return (1 - w) * season_wpct + w * recent_wpct
+
+
+def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[BetRecommendation]:
+    """
+    Analyse a single IPL match for moneyline (match-winner) value.
+
+    IPL on Robinhood is h2h only — no spreads or run-line bets.
+    Returns at most one BetRecommendation per game (the side with edge).
+    """
+    from src.data.ipl_stats import normalize as ipl_normalize
+    home = ipl_normalize(game["home_team"])
+    away = ipl_normalize(game["away_team"])
+    label = f"{away} @ {home}"
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
+    recs = []
+    _min = min_edge if min_edge is not None else MIN_EDGE
+
+    ml = game.get("moneyline")
+    if not ml:
+        return recs
+
+    market_home_prob = ml["home_prob"]
+    market_away_prob = ml["away_prob"]
+
+    home_form = ipl_ctx["season_form"].get(home, {})
+    away_form = ipl_ctx["season_form"].get(away, {})
+    stats_available = bool(home_form or away_form)
+
+    home_strength = _ipl_team_strength(home, ipl_ctx)
+    away_strength = _ipl_team_strength(away, ipl_ctx)
+
+    signals  = []
+    research = []
+
+    if not stats_available:
+        signals.append("⚠ IPL form data unavailable — using market baseline only")
+
+    # Normalise team strengths → base win probability
+    total = home_strength + away_strength
+    base_home_prob = home_strength / total if total > 0 else 0.5
+
+    adj = 0.0
+
+    # Home venue advantage
+    adj += IPL_HOME_ADV
+    signals.append(f"Home venue advantage: {home} (+{IPL_HOME_ADV*100:.0f}%)")
+
+    # Team form stats in research panel
+    if home_form:
+        research.append(
+            f"{home}: {home_form.get('wins', '?')}W-{home_form.get('losses', '?')}L "
+            f"({home_form.get('total', 0)} matches) | "
+            f"Win% {home_form.get('win_pct', 0)*100:.0f}% | "
+            f"Recent Win% {home_form.get('recent_win_pct', 0)*100:.0f}% "
+            f"(last {home_form.get('recent_total', 0)} games)"
+        )
+    if away_form:
+        research.append(
+            f"{away}: {away_form.get('wins', '?')}W-{away_form.get('losses', '?')}L "
+            f"({away_form.get('total', 0)} matches) | "
+            f"Win% {away_form.get('win_pct', 0)*100:.0f}% | "
+            f"Recent Win% {away_form.get('recent_win_pct', 0)*100:.0f}% "
+            f"(last {away_form.get('recent_total', 0)} games)"
+        )
+
+    # Form differential signal
+    strength_gap = home_strength - away_strength
+    if abs(strength_gap) >= 0.10:
+        stronger = home if strength_gap > 0 else away
+        signals.append(f"Form edge: {stronger} (blended win-rate gap {abs(strength_gap)*100:.0f}%)")
+
+    # Recent form divergence (hot vs cold team)
+    home_recent = home_form.get("recent_win_pct", home_strength)
+    away_recent = away_form.get("recent_win_pct", away_strength)
+    if home_form.get("recent_total", 0) >= 2 and away_form.get("recent_total", 0) >= 2:
+        recent_gap = home_recent - away_recent
+        if abs(recent_gap) >= 0.30:
+            hot  = home if recent_gap > 0 else away
+            cold = away if recent_gap > 0 else home
+            signals.append(f"Hot/cold streak: {hot} hot ({home_recent*100:.0f}% last 7d) vs {cold} cold ({away_recent*100:.0f}%)")
+
+    # Rest days
+    home_rest = ipl_ctx["rest_days"].get(home, 3)
+    away_rest = ipl_ctx["rest_days"].get(away, 3)
+    research.append(f"Rest days — {home}: {home_rest} | {away}: {away_rest}")
+
+    adjusted_home_prob = min(0.90, max(0.10, base_home_prob + adj))
+    adjusted_away_prob = 1.0 - adjusted_home_prob
+
+    home_edge = adjusted_home_prob - market_home_prob
+    away_edge = adjusted_away_prob - market_away_prob
+
+    if home_edge >= _min and has_positive_ev(adjusted_home_prob, market_home_prob):
+        sizing = robinhood_kelly(adjusted_home_prob, market_home_prob)
+        if sizing.num_contracts > 0:
+            recs.append(BetRecommendation(
+                sport="IPL", game=label, bet_type="Moneyline", pick=home,
+                market_prob=market_home_prob, model_prob=adjusted_home_prob,
+                edge=home_edge, contract_price=market_home_prob,
+                sizing=sizing,
+                confidence=_confidence_label(home_edge, len(signals), stats_available),
+                signals=signals[:], research=research[:],
+                home_team=home, away_team=away, game_time=game_time,
+                commence_time=commence_time,
+            ))
+
+    if away_edge >= _min and has_positive_ev(adjusted_away_prob, market_away_prob):
+        sizing = robinhood_kelly(adjusted_away_prob, market_away_prob)
+        if sizing.num_contracts > 0:
+            recs.append(BetRecommendation(
+                sport="IPL", game=label, bet_type="Moneyline", pick=away,
+                market_prob=market_away_prob, model_prob=adjusted_away_prob,
+                edge=away_edge, contract_price=market_away_prob,
+                sizing=sizing,
+                confidence=_confidence_label(away_edge, len(signals), stats_available),
+                signals=signals[:], research=research[:],
+                home_team=home, away_team=away, game_time=game_time,
+                commence_time=commence_time,
+            ))
+
+    return recs
+
     return recs

@@ -40,6 +40,7 @@
     .badge-mlb { background: #991b1b; color: #fff; }
     .badge-nfl { background: #7c3aed; color: #fff; }
     .badge-nhl { background: #0d9488; color: #fff; }
+    .badge-ipl { background: #d97706; color: #fff; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
@@ -155,6 +156,7 @@
       MLB: {{ report.mlb_game_count }} game{% if report.mlb_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       {% if report.has_nfl %}NFL: {{ report.nfl_game_count }} game{% if report.nfl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
       {% if report.has_nhl %}NHL: {{ report.nhl_game_count }} game{% if report.nhl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
+      {% if report.has_ipl %}IPL: {{ report.ipl_game_count }} match{% if report.ipl_game_count != 1 %}es{% endif %} &nbsp;|&nbsp; {% endif %}
       Budget: ${{ "%.0f"|format(report.daily_budget) }}
     </div>
     {% set cr = report.odds_api_credits %}
@@ -744,6 +746,81 @@
     {% endfor %}
     </div><!-- sub-body nhl-singles -->
     </div><!-- sub-section nhl-singles -->
+  </div>
+  {% endif %}
+
+  {% if report.ipl_watchlist %}
+  <div class="section" id="sec-ipl">
+    <div class="section-title">🏏 IPL
+      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
+        {{ report.ipl_watchlist|length }} pick{% if report.ipl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only
+      </span>
+    </div>
+    <div class="sub-section" id="sub-ipl-singles">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-ipl-singles')">
+      <div class="league-sub-label">Match Winner</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
+    {% for bet in report.ipl_watchlist %}
+    <div class="card ipl-watchlist-card"
+         id="ipl-{{ loop.index }}"
+         data-home-team="{{ bet.home_team }}"
+         data-away-team="{{ bet.away_team }}"
+         data-bet-type="{{ bet.bet_type }}"
+         data-pick="{{ bet.pick }}"
+         data-sport="IPL"
+         data-edge-pct="{{ bet.edge_pct }}"
+         data-model-prob-pct="{{ bet.model_prob_pct }}"
+         data-commence-time="{{ bet.commence_time }}">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">{{ bet.pick }}</div>
+            <div class="card-subtitle">
+              <span class="badge badge-ipl">IPL</span>
+              &nbsp;Match Winner &nbsp;&middot;&nbsp; {{ bet.game }}
+            </div>
+            <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
+          <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
+        </div>
+        {% if bet.signals %}
+        <div class="signals">
+          <div class="signals-title">Key Signals</div>
+          {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
+        </div>
+        {% endif %}
+        {% if bet.research %}
+        <div class="research-section">
+          <details>
+            <summary style="color:#d97706;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
+            {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
+          </details>
+        </div>
+        {% endif %}
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
+          🔭 Watchlist only — not tracked in performance tables. Moneyline (match winner) only.
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    </div><!-- sub-body ipl-singles -->
+    </div><!-- sub-section ipl-singles -->
   </div>
   {% endif %}
 

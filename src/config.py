@@ -17,11 +17,13 @@ NBA_SPORT = "basketball_nba"
 MLB_SPORT = "baseball_mlb"
 NFL_SPORT = "americanfootball_nfl"
 NHL_SPORT = "icehockey_nhl"
+IPL_SPORT = "cricket_ipl"
 SPORT_LABELS = {
     NBA_SPORT: "NBA",
     MLB_SPORT: "MLB",
     NFL_SPORT: "NFL",
     NHL_SPORT: "NHL",
+    IPL_SPORT: "IPL",
 }
 
 # --- Active-season calendar (month numbers) ---
@@ -32,6 +34,7 @@ SPORT_ACTIVE_MONTHS = {
     "mlb": list(range(3, 12)),                          # Mar – Nov
     "nfl": list(range(9, 13)) + [1, 2],                # Sep – Feb
     "nhl": list(range(10, 13)) + list(range(1, 7)),    # Oct – Jun
+    "ipl": [3, 4, 5],                                  # Mar – May
 }
 
 # --- Betting parameters ---
@@ -73,6 +76,12 @@ MLB_PLAYOFF_RECENT_WEIGHT  = 0.55    # same flip toward recent form
 # --- Schedule load (7-day fatigue) ---
 # Applied when a team has played many games in the last 7 days
 SCHEDULE_LOAD_THRESHOLDS = {5: 0.01, 6: 0.02, 7: 0.03}  # games_in_7d → penalty
+
+# --- IPL (Indian Premier League cricket) — watchlist only ---
+# T20 home advantage is substantial; ~5% raw but market prices most of it.
+# Recent form dominates in a short tournament (10 teams, ~14 matches each).
+IPL_HOME_ADV      = 0.025   # ~2.5% residual home advantage beyond market pricing
+IPL_RECENT_WEIGHT = 0.65    # T20 form is highly volatile — weight recent heavily
 
 # --- Line movement signal ---
 LINE_MOVE_THRESHOLD = 0.03           # 3% probability shift triggers sharp-money signal
