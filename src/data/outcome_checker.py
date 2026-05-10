@@ -663,6 +663,10 @@ def check_and_settle_props(today: date) -> int:
     from src.data.prop_outcomes import check_prop_outcomes
 
     existing      = _load_prop_history()
+    existing = [
+        {**r, "prop_type": "Hits Over"} if r.get("prop_type") == "Hits Over (1+)" else r
+        for r in existing
+    ]
     existing_keys = {(r["date"], r["player"], r["prop_type"]) for r in existing}
     all_new: List[Dict] = []
 
@@ -711,6 +715,11 @@ def load_prop_accuracy() -> Dict:
     double-counting props already written to history by the morning workflow.
     """
     records = _load_prop_history()
+    # Normalise legacy "Hits Over (1+)" → "Hits Over" so they share one table row
+    records = [
+        {**r, "prop_type": "Hits Over"} if r.get("prop_type") == "Hits Over (1+)" else r
+        for r in records
+    ]
     if not records:
         return {}
 

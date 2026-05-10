@@ -18,6 +18,7 @@ NBA_STAT_KEY = {
     "Points Over":   "points",
     "Rebounds Over": "rebounds",
     "Assists Over":  "assists",
+    "Steals Over":   "steals",
 }
 
 # ESPN MLB pitching group has no name — detect by pitching-specific keys
