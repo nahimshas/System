@@ -253,6 +253,13 @@ def build_report(
         performance = {}
 
     try:
+        from src.data.outcome_checker import load_watchlist_performance
+        watchlist_performance = load_watchlist_performance()
+    except Exception:
+        watchlist_performance = {"NHL": {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
+                                 "IPL": {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None}}
+
+    try:
         from src.data.outcome_checker import build_chart_data
         chart_data = build_chart_data()
     except Exception:
@@ -336,4 +343,5 @@ def build_report(
         "has_mlb_singles":         len(mlb_top_singles) > 0,
         "has_nfl_singles":         len(nfl_top_singles) > 0,
         "prop_accuracy_by_sport":  prop_accuracy_by_sport,
+        "watchlist_performance":   watchlist_performance,
     }

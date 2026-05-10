@@ -24,6 +24,13 @@ ESPN_SPORT_PATHS = {
     "MLB": "baseball/mlb",
 }
 
+# Watchlist-only leagues (NHL, IPL) — separate history file, no PnL tracking
+WATCHLIST_HISTORY_PATH = Path("state/watchlist_history.json")
+ESPN_WATCHLIST_PATHS = {
+    "NHL": "hockey/nhl",
+    "IPL": "cricket/ipl",
+}
+
 HISTORY_PATH = Path(HISTORY_FILE)
 
 
@@ -912,3 +919,212 @@ def _append_to_prop_history(records: List[Dict]) -> None:
         )
     except Exception as e:
         logger.error(f"Failed to write prop history: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Watchlist settlement (NHL, IPL) — separate history, no PnL
+# ---------------------------------------------------------------------------
+
+def _load_watchlist_history() -> List[Dict]:
+    if not WATCHLIST_HISTORY_PATH.exists():
+        return []
+    try:
+        with open(WATCHLIST_HISTORY_PATH) as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception as e:
+        logger.error(f"Failed to load watchlist history: {e}")
+        return []
+
+
+def _save_watchlist_history(records: List[Dict]) -> None:
+    WATCHLIST_HISTORY_PATH.parent.mkdir(exist_ok=True)
+    try:
+        with open(WATCHLIST_HISTORY_PATH, "w") as f:
+            json.dump(records, f, indent=2, default=str)
+        logger.info(f"Watchlist history updated → {WATCHLIST_HISTORY_PATH} ({len(records)} total records)")
+    except Exception as e:
+        logger.error(f"Failed to write watchlist history: {e}")
+
+
+def _parse_score_str(score_str) -> float:
+    """
+    Parse a score that may be an integer, float, or cricket-style 'runs/wickets' string.
+    Returns the numeric part before any slash (e.g. '182/6' → 182.0).
+    """
+    s = str(score_str or "0").split("/")[0].strip()
+    try:
+        return float(s)
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
+    """
+    Fetch completed game scores for watchlist sports (NHL, IPL) from ESPN.
+    Identical structure to _fetch_espn_final_scores but uses WATCHLIST sport paths
+    and _parse_score_str to handle cricket 'runs/wickets' format.
+    """
+    path = ESPN_WATCHLIST_PATHS.get(sport)
+    if not path:
+        return {}
+
+    date_str = game_date.strftime("%Y%m%d")
+    url = f"{ESPN_BASE}/{path}/scoreboard"
+    try:
+        r = requests.get(url, params={"dates": date_str}, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        logger.error(f"ESPN fetch failed ({sport}, {game_date}): {e}")
+        return {}
+
+    scores: Dict = {}
+    for event in data.get("events", []):
+        comps = event.get("competitions", [])
+        if not comps:
+            continue
+        comp = comps[0]
+        if not comp.get("status", {}).get("type", {}).get("completed", False):
+            continue
+
+        competitors = comp.get("competitors", [])
+        if len(competitors) < 2:
+            continue
+
+        home_comp = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
+        away_comp = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
+
+        home_name  = home_comp.get("team", {}).get("displayName", "")
+        away_name  = away_comp.get("team", {}).get("displayName", "")
+        home_abbr  = home_comp.get("team", {}).get("abbreviation", "")
+        away_abbr  = away_comp.get("team", {}).get("abbreviation", "")
+        home_score = _parse_score_str(home_comp.get("score", 0))
+        away_score = _parse_score_str(away_comp.get("score", 0))
+
+        entry = {
+            "home_name": home_name, "away_name": away_name,
+            "home_abbr": home_abbr, "away_abbr": away_abbr,
+            "home_score": home_score, "away_score": away_score,
+        }
+        for key in [home_name, away_name, home_abbr, away_abbr]:
+            if key:
+                scores[key.lower()] = entry
+
+    logger.debug(f"ESPN {sport} {game_date}: {len(scores)//4 or len(scores)} game(s) found")
+    return scores
+
+
+def check_and_settle_watchlist(today: date) -> int:
+    """
+    Settle yesterday's NHL and IPL watchlist picks against ESPN final scores.
+    Appends new WON/LOST records to state/watchlist_history.json.
+    Returns the number of newly settled picks.
+    """
+    from datetime import timedelta
+    yesterday = today - timedelta(days=1)
+
+    from src.state.manager import load_state
+    state = load_state(yesterday)
+    if not state:
+        logger.info(f"No state for {yesterday} — no watchlist picks to settle")
+        return 0
+
+    existing = _load_watchlist_history()
+    settled_keys = {(r["date"], r["sport"], r["pick"], r["game"]) for r in existing}
+    new_records: List[Dict] = []
+
+    # ── NHL ──────────────────────────────────────────────────────────────────
+    nhl_picks = [p for p in (state.get("singles_display") or []) if p.get("sport") == "NHL"]
+    nhl_scores = _fetch_watchlist_final_scores("NHL", yesterday) if nhl_picks else {}
+
+    for pick in nhl_picks:
+        key = (yesterday.isoformat(), "NHL", pick.get("pick", ""), pick.get("game", ""))
+        if key in settled_keys:
+            continue
+        score_data = _find_game_score(nhl_scores, pick.get("home_team", ""), pick.get("away_team", ""))
+        if not score_data:
+            logger.debug(f"NHL watchlist: score not found for {pick.get('game')} on {yesterday}")
+            continue
+        result = _determine_outcome(
+            pick.get("pick", ""), pick.get("bet_type", ""),
+            pick.get("home_team", ""), pick.get("away_team", ""),
+            score_data["home_score"], score_data["away_score"],
+        )
+        if result not in ("WON", "LOST"):
+            continue
+        new_records.append({
+            "date":            yesterday.isoformat(),
+            "sport":           "NHL",
+            "game":            pick.get("game", ""),
+            "pick":            pick.get("pick", ""),
+            "bet_type":        pick.get("bet_type", "Moneyline"),
+            "home_team":       pick.get("home_team", ""),
+            "away_team":       pick.get("away_team", ""),
+            "edge_pct":        pick.get("edge_pct", 0),
+            "confidence":      pick.get("confidence", "MEDIUM"),
+            "model_prob_pct":  pick.get("model_prob_pct", 0),
+            "market_prob_pct": pick.get("market_prob_pct", 0),
+            "result":          result,
+        })
+        logger.info(f"NHL watchlist settled: {pick.get('pick')} → {result}")
+
+    # ── IPL ──────────────────────────────────────────────────────────────────
+    ipl_picks = state.get("ipl_display") or []
+    ipl_scores = _fetch_watchlist_final_scores("IPL", yesterday) if ipl_picks else {}
+
+    for pick in ipl_picks:
+        key = (yesterday.isoformat(), "IPL", pick.get("pick", ""), pick.get("game", ""))
+        if key in settled_keys:
+            continue
+        score_data = _find_game_score(ipl_scores, pick.get("home_team", ""), pick.get("away_team", ""))
+        if not score_data:
+            logger.debug(f"IPL watchlist: score not found for {pick.get('game')} on {yesterday}")
+            continue
+        result = _determine_outcome(
+            pick.get("pick", ""), pick.get("bet_type", ""),
+            pick.get("home_team", ""), pick.get("away_team", ""),
+            score_data["home_score"], score_data["away_score"],
+        )
+        if result not in ("WON", "LOST"):
+            continue
+        new_records.append({
+            "date":            yesterday.isoformat(),
+            "sport":           "IPL",
+            "game":            pick.get("game", ""),
+            "pick":            pick.get("pick", ""),
+            "bet_type":        pick.get("bet_type", "Moneyline"),
+            "home_team":       pick.get("home_team", ""),
+            "away_team":       pick.get("away_team", ""),
+            "edge_pct":        pick.get("edge_pct", 0),
+            "confidence":      pick.get("confidence", "MEDIUM"),
+            "model_prob_pct":  pick.get("model_prob_pct", 0),
+            "market_prob_pct": pick.get("market_prob_pct", 0),
+            "result":          result,
+        })
+        logger.info(f"IPL watchlist settled: {pick.get('pick')} → {result}")
+
+    if new_records:
+        _save_watchlist_history(existing + new_records)
+
+    return len(new_records)
+
+
+def load_watchlist_performance() -> Dict[str, Dict]:
+    """
+    Returns {sport: {won, lost, total, win_rate_pct}} for NHL and IPL.
+    Used by generator.py to populate the watchlist tracking tiles.
+    """
+    records = _load_watchlist_history()
+    result: Dict[str, Dict] = {}
+    for sport in ("NHL", "IPL"):
+        subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
+        won  = sum(1 for r in subset if r.get("result") == "WON")
+        lost = len(subset) - won
+        result[sport] = {
+            "won":          won,
+            "lost":         lost,
+            "total":        won + lost,
+            "win_rate_pct": round(won / (won + lost) * 100, 1) if (won + lost) > 0 else None,
+        }
+    return result
