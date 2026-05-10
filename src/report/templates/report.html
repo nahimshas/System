@@ -1389,8 +1389,8 @@
     if (sport === "NBA") {
       var periRem  = Math.max(0, 4 - period);     // full quarters remaining after this one
       var clockMin = Math.max(0, clock / 60);     // minutes left in current quarter
-      var otMin    = period > 4 ? 5 : 0;          // if we're in OT, 5-min period
-      remUnits = periRem * 12 + clockMin + otMin; // total minutes remaining
+      // OT: periRem is already 0 and clockMin covers remaining OT time — no extra term needed
+      remUnits = periRem * 12 + clockMin;         // total minutes remaining
     } else if (sport === "NHL") {
       // NHL: 3 × 20-min periods. OT = 5 min (regular season) / 20 min (playoffs).
       var periRem2 = Math.max(0, 3 - period);
@@ -1416,8 +1416,12 @@
       var curMargin = ourScore - oppScore;  // positive = we're winning
 
       if (sport === "NBA") {
-        // Score-change std ≈ sqrt(min_remaining * 5) for the differential
+        // Score-change std ≈ sqrt(min_remaining * 5) for the differential.
+        // In the final 2 minutes of Q4/OT, intentional fouling dramatically
+        // accelerates pace (~4-6 possessions in 60 sec), so enforce a minimum
+        // std of 3.0 pts to avoid collapsing too quickly to 1%/99%.
         var std = Math.sqrt(remUnits * 5);
+        if (period >= 4 && remUnits < 2) std = Math.max(std, 3.0);
         return 1 - normalCDF(-curMargin / (std || 0.1));
       } else if (sport === "NHL") {
         // NHL: ~0.15 goals/min per team → differential variance ≈ rem * 0.30
@@ -1476,6 +1480,7 @@
 
       if (sport === "NBA") {
         var std3 = Math.sqrt(remUnits * 5);
+        if (period >= 4 && remUnits < 2) std3 = Math.max(std3, 3.0);
         return 1 - normalCDF(needed3 / (std3 || 0.1));
       } else if (sport === "NHL") {
         var std3N = Math.sqrt(remUnits * 0.30);
@@ -1578,8 +1583,15 @@
     // Period / inning and clock
     var period    = status.period  || 1;
     var clockStr  = status.displayClock || "0:00";
-    var clockParts = clockStr.split(":").map(Number);
-    var clockSec  = (clockParts[0] || 0) * 60 + (clockParts[1] || 0);
+    var clockSec;
+    if (clockStr.indexOf(":") >= 0) {
+      // Normal "M:SS" format (e.g. "1:30", "0:45")
+      var clockParts = clockStr.split(":").map(Number);
+      clockSec = (clockParts[0] || 0) * 60 + (clockParts[1] || 0);
+    } else {
+      // No colon — ESPN sometimes sends raw seconds for sub-minute clocks (e.g. "45")
+      clockSec = parseInt(clockStr, 10) || 0;
+    }
 
     // For MLB: detect top vs bottom of inning from detail ("Bot 1st", "Top 3rd", etc.)
     var isBottom  = /\bbot/i.test(detail) ? 1 : 0;
