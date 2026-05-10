@@ -660,6 +660,11 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "first_run_at":  datetime.now(timezone.utc).isoformat(),
             "singles":       final_singles,
             "singles_display": final_singles_display,
+            # Write-once morning backup — never overwritten by afternoon runs.
+            # Subsequent runs use this as the preservation baseline so that
+            # watchlist picks (NHL, etc.) survive even if afternoon analysis
+            # produces zero picks due to context failures.
+            "morning_singles_display": final_singles_display,
             "parlays":       final_parlays,
             "props":         final_props,
             "props_display": fresh_props_display,
@@ -696,7 +701,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 ("NFL", nfl_game_count), ("NHL", nhl_game_count),
             ] if cnt > 0
         }
-        _morning_display = state.get("singles_display") or []
+        # Use the write-once morning backup as the preservation source.
+        # Falls back to singles_display for states written before this key existed.
+        _morning_display = (
+            state.get("morning_singles_display")
+            or state.get("singles_display")
+            or []
+        )
         _morning_sports  = {r.get("sport") for r in _morning_display if r.get("sport")}
         _fresh_sports    = {r.get("sport") for r in fresh_singles_display if r.get("sport")}
         # Preserve: had morning picks + games exist in odds today + zero fresh display picks
@@ -709,12 +720,14 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         _preserved_display = [r for r in _morning_display if r.get("sport") in _preserve_sports]
         final_singles_display = fresh_singles_display + _preserved_display
 
-        # Persist updated state (locked flags, any substitutions)
+        # Persist updated state — morning_singles_display is intentionally NOT
+        # updated here; it stays locked to the first run's value all day.
         save_state(today, {
             "date":          today.isoformat(),
             "first_run_at":  state.get("first_run_at"),
             "singles":       final_singles,
             "singles_display": final_singles_display,
+            "morning_singles_display": state.get("morning_singles_display"),
             "parlays":       final_parlays,
             "props":         final_props,
             "props_display": fresh_props_display,
