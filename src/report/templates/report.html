@@ -1396,8 +1396,10 @@
 
   // Runs once on load — fills every game-time element with the browser's local time.
   function initLocalTimes() {
-    // Single bet cards: read data-commence-time from the card, write into .card-time
-    document.querySelectorAll(".card[data-commence-time]").forEach(function (card) {
+    // Single bet cards: read data-commence-time from the card, write into .card-time.
+    // Exclude IPL watchlist cards — their time div is managed by renderIplCommenceTimes()
+    // and may already show server-rendered state ("Match In Progress", etc.).
+    document.querySelectorAll(".card[data-commence-time]:not(.ipl-watchlist-card)").forEach(function (card) {
       var iso = card.getAttribute("data-commence-time") || "";
       var el  = card.querySelector(".card-time");
       if (el && iso) el.textContent = formatLocalTime(iso);

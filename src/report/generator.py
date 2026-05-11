@@ -317,7 +317,7 @@ def build_report(
         "has_nba":            nba_game_count > 0,
         "has_mlb":            mlb_game_count > 0,
         "has_nfl":            nfl_game_count > 0,
-        "has_nhl":            nhl_game_count > 0,
+        "has_nhl":            len(nhl_watchlist) > 0,
         "ipl_watchlist":      ipl_watchlist,
         "has_ipl":            ipl_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
