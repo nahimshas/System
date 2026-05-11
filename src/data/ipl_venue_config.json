@@ -1,5 +1,5 @@
 {
-  "_comment": "Static IPL venue config — review and update each March before the season starts.",
+  "_comment": "Static IPL venue config — review and update each March before the season starts. Keys MUST match Cricbuzz ground names exactly (check live data if a venue lookup misses).",
   "_fields": {
     "dew_risk": "0–1 scale. Probability of significant dew at night matches, based on city humidity and season. High dew favours the chasing team (second innings).",
     "boundary_rating": "Relative to league average (1.0). >1.0 = shorter boundaries = higher scoring venue.",
@@ -26,7 +26,7 @@
     "team": "Kolkata Knight Riders",
     "city": "Kolkata"
   },
-  "M. Chinnaswamy Stadium": {
+  "M.Chinnaswamy Stadium": {
     "dew_risk": 0.40,
     "boundary_rating": 1.15,
     "home_adv_modifier": 1.1,
@@ -74,5 +74,21 @@
     "home_adv_modifier": 1.0,
     "team": "Lucknow Super Giants",
     "city": "Lucknow"
+  },
+  "Himachal Pradesh Cricket Association Stadium": {
+    "dew_risk": 0.20,
+    "boundary_rating": 1.10,
+    "home_adv_modifier": 1.0,
+    "team": "Punjab Kings",
+    "city": "Dharamsala",
+    "_note": "High altitude (1457m) — ball travels further, higher scoring. Punjab Kings alternate home. home_adv_modifier 1.0 = limited crowd effect."
+  },
+  "Shaheed Veer Narayan Singh International Stadium": {
+    "dew_risk": 0.40,
+    "boundary_rating": 0.96,
+    "home_adv_modifier": 1.0,
+    "team": null,
+    "city": "Raipur",
+    "_note": "Neutral venue — no home team. home_adv_modifier 1.0 = base flat advantage only."
   }
 }
