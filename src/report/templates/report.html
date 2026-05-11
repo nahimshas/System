@@ -3227,10 +3227,13 @@
 
     // ── IPL live updates via core.espnuk.org ─────────────────────────────────
     // Same ESPN family as NBA/MLB/NHL, CORS-enabled, no API key required.
-    // Polls every 30 s; stops once all unsettled IPL cards are resolved.
+    // Polls every 30 s; stops once all IPL cards are ESPN-finalized.
+    // Handles both JS-unsettled cards ([data-ipl-commence]) and server-settled
+    // cards ("Match Ended" already in card-time) — both get the ESPN score.
     (function () {
       var IPL_EVENTS_URL =
         "http://core.espnuk.org/v2/sports/cricket/leagues/8048/events";
+      var pollTimer = null;
 
       function sigmoid(x) {
         return 1 / (1 + Math.exp(-x));
@@ -3306,9 +3309,12 @@
       }
 
       function applyIplEvent(ev, status, lsByComp) {
-        // Cards without data-ipl-commence are already server-settled — skip
+        // Target all IPL cards not yet ESPN-finalized.
+        // data-espn-done is set here once ESPN confirms the final result —
+        // this covers both server-settled cards ("Match Ended" from Jinja) and
+        // JS-unsettled cards ([data-ipl-commence] upcoming/live).
         var cards = document.querySelectorAll(
-          ".ipl-watchlist-card [data-ipl-commence]"
+          ".ipl-watchlist-card:not([data-espn-done])"
         );
         if (!cards.length) return;
 
@@ -3331,26 +3337,26 @@
         var isComplete  = state === "post" || !!winnerTeam;
         var isLive      = state === "in";
 
-        cards.forEach(function (timeDiv) {
-          var card = timeDiv.closest(".ipl-watchlist-card");
-          if (!card) return;
-
+        cards.forEach(function (card) {
           var homeTeam = card.getAttribute("data-home-team") || "";
           var awayTeam = card.getAttribute("data-away-team") || "";
           var evHome   = teams[0] ? teams[0].name : "";
           var evAway   = teams[1] ? teams[1].name : "";
           if (!iplNameMatch(homeTeam, evHome) || !iplNameMatch(awayTeam, evAway)) return;
 
+          var timeDiv = card.querySelector(".card-time");
           var liveDiv = card.querySelector(".live-status");
 
           if (isComplete && winnerTeam) {
             var pick   = card.getAttribute("data-pick") || "";
             var result = iplNameMatch(pick, winnerTeam.name) ? "WON" : "LOST";
             card.setAttribute("data-live-result", result);
+            card.setAttribute("data-espn-done", "1");
             showLockBadge(card);
-            // Remove attribute so renderIplCommenceTimes won't overwrite
-            timeDiv.removeAttribute("data-ipl-commence");
-            timeDiv.textContent = "";
+            if (timeDiv) {
+              timeDiv.removeAttribute("data-ipl-commence");
+              timeDiv.textContent = "";
+            }
             if (liveDiv) {
               liveDiv.innerHTML =
                 '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
@@ -3361,7 +3367,10 @@
             showLockBadge(card);
             card.removeAttribute("data-live-result");
             // Clear card-time — live info lives entirely in live-status (matches other leagues)
-            timeDiv.textContent = "";
+            if (timeDiv) {
+              timeDiv.removeAttribute("data-ipl-commence");
+              timeDiv.textContent = "";
+            }
             var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
             var winProb    = lsByComp ? calcIplWinProb(lsByComp, marketProb) : marketProb;
             if (liveDiv) {
@@ -3375,11 +3384,17 @@
           }
           // state === "pre": renderIplCommenceTimes already shows the scheduled time
         });
+
+        // Stop interval once every IPL card has been ESPN-finalized
+        if (pollTimer && !document.querySelector(".ipl-watchlist-card:not([data-espn-done])")) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
       }
 
       function pollIplLive() {
-        // Stop polling when no unsettled IPL cards remain
-        if (!document.querySelector(".ipl-watchlist-card [data-ipl-commence]")) return;
+        if (!document.querySelector(".ipl-watchlist-card")) return;
+        if (!document.querySelector(".ipl-watchlist-card:not([data-espn-done])")) return;
 
         var now = new Date();
         var d = [
@@ -3394,7 +3409,7 @@
             (data.items || []).forEach(function (item) {
               var m = (item.$ref || "").match(/\/events\/(\d+)$/);
               if (!m) return;
-              var id   = m[1];
+              var id    = m[1];
               var evUrl = IPL_EVENTS_URL + "/" + id;
               var stUrl = IPL_EVENTS_URL + "/" + id + "/competitions/" + id + "/status";
               Promise.all([
@@ -3422,7 +3437,7 @@
 
       // Run immediately then every 30 seconds
       pollIplLive();
-      setInterval(pollIplLive, 30 * 1000);
+      pollTimer = setInterval(pollIplLive, 30 * 1000);
     }());
 
     function onFetch(events) {
