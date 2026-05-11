@@ -1133,10 +1133,12 @@ def save_watchlist_pending(records: List[Dict]) -> None:
     _save_watchlist_pending(records)
 
 
-def _settle_ipl_pick(pick: Dict, game_date: date) -> Optional[str]:
+def _settle_ipl_pick(pick: Dict, game_date: date) -> Optional[tuple]:
     """
     Determine WON/LOST for an IPL pending pick via Cricbuzz completed match data.
-    Returns "WON", "LOST", or None if the match is not yet in the completed list.
+    Returns (result, match_summary) where result is "WON"/"LOST" and match_summary
+    is the raw Cricbuzz status string (e.g. "DC won by 3 wickets").
+    Returns None if the match is not yet in the completed list.
     ESPN cricket/ipl always returns 404, so this replaces that path for IPL.
     """
     try:
@@ -1166,7 +1168,8 @@ def _settle_ipl_pick(pick: Dict, game_date: date) -> Optional[str]:
             winner = m.get("winner")
             if winner is None:
                 return None  # match complete but no clean winner (tie/no result)
-            return "WON" if normalize(winner) == norm_pick else "LOST"
+            result = "WON" if normalize(winner) == norm_pick else "LOST"
+            return (result, m.get("match_summary", ""))
 
     return None  # match not yet in completed list
 
@@ -1232,16 +1235,18 @@ def settle_watchlist_pending(now_utc: datetime) -> int:
         # Game should be done — resolve result
         game_date = commence_dt.date()
 
+        match_summary = ""
         if sport == "IPL":
             # ESPN cricket/ipl returns 404 — use Cricbuzz completed match data instead
-            result = _settle_ipl_pick(pick, game_date)
-            if result is None:
+            ipl_settled = _settle_ipl_pick(pick, game_date)
+            if ipl_settled is None:
                 logger.debug(
                     f"IPL pending: result not final for {pick.get('game')} "
                     f"(game_date={game_date}) — retaining"
                 )
                 still_pending.append(pick)
                 continue
+            result, match_summary = ipl_settled
         else:
             scores = _fetch_watchlist_final_scores(sport, game_date)
             if not scores:
@@ -1287,6 +1292,7 @@ def settle_watchlist_pending(now_utc: datetime) -> int:
             "model_prob_pct":  pick.get("model_prob_pct", 0),
             "market_prob_pct": pick.get("market_prob_pct", 0),
             "result":          result,
+            "match_summary":   match_summary,
         })
         settled_keys.add(key)
         logger.info(f"{sport} pending pick settled: {pick.get('pick')} → {result}")

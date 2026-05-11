@@ -609,10 +609,11 @@ def get_ipl_completed_matches(today: date) -> List[Dict]:
         t1 = m.get("team1", "")
         t2 = m.get("team2", "")
         result.append({
-            "team1":     t1,
-            "team2":     t2,
-            "winner":    _parse_winner(m.get("status", ""), t1, t2),
-            "start_ms":  m.get("start_ms", 0),
+            "team1":        t1,
+            "team2":        t2,
+            "winner":       _parse_winner(m.get("status", ""), t1, t2),
+            "start_ms":     m.get("start_ms", 0),
+            "match_summary": m.get("status", ""),
         })
     return result
 

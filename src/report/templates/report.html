@@ -808,12 +808,7 @@
             </div>
             {# ── Status badge: settled / in-play / upcoming ── #}
             {% if bet.status == 'settled' %}
-            <div class="card-time" style="color:var(--muted);font-size:0.78rem;font-weight:600;margin-top:3px;">
-              Match Ended &nbsp;
-              <span style="font-weight:700;font-size:0.85rem;color:{% if bet.result == 'WON' %}#16a34a{% else %}#ef4444{% endif %};">
-                {% if bet.result == 'WON' %}✅ WON{% elif bet.result == 'LOST' %}❌ LOST{% endif %}
-              </span>
-            </div>
+            <div class="card-time" style="color:var(--muted);font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
             {% elif bet.status == 'in_progress' %}
             <div class="card-time" style="color:#ef4444;font-size:0.78rem;font-weight:600;margin-top:3px;">
               🔴 Match In Progress
@@ -832,7 +827,13 @@
             <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
           </div>
         </div>
+        {% if bet.status == 'settled' %}
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;">
+          <span style="color:#94a3b8;font-size:0.75rem;">Final: {{ bet.match_summary or 'Match complete' }}</span>&nbsp;&nbsp;{% if bet.result == 'WON' %}<span style="color:#16a34a;font-weight:700;font-size:0.9rem;">✓ WON</span>{% elif bet.result == 'LOST' %}<span style="color:#ef4444;font-weight:700;font-size:0.9rem;">✗ LOST</span>{% endif %}
+        </div>
+        {% else %}
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        {% endif %}
         <div class="card-compact">
           <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
           <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
