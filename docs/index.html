@@ -4962,7 +4962,7 @@
         return a && b && (a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1);
       }
 
-      function applyIplEvent(ev) {
+      function applyIplEvent(ev, status) {
         // Cards without data-ipl-commence are already server-settled — skip
         var cards = document.querySelectorAll(
           ".ipl-watchlist-card [data-ipl-commence]"
@@ -4984,7 +4984,10 @@
 
         var note = comp.note || "";
         var winnerTeam = teams.find(function (t) { return t.winner; });
-        var isComplete = !!winnerTeam;
+        var state = ((status || {}).type || {}).state || "";  // "pre" | "in" | "post"
+        var liveSummary = (status || {}).longSummary || "";
+        var isComplete = state === "post" || !!winnerTeam;
+        var isLive = state === "in";
 
         cards.forEach(function (timeDiv) {
           var card = timeDiv.closest(".ipl-watchlist-card");
@@ -4999,7 +5002,7 @@
 
           var liveDiv = card.querySelector(".live-status");
 
-          if (isComplete) {
+          if (isComplete && winnerTeam) {
             var pick = card.getAttribute("data-pick") || "";
             var result = iplNameMatch(pick, winnerTeam.name) ? "WON" : "LOST";
 
@@ -5017,13 +5020,16 @@
                     note + "</span>"
                   : "");
             }
-          } else {
-            // Match not yet complete — ensure in-progress text is shown
-            if (liveDiv && !liveDiv.textContent.trim()) {
-              liveDiv.innerHTML =
-                '<span style="color:var(--muted);font-size:0.75rem;">🔴 In Progress</span>';
+          } else if (isLive) {
+            timeDiv.style.color = "#ef4444";
+            timeDiv.textContent = "🔴 Match In Progress";
+            if (liveDiv) {
+              liveDiv.innerHTML = liveSummary
+                ? '<span style="color:#94a3b8;font-size:0.75rem;">' + liveSummary + "</span>"
+                : "";
             }
           }
+          // state === "pre": renderIplCommenceTimes already shows the scheduled time
         });
       }
 
@@ -5044,9 +5050,14 @@
             (data.items || []).forEach(function (item) {
               var m = (item.$ref || "").match(/\/events\/(\d+)$/);
               if (!m) return;
-              fetch("http://core.espnuk.org/v2/sports/cricket/leagues/8048/events/" + m[1])
-                .then(function (r) { return r.json(); })
-                .then(applyIplEvent)
+              var id = m[1];
+              var evUrl = IPL_EVENTS_URL + "/" + id;
+              var stUrl = IPL_EVENTS_URL + "/" + id + "/competitions/" + id + "/status";
+              Promise.all([
+                fetch(evUrl).then(function (r) { return r.json(); }),
+                fetch(stUrl).then(function (r) { return r.json(); }),
+              ])
+                .then(function (res) { applyIplEvent(res[0], res[1]); })
                 .catch(function () {});
             });
           })
