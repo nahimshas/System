@@ -19,6 +19,7 @@ from src.config import (
     NBA_PLAYOFF_RECENT_WEIGHT, NBA_PLAYOFF_TOTAL_STD,
     MLB_PLAYOFF_SCORING_FACTOR, MLB_PLAYOFF_STARTER_IP,
     MLB_PLAYOFF_RECENT_WEIGHT,
+    NHL_PLAYOFF_SCORING_FACTOR,
     SCHEDULE_LOAD_THRESHOLDS,
 )
 from src.data.injuries import injury_adjustment
@@ -1430,7 +1431,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
 
 # NHL goal differential std ≈ 1.7 goals.  Puck line = always ±1.5.
 NHL_SPREAD_STD   = 1.7
-NHL_TOTAL_STD    = 1.3
+NHL_TOTAL_STD    = 1.5   # real NHL game-total std ≈ 1.5–1.7; 1.3 was too tight
 NHL_HOME_ADV     = 0.020   # ~2% residual beyond market
 NHL_B2B_PENALTY  = 0.025   # back-to-back (1 day rest) penalty
 NHL_RECENT_WEIGHT = 0.40   # NHL form is more volatile, weight recent more
@@ -1677,26 +1678,49 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
         home_stats = nhl_ctx["season_stats"].get(home, {})
         away_stats = nhl_ctx["season_stats"].get(away, {})
         if home_stats and away_stats:
-            exp_home = (home_stats.get("gpg", 3.0) + away_stats.get("gapg", 3.0)) / 2
-            exp_away = (away_stats.get("gpg", 3.0) + home_stats.get("gapg", 3.0)) / 2
+            # Blend season GPG/GAPG with recent form — same weight used by ML/Spread
+            home_recent_form = nhl_ctx["recent_form"].get(home, {})
+            away_recent_form = nhl_ctx["recent_form"].get(away, {})
+            w = 0.55 if playoff else NHL_RECENT_WEIGHT
+
+            home_gpg  = ((1 - w) * home_stats.get("gpg",  3.0)
+                         + w * home_recent_form.get("recent_gpg",  home_stats.get("gpg",  3.0)))
+            home_gapg = ((1 - w) * home_stats.get("gapg", 3.0)
+                         + w * home_recent_form.get("recent_gapg", home_stats.get("gapg", 3.0)))
+            away_gpg  = ((1 - w) * away_stats.get("gpg",  3.0)
+                         + w * away_recent_form.get("recent_gpg",  away_stats.get("gpg",  3.0)))
+            away_gapg = ((1 - w) * away_stats.get("gapg", 3.0)
+                         + w * away_recent_form.get("recent_gapg", away_stats.get("gapg", 3.0)))
+
+            exp_home = (home_gpg + away_gapg) / 2
+            exp_away = (away_gpg + home_gapg) / 2
+
             if home_rest == 1:
                 exp_home -= 0.20
             if away_rest == 1:
                 exp_away -= 0.20
+
+            # Playoff scoring factor — NHL playoffs average ~8% fewer goals
+            if playoff:
+                exp_home *= NHL_PLAYOFF_SCORING_FACTOR
+                exp_away *= NHL_PLAYOFF_SCORING_FACTOR
+
             expected_total = exp_home + exp_away
 
             market_line = total["line"]
-            model_over_prob  = float(1 - norm.cdf(market_line, expected_total, NHL_TOTAL_STD))
+            blended_total = (1 - _TOTAL_MARKET_ANCHOR) * expected_total + _TOTAL_MARKET_ANCHOR * market_line
+            model_over_prob  = float(1 - norm.cdf(market_line, blended_total, NHL_TOTAL_STD))
             market_over_prob  = total["over_prob"]
             market_under_prob = total["under_prob"]
 
             total_signals = [
                 f"Model projected score: {home} {exp_home:.1f} — {away} {exp_away:.1f}",
-                f"Model expected total: {expected_total:.1f} vs market line {market_line}",
+                f"Model expected total: {blended_total:.1f} vs market line {market_line}",
             ]
             total_research = [
-                f"{home} GPG: {home_stats.get('gpg','?'):.2f} vs {away} GAPG: {away_stats.get('gapg','?'):.2f}",
-                f"{away} GPG: {away_stats.get('gpg','?'):.2f} vs {home} GAPG: {home_stats.get('gapg','?'):.2f}",
+                f"{home} GPG (blended): {home_gpg:.2f} vs {away} GAPG (blended): {away_gapg:.2f}",
+                f"{away} GPG (blended): {away_gpg:.2f} vs {home} GAPG (blended): {home_gapg:.2f}",
+                f"Recent form weight: {w*100:.0f}% | Season weight: {(1-w)*100:.0f}%",
             ]
 
             _over_label  = f"Over {market_line - 0.5}"  if market_line % 1 == 0 else f"Over {market_line}"

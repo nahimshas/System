@@ -73,6 +73,9 @@ MLB_PLAYOFF_SCORING_FACTOR = 0.91    # ~9% run reduction (4.5 → ~4.1 R/G)
 MLB_PLAYOFF_STARTER_IP     = 4.8     # shorter leash vs 5.5 inn regular season
 MLB_PLAYOFF_RECENT_WEIGHT  = 0.55    # same flip toward recent form
 
+# NHL playoffs (mid-April → mid-June): peak goaltending, tighter defence, slower scoring
+NHL_PLAYOFF_SCORING_FACTOR = 0.92    # ~8% goal reduction vs regular season (6.2 → ~5.7 G/G)
+
 # --- Schedule load (7-day fatigue) ---
 # Applied when a team has played many games in the last 7 days
 SCHEDULE_LOAD_THRESHOLDS = {5: 0.01, 6: 0.02, 7: 0.03}  # games_in_7d → penalty

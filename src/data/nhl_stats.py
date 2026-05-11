@@ -36,10 +36,11 @@ def normalize(name: str) -> str:
 def _nhl_season() -> int:
     """
     ESPN NHL season year = the year the season ends.
-    Oct 2024 – Jun 2025 → 2025.
+    Oct 2025 – Jun 2026 → 2026.
     """
     today = date.today()
-    return today.year if today.month >= 10 else today.year
+    # Season starting in October belongs to the following year on ESPN
+    return today.year + 1 if today.month >= 10 else today.year
 
 
 def _get(url: str, params: dict = None) -> Optional[dict]:
@@ -112,10 +113,12 @@ def _fetch_all_team_stats() -> Dict[str, Dict]:
 def _fetch_recent_form(team_map: Dict[str, Dict]) -> Dict[str, Dict]:
     """
     Estimates recent form from completed games in the last 14 days.
-    Returns {display_name: {recent_net_rtg, recent_w_pct}}.
+    Returns {display_name: {recent_net_rtg, recent_w_pct, recent_gpg, recent_gapg}}.
+    Tracks goals scored and allowed separately so the totals model can blend them.
     """
     recent: Dict[str, Dict] = {}
     today = date.today()
+    # Each entry: (goals_for, goals_against, won)
     team_scores: Dict[str, list] = {}
 
     for delta in range(1, 15):
@@ -139,11 +142,12 @@ def _fetch_recent_form(team_map: Dict[str, Dict]) -> Dict[str, Dict]:
                 names  = list(scores.keys())
                 if len(names) != 2:
                     continue
-                margin = scores[names[0]] - scores[names[1]]
-                won    = margin > 0
-                for i, name in enumerate(names):
-                    sign = 1 if i == 0 else -1
-                    team_scores.setdefault(name, []).append((sign * margin, won if i == 0 else not won))
+                for name in names:
+                    opp  = names[1] if name == names[0] else names[0]
+                    gf   = scores[name]
+                    ga   = scores[opp]
+                    won  = gf > ga
+                    team_scores.setdefault(name, []).append((gf, ga, won))
             except Exception:
                 continue
         time.sleep(0.05)
@@ -151,11 +155,14 @@ def _fetch_recent_form(team_map: Dict[str, Dict]) -> Dict[str, Dict]:
     for name, entries in team_scores.items():
         if not entries:
             continue
-        avg_margin = sum(e[0] for e in entries) / len(entries)
-        w_pct      = sum(1 for e in entries if e[1]) / len(entries)
+        avg_gf  = sum(e[0] for e in entries) / len(entries)
+        avg_ga  = sum(e[1] for e in entries) / len(entries)
+        w_pct   = sum(1 for e in entries if e[2]) / len(entries)
         recent[name] = {
-            "recent_net_rtg": avg_margin,
+            "recent_net_rtg": avg_gf - avg_ga,
             "recent_w_pct":   w_pct,
+            "recent_gpg":     avg_gf,
+            "recent_gapg":    avg_ga,
         }
 
     for name, stats in team_map.items():
@@ -163,6 +170,8 @@ def _fetch_recent_form(team_map: Dict[str, Dict]) -> Dict[str, Dict]:
             recent[name] = {
                 "recent_net_rtg": stats.get("net_rtg", 0.0),
                 "recent_w_pct":   stats.get("win_pct", 0.5),
+                "recent_gpg":     stats.get("gpg", 3.0),
+                "recent_gapg":    stats.get("gapg", 3.0),
             }
 
     return recent
