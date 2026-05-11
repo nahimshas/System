@@ -19,6 +19,7 @@ NBA_STAT_KEY = {
     "Rebounds Over": "rebounds",
     "Assists Over":  "assists",
     "Steals Over":   "steals",
+    "Blocks Over":   "blocks",
 }
 
 # ESPN MLB pitching group has no name — detect by pitching-specific keys
@@ -265,6 +266,7 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
         if sport == "NBA":
             stat_key = NBA_STAT_KEY.get(prop_type)
             if not stat_key:
+                logger.warning(f"Unknown NBA prop_type '{prop_type}' — add to NBA_STAT_KEY to enable settlement")
                 continue
             if nba_events is None:
                 nba_events = _get_scoreboard("basketball/nba", game_date)

@@ -768,6 +768,15 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         final_singles_display = fresh_singles_display + _preserved_display + _morning_locked
 
+        # Preserve morning game counts for sports whose odds vanish once games start.
+        # The odds API stops listing a game the moment it begins, so a subsequent run
+        # sees 0 games even though picks exist — falling back to the morning count keeps
+        # the header summary and has_* flags correct.
+        nba_game_count = nba_game_count or state.get("nba_game_count", 0)
+        mlb_game_count = mlb_game_count or state.get("mlb_game_count", 0)
+        nfl_game_count = nfl_game_count or state.get("nfl_game_count", 0)
+        nhl_game_count = nhl_game_count or state.get("nhl_game_count", 0)
+
         # Props display: preserve morning props for sports not analyzed this run,
         # and any locked props (game already started) from analyzed sports.
         _morning_props_display = state.get("props_display") or []
