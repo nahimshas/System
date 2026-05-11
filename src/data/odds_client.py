@@ -38,6 +38,13 @@ _MLB_PROP_MARKETS = [
     "batter_home_runs","batter_hits_runs_rbis",
 ]
 
+# For these markets, prefer a specific line point over the preferred book's default.
+# Robinhood offers HRR at 1+ (Over 0.5) and Total Bases at 2+ (Over 1.5).
+_TARGET_LINE_POINTS: Dict[str, float] = {
+    "batter_hits_runs_rbis": 0.5,
+    "batter_total_bases":    1.5,
+}
+
 
 _last_api_error: Optional[str] = None   # module-level; cleared each call
 _credits_used: Optional[int] = None
@@ -432,6 +439,50 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
                 break
             if pref_book:
                 break
+
+        # For markets with a preferred target line, override whatever the preferred
+        # book offered with the target point, sourcing from any book (preferred first).
+        target_point = _TARGET_LINE_POINTS.get(market_key)
+        if target_point is not None:
+            _prio_set   = set(priority)
+            ordered_bks = sorted(
+                bookmakers,
+                key=lambda b: (
+                    priority.index(b["key"]) if b["key"] in _prio_set else len(priority)
+                ),
+            )
+            target_found: Dict[str, tuple] = {}
+            for bk in ordered_bks:
+                bk_key = bk.get("key", "")
+                for mkt in bk.get("markets", []):
+                    if mkt.get("key") != market_key:
+                        continue
+                    outcomes = mkt.get("outcomes", [])
+                    if not outcomes:
+                        break
+                    f      = outcomes[0]
+                    f_desc = f.get("description", "").lower()
+                    f_name = f.get("name", "").lower()
+                    if f_desc in ("over", "under"):
+                        for o in outcomes:
+                            if (o.get("description", "").lower() == "over"
+                                    and o.get("point") == target_point):
+                                pname = o.get("name", "")
+                                if pname and pname not in target_found:
+                                    target_found[pname] = (int(o.get("price", -110)), bk_key)
+                    elif f_name in ("over", "under"):
+                        for o in outcomes:
+                            if (o.get("name", "").lower() == "over"
+                                    and o.get("point") == target_point):
+                                pname = o.get("description", "")
+                                if pname and pname not in target_found:
+                                    target_found[pname] = (int(o.get("price", -110)), bk_key)
+                    break
+            for pname, (price, bk_key) in target_found.items():
+                pref_lines[pname]  = target_point
+                pref_prices[pname] = price
+                if pref_book is None:
+                    pref_book = bk_key
 
         if not pref_lines:
             continue

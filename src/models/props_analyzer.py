@@ -351,6 +351,10 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
                 over_price   = market_info["over_price"]
                 book         = market_info["book"]
 
+                # Robinhood's Points props start at Over 9.5 (10+); skip lower lines
+                if prop_label == "Points Over" and market_line < 9.5:
+                    continue
+
                 model_line = _project_nba_stat(
                     prop_label, pstats, team_stats, opp_stats, is_b2b, playoff,
                     game_total_scale=game_total_scale,
