@@ -802,6 +802,7 @@
             {% endif %}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            {% if bet.locked or bet.status in ('in_progress', 'settled') %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
             <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
           </div>
         </div>
@@ -1888,10 +1889,10 @@
     confBadge.parentNode.insertBefore(span, confBadge);
   }
 
-  // Props have no ESPN matching — use commence_time directly.
+  // Props and IPL cards have no ESPN matching — use commence_time directly.
   function checkPropLocks() {
     var now = Date.now();
-    document.querySelectorAll(".prop-card[data-commence-time]").forEach(function (card) {
+    document.querySelectorAll(".prop-card[data-commence-time], .ipl-watchlist-card[data-commence-time]").forEach(function (card) {
       var ct = card.getAttribute("data-commence-time") || "";
       if (!ct) return;
       try {

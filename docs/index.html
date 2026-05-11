@@ -3610,10 +3610,10 @@
     confBadge.parentNode.insertBefore(span, confBadge);
   }
 
-  // Props have no ESPN matching — use commence_time directly.
+  // Props and IPL cards have no ESPN matching — use commence_time directly.
   function checkPropLocks() {
     var now = Date.now();
-    document.querySelectorAll(".prop-card[data-commence-time]").forEach(function (card) {
+    document.querySelectorAll(".prop-card[data-commence-time], .ipl-watchlist-card[data-commence-time]").forEach(function (card) {
       var ct = card.getAttribute("data-commence-time") || "";
       if (!ct) return;
       try {
