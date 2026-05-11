@@ -844,14 +844,14 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         )
 
     # --- Expected runs ---
-    home_ops = home_batting.get("ops", 0.720)
-    away_ops = away_batting.get("ops", 0.720)
+    home_ops = home_batting.get("ops", 0.735)
+    away_ops = away_batting.get("ops", 0.735)
     league_avg_runs = 4.5
 
     home_sp_score = _pitcher_quality_score(home_pitcher_stats) if home_pitcher_stats else 0
     away_sp_score = _pitcher_quality_score(away_pitcher_stats) if away_pitcher_stats else 0
-    home_offense_adj = (home_ops - 0.720) / 0.080
-    away_offense_adj = (away_ops - 0.720) / 0.080
+    home_offense_adj = (home_ops - 0.735) / 0.080   # baseline updated to current MLB avg OPS
+    away_offense_adj = (away_ops - 0.735) / 0.080
     home_bullpen_adj = (4.20 - home_bp_era) / 2.0
     away_bullpen_adj = (4.20 - away_bp_era) / 2.0
 
@@ -864,6 +864,34 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                              - home_sp_score * 0.8
                              + away_offense_adj * 0.6
                              + home_bullpen_adj * 0.3)
+
+    # --- Strikeout matchup adjustment ---
+    # High-K% offense facing a strikeout pitcher is a run-suppression signal the
+    # market sometimes underweights. Both conditions must be extreme to adjust.
+    _K_PCT_THRESHOLD = 0.245   # ~17th percentile worst batting K% (league avg ~0.228)
+    _K9_THRESHOLD    = 9.5     # above-average strikeout rate for starters
+    _K_MATCHUP_COEFF = 0.20    # max run reduction per team (~0.2 runs at full mismatch)
+
+    home_k_pct  = home_batting.get("k_pct", 0.228)
+    away_k_pct  = away_batting.get("k_pct", 0.228)
+    away_sp_k9  = away_pitcher_stats.get("k_per_9", 8.0) if away_pitcher_stats else 8.0
+    home_sp_k9  = home_pitcher_stats.get("k_per_9", 8.0) if home_pitcher_stats else 8.0
+
+    home_k_penalty = max(0.0, home_k_pct - _K_PCT_THRESHOLD) * max(0.0, away_sp_k9 - _K9_THRESHOLD) * _K_MATCHUP_COEFF
+    away_k_penalty = max(0.0, away_k_pct - _K_PCT_THRESHOLD) * max(0.0, home_sp_k9 - _K9_THRESHOLD) * _K_MATCHUP_COEFF
+
+    if home_k_penalty > 0.01:
+        expected_home_runs = max(1.5, expected_home_runs - home_k_penalty)
+        signals.append(
+            f"⚠ K matchup: {home} K% {home_k_pct:.1%} vs {away_pitcher_name} K/9 {away_sp_k9:.1f} "
+            f"— run suppression ({home_k_penalty:.2f} runs)"
+        )
+    if away_k_penalty > 0.01:
+        expected_away_runs = max(1.5, expected_away_runs - away_k_penalty)
+        signals.append(
+            f"⚠ K matchup: {away} K% {away_k_pct:.1%} vs {home_pitcher_name} K/9 {home_sp_k9:.1f} "
+            f"— run suppression ({away_k_penalty:.2f} runs)"
+        )
 
     expected_home_runs *= park_factor
     expected_away_runs *= park_factor
@@ -880,12 +908,10 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         expected_home_runs = max(1.5, expected_home_runs)
         expected_away_runs = max(1.5, expected_away_runs)
 
-    run_diff = expected_home_runs - expected_away_runs
-    model_home_prob = float(norm.cdf(run_diff, 0, MLB_SPREAD_STD))
-    model_home_prob = min(0.85, max(0.15, model_home_prob - home_inj + away_inj))
-    model_away_prob = 1 - model_home_prob
-
     # --- Schedule load ---
+    # Applied BEFORE run_diff so ML/Spread model sees the fatigue penalty,
+    # not just the totals. Previously these modified expected_runs after
+    # model_home_prob was already computed, making them totals-only signals.
     home_load_pen = _schedule_load_penalty(home_schedule_load)
     away_load_pen = _schedule_load_penalty(away_schedule_load)
     if home_load_pen > 0:
@@ -896,6 +922,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         signals.append(f"⚠ {away} schedule load: {away_schedule_load} games in 7 days")
 
     # --- Playoff context ---
+    # Also applied BEFORE run_diff for the same reason — playoff run reduction
+    # should flow into win probability, not just totals.
     if playoff:
         expected_home_runs *= MLB_PLAYOFF_SCORING_FACTOR
         expected_away_runs *= MLB_PLAYOFF_SCORING_FACTOR
@@ -904,6 +932,11 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
 
     signals.append(f"Model projected score: {home} {expected_home_runs:.1f} — {away} {expected_away_runs:.1f}")
     research.append(f"Model expected runs: {home} {expected_home_runs:.2f} | {away} {expected_away_runs:.2f}")
+
+    run_diff = expected_home_runs - expected_away_runs
+    model_home_prob = float(norm.cdf(run_diff, 0, MLB_SPREAD_STD))
+    model_home_prob = min(0.85, max(0.15, model_home_prob - home_inj + away_inj))
+    model_away_prob = 1 - model_home_prob
 
     ml = game.get("moneyline")
     if ml:
@@ -1039,11 +1072,12 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     if total:
         expected_total = expected_home_runs + expected_away_runs
         market_line = total["line"]
-        model_over_prob = float(1 - norm.cdf(market_line, expected_total, MLB_SPREAD_STD * 1.5))
+        blended_total = (1 - _TOTAL_MARKET_ANCHOR) * expected_total + _TOTAL_MARKET_ANCHOR * market_line
+        model_over_prob = float(1 - norm.cdf(market_line, blended_total, MLB_SPREAD_STD * 1.5))
         market_over_prob = total["over_prob"]
         market_under_prob = total["under_prob"]
 
-        total_signals = signals[:] + [f"Model expected total: {expected_total:.1f} vs line {market_line}"]
+        total_signals = signals[:] + [f"Model expected total: {blended_total:.1f} vs line {market_line}"]
         total_research = research[:]
 
         over_edge = model_over_prob - market_over_prob

@@ -140,26 +140,61 @@ def get_team_batting_stats(team_id: int) -> Dict:
 
 
 def get_bullpen_stats(team_id: int) -> Dict:
-    """Fetches team bullpen ERA for the season as a proxy for bullpen quality."""
+    """
+    Fetches relief-only ERA/WHIP by querying individual pitcher stats for the team
+    and filtering to pitchers with zero starts (pure relievers).
+    This avoids the double-counting problem of using team ERA which includes starters.
+    Falls back to 4.20/1.30 league averages if insufficient relief IP is found.
+    """
     if not team_id:
         return {}
-    data = _get(f"/teams/{team_id}/stats", {
-        "stats": "season",
-        "group": "pitching",
-        "season": date.today().year,
+    data = _get("/stats", {
+        "stats":    "season",
+        "group":    "pitching",
+        "gameType": "R",
+        "teamId":   team_id,
+        "season":   date.today().year,
+        "limit":    50,
     })
     if not data:
         return {}
+
+    total_er   = 0.0
+    total_ip   = 0.0
+    total_hits = 0
+    total_bb   = 0
+
     try:
-        splits = data["stats"][0]["splits"]
-        if not splits:
-            return {}
-        s = splits[0]["stat"]
-        era = float(s.get("era", "4.50").replace("-", "4.50") or "4.50")
-        whip = float(s.get("whip", "1.30").replace("-", "1.30") or "1.30")
+        for stat_group in data.get("stats", []):
+            for split in stat_group.get("splits", []):
+                s = split.get("stat", {})
+                games_started = int(s.get("gamesStarted", 0))
+                if games_started > 0:
+                    continue  # skip starters and swingmen who made starts
+
+                ip_str = (s.get("inningsPitched") or "0").replace("-", "0")
+                ip = float(ip_str)
+                if ip < 2:
+                    continue  # skip pitchers with negligible work
+
+                er  = float(s.get("earnedRuns", 0) or 0)
+                h   = int(s.get("hits",         0) or 0)
+                bb  = int(s.get("baseOnBalls",  0) or 0)
+                total_er   += er
+                total_ip   += ip
+                total_hits += h
+                total_bb   += bb
+
+        if total_ip < 10:
+            logger.warning(f"Insufficient relief IP for team {team_id} — using league averages")
+            return {"bullpen_era": 4.20, "bullpen_whip": 1.30}
+
+        era  = round(total_er / total_ip * 9, 2)
+        whip = round((total_hits + total_bb) / total_ip, 2)
         return {"bullpen_era": era, "bullpen_whip": whip}
-    except (KeyError, IndexError, ValueError) as e:
-        logger.warning(f"Bullpen stats parse error: {e}")
+
+    except (KeyError, IndexError, ValueError, ZeroDivisionError) as e:
+        logger.warning(f"Bullpen stats parse error (team {team_id}): {e}")
         return {}
 
 
