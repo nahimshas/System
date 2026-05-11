@@ -342,6 +342,16 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             sg["umpire_name"]     = ump
             sg["umpire_k_factor"] = get_umpire_tendency(ump).get("k_factor", 1.0)
 
+        # Propagate singles model projections to schedule games so MLB props can use them.
+        # analyze_mlb_game stamps model_total/market_total onto the odds game dict;
+        # mlb_player_props uses schedule games, so we copy them across here.
+        _odds_by_matchup = {(g["home_team"], g["away_team"]): g for g in mlb_odds_games}
+        for _sg in mlb_schedule:
+            _og = _odds_by_matchup.get((_sg.get("home_team"), _sg.get("away_team")))
+            if _og:
+                _sg["model_total"]  = _og.get("model_total")
+                _sg["market_total"] = _og.get("market_total")
+
         mlb_singles_raw = [r for r in mlb_display_raw if r.edge >= MIN_EDGE]
         mlb_props_raw = mlb_player_props(mlb_schedule, pitcher_stats_map)
         mlb_props_display_raw = mlb_player_props(mlb_schedule, pitcher_stats_map, min_edge=0.0)

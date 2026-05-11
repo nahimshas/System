@@ -470,6 +470,11 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             # Partial market anchor — blends model projection with market line to
             # dampen any remaining systematic bias without eliminating genuine edges.
             blended_total = (1 - _TOTAL_MARKET_ANCHOR) * expected_total + _TOTAL_MARKET_ANCHOR * market_line
+            # Stamp onto game dict so props_analyzer can use the same projection
+            game["model_total"]  = round(blended_total, 1)
+            game["market_total"] = market_line
+            game["home_inj_pts"] = round(inj_home_pts, 1)
+            game["away_inj_pts"] = round(inj_away_pts, 1)
             model_over_prob = float(1 - norm.cdf(market_line, blended_total, total_std))
             market_over_prob = total["over_prob"]
             market_under_prob = total["under_prob"]
@@ -1074,6 +1079,9 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         expected_total = expected_home_runs + expected_away_runs
         market_line = total["line"]
         blended_total = (1 - _TOTAL_MARKET_ANCHOR) * expected_total + _TOTAL_MARKET_ANCHOR * market_line
+        # Stamp onto game dict so props_analyzer can use the same projection
+        game["model_total"]  = round(blended_total, 1)
+        game["market_total"] = market_line
         model_over_prob = float(1 - norm.cdf(market_line, blended_total, MLB_SPREAD_STD * 1.5))
         market_over_prob = total["over_prob"]
         market_under_prob = total["under_prob"]

@@ -107,6 +107,7 @@ def _project_nba_stat(
     opp_stats:  Dict,
     is_b2b:    bool,
     playoff:   bool,
+    game_total_scale: float = 1.0,
 ) -> Optional[float]:
     if prop_type == "Points Over":
         base = pstats.get("pts", 0.0)
@@ -124,7 +125,7 @@ def _project_nba_stat(
                 adj *= 0.88    # role players: significant reduction
         if is_b2b:
             adj *= _NBA_B2B_FACTOR
-        return round(adj, 1)
+        return round(adj * game_total_scale, 1)
 
     if prop_type == "Rebounds Over":
         base = pstats.get("reb", 0.0)
@@ -143,7 +144,7 @@ def _project_nba_stat(
                 adj = base * 0.90 * pace_proxy
         else:
             adj = base * pace_proxy
-        return round(adj * (0.95 if is_b2b else 1.0), 1)
+        return round(adj * (0.95 if is_b2b else 1.0) * game_total_scale, 1)
 
     if prop_type == "Assists Over":
         base = pstats.get("ast", 0.0)
@@ -161,7 +162,7 @@ def _project_nba_stat(
                 adj *= 0.96   # solid playmakers: slightly tighter playoff defense
             else:
                 adj *= 0.90   # marginal passers: fewer opportunities
-        return round(adj * (0.95 if is_b2b else 1.0), 1)
+        return round(adj * (0.95 if is_b2b else 1.0) * game_total_scale, 1)
 
     if prop_type == "Steals Over":
         base = pstats.get("stl", 0.0)
@@ -171,7 +172,7 @@ def _project_nba_stat(
         # Faster offenses create more steal opportunities
         opp_off = opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)
         adj = base * (opp_off / _NBA_LEAGUE_AVG)
-        return round(adj * (0.94 if is_b2b else 1.0), 2)
+        return round(adj * (0.94 if is_b2b else 1.0) * game_total_scale, 2)
 
     if prop_type == "Blocks Over":
         base = pstats.get("blk", 0.0)
@@ -181,7 +182,7 @@ def _project_nba_stat(
         # Shot-heavy offenses create more block opportunities
         opp_off = opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)
         adj = base * (opp_off / _NBA_LEAGUE_AVG)
-        return round(adj * (0.94 if is_b2b else 1.0), 2)
+        return round(adj * (0.94 if is_b2b else 1.0) * game_total_scale, 2)
 
     if prop_type == "Threes Over":
         base = pstats.get("three_pm", 0.0)
@@ -200,7 +201,7 @@ def _project_nba_stat(
                 adj = base * 0.90 * opp_def_adj
         else:
             adj = base * opp_def_adj
-        return round(adj * (0.95 if is_b2b else 1.0), 1)
+        return round(adj * (0.95 if is_b2b else 1.0) * game_total_scale, 1)
 
     return None
 
@@ -246,13 +247,14 @@ def _k_matchup_factor(batter_k_pct: float, pitcher_k9: float) -> float:
 
 
 def _project_mlb_batter_stat(
-    prop_type:     str,
-    bstats:        Dict,
-    pitcher_fip:   float,
-    park_factor:   float,
-    pitcher_xfip:  Optional[float] = None,
-    pitcher_whip:  float = _LEAGUE_AVG_WHIP,
-    pitcher_k9:    float = 8.0,
+    prop_type:        str,
+    bstats:           Dict,
+    pitcher_fip:      float,
+    park_factor:      float,
+    pitcher_xfip:     Optional[float] = None,
+    pitcher_whip:     float = _LEAGUE_AVG_WHIP,
+    pitcher_k9:       float = 8.0,
+    game_total_scale: float = 1.0,
 ) -> Optional[float]:
     batter_k_pct = bstats.get("k_pct", _LEAGUE_K_PCT)
     fip_adj      = _pitcher_fip_adj(pitcher_fip, pitcher_xfip)
@@ -264,19 +266,19 @@ def _project_mlb_batter_stat(
             return None
         # WHIP is more directly relevant to hits than FIP
         whip_adj = _pitcher_whip_adj(pitcher_whip)
-        return round(base * whip_adj * k_adj * park_factor, 2)
+        return round(base * whip_adj * k_adj * park_factor * game_total_scale, 2)
 
     if prop_type == "Total Bases Over":
         base = bstats.get("tb_pg", 0.0)
-        return round(base * fip_adj * k_adj * park_factor, 2) if base >= 0.5 else None
+        return round(base * fip_adj * k_adj * park_factor * game_total_scale, 2) if base >= 0.5 else None
 
     if prop_type == "Home Runs Over":
         base = bstats.get("hr_pg", 0.0)
-        return round(base * fip_adj * park_factor, 3) if base >= 0.02 else None
+        return round(base * fip_adj * park_factor * game_total_scale, 3) if base >= 0.02 else None
 
     if prop_type == "HRR Over":
         base = bstats.get("hrr_pg", 0.0)
-        return round(base * fip_adj * k_adj * park_factor, 2) if base >= 0.5 else None
+        return round(base * fip_adj * k_adj * park_factor * game_total_scale, 2) if base >= 0.5 else None
 
     return None
 
@@ -326,6 +328,14 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
             opp_stats  = season_stats.get(opp, {})
             is_b2b     = rest_days.get(team, 1) == 0
 
+            # Game-level environment signal from singles model
+            _model_total  = game.get("model_total")
+            _market_total = game.get("market_total")
+            if _model_total and _market_total and _market_total > 0:
+                game_total_scale = min(1.08, max(0.92, _model_total / _market_total))
+            else:
+                game_total_scale = 1.0
+
             base_research = [
                 f"{team}: Net RTG {team_stats.get('net_rtg', 0):+.1f} | PPG {team_stats.get('off_rtg', 0):.1f} | OPPG {team_stats.get('def_rtg', 0):.1f}",
                 f"{opp}: Net RTG {opp_stats.get('net_rtg', 0):+.1f} | PPG {opp_stats.get('off_rtg', 0):.1f} | OPPG {opp_stats.get('def_rtg', 0):.1f}",
@@ -341,7 +351,10 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
                 over_price   = market_info["over_price"]
                 book         = market_info["book"]
 
-                model_line = _project_nba_stat(prop_label, pstats, team_stats, opp_stats, is_b2b, playoff)
+                model_line = _project_nba_stat(
+                    prop_label, pstats, team_stats, opp_stats, is_b2b, playoff,
+                    game_total_scale=game_total_scale,
+                )
                 if model_line is None:
                     continue
 
@@ -359,7 +372,13 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
                 if prop_label == "Points Over":
                     signals.append(
                         f"{opp} allows {opp_stats.get('def_rtg',0):.1f} PPG "
-                        f"({'above' if opp_stats.get('def_rtg',112)>112 else 'below'} avg)"
+                        f"({'above' if opp_stats.get('def_rtg',115)>115 else 'below'} avg)"
+                    )
+                if _model_total and _market_total and abs(game_total_scale - 1.0) >= 0.02:
+                    direction = "high" if game_total_scale > 1.0 else "low"
+                    signals.append(
+                        f"Game total: model {_model_total} vs market {_market_total} "
+                        f"({direction}-scoring environment, scale {game_total_scale:.2f}x)"
                     )
                 if is_b2b:
                     signals.append(f"⚠ {team} on back-to-back — reduction applied")
@@ -547,11 +566,20 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                 pitcher_whip   = facing_p_stats.get("whip", 1.30)
                 pitcher_k9     = facing_p_stats.get("k_per_9", 8.0)
 
+                # Game-level run environment from singles model
+                _model_total  = game.get("model_total")
+                _market_total = game.get("market_total")
+                if _model_total and _market_total and _market_total > 0:
+                    mlb_game_scale = min(1.10, max(0.90, _model_total / _market_total))
+                else:
+                    mlb_game_scale = 1.0
+
                 model_line = _project_mlb_batter_stat(
                     prop_label, bstats, pitcher_fip, pf,
                     pitcher_xfip=pitcher_xfip,
                     pitcher_whip=pitcher_whip,
                     pitcher_k9=pitcher_k9,
+                    game_total_scale=mlb_game_scale,
                 )
                 if model_line is None:
                     continue
@@ -578,6 +606,13 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                         f"Market: Over {market_line} at {odds_display} ({book})",
                         f"Model projects {model_line:.2f} → edge {edge*100:+.1f}%",
                         f"vs {facing_name} (FIP {pitcher_fip:.2f}{xfip_str} | WHIP {pitcher_whip:.2f}) | Park {pf:.2f}",
+                        *(
+                            [f"Game total: model {_model_total} vs market {_market_total} "
+                             f"({'high' if mlb_game_scale > 1.0 else 'low'}-scoring environment, "
+                             f"scale {mlb_game_scale:.2f}x)"]
+                            if _model_total and _market_total and abs(mlb_game_scale - 1.0) >= 0.02
+                            else []
+                        ),
                     ],
                     research=[
                         f"{player_name}: AVG {bstats['avg']:.3f} | OBP {bstats['obp']:.3f} | "
