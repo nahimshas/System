@@ -46,6 +46,10 @@ MLB_SPREAD_STD = 3.0    # was 1.8
 _INJURY_GATE   = 0.030   # ≈ one key starter fully out
 _INJURY_MARGIN = 0.10    # model allowed at most market_prob × (1 + 10%) for injured team
 
+# Totals model helpers
+_NBA_INJ_TO_PTS    = 75.0  # converts win-prob injury_adj → expected pts reduction in totals
+_TOTAL_MARKET_ANCHOR = 0.20  # 20% weight toward market line — shrinks systematic projection bias
+
 
 def _is_nba_playoff(dt: Optional[datetime] = None) -> bool:
     """NBA playoffs: mid-April through mid-June."""
@@ -139,6 +143,8 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
     # Pre-initialise so Total block can reference these even if ml block is skipped
     home_rest = nba_ctx["rest_days"].get(home, 1)
     away_rest = nba_ctx["rest_days"].get(away, 1)
+    home_inj = injury_adjustment(home, nba_injuries, "nba")
+    away_inj = injury_adjustment(away, nba_injuries, "nba")
 
     ml = game.get("moneyline")
     if ml:
@@ -237,8 +243,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             research.append("Playoff adjustment: scoring/pace factors applied to totals model")
 
         # --- Injuries ---
-        home_inj = injury_adjustment(home, nba_injuries, "nba")
-        away_inj = injury_adjustment(away, nba_injuries, "nba")
+        # home_inj / away_inj pre-computed above (shared with totals block)
         home_inj_list = nba_injuries.get(home, [])
         away_inj_list = nba_injuries.get(away, [])
 
@@ -412,14 +417,30 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         home_stats = nba_ctx["season_stats"].get(home, {})
         away_stats = nba_ctx["season_stats"].get(away, {})
         if home_stats and away_stats:
+            # Blend season PPG/OPPG with recent form — same weight used by ML/Spread strength model.
+            # recent_form carries recent_ppg / recent_oppg from the 14-day schedule window.
+            home_recent_form = nba_ctx["recent_form"].get(home, {})
+            away_recent_form = nba_ctx["recent_form"].get(away, {})
+            w = NBA_PLAYOFF_RECENT_WEIGHT if playoff else NBA_RECENT_FORM_WEIGHT
+            home_off = ((1 - w) * home_stats.get("off_rtg", 110)
+                        + w * home_recent_form.get("recent_ppg", home_stats.get("off_rtg", 110)))
+            home_def = ((1 - w) * home_stats.get("def_rtg", 110)
+                        + w * home_recent_form.get("recent_oppg", home_stats.get("def_rtg", 110)))
+            away_off = ((1 - w) * away_stats.get("off_rtg", 110)
+                        + w * away_recent_form.get("recent_ppg", away_stats.get("off_rtg", 110)))
+            away_def = ((1 - w) * away_stats.get("def_rtg", 110)
+                        + w * away_recent_form.get("recent_oppg", away_stats.get("def_rtg", 110)))
+
             avg_pace = (home_stats.get("pace", 100) + away_stats.get("pace", 100)) / 2
             if playoff:
                 avg_pace *= NBA_PLAYOFF_PACE_FACTOR
-            expected_home_pts = (home_stats.get("off_rtg", 110) + away_stats.get("def_rtg", 110)) / 2 * avg_pace / 100
-            expected_away_pts = (away_stats.get("off_rtg", 110) + home_stats.get("def_rtg", 110)) / 2 * avg_pace / 100
-            if playoff:
-                expected_home_pts *= NBA_PLAYOFF_SCORING_FACTOR
-                expected_away_pts *= NBA_PLAYOFF_SCORING_FACTOR
+            expected_home_pts = (home_off + away_def) / 2 * avg_pace / 100
+            expected_away_pts = (away_off + home_def) / 2 * avg_pace / 100
+            # NBA_PLAYOFF_SCORING_FACTOR is intentionally NOT applied here.
+            # The pace factor already captures fewer possessions; applying the scoring
+            # factor on top creates a ~10% combined reduction that systematically
+            # under-projects totals vs market lines. The market line already reflects
+            # playoff defensive intensity.
 
             # Apply B2B penalty to individual team scores so per-team projection
             # and expected_total are always consistent with each other.
@@ -431,27 +452,45 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                 expected_away_pts -= 4.0
                 b2b_teams.append(away)
 
-            expected_total = expected_home_pts + expected_away_pts   # naturally B2B-adjusted
+            # Injury impact on scoring — missing players reduce expected output.
+            # Scale win-prob adjustment to estimated pts loss; residual after market repricing.
+            inj_home_pts = min(home_inj * _NBA_INJ_TO_PTS, 6.0)
+            inj_away_pts = min(away_inj * _NBA_INJ_TO_PTS, 6.0)
+            if inj_home_pts > 0.5:
+                expected_home_pts -= inj_home_pts
+            if inj_away_pts > 0.5:
+                expected_away_pts -= inj_away_pts
+
+            expected_total = expected_home_pts + expected_away_pts
 
             market_line = total["line"]
             total_std   = NBA_PLAYOFF_TOTAL_STD if playoff else NBA_TOTAL_STD
-            model_over_prob = float(1 - norm.cdf(market_line, expected_total, total_std))
+
+            # Partial market anchor — blends model projection with market line to
+            # dampen any remaining systematic bias without eliminating genuine edges.
+            blended_total = (1 - _TOTAL_MARKET_ANCHOR) * expected_total + _TOTAL_MARKET_ANCHOR * market_line
+            model_over_prob = float(1 - norm.cdf(market_line, blended_total, total_std))
             market_over_prob = total["over_prob"]
             market_under_prob = total["under_prob"]
 
             base_total_signals = [
                 f"Model projected score: {home} {expected_home_pts:.0f} — {away} {expected_away_pts:.0f}",
-                f"Model expected total: {expected_total:.1f} vs market line {market_line}",
+                f"Model expected total: {blended_total:.1f} vs market line {market_line}",
                 f"Combined pace: {avg_pace:.1f} possessions/game",
             ]
             total_research = [
-                f"{home} OffRtg: {home_stats.get('off_rtg', '?'):.1f} vs {away} DefRtg: {away_stats.get('def_rtg', '?'):.1f}",
-                f"{away} OffRtg: {away_stats.get('off_rtg', '?'):.1f} vs {home} DefRtg: {home_stats.get('def_rtg', '?'):.1f}",
+                f"{home} off (blended): {home_off:.1f} vs {away} def (blended): {away_def:.1f}",
+                f"{away} off (blended): {away_off:.1f} vs {home} def (blended): {home_def:.1f}",
+                f"Recent form weight: {w*100:.0f}% | Season weight: {(1-w)*100:.0f}%",
             ]
             if b2b_teams:
                 total_research.append(
                     f"B2B: {', '.join(b2b_teams)} — pace/scoring reduction applied to model (-4 pts per team)"
                 )
+            if inj_home_pts > 0.5:
+                total_research.append(f"⚕ {home} injury drag: −{inj_home_pts:.1f} pts from totals projection")
+            if inj_away_pts > 0.5:
+                total_research.append(f"⚕ {away} injury drag: −{inj_away_pts:.1f} pts from totals projection")
 
             over_edge  = model_over_prob - market_over_prob
             under_edge = (1 - model_over_prob) - market_under_prob
