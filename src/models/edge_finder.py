@@ -1666,9 +1666,16 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
 
 # IPL home advantage: T20 home-pitch knowledge + crowd effect.
 # Raw historical home win rate ≈ 55–57%; residual beyond market ≈ 2.5%.
+# This is the base rate — scaled per-venue by home_adv_modifier in venue config.
 IPL_HOME_ADV      = 0.025
+# League-average home win rate used to calibrate live venue history.
+IPL_LEAGUE_HOME_WIN_PCT = 0.55
 # Form weight: T20 is highly volatile — tilt heavily toward recent form.
 IPL_RECENT_WEIGHT = 0.65
+# Min matches at a venue before trusting live home_win_pct over config modifier.
+IPL_VENUE_MIN_MATCHES = 5
+# H2H adjustment cap: ±4% at perfect dominance, scales linearly with H2H edge.
+IPL_H2H_MAX_ADJ = 0.04
 
 
 def _ipl_team_strength(team: str, ctx: dict) -> float:
@@ -1683,9 +1690,35 @@ def _ipl_team_strength(team: str, ctx: dict) -> float:
     season_wpct = form.get("win_pct", 0.5)
     recent_wpct = form.get("recent_win_pct", season_wpct)
     recent_n    = form.get("recent_total", 0)
-    # Only use the recent window if it has at least 2 games
     w = IPL_RECENT_WEIGHT if recent_n >= 2 else 0.0
     return (1 - w) * season_wpct + w * recent_wpct
+
+
+def _ipl_venue_home_adv(venue_name: str, ipl_ctx: dict) -> float:
+    """
+    Returns venue-specific home advantage adjustment.
+
+    Priority:
+      1. Live season history at this venue (if ≥ IPL_VENUE_MIN_MATCHES games played).
+         Uses the gap between observed home_win_pct and league average, scaled by 0.5
+         to account for market pricing, added to the base IPL_HOME_ADV.
+      2. Config modifier from ipl_venue_config.json (scales IPL_HOME_ADV).
+      3. Flat IPL_HOME_ADV if no venue data at all.
+    """
+    if not venue_name:
+        return IPL_HOME_ADV
+
+    vstats = ipl_ctx.get("venue_stats", {}).get(venue_name, {})
+    vcfg   = ipl_ctx.get("venue_config", {}).get(venue_name, {})
+
+    n = vstats.get("total_matches", 0)
+    if n >= IPL_VENUE_MIN_MATCHES:
+        hist_home_pct = vstats.get("home_win_pct", IPL_LEAGUE_HOME_WIN_PCT)
+        # Residual over league average, halved (market prices some of it already)
+        return IPL_HOME_ADV + (hist_home_pct - IPL_LEAGUE_HOME_WIN_PCT) * 0.5
+
+    modifier = vcfg.get("home_adv_modifier", 1.0)
+    return IPL_HOME_ADV * modifier
 
 
 def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[BetRecommendation]:
@@ -1718,6 +1751,12 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
     home_strength = _ipl_team_strength(home, ipl_ctx)
     away_strength = _ipl_team_strength(away, ipl_ctx)
 
+    # Venue context
+    venue_name = ipl_ctx.get("match_venues", {}).get((home, away), "")
+    vcfg       = ipl_ctx.get("venue_config", {}).get(venue_name, {})
+    vstats     = ipl_ctx.get("venue_stats",  {}).get(venue_name, {})
+    h2h        = ipl_ctx.get("h2h",          {}).get((home, away), {})
+
     signals  = []
     research = []
 
@@ -1730,11 +1769,13 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
 
     adj = 0.0
 
-    # Home venue advantage
-    adj += IPL_HOME_ADV
-    signals.append(f"Home venue advantage: {home} (+{IPL_HOME_ADV*100:.0f}%)")
+    # --- Home venue advantage (venue-specific) ---
+    home_adv = _ipl_venue_home_adv(venue_name, ipl_ctx)
+    adj += home_adv
+    venue_label = f" at {venue_name}" if venue_name else ""
+    signals.append(f"Home venue advantage: {home}{venue_label} (+{home_adv*100:.1f}%)")
 
-    # Team form stats in research panel
+    # --- Team form stats in research panel ---
     if home_form:
         research.append(
             f"{home}: {home_form.get('wins', '?')}W-{home_form.get('losses', '?')}L "
@@ -1752,13 +1793,13 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
             f"(last {away_form.get('recent_total', 0)} games)"
         )
 
-    # Form differential signal
+    # --- Form differential signal ---
     strength_gap = home_strength - away_strength
     if abs(strength_gap) >= 0.10:
         stronger = home if strength_gap > 0 else away
         signals.append(f"Form edge: {stronger} (blended win-rate gap {abs(strength_gap)*100:.0f}%)")
 
-    # Recent form divergence (hot vs cold team)
+    # --- Recent form divergence (hot vs cold team) ---
     home_recent = home_form.get("recent_win_pct", home_strength)
     away_recent = away_form.get("recent_win_pct", away_strength)
     if home_form.get("recent_total", 0) >= 2 and away_form.get("recent_total", 0) >= 2:
@@ -1768,10 +1809,45 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
             cold = away if recent_gap > 0 else home
             signals.append(f"Hot/cold streak: {hot} hot ({home_recent*100:.0f}% last 7d) vs {cold} cold ({away_recent*100:.0f}%)")
 
-    # Rest days
+    # --- Head-to-head (current season) ---
+    h2h_total = h2h.get("total", 0)
+    if h2h_total >= 2:
+        h2h_home_pct = h2h.get("home_h2h_pct", 0.5)
+        h2h_adj = (h2h_home_pct - 0.5) * (IPL_H2H_MAX_ADJ * 2)  # ±4% at 100%/0%
+        h2h_adj = max(-IPL_H2H_MAX_ADJ, min(IPL_H2H_MAX_ADJ, h2h_adj))
+        if abs(h2h_adj) >= 0.01:
+            adj += h2h_adj
+            favoured = home if h2h_adj > 0 else away
+            h2h_wins = h2h.get("home_wins") if h2h_adj > 0 else h2h.get("away_wins")
+            signals.append(
+                f"H2H edge: {favoured} leads {h2h_wins}-{h2h_total - h2h_wins} "
+                f"this season ({h2h_adj*100:+.1f}%)"
+            )
+
+    # --- Rest days ---
     home_rest = ipl_ctx["rest_days"].get(home, 3)
     away_rest = ipl_ctx["rest_days"].get(away, 3)
     research.append(f"Rest days — {home}: {home_rest} | {away}: {away_rest}")
+
+    # --- Venue research notes ---
+    if venue_name:
+        dew_risk = vcfg.get("dew_risk")
+        boundary = vcfg.get("boundary_rating")
+        n_at_venue = vstats.get("total_matches", 0)
+        avg_score  = vstats.get("avg_score")
+        venue_hw   = vstats.get("home_win_pct")
+
+        venue_notes = [f"Venue: {venue_name}"]
+        if dew_risk is not None:
+            dew_label = "high" if dew_risk >= 0.55 else "moderate" if dew_risk >= 0.35 else "low"
+            venue_notes.append(f"dew risk {dew_label} ({dew_risk:.0%})")
+        if boundary is not None:
+            venue_notes.append(f"boundary rating {boundary:.2f}x")
+        if avg_score is not None and n_at_venue > 0:
+            venue_notes.append(f"avg top score {avg_score:.0f} runs ({n_at_venue} matches this season)")
+        if venue_hw is not None and n_at_venue >= IPL_VENUE_MIN_MATCHES:
+            venue_notes.append(f"home win% at venue {venue_hw:.0%}")
+        research.append(" | ".join(venue_notes))
 
     adjusted_home_prob = min(0.90, max(0.10, base_home_prob + adj))
     adjusted_away_prob = 1.0 - adjusted_home_prob
@@ -1806,7 +1882,5 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
                 home_team=home, away_team=away, game_time=game_time,
                 commence_time=commence_time,
             ))
-
-    return recs
 
     return recs
