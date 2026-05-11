@@ -3392,47 +3392,66 @@
         }
       }
 
+      function utcDateStr(d) {
+        return [
+          d.getUTCFullYear(),
+          String(d.getUTCMonth() + 1).padStart(2, "0"),
+          String(d.getUTCDate()).padStart(2, "0"),
+        ].join("");
+      }
+
       function pollIplLive() {
         if (!document.querySelector(".ipl-watchlist-card")) return;
-        if (!document.querySelector(".ipl-watchlist-card:not([data-espn-done])")) return;
+        var unsettled = document.querySelectorAll(".ipl-watchlist-card:not([data-espn-done])");
+        if (!unsettled.length) return;
 
         var now = new Date();
-        var d = [
-          now.getUTCFullYear(),
-          String(now.getUTCMonth() + 1).padStart(2, "0"),
-          String(now.getUTCDate()).padStart(2, "0"),
-        ].join("");
+        // Always include today and yesterday UTC — covers midnight crossover and
+        // the case where commence-time is empty (server-settled picks may lack it).
+        var datesToFetch = {};
+        datesToFetch[utcDateStr(now)] = true;
+        datesToFetch[utcDateStr(new Date(now.getTime() - 86400000))] = true;
 
-        fetch(IPL_EVENTS_URL + "?dates=" + d)
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            (data.items || []).forEach(function (item) {
-              var m = (item.$ref || "").match(/\/events\/(\d+)$/);
-              if (!m) return;
-              var id    = m[1];
-              var evUrl = IPL_EVENTS_URL + "/" + id;
-              var stUrl = IPL_EVENTS_URL + "/" + id + "/competitions/" + id + "/status";
-              Promise.all([
-                fetch(evUrl).then(function (r) { return r.json(); }),
-                fetch(stUrl).then(function (r) { return r.json(); }),
-              ])
-                .then(function (res) {
-                  var ev     = res[0];
-                  var status = res[1];
-                  var st     = ((status.type || {}).state || "");
-                  if (st === "in") {
-                    var comps = ((ev.competitions || [])[0] || {}).competitors || [];
-                    fetchLinescores(id, comps).then(function (lsByComp) {
-                      applyIplEvent(ev, status, lsByComp);
-                    });
-                  } else {
-                    applyIplEvent(ev, status, null);
-                  }
-                })
-                .catch(function () {});
-            });
-          })
-          .catch(function () {});
+        // Also include the explicit match date for each unsettled card
+        unsettled.forEach(function (card) {
+          var ct = card.getAttribute("data-commence-time") || "";
+          if (ct) {
+            try { datesToFetch[utcDateStr(new Date(ct))] = true; } catch (e) {}
+          }
+        });
+
+        Object.keys(datesToFetch).forEach(function (d) {
+          fetch(IPL_EVENTS_URL + "?dates=" + d)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+              (data.items || []).forEach(function (item) {
+                var m = (item.$ref || "").match(/\/events\/(\d+)$/);
+                if (!m) return;
+                var id    = m[1];
+                var evUrl = IPL_EVENTS_URL + "/" + id;
+                var stUrl = IPL_EVENTS_URL + "/" + id + "/competitions/" + id + "/status";
+                Promise.all([
+                  fetch(evUrl).then(function (r) { return r.json(); }),
+                  fetch(stUrl).then(function (r) { return r.json(); }),
+                ])
+                  .then(function (res) {
+                    var ev     = res[0];
+                    var status = res[1];
+                    var st     = ((status.type || {}).state || "");
+                    if (st === "in") {
+                      var comps = ((ev.competitions || [])[0] || {}).competitors || [];
+                      fetchLinescores(id, comps).then(function (lsByComp) {
+                        applyIplEvent(ev, status, lsByComp);
+                      });
+                    } else {
+                      applyIplEvent(ev, status, null);
+                    }
+                  })
+                  .catch(function () {});
+              });
+            })
+            .catch(function () {});
+        });
       }
 
       // Run immediately then every 30 seconds
