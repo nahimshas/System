@@ -609,6 +609,18 @@ def _fetch_athlete_web_stats(athlete_id: str) -> Dict:
     return _stats_from_vals(vals) if vals else {}
 
 
+def _fetch_athlete_site_stats(athlete_id: str) -> Dict:
+    """
+    Fetch full per-game season stats (incl. stl/blk/3PM) via the ESPN site API.
+    Used to supplement tier-3 players who only get pts/reb/ast from the web endpoint.
+    """
+    data = _get(f"{ESPN_NBA}/athletes/{athlete_id}/statistics")
+    if not data:
+        return {}
+    vals = _parse_stat_vals(data)
+    return _stats_from_vals(vals) if vals else {}
+
+
 # ---------------------------------------------------------------------------
 # Public: player props stats with 3-tier fallback
 # ---------------------------------------------------------------------------
@@ -721,7 +733,15 @@ def get_nba_player_props_stats(
                     result[player_name]["team"] = espn_team
                 fb_supp += 1
             else:
-                result[player_name] = {"stats": web_stats, "team": espn_team}
+                # New tier-3 player: web API only returns pts/reb/ast.
+                # Try site API to fill stl/blk/three_pm so peripheral props aren't silently dropped.
+                site_stats = _fetch_athlete_site_stats(athlete_id)
+                time.sleep(0.15)
+                merged = dict(web_stats)
+                for k in ("stl", "blk", "three_pm"):
+                    if site_stats.get(k, 0) > 0:
+                        merged[k] = site_stats[k]
+                result[player_name] = {"stats": merged, "team": espn_team}
                 fb_new += 1
 
         logger.info(

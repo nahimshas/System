@@ -96,7 +96,7 @@ def _confidence(edge: float, model_line: float, market_line: float) -> str:
 # NBA stat projections
 # ---------------------------------------------------------------------------
 
-_NBA_LEAGUE_AVG = 112.0
+_NBA_LEAGUE_AVG = 115.0   # current season (~115-116 PPG; was stale at 112)
 _NBA_B2B_FACTOR = 0.92
 
 
@@ -131,15 +131,18 @@ def _project_nba_stat(
         min_base = 5.0 if playoff else 2.0
         if base < min_base:
             return None
+        # Combined scoring as pace proxy: higher-scoring games = more possessions = more boards
+        avg_off = (team_stats.get("off_rtg", _NBA_LEAGUE_AVG) + opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)) / 2
+        pace_proxy = avg_off / _NBA_LEAGUE_AVG
         if playoff:
             if base >= 10:
-                adj = base * 1.03  # elite rebounders: slightly more in playoff battle
+                adj = base * 1.03 * pace_proxy
             elif base >= 7:
-                adj = base * 0.97  # solid rebounders: minor reduction
+                adj = base * 0.97 * pace_proxy
             else:
-                adj = base * 0.90  # role players: reduced minutes/opportunities
+                adj = base * 0.90 * pace_proxy
         else:
-            adj = base
+            adj = base * pace_proxy
         return round(adj * (0.95 if is_b2b else 1.0), 1)
 
     if prop_type == "Assists Over":
@@ -147,8 +150,10 @@ def _project_nba_stat(
         min_base = 4.0 if playoff else 1.0
         if base < min_base:
             return None
-        pace = (team_stats.get("pace", 100) + opp_stats.get("pace", 100)) / 2
-        adj = base * (pace / 100.0)
+        # Opponent off_rtg as pace proxy: faster offenses generate more assist opportunities
+        opp_off = opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)
+        pace_proxy = opp_off / _NBA_LEAGUE_AVG
+        adj = base * pace_proxy
         if playoff:
             if base >= 7:
                 adj *= 1.03   # elite playmakers: usage stays high
@@ -163,29 +168,38 @@ def _project_nba_stat(
         min_base = 0.5 if playoff else 0.3
         if base < min_base:
             return None
-        return round(base, 2)
+        # Faster offenses create more steal opportunities
+        opp_off = opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)
+        adj = base * (opp_off / _NBA_LEAGUE_AVG)
+        return round(adj * (0.94 if is_b2b else 1.0), 2)
 
     if prop_type == "Blocks Over":
         base = pstats.get("blk", 0.0)
         min_base = 0.5 if playoff else 0.3
         if base < min_base:
             return None
-        return round(base, 2)
+        # Shot-heavy offenses create more block opportunities
+        opp_off = opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)
+        adj = base * (opp_off / _NBA_LEAGUE_AVG)
+        return round(adj * (0.94 if is_b2b else 1.0), 2)
 
     if prop_type == "Threes Over":
         base = pstats.get("three_pm", 0.0)
         min_base = 1.5 if playoff else 0.5
         if base < min_base:
             return None
+        # Opponent def_rtg proxy: worse defenses allow more 3PM opportunities
+        opp_def = opp_stats.get("def_rtg", _NBA_LEAGUE_AVG)
+        opp_def_adj = opp_def / _NBA_LEAGUE_AVG
         if playoff:
             if base >= 3.0:
-                adj = base * 1.02   # elite shooters: looks for them in playoffs
+                adj = base * 1.02 * opp_def_adj
             elif base >= 2.0:
-                adj = base * 0.96   # solid shooters: tighter contest
+                adj = base * 0.96 * opp_def_adj
             else:
-                adj = base * 0.90   # role shooters: reduced opportunities
+                adj = base * 0.90 * opp_def_adj
         else:
-            adj = base
+            adj = base * opp_def_adj
         return round(adj * (0.95 if is_b2b else 1.0), 1)
 
     return None
