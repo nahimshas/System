@@ -4888,19 +4888,24 @@
     // human-readable Pacific time string shown on the card.
     // Called once on load (no ESPN fetch needed — pure client-side formatting).
     function renderIplCommenceTimes() {
+      var now = new Date();
       document.querySelectorAll("[data-ipl-commence]").forEach(function (el) {
         var iso = el.getAttribute("data-ipl-commence");
         if (!iso) return;
         try {
           var dt = new Date(iso);
-          // Format in Pacific time (respects DST automatically via the browser)
-          var opts = {
-            timeZone: "America/Los_Angeles",
-            month: "short", day: "numeric",
-            hour: "numeric", minute: "2-digit",
-            hour12: true,
-          };
-          el.textContent = "📅 " + dt.toLocaleString("en-US", opts) + " PT";
+          if (dt <= now) {
+            el.textContent = "🔴 Match In Progress";
+            el.style.color = "#ef4444";
+          } else {
+            var opts = {
+              month: "short", day: "numeric",
+              hour: "numeric", minute: "2-digit",
+              hour12: true,
+              timeZoneName: "short",
+            };
+            el.textContent = "📅 " + dt.toLocaleString([], opts);
+          }
         } catch (e) {
           el.textContent = "📅 " + iso.slice(0, 10);
         }

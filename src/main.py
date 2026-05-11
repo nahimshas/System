@@ -45,6 +45,7 @@ from src.data.outcome_checker import (
     check_and_settle_watchlist,      # NHL date-based settlement
     settle_watchlist_pending,        # IPL (+ future leagues) rolling pending settlement
     load_watchlist_pending, save_watchlist_pending,
+    load_watchlist_today_settled,
 )
 from src.report.generator import build_report
 from src.report.email_sender import send_report
@@ -650,13 +651,20 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         save_watchlist_pending(_wl_pending)
 
-        # The report shows ALL unsettled picks (in-play + upcoming)
-        fresh_ipl_display = _wl_pending
-        ipl_game_count    = len(_wl_pending)
+        # Include today's settled picks so the card shows "Match Ended + WON/LOST"
+        _today_settled = [
+            {**r, "status": "settled"}
+            for r in load_watchlist_today_settled("IPL", today)
+        ]
+
+        # The report shows all picks: settled (with result) + in-play + upcoming
+        fresh_ipl_display = _today_settled + _wl_pending
+        ipl_game_count    = len(fresh_ipl_display)
         logger.info(
-            f"IPL pending: {ipl_game_count} unsettled pick(s) "
+            f"IPL pending: {len(_wl_pending)} unsettled pick(s) "
             f"({sum(1 for p in _wl_pending if p.get('status')=='in_progress')} in-play, "
-            f"{sum(1 for p in _wl_pending if p.get('status')=='upcoming')} upcoming)"
+            f"{sum(1 for p in _wl_pending if p.get('status')=='upcoming')} upcoming), "
+            f"{len(_today_settled)} settled today"
         )
 
     # ------------------------------------------------------------------ #

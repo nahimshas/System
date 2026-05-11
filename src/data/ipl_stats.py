@@ -590,6 +590,33 @@ def get_ipl_context(
     }
 
 
+def get_ipl_completed_matches(today: date) -> List[Dict]:
+    """
+    Return completed IPL matches from Cricbuzz for the current season.
+
+    Each dict: {team1, team2, winner (canonical name or None), start_ms}
+    Used by outcome_checker.settle_watchlist_pending() to settle IPL picks
+    without relying on the ESPN cricket/ipl endpoint (which always returns 404).
+    """
+    series_id = _discover_series_id(today.year)
+    if not series_id:
+        return []
+    matches = _fetch_series_matches(series_id)
+    result = []
+    for m in matches:
+        if m.get("state") != "Complete":
+            continue
+        t1 = m.get("team1", "")
+        t2 = m.get("team2", "")
+        result.append({
+            "team1":     t1,
+            "team2":     t2,
+            "winner":    _parse_winner(m.get("status", ""), t1, t2),
+            "start_ms":  m.get("start_ms", 0),
+        })
+    return result
+
+
 def _empty_context(venue_config: Dict, team_names: List[str]) -> Dict:
     return {
         "season_form":     {},

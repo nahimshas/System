@@ -1133,6 +1133,53 @@ def save_watchlist_pending(records: List[Dict]) -> None:
     _save_watchlist_pending(records)
 
 
+def _settle_ipl_pick(pick: Dict, game_date: date) -> Optional[str]:
+    """
+    Determine WON/LOST for an IPL pending pick via Cricbuzz completed match data.
+    Returns "WON", "LOST", or None if the match is not yet in the completed list.
+    ESPN cricket/ipl always returns 404, so this replaces that path for IPL.
+    """
+    try:
+        from src.data.ipl_stats import get_ipl_completed_matches, normalize
+    except Exception as e:
+        logger.error(f"IPL settlement: could not import ipl_stats: {e}")
+        return None
+
+    home_team = pick.get("home_team", "")
+    away_team = pick.get("away_team", "")
+    our_pick  = pick.get("pick", "")
+
+    try:
+        completed = get_ipl_completed_matches(game_date)
+    except Exception as e:
+        logger.error(f"IPL settlement: Cricbuzz fetch failed: {e}")
+        return None
+
+    norm_home = normalize(home_team)
+    norm_away = normalize(away_team)
+    norm_pick = normalize(our_pick)
+
+    for m in completed:
+        t1 = normalize(m.get("team1", ""))
+        t2 = normalize(m.get("team2", ""))
+        if (t1 == norm_home and t2 == norm_away) or (t1 == norm_away and t2 == norm_home):
+            winner = m.get("winner")
+            if winner is None:
+                return None  # match complete but no clean winner (tie/no result)
+            return "WON" if normalize(winner) == norm_pick else "LOST"
+
+    return None  # match not yet in completed list
+
+
+def load_watchlist_today_settled(sport: str, today: date) -> List[Dict]:
+    """
+    Return today's settled watchlist picks for a given sport.
+    Used by main.py to include same-day settled results in the display.
+    """
+    records = _load_watchlist_history()
+    return [r for r in records if r.get("sport") == sport and r.get("date") == today.isoformat()]
+
+
 def settle_watchlist_pending(now_utc: datetime) -> int:
     """
     Attempt to settle any pending watchlist picks whose games should now be final.
@@ -1182,39 +1229,49 @@ def settle_watchlist_pending(now_utc: datetime) -> int:
             still_pending.append(pick)
             continue
 
-        # Game should be done — try ESPN for a completed result
+        # Game should be done — resolve result
         game_date = commence_dt.date()
-        scores = _fetch_watchlist_final_scores(sport, game_date)
-        if not scores:
-            # Try the next calendar day (covers late-finishing / rain-delayed matches)
-            scores = _fetch_watchlist_final_scores(sport, game_date + timedelta(days=1))
 
-        score_data = _find_game_score(
-            scores, pick.get("home_team", ""), pick.get("away_team", "")
-        )
-        if not score_data:
-            # ESPN doesn't show it as completed yet — keep pending
-            logger.debug(
-                f"{sport} pending: score not final for {pick.get('game')} "
-                f"(game_date={game_date}) — retaining"
+        if sport == "IPL":
+            # ESPN cricket/ipl returns 404 — use Cricbuzz completed match data instead
+            result = _settle_ipl_pick(pick, game_date)
+            if result is None:
+                logger.debug(
+                    f"IPL pending: result not final for {pick.get('game')} "
+                    f"(game_date={game_date}) — retaining"
+                )
+                still_pending.append(pick)
+                continue
+        else:
+            scores = _fetch_watchlist_final_scores(sport, game_date)
+            if not scores:
+                # Try the next calendar day (covers late-finishing / rain-delayed matches)
+                scores = _fetch_watchlist_final_scores(sport, game_date + timedelta(days=1))
+
+            score_data = _find_game_score(
+                scores, pick.get("home_team", ""), pick.get("away_team", "")
             )
-            still_pending.append(pick)
-            continue
+            if not score_data:
+                logger.debug(
+                    f"{sport} pending: score not final for {pick.get('game')} "
+                    f"(game_date={game_date}) — retaining"
+                )
+                still_pending.append(pick)
+                continue
+
+            result = _determine_outcome(
+                pick.get("pick", ""), pick.get("bet_type", ""),
+                pick.get("home_team", ""), pick.get("away_team", ""),
+                score_data["home_score"], score_data["away_score"],
+            )
+            if result not in ("WON", "LOST"):
+                still_pending.append(pick)
+                continue
 
         key = (game_date.isoformat(), sport, pick.get("pick", ""), pick.get("game", ""))
         if key in settled_keys:
             # Already in history (e.g. from a previous run) — just drop from pending
             logger.debug(f"{sport} pending: {pick.get('pick')} already settled — removing from pending")
-            continue
-
-        result = _determine_outcome(
-            pick.get("pick", ""), pick.get("bet_type", ""),
-            pick.get("home_team", ""), pick.get("away_team", ""),
-            score_data["home_score"], score_data["away_score"],
-        )
-        if result not in ("WON", "LOST"):
-            # PUSH or UNKNOWN — keep pending for now
-            still_pending.append(pick)
             continue
 
         new_records.append({

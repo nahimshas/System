@@ -780,10 +780,17 @@
               <span class="badge badge-ipl">IPL</span>
               &nbsp;Match Winner &nbsp;&middot;&nbsp; {{ bet.game }}
             </div>
-            {# ── Status badge: in-play vs upcoming ── #}
-            {% if bet.status == 'in_progress' %}
+            {# ── Status badge: settled / in-play / upcoming ── #}
+            {% if bet.status == 'settled' %}
+            <div class="card-time" style="color:var(--muted);font-size:0.78rem;font-weight:600;margin-top:3px;">
+              Match Ended &nbsp;
+              <span style="font-weight:700;font-size:0.85rem;color:{% if bet.result == 'WON' %}#16a34a{% else %}#ef4444{% endif %};">
+                {% if bet.result == 'WON' %}✅ WON{% elif bet.result == 'LOST' %}❌ LOST{% endif %}
+              </span>
+            </div>
+            {% elif bet.status == 'in_progress' %}
             <div class="card-time" style="color:#ef4444;font-size:0.78rem;font-weight:600;margin-top:3px;">
-              🔴 In Progress — result pending
+              🔴 Match In Progress
             </div>
             {% elif bet.commence_time %}
             <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"
@@ -3159,19 +3166,24 @@
     // human-readable Pacific time string shown on the card.
     // Called once on load (no ESPN fetch needed — pure client-side formatting).
     function renderIplCommenceTimes() {
+      var now = new Date();
       document.querySelectorAll("[data-ipl-commence]").forEach(function (el) {
         var iso = el.getAttribute("data-ipl-commence");
         if (!iso) return;
         try {
           var dt = new Date(iso);
-          // Format in Pacific time (respects DST automatically via the browser)
-          var opts = {
-            timeZone: "America/Los_Angeles",
-            month: "short", day: "numeric",
-            hour: "numeric", minute: "2-digit",
-            hour12: true,
-          };
-          el.textContent = "📅 " + dt.toLocaleString("en-US", opts) + " PT";
+          if (dt <= now) {
+            el.textContent = "🔴 Match In Progress";
+            el.style.color = "#ef4444";
+          } else {
+            var opts = {
+              month: "short", day: "numeric",
+              hour: "numeric", minute: "2-digit",
+              hour12: true,
+              timeZoneName: "short",
+            };
+            el.textContent = "📅 " + dt.toLocaleString([], opts);
+          }
         } catch (e) {
           el.textContent = "📅 " + iso.slice(0, 10);
         }
