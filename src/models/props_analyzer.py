@@ -374,6 +374,35 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
                         f"{opp} allows {opp_stats.get('def_rtg',0):.1f} PPG "
                         f"({'above' if opp_stats.get('def_rtg',115)>115 else 'below'} avg)"
                     )
+                if prop_label == "Rebounds Over":
+                    avg_off = (team_stats.get("off_rtg", _NBA_LEAGUE_AVG) + opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)) / 2
+                    signals.append(
+                        f"Avg game pace: {avg_off:.1f} combined PPG "
+                        f"({'above' if avg_off > _NBA_LEAGUE_AVG else 'below'} avg → "
+                        f"{'more' if avg_off > _NBA_LEAGUE_AVG else 'fewer'} board opportunities)"
+                    )
+                if prop_label == "Assists Over":
+                    opp_off = opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)
+                    signals.append(
+                        f"{opp} scores {opp_off:.1f} PPG "
+                        f"({'above' if opp_off > _NBA_LEAGUE_AVG else 'below'} avg → "
+                        f"{'more' if opp_off > _NBA_LEAGUE_AVG else 'fewer'} assist opportunities)"
+                    )
+                if prop_label == "Threes Over":
+                    opp_def = opp_stats.get("def_rtg", _NBA_LEAGUE_AVG)
+                    signals.append(
+                        f"{opp} allows {opp_def:.1f} PPG "
+                        f"({'above' if opp_def > _NBA_LEAGUE_AVG else 'below'} avg → "
+                        f"{'more' if opp_def > _NBA_LEAGUE_AVG else 'fewer'} 3PM opportunities)"
+                    )
+                if prop_label in ("Steals Over", "Blocks Over"):
+                    opp_off = opp_stats.get("off_rtg", _NBA_LEAGUE_AVG)
+                    stat_name = "steal" if prop_label == "Steals Over" else "block"
+                    signals.append(
+                        f"{opp} scores {opp_off:.1f} PPG "
+                        f"({'above' if opp_off > _NBA_LEAGUE_AVG else 'below'} avg → "
+                        f"{'more' if opp_off > _NBA_LEAGUE_AVG else 'fewer'} {stat_name} opportunities)"
+                    )
                 if _model_total and _market_total and abs(game_total_scale - 1.0) >= 0.02:
                     direction = "high" if game_total_scale > 1.0 else "low"
                     signals.append(
@@ -545,7 +574,8 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                         signals=signals,
                         research=[
                             f"{player_name}: ERA {era:.2f} | FIP {fip:.2f}{xfip_str} | K/9 {k9:.1f} | BB/9 {bb9:.1f} | HR/9 {hr9:.2f}{babip_str}",
-                            f"Season IP: {ip:.0f} | Projected start: ~{expected_innings} inn",
+                            f"Season IP: {ip:.0f} | Projected start: ~{expected_innings} inn "
+                            f"({'actual avg: ' + str(avg_ip_start) + ' inn/start' if avg_ip_start else 'using default 5.5'})",
                             f"Venue: {venue} (park factor {pf:.2f})" if venue else "",
                         ],
                         commence_time=game_commence,
@@ -593,6 +623,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
 
                 xfip_str   = f" / xFIP {pitcher_xfip:.2f}" if pitcher_xfip else ""
                 bk_pct_str = f" | K% {bstats.get('k_pct', 0):.1%}"
+                _k_factor  = _k_matchup_factor(bstats.get("k_pct", _LEAGUE_K_PCT), pitcher_k9)
 
                 picks.append(PropPick(
                     sport="MLB", player=player_name, team=team, opponent=opp,
@@ -611,6 +642,13 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                              f"({'high' if mlb_game_scale > 1.0 else 'low'}-scoring environment, "
                              f"scale {mlb_game_scale:.2f}x)"]
                             if _model_total and _market_total and abs(mlb_game_scale - 1.0) >= 0.02
+                            else []
+                        ),
+                        *(
+                            [f"K% matchup: batter {bstats.get('k_pct', _LEAGUE_K_PCT):.1%} vs "
+                             f"pitcher {pitcher_k9:.1f} K/9 → -{(1 - _k_factor):.1%} suppression"]
+                            if prop_label in ("Hits Over", "Total Bases Over", "HRR Over")
+                            and _k_factor <= 0.95
                             else []
                         ),
                     ],
