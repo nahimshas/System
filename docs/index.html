@@ -4927,12 +4927,17 @@
     // Called once on load (no ESPN fetch needed — pure client-side formatting).
     function renderIplCommenceTimes() {
       var now = new Date();
+      var MATCH_DURATION_MS = 4.5 * 60 * 60 * 1000; // 4.5 hrs — T20 match + buffer
       document.querySelectorAll("[data-ipl-commence]").forEach(function (el) {
         var iso = el.getAttribute("data-ipl-commence");
         if (!iso) return;
         try {
           var dt = new Date(iso);
-          if (dt <= now) {
+          var estimatedEnd = new Date(dt.getTime() + MATCH_DURATION_MS);
+          if (now >= estimatedEnd) {
+            el.textContent = "⏳ Awaiting result — updates at next run";
+            el.style.color = "#94a3b8";
+          } else if (dt <= now) {
             el.textContent = "🔴 Match In Progress";
             el.style.color = "#ef4444";
           } else {
@@ -4950,6 +4955,115 @@
       });
     }
     renderIplCommenceTimes();
+
+    // ── IPL live updates via core.espnuk.org ─────────────────────────────────
+    // Same ESPN family as NBA/MLB/NHL, CORS-enabled, no API key required.
+    // Polls every 2 min; stops once all unsettled IPL cards are resolved.
+    (function () {
+      var IPL_EVENTS_URL =
+        "http://core.espnuk.org/v2/sports/cricket/leagues/8048/events";
+
+      function iplNameMatch(a, b) {
+        a = (a || "").toLowerCase().trim();
+        b = (b || "").toLowerCase().trim();
+        return a && b && (a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1);
+      }
+
+      function applyIplEvent(ev) {
+        // Cards without data-ipl-commence are already server-settled — skip
+        var cards = document.querySelectorAll(
+          ".ipl-watchlist-card [data-ipl-commence]"
+        );
+        if (!cards.length) return;
+
+        var comp = (ev.competitions || [])[0];
+        if (!comp) return;
+
+        var competitors = (comp.competitors || []).slice().sort(function (a, b) {
+          return (a.order || 0) - (b.order || 0);
+        });
+
+        // event.name = "Home Team v Away Team" — index matches competitor order
+        var nameParts = (ev.name || "").split(" v ");
+        var teams = competitors.map(function (c, i) {
+          return { name: (nameParts[i] || "").trim(), winner: !!c.winner };
+        });
+
+        var note = comp.note || "";
+        var winnerTeam = teams.find(function (t) { return t.winner; });
+        var isComplete = !!winnerTeam;
+
+        cards.forEach(function (timeDiv) {
+          var card = timeDiv.closest(".ipl-watchlist-card");
+          if (!card) return;
+
+          var homeTeam = card.getAttribute("data-home-team") || "";
+          var awayTeam = card.getAttribute("data-away-team") || "";
+          var evHome = teams[0] ? teams[0].name : "";
+          var evAway = teams[1] ? teams[1].name : "";
+
+          if (!iplNameMatch(homeTeam, evHome) || !iplNameMatch(awayTeam, evAway)) return;
+
+          var liveDiv = card.querySelector(".live-status");
+
+          if (isComplete) {
+            var pick = card.getAttribute("data-pick") || "";
+            var result = iplNameMatch(pick, winnerTeam.name) ? "WON" : "LOST";
+
+            card.setAttribute("data-live-result", result);
+            // Remove attribute so renderIplCommenceTimes won't overwrite this
+            timeDiv.removeAttribute("data-ipl-commence");
+            timeDiv.style.color = "var(--muted)";
+            timeDiv.textContent = "Match Ended";
+
+            if (liveDiv) {
+              liveDiv.innerHTML =
+                outcomeHtml(result) +
+                (note
+                  ? ' <span style="color:var(--muted);font-size:0.75rem;">&nbsp;&middot; ' +
+                    note + "</span>"
+                  : "");
+            }
+          } else {
+            // Match not yet complete — ensure in-progress text is shown
+            if (liveDiv && !liveDiv.textContent.trim()) {
+              liveDiv.innerHTML =
+                '<span style="color:var(--muted);font-size:0.75rem;">🔴 In Progress</span>';
+            }
+          }
+        });
+      }
+
+      function pollIplLive() {
+        // Stop polling when no unsettled IPL cards remain
+        if (!document.querySelector(".ipl-watchlist-card [data-ipl-commence]")) return;
+
+        var now = new Date();
+        var d = [
+          now.getUTCFullYear(),
+          String(now.getUTCMonth() + 1).padStart(2, "0"),
+          String(now.getUTCDate()).padStart(2, "0"),
+        ].join("");
+
+        fetch(IPL_EVENTS_URL + "?dates=" + d)
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            (data.items || []).forEach(function (item) {
+              var m = (item.$ref || "").match(/\/events\/(\d+)$/);
+              if (!m) return;
+              fetch("http://core.espnuk.org/v2/sports/cricket/leagues/8048/events/" + m[1])
+                .then(function (r) { return r.json(); })
+                .then(applyIplEvent)
+                .catch(function () {});
+            });
+          })
+          .catch(function () {});
+      }
+
+      // Run immediately then every 2 minutes
+      pollIplLive();
+      setInterval(pollIplLive, 2 * 60 * 1000);
+    }());
 
     function onFetch(events) {
       allEvents = allEvents.concat(events);
