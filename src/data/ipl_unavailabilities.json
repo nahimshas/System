@@ -1,0 +1,13 @@
+{
+  "_comment": "Manually updated before each IPL match day. Key = YYYY-MM-DD (IST date of the match). Update the night before or early morning when official squad announcements drop.",
+  "_impact": "Each confirmed absence applies a -4% win probability penalty to that team, capped at -8% total. Only list confirmed absences \u2014 not speculative ones.",
+  "_howto": "Use the full player name as shown on Cricbuzz. Remove past dates to keep file tidy. Leave team list empty [] if no known absences.",
+  "_example": {
+    "2026-03-22": {
+      "Mumbai Indians": [
+        "Hardik Pandya"
+      ],
+      "Chennai Super Kings": []
+    }
+  }
+}

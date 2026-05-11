@@ -25,8 +25,9 @@ from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-CRICBUZZ_BASE  = "https://www.cricbuzz.com"
+CRICBUZZ_BASE      = "https://www.cricbuzz.com"
 _VENUE_CONFIG_PATH = Path(__file__).parent / "ipl_venue_config.json"
+_UNAVAIL_PATH      = Path(__file__).parent / "ipl_unavailabilities.json"
 
 # Odds API / ESPN team name → canonical display name used as dict key everywhere.
 _ODDS_TO_ESPN: Dict[str, str] = {
@@ -474,6 +475,43 @@ def _fetch_todays_venues(today: date, matches: List[Dict]) -> Dict[Tuple[str, st
 
 
 # ---------------------------------------------------------------------------
+# Player unavailabilities
+# ---------------------------------------------------------------------------
+
+def _load_unavailabilities(today: date) -> Dict[str, List[str]]:
+    """
+    Load confirmed player absences from the static config file.
+    Checks today + next 2 days so a pipeline run on May 10 picks up
+    absences declared for a May 11 match.
+    Returns {canonical_team_name: [player_name, ...]}.
+    """
+    try:
+        with open(_UNAVAIL_PATH) as f:
+            raw = json.load(f)
+    except Exception as e:
+        logger.warning(f"IPL unavailabilities load failed: {e}")
+        return {}
+
+    result: Dict[str, List[str]] = {}
+    for delta in range(3):
+        key = (today + timedelta(days=delta)).isoformat()
+        day_data = raw.get(key, {})
+        if not isinstance(day_data, dict):
+            continue
+        for team, players in day_data.items():
+            if team.startswith("_") or not isinstance(players, list):
+                continue
+            canon = normalize(team)
+            for p in players:
+                if p and p not in result.get(canon, []):
+                    result.setdefault(canon, []).append(p)
+
+    if result:
+        logger.info(f"IPL unavailabilities loaded: {result}")
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
 
@@ -501,7 +539,8 @@ def get_ipl_context(
     matchups   = matchups   or []
     norm_matchups = [(normalize(h), normalize(a)) for h, a in matchups]
 
-    venue_config = _load_venue_config()
+    venue_config    = _load_venue_config()
+    unavailabilities = _load_unavailabilities(today)
 
     series_id = _discover_series_id(today.year)
     if not series_id:
@@ -540,23 +579,25 @@ def get_ipl_context(
         logger.warning(f"IPL today's venues fetch failed: {e}")
 
     return {
-        "season_form":  season_data["season_form"],
-        "rest_days":    rest_days,
-        "venue_stats":  season_data["venue_stats"],
-        "venue_config": venue_config,
-        "match_venues": match_venues,
-        "h2h":          season_data["h2h"],
-        "match_flags":  match_flags,
+        "season_form":     season_data["season_form"],
+        "rest_days":       rest_days,
+        "venue_stats":     season_data["venue_stats"],
+        "venue_config":    venue_config,
+        "match_venues":    match_venues,
+        "h2h":             season_data["h2h"],
+        "match_flags":     match_flags,
+        "unavailabilities": unavailabilities,
     }
 
 
 def _empty_context(venue_config: Dict, team_names: List[str]) -> Dict:
     return {
-        "season_form":  {},
-        "rest_days":    {normalize(n): 3 for n in team_names},
-        "venue_stats":  {},
-        "venue_config": venue_config,
-        "match_venues": {},
-        "h2h":          {},
-        "match_flags":  {},
+        "season_form":     {},
+        "rest_days":       {normalize(n): 3 for n in team_names},
+        "venue_stats":     {},
+        "venue_config":    venue_config,
+        "match_venues":    {},
+        "h2h":             {},
+        "match_flags":     {},
+        "unavailabilities": {},
     }

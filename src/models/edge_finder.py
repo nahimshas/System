@@ -1680,6 +1680,9 @@ IPL_VENUE_MIN_MATCHES    = 5
 IPL_H2H_MAX_ADJ          = 0.04
 # Rest penalty: applied when a team has had < 2 days since their last match.
 IPL_SHORT_REST_PENALTY   = 0.015
+# Player unavailabilities: penalty per confirmed absent key player, capped per team.
+IPL_ABSENT_PLAYER_IMPACT = 0.04
+IPL_ABSENT_MAX_IMPACT    = 0.08
 
 
 def _is_ipl_playoff(dt: Optional[datetime] = None) -> bool:
@@ -1882,6 +1885,25 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
         if venue_hw is not None and n_at_venue >= IPL_VENUE_MIN_MATCHES:
             venue_notes.append(f"home win% at venue {venue_hw:.0%}")
         research.append(" | ".join(venue_notes))
+
+    # --- Known player unavailabilities ---
+    unavailabilities = ipl_ctx.get("unavailabilities", {})
+    home_absent = unavailabilities.get(home, [])
+    away_absent = unavailabilities.get(away, [])
+
+    if home_absent:
+        penalty = min(len(home_absent) * IPL_ABSENT_PLAYER_IMPACT, IPL_ABSENT_MAX_IMPACT)
+        adj -= penalty
+        names = ", ".join(home_absent)
+        signals.append(f"🚫 {home} missing: {names} (-{penalty*100:.0f}%)")
+        research.append(f"Unavailable ({home}): {names}")
+
+    if away_absent:
+        penalty = min(len(away_absent) * IPL_ABSENT_PLAYER_IMPACT, IPL_ABSENT_MAX_IMPACT)
+        adj += penalty
+        names = ", ".join(away_absent)
+        signals.append(f"🚫 {away} missing: {names} (+{penalty*100:.0f}% for {home})")
+        research.append(f"Unavailable ({away}): {names}")
 
     adjusted_home_prob = min(0.90, max(0.10, base_home_prob + adj))
     adjusted_away_prob = 1.0 - adjusted_home_prob

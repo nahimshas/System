@@ -498,7 +498,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                     )
                 except Exception as e:
                     logger.error(f"IPL stats fetch failed: {e}")
-                    ipl_ctx = {"season_form": {}, "rest_days": {}, "venue_stats": {}, "venue_config": {}, "match_venues": {}, "h2h": {}}
+                    ipl_ctx = {"season_form": {}, "rest_days": {}, "venue_stats": {}, "venue_config": {}, "match_venues": {}, "h2h": {}, "match_flags": {}, "unavailabilities": {}}
                     errors.append(f"IPL stats partially unavailable: {e}")
 
                 for game in ipl_odds_games:
