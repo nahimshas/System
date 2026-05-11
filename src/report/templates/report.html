@@ -275,13 +275,18 @@
 
   {# ── Per-league collapsible sections ─────────────────────────────────── #}
 
-  {% if report.has_nba_singles or report.nba_props %}
+  {% if report.has_nba %}
   <div class="section" id="sec-nba">
     <div class="section-title">🏀 NBA
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {{ report.nba_top_singles|length }} pick{% if report.nba_top_singles|length != 1 %}s{% endif %}{% if report.nba_props %} &middot; {{ report.nba_props|length }} prop{% if report.nba_props|length != 1 %}s{% endif %}{% endif %}
+        {% if report.nba_top_singles or report.nba_props %}{{ report.nba_top_singles|length }} pick{% if report.nba_top_singles|length != 1 %}s{% endif %}{% if report.nba_props %} &middot; {{ report.nba_props|length }} prop{% if report.nba_props|length != 1 %}s{% endif %}{% endif %}{% else %}no qualifying picks{% endif %}
       </span>
     </div>
+    {% if not (report.nba_top_singles or report.nba_props) %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      😕 No picks found with edge &gt; 3% today — the model scanned all NBA games and found no suitable edges.
+    </div>
+    {% endif %}
 
     {% if report.nba_top_singles %}
     <div class="sub-section" id="sub-nba-singles">
@@ -437,13 +442,18 @@
   </div>
   {% endif %}
 
-  {% if report.has_mlb_singles or report.mlb_props %}
+  {% if report.has_mlb %}
   <div class="section" id="sec-mlb">
     <div class="section-title">⚾ MLB
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {{ report.mlb_top_singles|length }} pick{% if report.mlb_top_singles|length != 1 %}s{% endif %}{% if report.mlb_props %} &middot; {{ report.mlb_props|length }} prop{% if report.mlb_props|length != 1 %}s{% endif %}{% endif %}
+        {% if report.mlb_top_singles or report.mlb_props %}{{ report.mlb_top_singles|length }} pick{% if report.mlb_top_singles|length != 1 %}s{% endif %}{% if report.mlb_props %} &middot; {{ report.mlb_props|length }} prop{% if report.mlb_props|length != 1 %}s{% endif %}{% endif %}{% else %}no qualifying picks{% endif %}
       </span>
     </div>
+    {% if not (report.mlb_top_singles or report.mlb_props) %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      😕 No picks found with edge &gt; 3% today — the model scanned all MLB games and found no suitable edges.
+    </div>
+    {% endif %}
 
     {% if report.mlb_top_singles %}
     <div class="sub-section" id="sub-mlb-singles">
@@ -599,13 +609,18 @@
   </div>
   {% endif %}
 
-  {% if report.has_nfl_singles %}
+  {% if report.has_nfl %}
   <div class="section" id="sec-nfl">
     <div class="section-title">🏈 NFL
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {{ report.nfl_top_singles|length }} pick{% if report.nfl_top_singles|length != 1 %}s{% endif %} &middot; monitoring only
+        {% if report.nfl_top_singles %}{{ report.nfl_top_singles|length }} pick{% if report.nfl_top_singles|length != 1 %}s{% endif %} &middot; monitoring only{% else %}no qualifying picks{% endif %}
       </span>
     </div>
+    {% if not report.nfl_top_singles %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      😕 No picks found with edge &gt; 3% today — the model scanned all NFL games and found no suitable edges.
+    </div>
+    {% endif %}
     <div class="sub-section" id="sub-nfl-singles">
     <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-nfl-singles')">
       <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
@@ -674,13 +689,18 @@
   </div>
   {% endif %}
 
-  {% if report.nhl_watchlist %}
+  {% if report.has_nhl %}
   <div class="section" id="sec-nhl">
     <div class="section-title">🏒 NHL
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {{ report.nhl_watchlist|length }} pick{% if report.nhl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only
+        {% if report.nhl_watchlist %}{{ report.nhl_watchlist|length }} pick{% if report.nhl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
       </span>
     </div>
+    {% if not report.nhl_watchlist %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      😕 No picks found with edge &gt; 3% today — the model scanned all NHL games and found no suitable edges.
+    </div>
+    {% endif %}
     <div class="sub-section" id="sub-nhl-singles">
     <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-nhl-singles')">
       <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
@@ -749,13 +769,18 @@
   </div>
   {% endif %}
 
-  {% if report.ipl_watchlist %}
+  {% if report.has_ipl %}
   <div class="section" id="sec-ipl">
     <div class="section-title">🏏 IPL
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {{ report.ipl_watchlist|length }} pick{% if report.ipl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only
+        {% if report.ipl_watchlist %}{{ report.ipl_watchlist|length }} pick{% if report.ipl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
       </span>
     </div>
+    {% if not report.ipl_watchlist %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      😕 No picks found with edge &gt; 3% today — the model scanned all IPL matches and found no suitable edges.
+    </div>
+    {% endif %}
     <div class="sub-section" id="sub-ipl-singles">
     <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-ipl-singles')">
       <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
