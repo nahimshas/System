@@ -62,14 +62,18 @@ def get_pitcher_stats(pitcher_id: int) -> Dict:
         if not splits:
             return {}
         s = splits[0]["stat"]
-        era = float(s.get("era", "4.50").replace("-", "4.50") or "4.50")
-        ip = float(s.get("inningsPitched", "0").replace("-", "0") or "0")
-        k = int(s.get("strikeOuts", 0))
-        bb = int(s.get("baseOnBalls", 0))
-        hr = int(s.get("homeRunsAllowed", s.get("homeRuns", 0)))
-        k_per_9 = (k / ip * 9) if ip > 0 else 7.0
+        era           = float(s.get("era", "4.50").replace("-", "4.50") or "4.50")
+        ip            = float(s.get("inningsPitched", "0").replace("-", "0") or "0")
+        k             = int(s.get("strikeOuts", 0))
+        bb            = int(s.get("baseOnBalls", 0))
+        hr            = int(s.get("homeRunsAllowed", s.get("homeRuns", 0)))
+        hits_allowed  = int(s.get("hits", 0))
+        games_started = int(s.get("gamesStarted", 0))
+        k_per_9  = (k / ip * 9) if ip > 0 else 7.0
         bb_per_9 = (bb / ip * 9) if ip > 0 else 3.0
         hr_per_9 = (hr / ip * 9) if ip > 0 else 1.2
+        whip = round((hits_allowed + bb) / ip, 2) if ip > 0 else 1.30
+        avg_ip_per_start = round(ip / games_started, 1) if games_started > 0 else None
         # FIP: (13*HR + 3*BB - 2*K) / IP + FIP_constant (~3.2)
         fip = ((13 * hr + 3 * bb - 2 * k) / ip + 3.20) if ip > 0 else era
 
@@ -90,11 +94,14 @@ def get_pitcher_stats(pitcher_id: int) -> Dict:
             "era":             era,
             "fip":             round(fip, 2),
             "xfip":            round(xfip, 2),
+            "whip":            whip,
             "babip":           round(babip, 3) if babip is not None else None,
             "k_per_9":         round(k_per_9, 1),
             "bb_per_9":        round(bb_per_9, 1),
             "hr_per_9":        round(hr_per_9, 2),
             "innings_pitched": ip,
+            "games_started":   games_started,
+            "avg_ip_per_start": avg_ip_per_start,
         }
     except (KeyError, IndexError, ValueError, ZeroDivisionError) as e:
         logger.warning(f"Pitcher stats parse error (id={pitcher_id}): {e}")
@@ -333,8 +340,11 @@ def get_batter_props_stats(team_id: int, player_names: List[str], min_pa: int = 
                 hr   = int(stat.get("homeRuns",   0))
                 runs = int(stat.get("runs",        0))
                 rbi  = int(stat.get("rbi",         0))
+                so   = int(stat.get("strikeOuts",  0))
             except (ValueError, TypeError):
                 continue
+
+            k_pct = round(so / pa, 3) if pa > 0 else 0.228
 
             result[matched] = {
                 "avg":     round(avg, 3),
@@ -345,6 +355,7 @@ def get_batter_props_stats(team_id: int, player_names: List[str], min_pa: int = 
                 "r_pg":    round(runs / games, 3),
                 "rbi_pg":  round(rbi  / games, 3),
                 "hrr_pg":  round((hits + runs + rbi) / games, 3),
+                "k_pct":   k_pct,
                 "pa":      pa,
                 "games":   games,
             }

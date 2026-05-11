@@ -195,30 +195,74 @@ def _project_nba_stat(
 # MLB batter stat projections
 # ---------------------------------------------------------------------------
 
+_LEAGUE_AVG_FIP  = 4.20
+_LEAGUE_AVG_WHIP = 1.30
+_LEAGUE_K_PCT    = 0.228
+
+
+def _pitcher_fip_adj(pitcher_fip: float, pitcher_xfip: Optional[float]) -> float:
+    """
+    Multiplier for batter stat projections based on pitcher FIP/xFIP.
+    Higher (worse) FIP → multiplier > 1.0 (batters score more).
+    Lower (better) FIP → multiplier < 1.0 (batters score less).
+    Blends xFIP when available (more stable, removes HR luck).
+    """
+    fip = pitcher_xfip if pitcher_xfip is not None else pitcher_fip
+    raw = 0.5 + 0.5 * max(fip, 2.0) / _LEAGUE_AVG_FIP
+    return min(max(raw, 0.70), 1.35)
+
+
+def _pitcher_whip_adj(pitcher_whip: float) -> float:
+    """
+    Multiplier for hit props based on pitcher WHIP.
+    WHIP directly measures hits+walks per inning — most relevant signal for hit props.
+    """
+    raw = pitcher_whip / _LEAGUE_AVG_WHIP
+    return min(max(raw, 0.70), 1.35)
+
+
+def _k_matchup_factor(batter_k_pct: float, pitcher_k9: float) -> float:
+    """
+    Penalty when a high-K batter faces a high-strikeout pitcher.
+    Reduces hit/TB/HRR projections proportionally.
+    """
+    k9_ratio = min(pitcher_k9 / 9.0, 1.5)
+    penalty  = max(0.0, batter_k_pct - _LEAGUE_K_PCT) * k9_ratio * 0.5
+    return max(0.85, 1.0 - penalty)
+
+
 def _project_mlb_batter_stat(
-    prop_type:   str,
-    bstats:      Dict,
-    pitcher_fip: float,
-    park_factor: float,
+    prop_type:     str,
+    bstats:        Dict,
+    pitcher_fip:   float,
+    park_factor:   float,
+    pitcher_xfip:  Optional[float] = None,
+    pitcher_whip:  float = _LEAGUE_AVG_WHIP,
+    pitcher_k9:    float = 8.0,
 ) -> Optional[float]:
-    league_avg_fip  = 4.20
-    pitcher_quality = league_avg_fip / max(pitcher_fip, 2.0)
+    batter_k_pct = bstats.get("k_pct", _LEAGUE_K_PCT)
+    fip_adj      = _pitcher_fip_adj(pitcher_fip, pitcher_xfip)
+    k_adj        = _k_matchup_factor(batter_k_pct, pitcher_k9)
 
     if prop_type == "Hits Over":
         base = bstats.get("hits_pg", 0.0)
-        return round(base * pitcher_quality * park_factor, 2) if base >= 0.3 else None
+        if base < 0.3:
+            return None
+        # WHIP is more directly relevant to hits than FIP
+        whip_adj = _pitcher_whip_adj(pitcher_whip)
+        return round(base * whip_adj * k_adj * park_factor, 2)
 
     if prop_type == "Total Bases Over":
         base = bstats.get("tb_pg", 0.0)
-        return round(base * pitcher_quality * park_factor, 2) if base >= 0.5 else None
+        return round(base * fip_adj * k_adj * park_factor, 2) if base >= 0.5 else None
 
     if prop_type == "Home Runs Over":
         base = bstats.get("hr_pg", 0.0)
-        return round(base * pitcher_quality * park_factor, 3) if base >= 0.02 else None
+        return round(base * fip_adj * park_factor, 3) if base >= 0.02 else None
 
     if prop_type == "HRR Over":
         base = bstats.get("hrr_pg", 0.0)
-        return round(base * pitcher_quality * park_factor, 2) if base >= 0.5 else None
+        return round(base * fip_adj * k_adj * park_factor, 2) if base >= 0.5 else None
 
     return None
 
@@ -413,7 +457,9 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                     era   = stats.get("era", 4.50)
                     bb9   = stats.get("bb_per_9", 3.0)
                     hr9   = stats.get("hr_per_9", 1.2)
-                    expected_innings = MLB_PLAYOFF_STARTER_IP if playoff else 5.5
+                    avg_ip_start = stats.get("avg_ip_per_start")
+                    base_innings = min(7.0, max(4.0, avg_ip_start)) if avg_ip_start else 5.5
+                    expected_innings = min(MLB_PLAYOFF_STARTER_IP, base_innings) if playoff else base_innings
 
                     if player_name == home_pitcher:
                         team, opp, opp_team_id = home, away, away_team_id
@@ -483,8 +529,16 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                 facing_p_stats = away_p_stats if team == home else home_p_stats
                 facing_name    = away_pitcher if team == home else home_pitcher
                 pitcher_fip    = facing_p_stats.get("fip", 4.20)
+                pitcher_xfip   = facing_p_stats.get("xfip")
+                pitcher_whip   = facing_p_stats.get("whip", 1.30)
+                pitcher_k9     = facing_p_stats.get("k_per_9", 8.0)
 
-                model_line = _project_mlb_batter_stat(prop_label, bstats, pitcher_fip, pf)
+                model_line = _project_mlb_batter_stat(
+                    prop_label, bstats, pitcher_fip, pf,
+                    pitcher_xfip=pitcher_xfip,
+                    pitcher_whip=pitcher_whip,
+                    pitcher_k9=pitcher_k9,
+                )
                 if model_line is None:
                     continue
 
@@ -494,6 +548,9 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                     continue
 
                 conf = _confidence(edge, model_line, market_line)
+
+                xfip_str   = f" / xFIP {pitcher_xfip:.2f}" if pitcher_xfip else ""
+                bk_pct_str = f" | K% {bstats.get('k_pct', 0):.1%}"
 
                 picks.append(PropPick(
                     sport="MLB", player=player_name, team=team, opponent=opp,
@@ -506,13 +563,13 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                     signals=[
                         f"Market: Over {market_line} at {odds_display} ({book})",
                         f"Model projects {model_line:.2f} → edge {edge*100:+.1f}%",
-                        f"vs {facing_name} (FIP {pitcher_fip:.2f}) at {venue} (park factor {pf:.2f})",
+                        f"vs {facing_name} (FIP {pitcher_fip:.2f}{xfip_str} | WHIP {pitcher_whip:.2f}) | Park {pf:.2f}",
                     ],
                     research=[
                         f"{player_name}: AVG {bstats['avg']:.3f} | OBP {bstats['obp']:.3f} | "
                         f"H/G {bstats['hits_pg']:.2f} | TB/G {bstats['tb_pg']:.2f} | "
-                        f"HR/G {bstats['hr_pg']:.3f} | HRR/G {bstats['hrr_pg']:.2f} ({bstats['pa']} PA)",
-                        f"Facing {facing_name}: FIP {pitcher_fip:.2f}",
+                        f"HR/G {bstats['hr_pg']:.3f} | HRR/G {bstats['hrr_pg']:.2f}{bk_pct_str} ({bstats['pa']} PA)",
+                        f"Facing {facing_name}: FIP {pitcher_fip:.2f}{xfip_str} | WHIP {pitcher_whip:.2f} | K/9 {pitcher_k9:.1f}",
                         f"Park factor {pf:.2f} at {venue}" if venue else "",
                     ],
                     commence_time=game_commence,
