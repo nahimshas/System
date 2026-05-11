@@ -38,6 +38,7 @@ from src.models.props_analyzer import nba_player_props, mlb_player_props
 from src.state.manager import (
     load_state, save_state, merge_picks,
     bet_to_dict, parlay_to_dict, prop_to_dict,
+    _game_started,
 )
 from src.data.outcome_checker import (
     check_and_settle, check_and_settle_props,
@@ -653,6 +654,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # ------------------------------------------------------------------ #
     state = load_state(today)
 
+    # Default: display picks = fresh picks (first run, or subsequent full run)
+    final_props_display = fresh_props_display
+
     if state is None:
         # ── First run of the day ─────────────────────────────────────────
         logger.info("First run today — saving picks as morning baseline")
@@ -717,15 +721,44 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         )
         _morning_sports  = {r.get("sport") for r in _morning_display if r.get("sport")}
         _fresh_sports    = {r.get("sport") for r in fresh_singles_display if r.get("sport")}
-        # Preserve: had morning picks + games exist in odds today + zero fresh display picks
-        _preserve_sports = (_morning_sports & _sports_with_games) - _fresh_sports
+
+        # Sports skipped by a league filter this run — always preserve their morning picks.
+        _not_analyzed = {
+            sp for sp, flag in [
+                ("NBA", "nba"), ("MLB", "mlb"), ("NFL", "nfl"), ("NHL", "nhl"),
+            ] if flag not in leagues
+        }
+
+        # Preserve: (1) sport not in this run's league filter, OR
+        #           (2) sport was analyzed, had games in odds, but produced no display picks
+        #               (typically a context-fetch failure).
+        _preserve_sports = _not_analyzed | ((_morning_sports & _sports_with_games) - _fresh_sports)
         if _preserve_sports:
             logger.info(
-                f"Subsequent run: preserving morning display picks for {_preserve_sports} "
-                f"(games in odds but analysis produced no display picks)"
+                f"Subsequent run: preserving morning display picks for {_preserve_sports}"
             )
         _preserved_display = [r for r in _morning_display if r.get("sport") in _preserve_sports]
-        final_singles_display = fresh_singles_display + _preserved_display
+
+        # Always carry forward locked picks from analyzed sports too — once a game
+        # starts, that pick must never disappear from display regardless of fresh output.
+        _morning_locked = [
+            {**r, "locked": True}
+            for r in _morning_display
+            if r.get("sport") not in _preserve_sports
+            and _game_started(r.get("commence_time", ""))
+        ]
+
+        final_singles_display = fresh_singles_display + _preserved_display + _morning_locked
+
+        # Props display: preserve morning props for sports not analyzed this run,
+        # and any locked props (game already started) from analyzed sports.
+        _morning_props_display = state.get("props_display") or []
+        _preserved_props = [
+            p for p in _morning_props_display
+            if p.get("sport") in _not_analyzed
+            or _game_started(p.get("commence_time", ""))
+        ]
+        final_props_display = fresh_props_display + _preserved_props
 
         # Persist updated state — morning_singles_display is intentionally NOT
         # updated here; it stays locked to the first run's value all day.
@@ -737,7 +770,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "morning_singles_display": state.get("morning_singles_display"),
             "parlays":       final_parlays,
             "props":         final_props,
-            "props_display": fresh_props_display,
+            "props_display": final_props_display,
             "warnings":      change_warnings,
             "odds_api_credits": get_api_credits(),
             "nba_game_count": nba_game_count,
@@ -762,7 +795,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         singles_display=final_singles_display,
         parlays=final_parlays,
         props=final_props,
-        props_display=fresh_props_display,
+        props_display=final_props_display,
         nba_game_count=nba_game_count,
         mlb_game_count=mlb_game_count,
         nfl_game_count=nfl_game_count,
