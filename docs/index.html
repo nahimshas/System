@@ -150,7 +150,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Tuesday, May 12, 2026 &middot; Generated May 12, 2026 at 02:06 PM PDT</div>
+    <div class="subtitle">Tuesday, May 12, 2026 &middot; Generated May 12, 2026 at 03:31 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
       MLB: 15 games &nbsp;|&nbsp;
@@ -4859,7 +4859,7 @@
     // cards ("Match Ended" already in card-time) — both get the ESPN score.
     (function () {
       var IPL_EVENTS_URL =
-        "http://core.espnuk.org/v2/sports/cricket/leagues/8048/events";
+        "https://core.espnuk.org/v2/sports/cricket/leagues/8048/events";
       var pollTimer = null;
 
       function sigmoid(x) {
@@ -4960,9 +4960,23 @@
 
         var winnerTeam  = teams.find(function (t) { return t.winner; });
         var state       = ((status || {}).type || {}).state || "";
-        var liveSummary = (status || {}).longSummary || "";
+        var liveSummary = (status || {}).longSummary
+                       || ((status || {}).type || {}).detail
+                       || ((status || {}).type || {}).longDetail
+                       || "";
         var isComplete  = state === "post" || !!winnerTeam;
         var isLive      = state === "in";
+
+        // Fallback: parse winner from liveSummary when c.winner isn't set by the API.
+        // liveSummary format: "Gujarat Titans won by 3 wickets"
+        if (isComplete && !winnerTeam && liveSummary) {
+          var wonIdx = liveSummary.toLowerCase().indexOf(" won by");
+          if (wonIdx !== -1) {
+            var parsedName = liveSummary.slice(0, wonIdx).trim();
+            var matched = teams.find(function (t) { return iplNameMatch(t.name, parsedName); });
+            if (matched) winnerTeam = matched;
+          }
+        }
 
         cards.forEach(function (card) {
           var homeTeam = card.getAttribute("data-home-team") || "";

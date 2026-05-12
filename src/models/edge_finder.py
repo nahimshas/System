@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 # MLB: real-world MLB run differential std ≈ 3.0 runs. 1.8 was far too tight,
 #      inflating all MLB edges significantly.
 NBA_SPREAD_STD = 12.0   # model uncertainty for point margin; 14.0 was too wide (suppressed all edges)
-MLB_SPREAD_STD = 3.0    # was 1.8
+MLB_SPREAD_STD = 1.8    # real-world MLB run-diff std ≈ 1.5–1.8; 3.0 was far too wide, suppressing pitcher impact
 
 # Injury credibility gate ─────────────────────────────────────────────────────
 # When a team's injury_adjustment ≥ INJURY_GATE, our season net-rating baseline
@@ -601,11 +601,18 @@ def _era_trap_severity(stats: Dict) -> float:
       or-worse by xFIP yet show an anomalously low ERA/BABIP (e.g. Cease 2026).
     """
     era   = stats.get("era")
-    xfip  = stats.get("xfip") or stats.get("fip", 4.20)
+    fip   = stats.get("fip")
+    xfip  = stats.get("xfip") or fip or 4.20
     babip = stats.get("babip")
     ip    = stats.get("innings_pitched", 0)
 
     if not isinstance(era, float) or not isinstance(ip, float) or ip < 10:
+        return 0.0
+
+    # Prerequisite: pitcher must be outperforming their FIP (ERA < FIP).
+    # Without this gate, pitchers like Wheeler (ERA > FIP but xFIP > ERA due to
+    # HR/FB luck) trigger a false trap — the market already prices in the FIP gap.
+    if isinstance(fip, float) and era >= fip:
         return 0.0
 
     xfip_val  = float(xfip)
@@ -711,24 +718,6 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             f"K/9 {k9} | BB/9 {bb9} | IP {ip_str}{babip_str}"
         )
         signals.append(f"{name} {fip_str}{xfip_str} | K/9: {k9}")
-
-        # ERA-trap flag: BABIP < .260 AND ERA well below FIP AND small sample
-        try:
-            if (
-                babip is not None
-                and isinstance(era, float)
-                and isinstance(fip, float)
-                and isinstance(ip, float)
-                and babip < 0.260
-                and ip < 60
-                and era < fip - 0.40
-            ):
-                signals.append(
-                    f"⚠ {name}: BABIP {babip:.3f} is unusually low — "
-                    f"ERA {era:.2f} likely overstates quality (true talent closer to FIP {fip:.2f})"
-                )
-        except Exception:
-            pass
 
     if home_pitcher_stats:
         _pitcher_lines(home_pitcher_name, home_pitcher_stats, "🔵")
