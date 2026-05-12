@@ -1593,6 +1593,8 @@
 
     if (remUnits <= 0) remUnits = 0.01;  // avoid div-by-zero at game's very end
 
+    var _mp = Math.min(0.99, Math.max(0.01, marketProb || 0.5));
+
     // --- Moneyline ---
     if (betType === "Moneyline") {
       // We win if OUR team leads (or comes back to lead) by game end.
@@ -1601,21 +1603,21 @@
       var curMargin = ourScore - oppScore;  // positive = we're winning
 
       if (sport === "NBA") {
-        // Score-change std ≈ sqrt(min_remaining * 5) for the differential.
-        // In the final 2 minutes of Q4/OT, intentional fouling dramatically
-        // accelerates pace (~4-6 possessions in 60 sec), so enforce a minimum
-        // std of 3.0 pts to avoid collapsing too quickly to 1%/99%.
         var std = Math.sqrt(remUnits * 5);
         if (period >= 4 && remUnits < 2) std = Math.max(std, 3.0);
-        return 1 - normalCDF(-curMargin / (std || 0.1));
+        var mu0ml  = normalPPF(_mp) * Math.sqrt(48 * 5);
+        var ef_ml  = mu0ml * remUnits / 48;
+        return 1 - normalCDF((-curMargin - ef_ml) / (std || 0.1));
       } else if (sport === "NHL") {
-        // NHL: ~0.15 goals/min per team → differential variance ≈ rem * 0.30
-        var stdN = Math.sqrt(remUnits * 0.30);
-        return 1 - normalCDF(-curMargin / (stdN || 0.1));
+        var stdN   = Math.sqrt(remUnits * 0.30);
+        var mu0mlN = normalPPF(_mp) * Math.sqrt(60 * 0.30);
+        var ef_mlN = mu0mlN * remUnits / 60;
+        return 1 - normalCDF((-curMargin - ef_mlN) / (stdN || 0.1));
       } else {
-        // MLB: runs per half-inning ≈ 0.5 per team → differential std ≈ sqrt(rem * 0.6)
-        var std2 = Math.sqrt(remUnits * 0.6);
-        return 1 - normalCDF(-curMargin / (std2 || 0.1));
+        var std2   = Math.sqrt(remUnits * 0.6);
+        var mu0ml2 = normalPPF(_mp) * Math.sqrt(18 * 0.6);
+        var ef_ml2 = mu0ml2 * remUnits / 18;
+        return 1 - normalCDF((-curMargin - ef_ml2) / (std2 || 0.1));
       }
     }
 
@@ -1628,24 +1630,20 @@
       var needed    = lineVal - curTotal;   // points still needed to hit the line
 
       if (sport === "NBA") {
-        // Use the line itself as the expected total for THIS game (4.4 pts/min is
-        // the league avg but each game's line already bakes in the true expected pace).
-        // Full-game std ≈ 22 pts → variance per minute = 22²/48 ≈ 10.1
-        var expRem = (lineVal / 48) * remUnits;
-        var stdRem = Math.sqrt(remUnits * 10.1);
-        var pOver  = 1 - normalCDF((needed - expRem) / (stdRem || 0.1));
+        var mu_tot  = lineVal + normalPPF(_mp) * Math.sqrt(48 * 10.1);
+        var expRem  = (mu_tot / 48) * remUnits;
+        var stdRem  = Math.sqrt(remUnits * 10.1);
+        var pOver   = 1 - normalCDF((needed - expRem) / (stdRem || 0.1));
         return parsed.dir === "over" ? pOver : 1 - pOver;
       } else if (sport === "NHL") {
-        // NHL: line / 60 min × rem = expected goals still to be scored
-        // Full-game std ≈ 1.5 goals → variance per minute = 1.5²/60 ≈ 0.0375
-        var expRemN = (lineVal / 60) * remUnits;
+        var mu_totN = lineVal + normalPPF(_mp) * Math.sqrt(60 * 0.0375);
+        var expRemN = (mu_totN / 60) * remUnits;
         var stdRemN = Math.sqrt(remUnits * 0.0375);
         var pOverN  = 1 - normalCDF((needed - expRemN) / (stdRemN || 0.1));
         return parsed.dir === "over" ? pOverN : 1 - pOverN;
       } else {
-        // MLB: line / 18 half-innings = expected runs per half-inning for this game.
-        // Full-game std ≈ 3 runs → variance per half-inning = 3²/18 = 0.5
-        var expRem2 = (lineVal / 18) * remUnits;
+        var mu_tot2 = lineVal + normalPPF(_mp) * Math.sqrt(18 * 0.5);
+        var expRem2 = (mu_tot2 / 18) * remUnits;
         var stdRem2 = Math.sqrt(remUnits * 0.5);
         var pOver2  = 1 - normalCDF((needed - expRem2) / (stdRem2 || 0.1));
         return parsed.dir === "over" ? pOver2 : 1 - pOver2;
@@ -1664,17 +1662,21 @@
       var needed3    = -spreadLine - curMargin3;   // how much more margin we need
 
       if (sport === "NBA") {
-        var std3 = Math.sqrt(remUnits * 5);
+        var std3  = Math.sqrt(remUnits * 5);
         if (period >= 4 && remUnits < 2) std3 = Math.max(std3, 3.0);
-        var mu0 = -spreadLine + normalPPF(Math.min(0.99, Math.max(0.01, marketProb || 0.5))) * Math.sqrt(240);
-        var expFuture = mu0 * remUnits / 48;
-        return 1 - normalCDF((needed3 - expFuture) / (std3 || 0.1));
+        var mu0sp  = -spreadLine + normalPPF(_mp) * Math.sqrt(48 * 5);
+        var ef_sp  = mu0sp * remUnits / 48;
+        return 1 - normalCDF((needed3 - ef_sp) / (std3 || 0.1));
       } else if (sport === "NHL") {
-        var std3N = Math.sqrt(remUnits * 0.30);
-        return 1 - normalCDF(needed3 / (std3N || 0.1));
+        var std3N  = Math.sqrt(remUnits * 0.30);
+        var mu0spN = -spreadLine + normalPPF(_mp) * Math.sqrt(60 * 0.30);
+        var ef_spN = mu0spN * remUnits / 60;
+        return 1 - normalCDF((needed3 - ef_spN) / (std3N || 0.1));
       } else {
-        var std4 = Math.sqrt(remUnits * 0.6);
-        return 1 - normalCDF(needed3 / (std4 || 0.1));
+        var std4   = Math.sqrt(remUnits * 0.6);
+        var mu0sp2 = -spreadLine + normalPPF(_mp) * Math.sqrt(18 * 0.6);
+        var ef_sp2 = mu0sp2 * remUnits / 18;
+        return 1 - normalCDF((needed3 - ef_sp2) / (std4 || 0.1));
       }
     }
 
