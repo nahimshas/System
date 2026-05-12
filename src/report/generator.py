@@ -157,6 +157,7 @@ def build_report(
             "locked":        rec.get("locked", False),
             "commence_time": rec.get("commence_time", ""),
             # Needed by JS for win-prob / WON-LOST
+            "market_prob_pct": rec.get("market_prob_pct", 50),
             "bet_type":      rec["bet_type"],
             "pick":          rec["pick"],
             "contract_price_cents": rec.get("contract_price_cents", 0),
