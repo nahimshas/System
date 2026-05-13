@@ -61,46 +61,74 @@ def _get(url: str, params: dict = None) -> Optional[dict]:
 def _fetch_all_team_stats() -> Dict[str, Dict]:
     """
     Returns {espn_display_name: stats_dict} for every NHL team from standings.
+
+    ESPN's standings structure differs between regular season and playoffs:
+      Regular season: conference → children (divisions) → standings.entries
+      Playoffs:       conference → standings.entries  (no division layer)
+    Both are handled by collecting entries from whichever layer has them.
+
+    Stat field names also differ in playoff mode — avgGoalsFor/avgGoalsAgainst
+    are absent; pointsFor/pointsAgainst/gamesPlayed must be used instead.
     """
     season = _nhl_season()
     data = _get(f"{ESPN_NHL_V2}/standings", params={"season": season})
     if not data:
         return {}
 
-    result: Dict[str, Dict] = {}
+    # Collect all standing entries regardless of whether they sit under a
+    # division layer (regular season) or directly on the conference (playoffs).
+    all_entries = []
     for conf in data.get("children", []):
-        for div in conf.get("children", []):
-            for entry in div.get("standings", {}).get("entries", []):
-                espn_name = entry.get("team", {}).get("displayName", "")
-                if not espn_name:
-                    continue
+        divisions = conf.get("children", [])
+        if divisions:
+            # Regular season: conference → division → entries
+            for div in divisions:
+                all_entries.extend(div.get("standings", {}).get("entries", []))
+        else:
+            # Playoff mode: conference → entries (no division children)
+            all_entries.extend(conf.get("standings", {}).get("entries", []))
 
-                stat_map = {s["name"]: s.get("value", 0.0)
-                            for s in entry.get("stats", []) if "name" in s}
+    result: Dict[str, Dict] = {}
+    for entry in all_entries:
+        espn_name = entry.get("team", {}).get("displayName", "")
+        if not espn_name:
+            continue
 
-                gpg  = float(stat_map.get("avgGoalsFor",
-                             stat_map.get("goalsFor",   3.0)) or 3.0)
-                gapg = float(stat_map.get("avgGoalsAgainst",
-                             stat_map.get("goalsAgainst", 3.0)) or 3.0)
-                wins   = float(stat_map.get("wins",   0))
-                losses = float(stat_map.get("losses", 1))
-                ot_losses = float(stat_map.get("otlosses", 0))
-                total  = wins + losses + ot_losses
-                win_pct = float(stat_map.get("winPercent",
-                                wins / total if total > 0 else 0.5))
-                points = float(stat_map.get("points", wins * 2))
+        stat_map = {s["name"]: s.get("value", 0.0)
+                    for s in entry.get("stats", []) if "name" in s}
 
-                result[espn_name] = {
-                    "off_rtg":  gpg,           # goals/game scored
-                    "def_rtg":  gapg,          # goals/game allowed
-                    "net_rtg":  gpg - gapg,    # goal differential per game
-                    "gpg":      gpg,
-                    "gapg":     gapg,
-                    "win_pct":  win_pct,
-                    "wins":     int(wins),
-                    "losses":   int(losses),
-                    "points":   int(points),
-                }
+        gp = float(stat_map.get("gamesPlayed", 0) or 0)
+
+        # Goals per game: prefer per-game fields, fall back to totals/gamesPlayed.
+        gpg_raw  = stat_map.get("avgGoalsFor") or stat_map.get("goalsFor")
+        gapg_raw = stat_map.get("avgGoalsAgainst") or stat_map.get("goalsAgainst")
+        if gpg_raw is None and gp > 0:
+            gpg_raw  = stat_map.get("pointsFor", 0) / gp
+        if gapg_raw is None and gp > 0:
+            gapg_raw = stat_map.get("pointsAgainst", 0) / gp
+        gpg  = float(gpg_raw  or 3.0)
+        gapg = float(gapg_raw or 3.0)
+
+        wins      = float(stat_map.get("wins",     0))
+        losses    = float(stat_map.get("losses",   1))
+        ot_losses = float(stat_map.get("otLosses", stat_map.get("otlosses", 0)))
+        total     = wins + losses + ot_losses
+        win_pct   = float(stat_map.get("winPercent",
+                          wins / total if total > 0 else 0.5) or
+                          (wins / total if total > 0 else 0.5))
+        points    = float(stat_map.get("points", wins * 2))
+
+        result[espn_name] = {
+            "off_rtg":  gpg,           # goals/game scored
+            "def_rtg":  gapg,          # goals/game allowed
+            "net_rtg":  gpg - gapg,    # goal differential per game
+            "gpg":      gpg,
+            "gapg":     gapg,
+            "win_pct":  win_pct,
+            "wins":     int(wins),
+            "losses":   int(losses),
+            "points":   int(points),
+        }
 
     logger.info(f"NHL season stats: {len(result)} teams loaded")
     return result
