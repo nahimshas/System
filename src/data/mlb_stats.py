@@ -156,12 +156,13 @@ def get_bullpen_stats(team_id: int) -> Dict:
     if not team_id:
         return {}
     data = _get("/stats", {
-        "stats":    "season",
-        "group":    "pitching",
-        "gameType": "R",
-        "teamId":   team_id,
-        "season":   date.today().year,
-        "limit":    50,
+        "stats":      "season",
+        "group":      "pitching",
+        "gameType":   "R",
+        "teamId":     team_id,
+        "season":     date.today().year,
+        "limit":      100,
+        "playerPool": "ALL",   # required — without this the API silently returns only starters
     })
     if not data:
         return {}

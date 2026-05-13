@@ -779,9 +779,14 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         )
 
     # --- Bullpen research ---
-    home_bp_era = home_bullpen.get("bullpen_era", 4.20)
-    away_bp_era = away_bullpen.get("bullpen_era", 4.20)
-    research.append(f"Bullpen ERA — {home}: {home_bp_era:.2f} | {away}: {away_bp_era:.2f}")
+    home_bp_era  = home_bullpen.get("bullpen_era",  4.20)
+    away_bp_era  = away_bullpen.get("bullpen_era",  4.20)
+    home_bp_whip = home_bullpen.get("bullpen_whip", 1.30)
+    away_bp_whip = away_bullpen.get("bullpen_whip", 1.30)
+    research.append(
+        f"Bullpen ERA — {home}: {home_bp_era:.2f} (WHIP {home_bp_whip:.2f}) | "
+        f"{away}: {away_bp_era:.2f} (WHIP {away_bp_whip:.2f})"
+    )
 
     # --- Park factor ---
     if park_factor != 1.0:
@@ -845,20 +850,43 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
 
     home_sp_score = _pitcher_quality_score(home_pitcher_stats) if home_pitcher_stats else 0
     away_sp_score = _pitcher_quality_score(away_pitcher_stats) if away_pitcher_stats else 0
+    # Bullpen quality score uses same scale as SP: (4.20 - ERA) / 1.50
+    # Positive = better than average (suppresses opponent runs), negative = worse.
+    home_bullpen_score = (4.20 - home_bp_era) / 1.50
+    away_bullpen_score = (4.20 - away_bp_era) / 1.50
+
     home_offense_adj = (home_ops - 0.735) / 0.080   # baseline updated to current MLB avg OPS
     away_offense_adj = (away_ops - 0.735) / 0.080
-    home_bullpen_adj = (4.20 - home_bp_era) / 2.0
-    away_bullpen_adj = (4.20 - away_bp_era) / 2.0
 
+    # Innings-based SP / bullpen split.
+    # Each pitcher's expected innings determine how much of the pitching coefficient
+    # they own. A SP going 6+ IP makes the bullpen nearly irrelevant; an opener
+    # scenario (3 IP) makes the bullpen the dominant factor.
+    # avg_ip_per_start is fetched from season stats; cap to [2, 7] to avoid extremes.
+    _TOTAL_INN   = 9.0
+    _PITCH_COEFF = 0.80   # total pitching influence on expected runs (unchanged)
+
+    home_sp_ip = min(7.0, max(2.0, home_pitcher_stats.get("avg_ip_per_start", 5.0) or 5.0)) \
+                 if home_pitcher_stats else 5.0
+    away_sp_ip = min(7.0, max(2.0, away_pitcher_stats.get("avg_ip_per_start", 5.0) or 5.0)) \
+                 if away_pitcher_stats else 5.0
+
+    home_sp_coeff = _PITCH_COEFF * (home_sp_ip / _TOTAL_INN)
+    home_bp_coeff = _PITCH_COEFF * ((_TOTAL_INN - home_sp_ip) / _TOTAL_INN)
+    away_sp_coeff = _PITCH_COEFF * (away_sp_ip / _TOTAL_INN)
+    away_bp_coeff = _PITCH_COEFF * ((_TOTAL_INN - away_sp_ip) / _TOTAL_INN)
+
+    # A better pitcher (positive score) REDUCES the opponent's expected runs → subtract.
+    # A worse pitcher (negative score) INCREASES the opponent's expected runs → subtract negative = add.
     expected_home_runs = max(1.5, league_avg_runs
-                             - away_sp_score * 0.8
-                             + home_offense_adj * 0.6
-                             + away_bullpen_adj * 0.3
+                             - away_sp_score     * away_sp_coeff   # away SP quality
+                             - away_bullpen_score * away_bp_coeff  # away bullpen quality
+                             + home_offense_adj  * 0.6
                              + MLB_HOME_ADVANTAGE * 5)
     expected_away_runs = max(1.5, league_avg_runs
-                             - home_sp_score * 0.8
-                             + away_offense_adj * 0.6
-                             + home_bullpen_adj * 0.3)
+                             - home_sp_score     * home_sp_coeff   # home SP quality
+                             - home_bullpen_score * home_bp_coeff  # home bullpen quality
+                             + away_offense_adj  * 0.6)
 
     # --- Strikeout matchup adjustment ---
     # High-K% offense facing a strikeout pitcher is a run-suppression signal the
