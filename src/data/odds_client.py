@@ -478,11 +478,26 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
                                 if pname and pname not in target_found:
                                     target_found[pname] = (int(o.get("price", -110)), bk_key)
                     break
-            for pname, (price, bk_key) in target_found.items():
-                pref_lines[pname]  = target_point
-                pref_prices[pname] = price
-                if pref_book is None:
-                    pref_book = bk_key
+            if target_found:
+                # Override pref_lines with only the players found at the target line.
+                # Discard any players that were only available at a different line
+                # (e.g., DraftKings offered HRR at 1.5 but we need 0.5).
+                pref_lines  = {}
+                pref_prices = {}
+                for pname, (price, bk_key) in target_found.items():
+                    pref_lines[pname]  = target_point
+                    pref_prices[pname] = price
+                    if pref_book is None:
+                        pref_book = bk_key
+            else:
+                # No book offered the target line — skip this market entirely.
+                # We don't fall back to a different line because that would price
+                # the bet incorrectly (e.g., showing HRR Over 1.5 when we only
+                # want to play HRR Over 0.5 on Robinhood).
+                logger.debug(
+                    f"Skipping {market_key}: target line {target_point} not found at any book"
+                )
+                pref_lines = {}
 
         if not pref_lines:
             continue
