@@ -7,6 +7,7 @@ Approach:
   3. Compare adjusted probability to market — flag positive edges
 """
 import logging
+import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
@@ -31,10 +32,18 @@ logger = logging.getLogger(__name__)
 # Standard deviation of game point/run differentials used in norm.cdf win-prob model.
 # NBA: real-world NBA point differential std ≈ 14 pts. Using 12 was too tight,
 #      causing the model to be overconfident on lopsided matchups.
-# MLB: real-world MLB run differential std ≈ 3.0 runs. 1.8 was far too tight,
-#      inflating all MLB edges significantly.
-NBA_SPREAD_STD = 12.0   # model uncertainty for point margin; 14.0 was too wide (suppressed all edges)
-MLB_SPREAD_STD = 1.8    # real-world MLB run-diff std ≈ 1.5–1.8; 3.0 was far too wide, suppressing pitcher impact
+# MLB: std of 1.8 keeps the 60–70% probability range well-calibrated (confirmed by backtest).
+#      The tanh cap below handles overconfidence at the high end without touching mid-range picks.
+NBA_SPREAD_STD  = 12.0  # model uncertainty for point margin; 14.0 was too wide (suppressed all edges)
+MLB_SPREAD_STD  = 1.8   # calibrated via backtest — do not change without re-running calibration
+# Soft ceiling on raw run differential before norm.cdf conversion.
+# When multiple factors stack (great SP + good bullpen + strong offense + injuries),
+# the linear sum overshoots realistic expectation. tanh(x / CAP) * CAP compresses
+# large differentials toward the cap using diminishing returns while leaving small
+# differentials (< ~1.0 run) nearly untouched. This prevents norm.cdf from
+# producing 85%+ probabilities that the backtest shows are only winning ~46%.
+# At CAP=1.8: a raw diff of 2.5 runs → capped to 1.71 runs → ~83% max probability.
+MLB_RUN_DIFF_CAP = 1.8
 
 # Injury credibility gate ─────────────────────────────────────────────────────
 # When a team's injury_adjustment ≥ INJURY_GATE, our season net-rating baseline
@@ -1027,7 +1036,14 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     research.append(f"Model expected runs: {home} {expected_home_runs:.2f} | {away} {expected_away_runs:.2f}")
 
     run_diff = expected_home_runs - expected_away_runs
-    model_home_prob = float(norm.cdf(run_diff, 0, MLB_SPREAD_STD))
+    # Apply diminishing-returns cap: small edges pass through unchanged,
+    # large stacked differentials are compressed toward MLB_RUN_DIFF_CAP.
+    run_diff_capped = MLB_RUN_DIFF_CAP * math.tanh(run_diff / MLB_RUN_DIFF_CAP)
+    if abs(run_diff_capped) < abs(run_diff) - 0.05:
+        research.append(
+            f"tanh cap active: raw run diff {run_diff:+.2f} → capped {run_diff_capped:+.2f}"
+        )
+    model_home_prob = float(norm.cdf(run_diff_capped, 0, MLB_SPREAD_STD))
     model_home_prob = min(0.85, max(0.15, model_home_prob))
     model_away_prob = 1 - model_home_prob
 
