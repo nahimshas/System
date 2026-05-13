@@ -846,7 +846,64 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     # --- Expected runs ---
     home_ops = home_batting.get("ops", 0.735)
     away_ops = away_batting.get("ops", 0.735)
+
+    # Coors Field correction — Colorado's season OPS and pitcher xFIP/ERA are
+    # heavily inflated by home games at altitude. When the Rockies play AWAY,
+    # their true offensive output is ~8% lower than season OPS suggests.
+    # When opponents pitch AT Coors, their stats are similarly inflated.
+    # The park_factor (1.30) already adjusts run totals for the venue, but
+    # the Rockies' season batting stats need correcting before that step.
+    _COORS_OPS_DEFLATOR = 0.92    # Rockies road OPS ≈ 92% of season OPS
+    _is_coors = "Coors" in venue
+    if "Colorado Rockies" == away and not _is_coors:
+        # Rockies batting away from Coors — deflate their inflated season OPS
+        away_ops = away_ops * _COORS_OPS_DEFLATOR
+    if "Colorado Rockies" == home and not _is_coors:
+        # Shouldn't happen (Rockies always home at Coors) but guard anyway
+        home_ops = home_ops * _COORS_OPS_DEFLATOR
+
     league_avg_runs = 4.5
+    _LEAGUE_AVG_XFIP = 4.20
+    _RECENT_WEIGHT   = 0.35   # weight given to last-4-starts xFIP vs season xFIP
+
+    def _blend_xfip(stats: Dict) -> float:
+        """
+        Blends season xFIP with recent-form xFIP (last 4 starts).
+        Also applies small-sample regression toward league average for
+        pitchers with fewer than 30 season IP — prevents extreme scores
+        from tiny samples like Imai (8 IP).
+        """
+        season_xfip = stats.get("xfip") or _LEAGUE_AVG_XFIP
+        season_ip   = stats.get("innings_pitched", 0) or 0
+        recent_xfip = stats.get("recent_xfip")
+        recent_ip   = stats.get("recent_ip", 0) or 0
+
+        if recent_xfip is not None and recent_ip >= 5:
+            blended = season_xfip * (1 - _RECENT_WEIGHT) + recent_xfip * _RECENT_WEIGHT
+        else:
+            blended = float(season_xfip)
+
+        # Regression toward league average for small-season samples.
+        # At 0 IP → 100% league avg; at 30+ IP → 0% regression.
+        if season_ip < 30:
+            regression = max(0.0, (30 - season_ip) / 30)
+            blended = blended * (1 - regression) + _LEAGUE_AVG_XFIP * regression
+
+        return round(blended, 3)
+
+    def _effective_avg_ip(stats: Dict) -> float:
+        """Returns best available avg IP per start — recent form preferred over season."""
+        recent = stats.get("recent_avg_ip_per_start")
+        season = stats.get("avg_ip_per_start")
+        return float(recent or season or 5.0)
+
+    # Blend xFIP before computing quality scores so recent form affects projections
+    if home_pitcher_stats:
+        home_blended_xfip = _blend_xfip(home_pitcher_stats)
+        home_pitcher_stats = {**home_pitcher_stats, "xfip": home_blended_xfip}
+    if away_pitcher_stats:
+        away_blended_xfip = _blend_xfip(away_pitcher_stats)
+        away_pitcher_stats = {**away_pitcher_stats, "xfip": away_blended_xfip}
 
     home_sp_score = _pitcher_quality_score(home_pitcher_stats) if home_pitcher_stats else 0
     away_sp_score = _pitcher_quality_score(away_pitcher_stats) if away_pitcher_stats else 0
@@ -866,9 +923,9 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     _TOTAL_INN   = 9.0
     _PITCH_COEFF = 0.80   # total pitching influence on expected runs (unchanged)
 
-    home_sp_ip = min(7.0, max(2.0, home_pitcher_stats.get("avg_ip_per_start", 5.0) or 5.0)) \
+    home_sp_ip = min(7.0, max(2.0, _effective_avg_ip(home_pitcher_stats))) \
                  if home_pitcher_stats else 5.0
-    away_sp_ip = min(7.0, max(2.0, away_pitcher_stats.get("avg_ip_per_start", 5.0) or 5.0)) \
+    away_sp_ip = min(7.0, max(2.0, _effective_avg_ip(away_pitcher_stats))) \
                  if away_pitcher_stats else 5.0
 
     home_sp_coeff = _PITCH_COEFF * (home_sp_ip / _TOTAL_INN)
@@ -953,12 +1010,25 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         signals.append("🏆 Playoffs: ace starters, shorter leash, lower scoring applied")
         research.append(f"Playoff adjustment: runs scaled by {MLB_PLAYOFF_SCORING_FACTOR} | starter IP capped at {MLB_PLAYOFF_STARTER_IP}")
 
+    # --- Injury run adjustment ---
+    # Route injury drag through expected runs (not win probability) so it is
+    # consistent with how pitching and offense are modelled and so the projected
+    # score shown in research correctly reflects the depleted lineup.
+    # Conversion: each 1% injury drag ≈ 0.08 fewer expected runs (rough empirical).
+    _INJ_RUNS_PER_PCT = 0.08
+    if home_inj > 0.01:
+        home_inj_runs = home_inj * _INJ_RUNS_PER_PCT * 100   # inj is a fraction, e.g. 0.025
+        expected_home_runs = max(1.5, expected_home_runs - home_inj_runs)
+    if away_inj > 0.01:
+        away_inj_runs = away_inj * _INJ_RUNS_PER_PCT * 100
+        expected_away_runs = max(1.5, expected_away_runs - away_inj_runs)
+
     signals.append(f"Model projected score: {home} {expected_home_runs:.1f} — {away} {expected_away_runs:.1f}")
     research.append(f"Model expected runs: {home} {expected_home_runs:.2f} | {away} {expected_away_runs:.2f}")
 
     run_diff = expected_home_runs - expected_away_runs
     model_home_prob = float(norm.cdf(run_diff, 0, MLB_SPREAD_STD))
-    model_home_prob = min(0.85, max(0.15, model_home_prob - home_inj + away_inj))
+    model_home_prob = min(0.85, max(0.15, model_home_prob))
     model_away_prob = 1 - model_home_prob
 
     ml = game.get("moneyline")

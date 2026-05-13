@@ -23,8 +23,8 @@ from src.config import (
 from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits, fetch_player_props
 from src.data.nba_stats import get_nba_context
 from src.data.mlb_stats import (
-    get_todays_games, get_pitcher_stats, get_team_batting_stats,
-    get_bullpen_stats, get_team_schedule_load,
+    get_todays_games, get_pitcher_stats, get_pitcher_recent_stats,
+    get_team_batting_stats, get_bullpen_stats, get_team_schedule_load,
 )
 from src.data.nfl_stats import get_nfl_context
 from src.data.nhl_stats import get_nhl_context
@@ -313,6 +313,17 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             try:
                 hp_stats  = get_pitcher_stats(game.get("home_pitcher_id"))
                 ap_stats  = get_pitcher_stats(game.get("away_pitcher_id"))
+
+                # Merge recent form (last 4 starts) into season stats dicts.
+                # edge_finder will blend these with season xFIP for the quality score.
+                # Falls back gracefully — if the game log fetch fails, season stats are used as-is.
+                hp_recent = get_pitcher_recent_stats(game.get("home_pitcher_id"))
+                ap_recent = get_pitcher_recent_stats(game.get("away_pitcher_id"))
+                if hp_recent:
+                    hp_stats = {**hp_stats, **hp_recent}
+                if ap_recent:
+                    ap_stats = {**ap_stats, **ap_recent}
+
                 home_bat  = get_team_batting_stats(game.get("home_team_id"))
                 away_bat  = get_team_batting_stats(game.get("away_team_id"))
                 home_bp   = get_bullpen_stats(game.get("home_team_id"))

@@ -108,6 +108,72 @@ def get_pitcher_stats(pitcher_id: int) -> Dict:
         return {}
 
 
+def get_pitcher_recent_stats(pitcher_id: int, last_n: int = 4) -> Dict:
+    """
+    Fetches per-start game log for the last N starts and computes recent
+    xFIP, FIP, K/9, BB/9, and avg IP per start.
+
+    Used to blend with season stats so the model responds to recent form —
+    a pitcher who has been dominant for 4 straight starts is treated
+    differently from one whose season ERA is propped up by early outings.
+
+    Returns an empty dict on failure so the caller can safely ignore it.
+    """
+    if not pitcher_id:
+        return {}
+    data = _get(f"/people/{pitcher_id}/stats", {
+        "stats":  "gameLog",
+        "group":  "pitching",
+        "season": date.today().year,
+    })
+    if not data:
+        return {}
+    try:
+        splits = data["stats"][0]["splits"]
+        if not splits:
+            return {}
+
+        # Game log returns one entry per appearance — take only starts
+        # (gamesStarted=1) and use the most recent last_n
+        starts = [s for s in splits if int(s.get("stat", {}).get("gamesStarted", 0)) == 1]
+        recent = starts[-last_n:] if len(starts) >= last_n else starts
+        if not recent:
+            return {}
+
+        total_ip = total_k = total_bb = total_hr = total_air = 0.0
+        for s in recent:
+            st = s.get("stat", {})
+            ip_str = (st.get("inningsPitched") or "0").replace("-", "0")
+            ip  = float(ip_str)
+            total_ip  += ip
+            total_k   += int(st.get("strikeOuts", 0))
+            total_bb  += int(st.get("baseOnBalls", 0))
+            total_hr  += int(st.get("homeRunsAllowed", st.get("homeRuns", 0)))
+            total_air += int(st.get("airOuts", 0))
+
+        if total_ip < 5:
+            return {}
+
+        recent_fip  = (13 * total_hr + 3 * total_bb - 2 * total_k) / total_ip + 3.20
+        recent_xfip = (13 * (total_air * 0.10) + 3 * total_bb - 2 * total_k) / total_ip + 3.20
+        recent_k9   = total_k  / total_ip * 9
+        recent_bb9  = total_bb / total_ip * 9
+        recent_avg_ip = round(total_ip / len(recent), 1)
+
+        return {
+            "recent_xfip":          round(recent_xfip, 2),
+            "recent_fip":           round(recent_fip, 2),
+            "recent_k_per_9":       round(recent_k9, 1),
+            "recent_bb_per_9":      round(recent_bb9, 1),
+            "recent_ip":            round(total_ip, 1),
+            "recent_starts":        len(recent),
+            "recent_avg_ip_per_start": recent_avg_ip,
+        }
+    except (KeyError, IndexError, ValueError, ZeroDivisionError) as e:
+        logger.warning(f"Pitcher recent stats parse error (id={pitcher_id}): {e}")
+        return {}
+
+
 def get_team_batting_stats(team_id: int) -> Dict:
     """Fetches team season batting stats."""
     if not team_id:

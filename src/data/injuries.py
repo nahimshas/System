@@ -82,7 +82,10 @@ NHL_POSITION_IMPACT = {
     "F": 0.018,    # generic forward
 }
 
-STATUS_WEIGHT = {"out": 1.0, "doubtful": 0.75, "questionable": 0.35, "day-to-day": 0.35}
+STATUS_WEIGHT = {"out": 1.0, "doubtful": 0.70, "questionable": 0.45, "day-to-day": 0.20}
+# day-to-day: player more likely to play than not (~20% chance they sit)
+# questionable: genuinely uncertain (~45% chance they sit)
+# doubtful: more likely out than not (~70% chance they sit)
 
 _SPORT_POSITION_MAP = {
     "nba": NBA_POSITION_IMPACT,
