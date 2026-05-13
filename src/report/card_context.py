@@ -157,7 +157,7 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
 
     elif severe_traps:
         t = severe_traps[0]
-        sev = "significant" if t.group(1) == "SEVERE" else "notable"
+        sev = "significant" if t.group(1) == "SEVERE" else "moderate"
         parts.append(
             f"The model finds a {ew} edge against {t.group(6)}, driven by a {sev} "
             f"ERA trap on {t.group(2)} — {t.group(3)} ERA vs {t.group(4)} xFIP "

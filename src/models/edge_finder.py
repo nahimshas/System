@@ -620,7 +620,9 @@ def _era_trap_severity(stats: Dict) -> float:
     babip = stats.get("babip")
     ip    = stats.get("innings_pitched", 0)
 
-    if not isinstance(era, float) or not isinstance(ip, float) or ip < 10:
+    # Require at least 20 IP before diagnosing an ERA trap — 10-19 IP is genuine
+    # small-sample volatility, not a structural disconnect between ERA and xFIP.
+    if not isinstance(era, float) or not isinstance(ip, float) or ip < 20:
         return 0.0
 
     # Prerequisite: pitcher must be outperforming their FIP (ERA < FIP).
