@@ -13,6 +13,7 @@ Subsequent runs       →
 import json
 import logging
 from collections import Counter
+from src.report.card_context import build_card_context, build_prop_context
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -83,8 +84,18 @@ def bet_to_dict(rec) -> Dict:
         "loss_if_lose": rec.sizing.loss_if_lose,
         "expected_value": rec.sizing.expected_value,
         "confidence": rec.confidence,
-        "signals": rec.signals,
-        "research": rec.research,
+        "signals": rec.signals,    # kept raw for state management / merge logic
+        "research": rec.research,  # kept raw for state management / merge logic
+        # Display context — narrative + merged deduplicated stat list.
+        # Computed here so confidence (set upstream) is never affected.
+        **dict(zip(
+            ("narrative", "context"),
+            build_card_context(
+                rec.sport, rec.pick, rec.bet_type,
+                rec.signals, rec.research,
+                rec.model_prob, rec.market_prob, rec.edge,
+            ),
+        )),
         # State management fields
         "home_team": rec.home_team,
         "away_team": rec.away_team,
@@ -138,6 +149,16 @@ def prop_to_dict(prop) -> Dict:
         "note": prop.note,
         "signals": prop.signals,
         "research": prop.research,
+        **dict(zip(
+            ("narrative", "context"),
+            build_prop_context(
+                prop.sport, prop.prop_type, prop.player, prop.team, prop.opponent,
+                prop.signals, prop.research,
+                prop.model_line,
+                getattr(prop, "market_line", prop.model_line),
+                getattr(prop, "edge", 0.0),
+            ),
+        )),
         # Odds API market fields
         "market_line":  getattr(prop, "market_line", prop.model_line),
         "market_prob":  getattr(prop, "market_prob", 0.0),

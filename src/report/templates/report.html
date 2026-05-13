@@ -62,19 +62,10 @@
     .stat-value.blue { color: var(--blue); }
     .stat-value.teal { color: var(--teal); }
 
-    .signals { margin-top: 10px; }
-    .signals-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-    .signal-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--blue); margin-bottom: 4px; line-height: 1.4; }
-
-    .research-section { margin-top: 10px; }
-    .research-section summary {
-      font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--teal);
-      cursor: pointer; list-style: none; padding: 6px 0; letter-spacing: 0.05em;
-    }
-    .research-section summary::-webkit-details-marker { display: none; }
-    .research-section summary::before { content: '▶ '; font-size: 0.6rem; }
-    .research-section[open] summary::before { content: '▼ '; }
-    .research-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--teal-dim); margin-bottom: 4px; line-height: 1.4; color: var(--muted); }
+    .card-narrative { margin-top: 10px; font-size: 0.85rem; line-height: 1.6; color: var(--text); font-style: italic; padding: 8px 12px; background: rgba(99,102,241,0.06); border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; }
+    .context-section { margin-top: 10px; }
+    .context-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.05em; }
+    .context-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--teal-dim); margin-bottom: 4px; line-height: 1.4; color: var(--muted); }
 
     .action-box { background: var(--blue-dim); border: 1px solid var(--blue); border-radius: 8px; padding: 12px; margin-top: 10px; }
     .action-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
@@ -340,18 +331,13 @@
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
         </div>
-        {% if bet.signals %}
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
-        </div>
+        {% if bet.narrative %}
+        <div class="card-narrative">{{ bet.narrative }}</div>
         {% endif %}
-        {% if bet.research %}
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
-          </details>
+        {% if bet.context %}
+        <div class="context-section">
+          <div class="context-title">Context &amp; Stats</div>
+          {% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}
         </div>
         {% endif %}
         {% if bet.alloc_rank %}
@@ -420,18 +406,13 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">+{{ prop.edge_pct }}%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">{{ prop.note }}</div>
-        {% if prop.signals %}
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          {% for signal in prop.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
-        </div>
+        {% if prop.narrative %}
+        <div class="card-narrative">{{ prop.narrative }}</div>
         {% endif %}
-        {% if prop.research %}
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            {% for item in prop.research %}<div class="research-item">{{ item }}</div>{% endfor %}
-          </details>
+        {% if prop.context %}
+        <div class="context-section" style="margin-top:8px;">
+          <div class="context-title">Context &amp; Stats</div>
+          {% for item in prop.context %}<div class="context-item">{{ item }}</div>{% endfor %}
         </div>
         {% endif %}
       </div>
@@ -508,18 +489,13 @@
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
         </div>
-        {% if bet.signals %}
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
-        </div>
+        {% if bet.narrative %}
+        <div class="card-narrative">{{ bet.narrative }}</div>
         {% endif %}
-        {% if bet.research %}
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
-          </details>
+        {% if bet.context %}
+        <div class="context-section">
+          <div class="context-title">Context &amp; Stats</div>
+          {% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}
         </div>
         {% endif %}
         {% if bet.alloc_rank %}
@@ -588,18 +564,13 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">+{{ prop.edge_pct }}%</div></div>
         </div>
         <div class="prop-note" style="margin-top:6px;">{{ prop.note }}</div>
-        {% if prop.signals %}
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          {% for signal in prop.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
-        </div>
+        {% if prop.narrative %}
+        <div class="card-narrative">{{ prop.narrative }}</div>
         {% endif %}
-        {% if prop.research %}
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            {% for item in prop.research %}<div class="research-item">{{ item }}</div>{% endfor %}
-          </details>
+        {% if prop.context %}
+        <div class="context-section" style="margin-top:8px;">
+          <div class="context-title">Context &amp; Stats</div>
+          {% for item in prop.context %}<div class="context-item">{{ item }}</div>{% endfor %}
         </div>
         {% endif %}
       </div>
@@ -667,18 +638,13 @@
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
         </div>
-        {% if bet.signals %}
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
-        </div>
+        {% if bet.narrative %}
+        <div class="card-narrative">{{ bet.narrative }}</div>
         {% endif %}
-        {% if bet.research %}
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
-          </details>
+        {% if bet.context %}
+        <div class="context-section">
+          <div class="context-title">Context &amp; Stats</div>
+          {% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}
         </div>
         {% endif %}
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
@@ -748,18 +714,13 @@
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
         </div>
-        {% if bet.signals %}
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          {% for signal in bet.signals %}<div class="signal-item">{{ signal }}</div>{% endfor %}
-        </div>
+        {% if bet.narrative %}
+        <div class="card-narrative">{{ bet.narrative }}</div>
         {% endif %}
-        {% if bet.research %}
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            {% for item in bet.research %}<div class="research-item">{{ item }}</div>{% endfor %}
-          </details>
+        {% if bet.context %}
+        <div class="context-section">
+          <div class="context-title">Context &amp; Stats</div>
+          {% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}
         </div>
         {% endif %}
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
