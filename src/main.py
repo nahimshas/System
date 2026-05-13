@@ -40,6 +40,7 @@ from src.state.manager import (
     bet_to_dict, parlay_to_dict, prop_to_dict,
     _game_started,
 )
+from src.report.card_context import build_card_context, build_prop_context
 from src.data.outcome_checker import (
     check_and_settle, check_and_settle_props,
     check_and_settle_watchlist,      # NHL date-based settlement
@@ -823,6 +824,40 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             logger.warning(f"{len(change_warnings)} pick change(s) since morning run")
             for w in change_warnings:
                 logger.warning(f"  {w.get('reason', w)}")
+
+    # ------------------------------------------------------------------ #
+    #  Hydrate narrative/context for any state-loaded picks that predate
+    #  the card context feature (dicts missing the 'narrative' key).
+    # ------------------------------------------------------------------ #
+    def _hydrate_bet(d: dict) -> dict:
+        if "narrative" in d:
+            return d
+        narrative, context = build_card_context(
+            d.get("sport", ""), d.get("pick", ""), d.get("bet_type", ""),
+            d.get("signals", []), d.get("research", []),
+            d.get("model_prob_pct", 50) / 100,
+            d.get("market_prob_pct", 50) / 100,
+            d.get("edge_pct", 0) / 100,
+        )
+        return {**d, "narrative": narrative, "context": context}
+
+    def _hydrate_prop(d: dict) -> dict:
+        if "narrative" in d:
+            return d
+        narrative, context = build_prop_context(
+            d.get("sport", ""), d.get("prop_type", ""), d.get("player", ""),
+            d.get("team", ""), d.get("opponent", ""),
+            d.get("signals", []), d.get("research", []),
+            d.get("model_line", d.get("market_line", 0)),
+            d.get("market_line", 0),
+            d.get("edge_pct", 0) / 100,
+        )
+        return {**d, "narrative": narrative, "context": context}
+
+    final_singles_display = [_hydrate_bet(d) for d in final_singles_display]
+    final_singles         = [_hydrate_bet(d) for d in final_singles]
+    final_props_display   = [_hydrate_prop(d) for d in final_props_display]
+    final_props           = [_hydrate_prop(d) for d in final_props]
 
     # ------------------------------------------------------------------ #
     #  Build report & render HTML
