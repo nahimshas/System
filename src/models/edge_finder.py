@@ -1867,6 +1867,8 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                         commence_time=commence_time,
                     ))
 
+    return recs
+
 
 # ---------------------------------------------------------------------------
 # IPL — Indian Premier League cricket (moneyline / match-winner only)
