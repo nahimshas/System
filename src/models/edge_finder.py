@@ -226,12 +226,17 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             adj += NBA_BACK_TO_BACK_PENALTY
             signals.append(f"{away} on back-to-back — favors {home} (+{NBA_BACK_TO_BACK_PENALTY*100:.0f}%)")
 
-        rest_diff = min(home_rest - away_rest, 3)
-        if abs(rest_diff) >= 1:
-            rest_adj = rest_diff * NBA_REST_BONUS_PER_DAY
-            adj += rest_adj
-            direction = home if rest_diff > 0 else away
-            signals.append(f"Rest edge: {direction} has {abs(rest_diff)} more rest day(s) (+{abs(rest_adj)*100:.1f}%)")
+        # Rest-difference bonus: only applied when neither team is on a B2B.
+        # If either team has 0 rest, the B2B penalty above already captures that
+        # team's fatigue disadvantage — adding a rest_diff on top double-counts it.
+        # Cap symmetrically at ±3 days (beyond 3 days, additional rest adds nothing).
+        if home_rest > 0 and away_rest > 0:
+            rest_diff = max(min(home_rest - away_rest, 3), -3)
+            if abs(rest_diff) >= 1:
+                rest_adj = rest_diff * NBA_REST_BONUS_PER_DAY
+                adj += rest_adj
+                direction = home if rest_diff > 0 else away
+                signals.append(f"Rest edge: {direction} has {abs(rest_diff)} more rest day(s) (+{abs(rest_adj)*100:.1f}%)")
 
         research.append(f"Rest days — {home}: {home_rest} | {away}: {away_rest}")
 
