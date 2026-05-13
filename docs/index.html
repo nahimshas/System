@@ -62,19 +62,10 @@
     .stat-value.blue { color: var(--blue); }
     .stat-value.teal { color: var(--teal); }
 
-    .signals { margin-top: 10px; }
-    .signals-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-    .signal-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--blue); margin-bottom: 4px; line-height: 1.4; }
-
-    .research-section { margin-top: 10px; }
-    .research-section summary {
-      font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--teal);
-      cursor: pointer; list-style: none; padding: 6px 0; letter-spacing: 0.05em;
-    }
-    .research-section summary::-webkit-details-marker { display: none; }
-    .research-section summary::before { content: '▶ '; font-size: 0.6rem; }
-    .research-section[open] summary::before { content: '▼ '; }
-    .research-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--teal-dim); margin-bottom: 4px; line-height: 1.4; color: var(--muted); }
+    .card-narrative { margin-top: 10px; font-size: 0.85rem; line-height: 1.6; color: var(--text); font-style: italic; padding: 8px 12px; background: rgba(99,102,241,0.06); border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; }
+    .context-section { margin-top: 10px; }
+    .context-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.05em; }
+    .context-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--teal-dim); margin-bottom: 4px; line-height: 1.4; color: var(--muted); }
 
     .action-box { background: var(--blue-dim); border: 1px solid var(--blue); border-radius: 8px; padding: 12px; margin-top: 10px; }
     .action-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
@@ -150,7 +141,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Wednesday, May 13, 2026 &middot; Generated May 13, 2026 at 02:34 PM PDT</div>
+    <div class="subtitle">Wednesday, May 13, 2026 &middot; Generated May 13, 2026 at 04:01 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
       MLB: 13 games &nbsp;|&nbsp;
@@ -546,18 +537,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+16.7%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Model projected score: Detroit Pistons 110 — Cleveland Cavaliers 110</div><div class="signal-item">Model expected total: 218.0 vs market line 211.5</div><div class="signal-item">Combined pace: 96.0 possessions/game</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Detroit Pistons off (blended): 117.8 vs Cleveland Cavaliers def (blended): 115.4</div><div class="research-item">Cleveland Cavaliers off (blended): 119.5 vs Detroit Pistons def (blended): 109.6</div><div class="research-item">Recent form weight: 55% | Season weight: 45%</div><div class="research-item">⚕ Detroit Pistons injury drag: −2.3 pts from totals projection</div>
-          </details>
-        </div>
         
         
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
@@ -613,18 +592,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value yellow">+4.1%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Home court advantage: Detroit Pistons (+2%)</div><div class="signal-item">Rating edge: Detroit Pistons (blended NetRtg diff +4.7)</div><div class="signal-item">🏆 Playoffs: defensive intensity higher, recent form weighted 55%</div><div class="signal-item">Detroit Pistons injury impact (-3.0%)</div><div class="signal-item">Model projected score: Detroit Pistons 105 — Cleveland Cavaliers 103</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Detroit Pistons: OffRtg 117.8 | DefRtg 109.6 | NetRtg 8.2</div><div class="research-item">Cleveland Cavaliers: OffRtg 119.5 | DefRtg 115.4 | NetRtg 4.1</div><div class="research-item">Detroit Pistons last 14 days: NetRtg 6.7 | Win% 71%</div><div class="research-item">Cleveland Cavaliers last 14 days: NetRtg 1.6 | Win% 57%</div><div class="research-item">Rest days — Detroit Pistons: 1 | Cleveland Cavaliers: 1</div><div class="research-item">Playoff adjustment: scoring/pace factors applied to totals model</div><div class="research-item">⚕ Detroit Pistons — Kevin Huerter (G): OUT</div><div class="research-item">⚕ Detroit Pistons — Caris LeVert (G): DAY-TO-DAY</div><div class="research-item">⚕ Detroit Pistons — Duncan Robinson (F): DAY-TO-DAY</div>
-          </details>
-        </div>
         
         
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
@@ -687,18 +654,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 63.9%. Model projects 4.9.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 1.5 at 63.9% (draftkings)</div><div class="signal-item">Model projects 4.9 → edge +34.1%</div><div class="signal-item">Avg game pace: 118.6 combined PPG (above avg → more board opportunities)</div><div class="signal-item">Game total: model 218.0 vs market 211.5 (high-scoring environment, scale 1.03x)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Cleveland Cavaliers: Net RTG +4.1 | PPG 119.5 | OPPG 115.4</div><div class="research-item">Detroit Pistons: Net RTG +8.2 | PPG 117.8 | OPPG 109.6</div><div class="research-item">Jaylon Tyson: 13.2 PPG / 5.1 RPG / 2.2 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -745,18 +700,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 2.5 at 55.0%. Model projects 4.6.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 2.5 at 55.0% (draftkings)</div><div class="signal-item">Model projects 4.6 → edge +33.2%</div><div class="signal-item">Detroit Pistons scores 117.8 PPG (above avg → more assist opportunities)</div><div class="signal-item">Game total: model 218.0 vs market 211.5 (high-scoring environment, scale 1.03x)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Cleveland Cavaliers: Net RTG +4.1 | PPG 119.5 | OPPG 115.4</div><div class="research-item">Detroit Pistons: Net RTG +8.2 | PPG 117.8 | OPPG 109.6</div><div class="research-item">Dennis Schroder: 10.8 PPG / 2.7 RPG / 4.9 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -803,18 +746,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 18.5 at 54.5%. Model projects 24.3.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 18.5 at 54.5% (draftkings)</div><div class="signal-item">Model projects 24.3 → edge +21.7%</div><div class="signal-item">Detroit Pistons allows 109.6 PPG (below avg)</div><div class="signal-item">Game total: model 218.0 vs market 211.5 (high-scoring environment, scale 1.03x)</div><div class="signal-item">🏆 Playoffs: star usage boost applied (+5%)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Cleveland Cavaliers: Net RTG +4.1 | PPG 119.5 | OPPG 115.4</div><div class="research-item">Detroit Pistons: Net RTG +8.2 | PPG 117.8 | OPPG 109.6</div><div class="research-item">James Harden: 23.6 PPG / 4.8 RPG / 6.5 APG / 1.91 SPG / 0.00 BPG / 0.0 3PM (40 games)</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -861,18 +792,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 3.5 at 60.3%. Model projects 5.2.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 3.5 at 60.3% (draftkings)</div><div class="signal-item">Model projects 5.2 → edge +20.0%</div><div class="signal-item">Avg game pace: 118.6 combined PPG (above avg → more board opportunities)</div><div class="signal-item">Game total: model 218.0 vs market 211.5 (high-scoring environment, scale 1.03x)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Cleveland Cavaliers: Net RTG +4.1 | PPG 119.5 | OPPG 115.4</div><div class="research-item">Detroit Pistons: Net RTG +8.2 | PPG 117.8 | OPPG 109.6</div><div class="research-item">Max Strus: 11.2 PPG / 5.4 RPG / 2.0 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -919,18 +838,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 48.1%. Model projects 2.11.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 1.5 at 48.1% (draftkings)</div><div class="signal-item">Model projects 2.11 → edge +18.0%</div><div class="signal-item">Detroit Pistons scores 117.8 PPG (above avg → more block opportunities)</div><div class="signal-item">Game total: model 218.0 vs market 211.5 (high-scoring environment, scale 1.03x)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Cleveland Cavaliers: Net RTG +4.1 | PPG 119.5 | OPPG 115.4</div><div class="research-item">Detroit Pistons: Net RTG +8.2 | PPG 117.8 | OPPG 109.6</div><div class="research-item">Jarrett Allen: 15.4 PPG / 8.5 RPG / 1.8 APG / 0.00 SPG / 2.00 BPG / 0.0 3PM (40 games)</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -977,18 +884,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 7.5 at 50.0%. Model projects 8.8.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 7.5 at 50.0% (draftkings)</div><div class="signal-item">Model projects 8.8 → edge +16.9%</div><div class="signal-item">Avg game pace: 118.6 combined PPG (above avg → more board opportunities)</div><div class="signal-item">Game total: model 218.0 vs market 211.5 (high-scoring environment, scale 1.03x)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Cleveland Cavaliers: Net RTG +4.1 | PPG 119.5 | OPPG 115.4</div><div class="research-item">Detroit Pistons: Net RTG +8.2 | PPG 117.8 | OPPG 109.6</div><div class="research-item">Jarrett Allen: 15.4 PPG / 8.5 RPG / 1.8 APG / 0.00 SPG / 2.00 BPG / 0.0 3PM (40 games)</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -1061,18 +956,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+22.2%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Kyle Bradish FIP 4.2 / xFIP 3.50 | K/9: 9.9</div><div class="signal-item">Max Fried FIP 2.7 / xFIP 3.89 | K/9: 7.4</div><div class="signal-item">Park factor 1.01 (pitcher-friendly: Oriole Park at Camden Yards)</div><div class="signal-item">Baltimore Orioles injury impact (-3.0%)</div><div class="signal-item">New York Yankees injury impact (-2.8%)</div><div class="signal-item">🌬️ Cross wind 15 mph (SSW) at Baltimore — minimal scoring impact</div><div class="signal-item">⚠ Baltimore Orioles schedule load: 7 games in 7 days</div><div class="signal-item">⚠ New York Yankees schedule load: 7 games in 7 days</div><div class="signal-item">Model projected score: Baltimore Orioles 4.0 — New York Yankees 4.3</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">🔵 Kyle Bradish: ERA 4.83 | FIP 4.2 / xFIP 3.50 | K/9 9.9 | BB/9 4.8 | IP 41</div><div class="research-item">🔴 Max Fried: ERA 2.91 | FIP 2.7 / xFIP 3.89 | K/9 7.4 | BB/9 2.8 | IP 58</div><div class="research-item">Baltimore Orioles offense: OPS 0.691 | AVG 0.229 | R/G 4.33</div><div class="research-item">New York Yankees offense: OPS 0.773 | AVG 0.238 | R/G 5.19</div><div class="research-item">Bullpen ERA — Baltimore Orioles: 4.20 | New York Yankees: 4.20</div><div class="research-item">Venue: Oriole Park at Camden Yards — park factor 1.01 (pitcher-friendly)</div><div class="research-item">⚕ Baltimore Orioles — Dylan Beavers (RF): DAY-TO-DAY</div><div class="research-item">⚕ Baltimore Orioles — Richard Guasch (SP): DAY-TO-DAY</div><div class="research-item">⚕ Baltimore Orioles — Will Robertson (LF): DAY-TO-DAY</div><div class="research-item">⚕ Baltimore Orioles — Keagan Gillies (P): DAY-TO-DAY</div><div class="research-item">⚕ Baltimore Orioles — Luis Vazquez (SS): DAY-TO-DAY</div><div class="research-item">⚕ New York Yankees — Travis MacGregor (SP): DAY-TO-DAY</div><div class="research-item">⚕ New York Yankees — Ben Hess (SP): DAY-TO-DAY</div><div class="research-item">👨‍⚖️ HP Umpire: Edwin Moscoso (near-neutral tendencies)</div><div class="research-item">🌤 Weather (Baltimore): 67°F | Wind 15 mph SSW (cross wind) | Precip 0%</div><div class="research-item">Model expected runs: Baltimore Orioles 4.00 | New York Yankees 4.32</div>
-          </details>
-        </div>
         
         
         <div style="margin-top:10px;font-size:0.75rem;">
@@ -1130,18 +1013,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+19.9%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Christian Scott FIP 3.56 / xFIP 3.80 | K/9: 12.3</div><div class="signal-item">Framber Valdez FIP 4.13 / xFIP 3.83 | K/9: 7.3</div><div class="signal-item">⚠ ERA trap [MODERATE] — Christian Scott: ERA 3.27 vs xFIP 3.80 over 11 IP (severity 0.46) — New York Mets ML may be overpriced by market</div><div class="signal-item">Park factor 0.97 (pitcher-friendly: Citi Field)</div><div class="signal-item">New York Mets injury impact (-3.1%)</div><div class="signal-item">🌬️ Cross wind 19 mph (S) at New York — minimal scoring impact</div><div class="signal-item">⚠ New York Mets schedule load: 6 games in 7 days</div><div class="signal-item">⚠ Detroit Tigers schedule load: 5 games in 7 days</div><div class="signal-item">Model projected score: New York Mets 3.3 — Detroit Tigers 4.2</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">🔵 Christian Scott: ERA 3.27 | FIP 3.56 / xFIP 3.80 | K/9 12.3 | BB/9 5.7 | IP 11</div><div class="research-item">🔴 Framber Valdez: ERA 4.57 | FIP 4.13 / xFIP 3.83 | K/9 7.3 | BB/9 3.1 | IP 43</div><div class="research-item">New York Mets offense: OPS 0.634 | AVG 0.225 | R/G 3.63</div><div class="research-item">Detroit Tigers offense: OPS 0.716 | AVG 0.243 | R/G 4.21</div><div class="research-item">Bullpen ERA — New York Mets: 4.31 (WHIP 1.45) | Detroit Tigers: 4.39 (WHIP 1.43)</div><div class="research-item">Venue: Citi Field — park factor 0.97 (pitcher-friendly)</div><div class="research-item">⚕ New York Mets — Grae Kessinger (3B): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Mike Tauchman (RF): OUT</div><div class="research-item">⚕ New York Mets — Joe Jacques (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Kevin Herget (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Nick Burdi (RP): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Jose Rojas (3B): DAY-TO-DAY</div><div class="research-item">⚕ New York Mets — Robert Stock (RP): OUT</div><div class="research-item">⚕ Detroit Tigers — Dugan Darnell (RP): DAY-TO-DAY</div><div class="research-item">👨‍⚖️ HP Umpire: Junior Valentine (near-neutral tendencies)</div><div class="research-item">🌤 Weather (New York): 69°F | Wind 19 mph S (cross wind) | Precip 1%</div><div class="research-item">Model expected runs: New York Mets 3.28 | Detroit Tigers 4.20</div><div class="research-item">tanh cap active: raw run diff -0.93 → capped -0.85</div>
-          </details>
-        </div>
         
         
         <div style="margin-top:10px;font-size:0.75rem;">
@@ -1199,18 +1070,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+19.3%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Sonny Gray FIP 4.27 / xFIP 4.18 | K/9: 4.8</div><div class="signal-item">Andrew Painter FIP 4.88 / xFIP 4.11 | K/9: 8.4</div><div class="signal-item">⚠ ERA trap [MODERATE] — Sonny Gray: ERA 3.54 vs xFIP 4.18 over 28 IP (severity 0.42) — Boston Red Sox ML may be overpriced by market</div><div class="signal-item">Park factor 1.08 (hitter-friendly: Fenway Park)</div><div class="signal-item">Boston Red Sox injury impact (-1.4%)</div><div class="signal-item">Philadelphia Phillies injury impact (-1.4%)</div><div class="signal-item">🌬️ Cross wind 13 mph (SSW) at Boston — minimal scoring impact</div><div class="signal-item">⚠ Boston Red Sox schedule load: 6 games in 7 days</div><div class="signal-item">⚠ Philadelphia Phillies schedule load: 6 games in 7 days</div><div class="signal-item">Model projected score: Boston Red Sox 4.2 — Philadelphia Phillies 4.3</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">🔵 Sonny Gray: ERA 3.54 | FIP 4.27 / xFIP 4.18 | K/9 4.8 | BB/9 2.2 | IP 28</div><div class="research-item">🔴 Andrew Painter: ERA 6.89 | FIP 4.88 / xFIP 4.11 | K/9 8.4 | BB/9 3.4 | IP 32</div><div class="research-item">Boston Red Sox offense: OPS 0.664 | AVG 0.235 | R/G 3.83</div><div class="research-item">Philadelphia Phillies offense: OPS 0.695 | AVG 0.235 | R/G 4.10</div><div class="research-item">Bullpen ERA — Boston Red Sox: 3.77 (WHIP 1.32) | Philadelphia Phillies: 3.99 (WHIP 1.49)</div><div class="research-item">Venue: Fenway Park — park factor 1.08 (hitter-friendly)</div><div class="research-item">⚕ Boston Red Sox — Hobie Harris (RP): DAY-TO-DAY</div><div class="research-item">⚕ Boston Red Sox — Brendan Rodgers (2B): OUT</div><div class="research-item">⚕ Philadelphia Phillies — Trea Turner (SS): DAY-TO-DAY</div><div class="research-item">⚕ Philadelphia Phillies — Keaton Anthony (1B): DAY-TO-DAY</div><div class="research-item">⚕ Philadelphia Phillies — Rene Pinto (C): DAY-TO-DAY</div><div class="research-item">⚕ Philadelphia Phillies — Daniel Robert (RP): DAY-TO-DAY</div><div class="research-item">⚕ Philadelphia Phillies — Andrew Bechtold (3B): DAY-TO-DAY</div><div class="research-item">⚕ Philadelphia Phillies — Mark Kolozsvary (C): DAY-TO-DAY</div><div class="research-item">👨‍⚖️ HP Umpire: Dan Bellino (near-neutral tendencies)</div><div class="research-item">🌤 Weather (Boston): 67°F | Wind 13 mph SSW (cross wind) | Precip 0%</div><div class="research-item">Model expected runs: Boston Red Sox 4.17 | Philadelphia Phillies 4.27</div>
-          </details>
-        </div>
         
         
         <div style="margin-top:10px;font-size:0.75rem;">
@@ -1268,18 +1127,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+17.6%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Lance McCullers Jr. FIP 4.7 / xFIP 3.94 | K/9: 9.8</div><div class="signal-item">👨‍⚖️ Umpire Roberto Ortiz: high-scoring games (run factor 1.05x avg) — leans Over</div><div class="signal-item">👨‍⚖️ Roberto Ortiz: tight strike zone (K factor 0.96x avg) — favors hitters / walks up</div><div class="signal-item">🌡️ Cool (61°F) at Daikin — slight run suppression (−0.2 runs)</div><div class="signal-item">🌧️ 100% precipitation chance at Daikin (rain likely) — monitor for delays/postponement</div><div class="signal-item">⚠ Houston Astros schedule load: 6 games in 7 days</div><div class="signal-item">⚠ Seattle Mariners schedule load: 6 games in 7 days</div><div class="signal-item">Model projected score: Houston Astros 4.5 — Seattle Mariners 4.9</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">🔵 Lance McCullers Jr.: ERA 7.41 | FIP 4.7 / xFIP 3.94 | K/9 9.8 | BB/9 5.3 | IP 34</div><div class="research-item">🔴 Bryce Miller (away): stats unavailable</div><div class="research-item">Houston Astros offense: OPS 0.751 | AVG 0.255 | R/G 4.63</div><div class="research-item">Seattle Mariners offense: OPS 0.700 | AVG 0.231 | R/G 4.19</div><div class="research-item">Bullpen ERA — Houston Astros: 6.46 (WHIP 1.75) | Seattle Mariners: 3.32 (WHIP 1.34)</div><div class="research-item">Venue: Daikin Park — neutral park</div><div class="research-item">⚕ Houston Astros — Walker Janek (C): DAY-TO-DAY</div><div class="research-item">⚕ Houston Astros — Lucas Spence (OF): DAY-TO-DAY</div><div class="research-item">⚕ Seattle Mariners — Teddy McGraw (SP): DAY-TO-DAY</div><div class="research-item">👨‍⚖️ HP Umpire: Roberto Ortiz — run factor 1.05x | K factor 0.96x | Hitter-friendly tendencies</div><div class="research-item">🌤 Weather (Daikin): 61°F | Wind 6 mph N (cross wind) | Precip 100%</div><div class="research-item">Model expected runs: Houston Astros 4.52 | Seattle Mariners 4.89</div>
-          </details>
-        </div>
         
         
         <div style="margin-top:10px;font-size:0.75rem;">
@@ -1337,18 +1184,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+17.2%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Simeon Woods Richardson FIP 6.12 / xFIP 5.22 | K/9: 4.4</div><div class="signal-item">Max Meyer FIP 2.75 / xFIP 3.40 | K/9: 9.6</div><div class="signal-item">Park factor 0.99 (pitcher-friendly: Target Field)</div><div class="signal-item">Minnesota Twins injury impact (-2.1%)</div><div class="signal-item">Miami Marlins injury impact (-1.2%)</div><div class="signal-item">👨‍⚖️ Umpire Manny Gonzalez: high-scoring games (run factor 1.06x avg) — leans Over</div><div class="signal-item">👨‍⚖️ Manny Gonzalez: tight strike zone (K factor 0.94x avg) — favors hitters / walks up</div><div class="signal-item">🌬️ Cross wind 10 mph (N) at Minneapolis — minimal scoring impact</div><div class="signal-item">⚠ Minnesota Twins schedule load: 6 games in 7 days</div><div class="signal-item">⚠ Miami Marlins schedule load: 6 games in 7 days</div><div class="signal-item">Model projected score: Minnesota Twins 3.7 — Miami Marlins 4.9</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">🔵 Simeon Woods Richardson: ERA 6.92 | FIP 6.12 / xFIP 5.22 | K/9 4.4 | BB/9 3.7 | IP 39</div><div class="research-item">🔴 Max Meyer: ERA 2.79 | FIP 2.75 / xFIP 3.40 | K/9 9.6 | BB/9 3.2 | IP 42</div><div class="research-item">Minnesota Twins offense: OPS 0.705 | AVG 0.235 | R/G 4.69</div><div class="research-item">Miami Marlins offense: OPS 0.694 | AVG 0.244 | R/G 4.19</div><div class="research-item">Bullpen ERA — Minnesota Twins: 5.54 (WHIP 1.60) | Miami Marlins: 3.03 (WHIP 1.20)</div><div class="research-item">Venue: Target Field — park factor 0.99 (pitcher-friendly)</div><div class="research-item">⚕ Minnesota Twins — Cory Lewis (SP): DAY-TO-DAY</div><div class="research-item">⚕ Minnesota Twins — Julian Merryweather (RP): DAY-TO-DAY</div><div class="research-item">⚕ Minnesota Twins — Matt Canterino (SP): DAY-TO-DAY</div><div class="research-item">⚕ Minnesota Twins — Walker Jenkins (CF): DAY-TO-DAY</div><div class="research-item">⚕ Miami Marlins — Owen Caissie (RF): DAY-TO-DAY</div><div class="research-item">⚕ Miami Marlins — Jesus Tinoco (RP): OUT</div><div class="research-item">👨‍⚖️ HP Umpire: Manny Gonzalez — run factor 1.06x | K factor 0.94x | One of the most hitter-friendly HPUs</div><div class="research-item">🌤 Weather (Minneapolis): 71°F | Wind 10 mph N (cross wind) | Precip 0%</div><div class="research-item">Model expected runs: Minnesota Twins 3.75 | Miami Marlins 4.92</div><div class="research-item">tanh cap active: raw run diff -1.17 → capped -1.03</div>
-          </details>
-        </div>
         
         
         <div style="margin-top:10px;font-size:0.75rem;">
@@ -1413,18 +1248,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 42.6%. Model: 2.50.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 1.5 at 42.6% (draftkings)</div><div class="signal-item">Model projects 2.50 → edge +36.9%</div><div class="signal-item">vs Shota Imanaga (FIP 2.88 / xFIP 3.35 | WHIP 0.93) | Park 1.03</div><div class="signal-item">Game total: model 9.2 vs market 8.5 (high-scoring environment, scale 1.08x)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Matt Olson: AVG 0.294 | OBP 0.374 | H/G 1.14 | TB/G 2.50 | HR/G 0.333 | HRR/G 2.88 | K% 23.5% (187 PA)</div><div class="research-item">Facing Shota Imanaga: FIP 2.88 / xFIP 3.35 | WHIP 0.93 | K/9 10.1</div><div class="research-item">Park factor 1.03 at Truist Park</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -1471,18 +1294,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 41.5%. Model: 2.18.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 1.5 at 41.5% (draftkings)</div><div class="signal-item">Model projects 2.18 → edge +34.1%</div><div class="signal-item">vs Kumar Rocker (FIP 4.35 / xFIP 3.91 | WHIP 1.53) | Park 1.05</div><div class="signal-item">Game total: model 7.6 vs market 8.0 (low-scoring environment, scale 0.95x)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Ildemaro Vargas: AVG 0.336 | OBP 0.360 | H/G 1.32 | TB/G 2.27 | HR/G 0.206 | HRR/G 2.73 | K% 10.6% (141 PA)</div><div class="research-item">Facing Kumar Rocker: FIP 4.35 / xFIP 3.91 | WHIP 1.53 | K/9 7.6</div><div class="research-item">Park factor 1.05 at Globe Life Field</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -1529,18 +1340,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 45.2%. Model: 2.37.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 1.5 at 45.2% (draftkings)</div><div class="signal-item">Model projects 2.37 → edge +32.6%</div><div class="signal-item">vs Nick Lodolo (FIP 8.10 / xFIP 4.53 | WHIP 1.18) | Park 1.12</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">James Wood: AVG 0.244 | OBP 0.392 | H/G 0.93 | TB/G 2.05 | HR/G 0.286 | HRR/G 2.48 | K% 31.2% (199 PA)</div><div class="research-item">Facing Nick Lodolo: FIP 8.10 / xFIP 4.53 | WHIP 1.18 | K/9 3.5</div><div class="research-item">Park factor 1.12 at Great American Ball Park</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -1587,18 +1386,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 44.1%. Model: 2.24.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 1.5 at 44.1% (draftkings)</div><div class="signal-item">Model projects 2.24 → edge +31.7%</div><div class="signal-item">vs Nick Lodolo (FIP 8.10 / xFIP 4.53 | WHIP 1.18) | Park 1.12</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">CJ Abrams: AVG 0.293 | OBP 0.391 | H/G 1.05 | TB/G 1.90 | HR/G 0.220 | HRR/G 2.49 | K% 19.5% (174 PA)</div><div class="research-item">Facing Nick Lodolo: FIP 8.10 / xFIP 4.53 | WHIP 1.18 | K/9 3.5</div><div class="research-item">Park factor 1.12 at Great American Ball Park</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -1645,18 +1432,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 0.5 at 57.6%. Model: 1.62.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 0.5 at 57.6% (draftkings)</div><div class="signal-item">Model projects 1.62 → edge +31.4%</div><div class="signal-item">vs Michael King (FIP 3.69 / xFIP 3.69 | WHIP 1.06) | Park 1.02</div><div class="signal-item">Game total: model 6.9 vs market 6.5 (high-scoring environment, scale 1.06x)</div><div class="signal-item">K% matchup: batter 37.6% vs pitcher 9.0 K/9 → -7.4% suppression</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Garrett Mitchell: AVG 0.211 | OBP 0.341 | H/G 0.64 | TB/G 0.94 | HR/G 0.028 | HRR/G 1.72 | K% 37.6% (133 PA)</div><div class="research-item">Facing Michael King: FIP 3.69 / xFIP 3.69 | WHIP 1.06 | K/9 9.0</div><div class="research-item">Park factor 1.02 at American Family Field</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -1703,18 +1478,6 @@
         </div>
         <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 43.7%. Model: 2.11.</div>
         
-        <div class="signals" style="margin-top:8px;">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Market: Over 1.5 at 43.7% (draftkings)</div><div class="signal-item">Model projects 2.11 → edge +30.0%</div><div class="signal-item">vs JR Ritchie (FIP 6.83 / xFIP 5.31 | WHIP 1.52) | Park 1.03</div><div class="signal-item">Game total: model 9.2 vs market 8.5 (high-scoring environment, scale 1.08x)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Ian Happ: AVG 0.228 | OBP 0.365 | H/G 0.85 | TB/G 1.73 | HR/G 0.225 | HRR/G 2.10 | K% 30.9% (181 PA)</div><div class="research-item">Facing JR Ritchie: FIP 6.83 / xFIP 5.31 | WHIP 1.52 | K/9 6.8</div><div class="research-item">Park factor 1.03 at Truist Park</div>
-          </details>
-        </div>
         
       </div>
     </div>
@@ -1780,18 +1543,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+7.4%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Model projected score: Colorado Avalanche 3.7 — Minnesota Wild 3.2</div><div class="signal-item">Model expected total: 6.8 vs market line 6.5</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Colorado Avalanche GPG (blended): 4.41 vs Minnesota Wild GAPG (blended): 3.74</div><div class="research-item">Minnesota Wild GPG (blended): 3.69 vs Colorado Avalanche GAPG (blended): 3.18</div><div class="research-item">Recent form weight: 55% | Season weight: 45%</div>
-          </details>
-        </div>
         
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
           🔭 Watchlist only — not tracked in performance tables until NHL testing is complete.
@@ -1838,18 +1589,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value yellow">+6.7%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Home ice advantage: Colorado Avalanche (+2%)</div><div class="signal-item">Rating edge: Colorado Avalanche (blended goal-diff +1.28)</div><div class="signal-item">🏆 Playoffs: recent form weighted 55%, tighter defence expected</div><div class="signal-item">Colorado Avalanche injury impact (-3.3%)</div><div class="signal-item">Minnesota Wild injuries benefit Colorado Avalanche (+2.7%)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Colorado Avalanche: 3.68 GPG | 2.48 GAPG | NetRtg 1.21</div><div class="research-item">Minnesota Wild: 3.32 GPG | 2.93 GAPG | NetRtg 0.39</div><div class="research-item">Colorado Avalanche last 14 days: NetRtg 1.25 | Win% 75%</div><div class="research-item">Minnesota Wild last 14 days: NetRtg -0.40 | Win% 40%</div><div class="research-item">Rest days — Colorado Avalanche: 2 | Minnesota Wild: 2</div><div class="research-item">⚕ Colorado Avalanche — Artturi Lehkonen (LW): OUT</div><div class="research-item">⚕ Colorado Avalanche — Sam Malinski (D): OUT</div><div class="research-item">⚕ Minnesota Wild — Jonas Brodin (D): DAY-TO-DAY</div><div class="research-item">⚕ Minnesota Wild — Joel Eriksson Ek (C): DAY-TO-DAY</div><div class="research-item">⚕ Minnesota Wild — Charlie Stramel (C): OUT</div>
-          </details>
-        </div>
         
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
           🔭 Watchlist only — not tracked in performance tables until NHL testing is complete.
@@ -1896,18 +1635,6 @@
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value yellow">+5.5%</div></div>
         </div>
         
-        <div class="signals">
-          <div class="signals-title">Key Signals</div>
-          <div class="signal-item">Home ice advantage: Colorado Avalanche (+2%)</div><div class="signal-item">Rating edge: Colorado Avalanche (blended goal-diff +1.28)</div><div class="signal-item">🏆 Playoffs: recent form weighted 55%, tighter defence expected</div><div class="signal-item">Colorado Avalanche injury impact (-3.3%)</div><div class="signal-item">Minnesota Wild injuries benefit Colorado Avalanche (+2.7%)</div>
-        </div>
-        
-        
-        <div class="research-section">
-          <details>
-            <summary style="color:#14b8a6;cursor:pointer;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;list-style:none;">Research &amp; Stats</summary>
-            <div class="research-item">Colorado Avalanche: 3.68 GPG | 2.48 GAPG | NetRtg 1.21</div><div class="research-item">Minnesota Wild: 3.32 GPG | 2.93 GAPG | NetRtg 0.39</div><div class="research-item">Colorado Avalanche last 14 days: NetRtg 1.25 | Win% 75%</div><div class="research-item">Minnesota Wild last 14 days: NetRtg -0.40 | Win% 40%</div><div class="research-item">Rest days — Colorado Avalanche: 2 | Minnesota Wild: 2</div><div class="research-item">⚕ Colorado Avalanche — Artturi Lehkonen (LW): OUT</div><div class="research-item">⚕ Colorado Avalanche — Sam Malinski (D): OUT</div><div class="research-item">⚕ Minnesota Wild — Jonas Brodin (D): DAY-TO-DAY</div><div class="research-item">⚕ Minnesota Wild — Joel Eriksson Ek (C): DAY-TO-DAY</div><div class="research-item">⚕ Minnesota Wild — Charlie Stramel (C): OUT</div>
-          </details>
-        </div>
         
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
           🔭 Watchlist only — not tracked in performance tables until NHL testing is complete.
