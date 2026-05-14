@@ -2166,3 +2166,226 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
             ))
 
     return recs
+
+
+# ---------------------------------------------------------------------------
+# WNBA — moneyline analysis
+# ---------------------------------------------------------------------------
+
+def analyze_wnba_game(
+    game: Dict,
+    wnba_ctx: Dict,
+    wnba_injuries: Dict,
+    min_edge: float = None,
+) -> List[BetRecommendation]:
+    """
+    Moneyline-only edge finder for WNBA (watchlist, no budget allocation).
+    Uses team offensive/defensive ratings, recent form, B2B, home advantage,
+    and a points-share based lineup penalty for injured players.
+    """
+    from src.data.wnba_stats import normalize as wnba_normalize, _name_match
+    from src.config import (
+        WNBA_HOME_ADVANTAGE, WNBA_BACK_TO_BACK_PENALTY, WNBA_RECENT_WEIGHT,
+        WNBA_SPREAD_STD, WNBA_REPLACEMENT_RATE, WNBA_MAX_LINEUP_PENALTY,
+        WNBA_STATUS_WEIGHTS,
+    )
+    from scipy.stats import norm as _norm
+    _zero_sizing = BetSizing(
+        dollar_allocation=0, num_contracts=0, contract_price=0,
+        total_cost=0, profit_if_win=0, loss_if_lose=0,
+        expected_value=0, kelly_fraction=0,
+    )
+
+    home_raw = game["home_team"]
+    away_raw = game["away_team"]
+    label    = f"{away_raw} @ {home_raw}"
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
+    recs = []
+    _min = min_edge if min_edge is not None else MIN_EDGE
+
+    ml = game.get("moneyline")
+    if not ml:
+        return recs
+
+    market_home_prob = ml["home_prob"]
+    market_away_prob = ml["away_prob"]
+
+    # Resolve team names against ctx keys (flexible matching)
+    def _resolve(raw: str, ctx_dict: Dict) -> str:
+        for key in ctx_dict:
+            if _name_match(raw, key):
+                return key
+        return raw
+
+    home = _resolve(home_raw, wnba_ctx["season_stats"])
+    away = _resolve(away_raw, wnba_ctx["season_stats"])
+
+    home_stats  = wnba_ctx["season_stats"].get(home, {})
+    away_stats  = wnba_ctx["season_stats"].get(away, {})
+    home_recent = wnba_ctx["recent_form"].get(home, {})
+    away_recent = wnba_ctx["recent_form"].get(away, {})
+    home_rest   = wnba_ctx["rest_days"].get(home, 3)
+    away_rest   = wnba_ctx["rest_days"].get(away, 3)
+
+    stats_available = bool(home_stats or away_stats)
+
+    signals  = []
+    research = []
+
+    if not stats_available:
+        signals.append("⚠ WNBA stats unavailable — using market baseline only")
+
+    # ── Base strength from season stats ──────────────────────────────────────
+    home_ppg = home_stats.get("ppg", 82.0)
+    away_ppg = away_stats.get("ppg", 82.0)
+    home_net  = home_stats.get("net_rtg", 0.0)
+    away_net  = away_stats.get("net_rtg", 0.0)
+
+    # Blended net rating: season + recent form
+    home_recent_net = home_recent.get("recent_net_rtg", home_net)
+    away_recent_net = away_recent.get("recent_net_rtg", away_net)
+    home_blended = (1 - WNBA_RECENT_WEIGHT) * home_net + WNBA_RECENT_WEIGHT * home_recent_net
+    away_blended = (1 - WNBA_RECENT_WEIGHT) * away_net + WNBA_RECENT_WEIGHT * away_recent_net
+
+    # Point margin from net ratings, converted to win probability via Normal CDF
+    net_diff   = home_blended - away_blended
+    base_prob  = float(_norm.cdf(net_diff / WNBA_SPREAD_STD))
+    base_prob  = min(0.88, max(0.12, base_prob))
+
+    adj = 0.0
+
+    # ── Home advantage ────────────────────────────────────────────────────────
+    adj += WNBA_HOME_ADVANTAGE
+    signals.append(f"Home court: {home_raw} (+{WNBA_HOME_ADVANTAGE*100:.0f}%)")
+
+    # ── Stats research ────────────────────────────────────────────────────────
+    if home_stats:
+        research.append(
+            f"{home_raw}: {home_ppg} PPG | FG {home_stats.get('fg_pct', 0):.1f}% | "
+            f"AST/TO {home_stats.get('ast_to', 0):.2f} | NetRtg {home_net:+.1f}"
+        )
+    if away_stats:
+        research.append(
+            f"{away_raw}: {away_ppg} PPG | FG {away_stats.get('fg_pct', 0):.1f}% | "
+            f"AST/TO {away_stats.get('ast_to', 0):.2f} | NetRtg {away_net:+.1f}"
+        )
+
+    # ── Recent form ───────────────────────────────────────────────────────────
+    if home_recent and home_recent.get("games", 0) >= 3:
+        research.append(
+            f"{home_raw} last {home_recent['games']} games: "
+            f"{home_recent['recent_ppg']} PPG | {home_recent['recent_w_pct']*100:.0f}% W"
+        )
+        if home_recent["recent_net_rtg"] > 5:
+            signals.append(f"{home_raw} in strong form (last {home_recent['games']} games: +{home_recent['recent_net_rtg']:.1f} net)")
+        elif home_recent["recent_net_rtg"] < -5:
+            signals.append(f"{home_raw} struggling recently (last {home_recent['games']} games: {home_recent['recent_net_rtg']:.1f} net)")
+
+    if away_recent and away_recent.get("games", 0) >= 3:
+        research.append(
+            f"{away_raw} last {away_recent['games']} games: "
+            f"{away_recent['recent_ppg']} PPG | {away_recent['recent_w_pct']*100:.0f}% W"
+        )
+        if away_recent["recent_net_rtg"] > 5:
+            signals.append(f"{away_raw} in strong form (last {away_recent['games']} games: +{away_recent['recent_net_rtg']:.1f} net)")
+        elif away_recent["recent_net_rtg"] < -5:
+            signals.append(f"{away_raw} struggling recently (last {away_recent['games']} games: {away_recent['recent_net_rtg']:.1f} net)")
+
+    # ── Back-to-back ──────────────────────────────────────────────────────────
+    research.append(f"Rest — {home_raw}: {home_rest} day(s) | {away_raw}: {away_rest} day(s)")
+    if home_rest == 1:
+        adj -= WNBA_BACK_TO_BACK_PENALTY
+        signals.append(f"{home_raw} on back-to-back (-{WNBA_BACK_TO_BACK_PENALTY*100:.0f}%)")
+    if away_rest == 1:
+        adj += WNBA_BACK_TO_BACK_PENALTY
+        signals.append(f"{away_raw} on back-to-back — favors {home_raw} (+{WNBA_BACK_TO_BACK_PENALTY*100:.0f}%)")
+
+    # ── Lineup penalty (points-share based) ───────────────────────────────────
+    def _lineup_penalty(team_display: str, team_raw: str) -> float:
+        """Compute compound lineup penalty from injured players' points share."""
+        inj_list = []
+        for key, val in wnba_injuries.items():
+            if _name_match(team_display, key) or _name_match(team_raw, key):
+                inj_list = val
+                break
+        if not inj_list:
+            return 0.0
+
+        # Compound: penalty = 1 - product(1 - single_player_penalty)
+        compound = 1.0
+        for p in inj_list:
+            status_wt = WNBA_STATUS_WEIGHTS.get(p.get("status", "Out"), 1.0)
+            weight    = p.get("player_weight", 0.0)
+            single    = weight * status_wt * (1.0 - WNBA_REPLACEMENT_RATE)
+            single    = min(single, 0.15)   # per-player cap
+            compound  *= (1.0 - single)
+
+        total = min(1.0 - compound, WNBA_MAX_LINEUP_PENALTY)
+        return round(total, 3)
+
+    home_lineup_pen = _lineup_penalty(home, home_raw)
+    away_lineup_pen = _lineup_penalty(away, away_raw)
+
+    # Injury research lines
+    for key, inj_list in wnba_injuries.items():
+        if _name_match(home, key) or _name_match(home_raw, key):
+            for p in inj_list:
+                ppg_str = f" ({p['ppg']} PPG, {p['points_share']*100:.0f}% pts share)" if p.get("ppg", 0) > 0 else ""
+                research.append(f"⚕ {home_raw} — {p['player']}{ppg_str}: {p['status'].upper()}")
+        if _name_match(away, key) or _name_match(away_raw, key):
+            for p in inj_list:
+                ppg_str = f" ({p['ppg']} PPG, {p['points_share']*100:.0f}% pts share)" if p.get("ppg", 0) > 0 else ""
+                research.append(f"⚕ {away_raw} — {p['player']}{ppg_str}: {p['status'].upper()}")
+
+    if home_lineup_pen > 0.02:
+        adj -= home_lineup_pen
+        signals.append(f"{home_raw} lineup impact (-{home_lineup_pen*100:.1f}%)")
+    if away_lineup_pen > 0.02:
+        adj += away_lineup_pen
+        signals.append(f"{away_raw} injuries benefit {home_raw} (+{away_lineup_pen*100:.1f}%)")
+
+    if not home_lineup_pen and not away_lineup_pen:
+        research.append("No significant injuries reported for either team")
+
+    # ── Final probability ─────────────────────────────────────────────────────
+    adj_home_prob = min(0.90, max(0.10, base_prob + adj))
+    adj_away_prob = 1.0 - adj_home_prob
+
+    # Credibility cap: don't stray too far from the market on injury-only signal
+    # (same pattern as NBA/NHL)
+    adj_home_prob = min(adj_home_prob, market_home_prob + 0.20)
+    adj_home_prob = max(adj_home_prob, market_home_prob - 0.20)
+    adj_away_prob = 1.0 - adj_home_prob
+
+    # ── Build recommendations ─────────────────────────────────────────────────
+    for team_raw, model_prob, market_prob in [
+        (home_raw, adj_home_prob, market_home_prob),
+        (away_raw, adj_away_prob, market_away_prob),
+    ]:
+        edge = model_prob - market_prob
+        if edge < _min:
+            continue
+
+        conf = _confidence_label(edge, len(signals), stats_available)
+
+        recs.append(BetRecommendation(
+            sport="WNBA",
+            game=label,
+            home_team=home_raw,
+            away_team=away_raw,
+            pick=team_raw,
+            bet_type="Moneyline",
+            model_prob=model_prob,
+            market_prob=market_prob,
+            edge=edge,
+            contract_price=market_prob,
+            sizing=_zero_sizing,
+            confidence=conf,
+            signals=signals[:],
+            research=research[:],
+            game_time=game_time,
+            commence_time=commence_time,
+        ))
+
+    return recs

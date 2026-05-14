@@ -18,12 +18,14 @@ MLB_SPORT = "baseball_mlb"
 NFL_SPORT = "americanfootball_nfl"
 NHL_SPORT = "icehockey_nhl"
 IPL_SPORT = "cricket_ipl"
+WNBA_SPORT = "basketball_wnba"
 SPORT_LABELS = {
     NBA_SPORT: "NBA",
     MLB_SPORT: "MLB",
     NFL_SPORT: "NFL",
     NHL_SPORT: "NHL",
     IPL_SPORT: "IPL",
+    WNBA_SPORT: "WNBA",
 }
 
 # --- Active-season calendar (month numbers) ---
@@ -35,6 +37,7 @@ SPORT_ACTIVE_MONTHS = {
     "nfl": list(range(9, 13)) + [1, 2],                # Sep – Feb
     "nhl": list(range(10, 13)) + list(range(1, 7)),    # Oct – Jun
     "ipl": [3, 4, 5],                                  # Mar – May
+    "wnba": [5, 6, 7, 8, 9],                           # May – Sep
 }
 
 # --- Betting parameters ---
@@ -79,6 +82,15 @@ NHL_PLAYOFF_SCORING_FACTOR = 0.92    # ~8% goal reduction vs regular season (6.2
 # --- Schedule load (7-day fatigue) ---
 # Applied when a team has played many games in the last 7 days
 SCHEDULE_LOAD_THRESHOLDS = {5: 0.01, 6: 0.02, 7: 0.03}  # games_in_7d → penalty
+
+# --- WNBA — watchlist only ---
+WNBA_HOME_ADVANTAGE = 0.020
+WNBA_BACK_TO_BACK_PENALTY = 0.040
+WNBA_RECENT_WEIGHT = 0.45
+WNBA_SPREAD_STD = 8.5
+WNBA_REPLACEMENT_RATE = 0.55
+WNBA_MAX_LINEUP_PENALTY = 0.30
+WNBA_STATUS_WEIGHTS: dict = {"Out": 1.0, "Doubtful": 0.75, "Questionable": 0.40, "Day-To-Day": 0.20, "Probable": 0.05}
 
 # --- IPL (Indian Premier League cricket) — watchlist only ---
 # T20 home advantage is substantial; ~5% raw but market prices most of it.

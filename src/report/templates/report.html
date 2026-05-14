@@ -41,6 +41,7 @@
     .badge-nfl { background: #7c3aed; color: #fff; }
     .badge-nhl { background: #0d9488; color: #fff; }
     .badge-ipl { background: #d97706; color: #fff; }
+    .badge-wnba { background: #f97316; color: #fff; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
@@ -155,6 +156,7 @@
       {% if report.has_nfl %}NFL: {{ report.nfl_game_count }} game{% if report.nfl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
       {% if report.has_nhl %}NHL: {{ report.nhl_game_count }} game{% if report.nhl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
       {% if report.has_ipl %}IPL: {{ report.ipl_game_count }} match{% if report.ipl_game_count != 1 %}es{% endif %} &nbsp;|&nbsp; {% endif %}
+      {% if report.has_wnba %}WNBA: {{ report.wnba_game_count }} game{% if report.wnba_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
       Budget: ${{ "%.0f"|format(report.daily_budget) }}
     </div>
     {% set cr = report.odds_api_credits %}
@@ -789,6 +791,87 @@
   </div>
   {% endif %}
 
+  {% if report.has_wnba %}
+  <div class="section" id="sec-wnba">
+    <div class="section-title">🏀 WNBA
+      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
+        {% if report.wnba_watchlist %}{{ report.wnba_watchlist|length }} pick{% if report.wnba_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
+      </span>
+    </div>
+    {% if not report.wnba_watchlist %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      😕 No picks found with edge &gt; 3% today — the model scanned all WNBA games and found no suitable edges.
+    </div>
+    {% endif %}
+    <div class="sub-section" id="sub-wnba-singles">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-wnba-singles')">
+      <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
+    {% for bet in report.wnba_watchlist %}
+    <div class="card wnba-watchlist-card"
+         id="wnba-{{ loop.index }}"
+         data-home-team="{{ bet.home_team }}"
+         data-away-team="{{ bet.away_team }}"
+         data-bet-type="{{ bet.bet_type }}"
+         data-pick="{{ bet.pick }}"
+         data-sport="WNBA"
+         data-edge-pct="{{ bet.edge_pct }}"
+         data-model-prob-pct="{{ bet.model_prob_pct }}"
+         data-market-prob-pct="{{ bet.market_prob_pct }}"
+         data-commence-time="{{ bet.commence_time }}">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">{{ bet.pick }}</div>
+            <div class="card-subtitle">
+              <span class="badge badge-wnba">🏀 WNBA</span>
+              {% if bet.bet_type == "Moneyline" %}&nbsp;ML &nbsp;&middot;&nbsp; {% endif %}{{ bet.game }}
+            </div>
+            <div class="card-time" style="font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
+          <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
+        </div>
+        {% if bet.narrative or bet.context %}
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            {% if bet.narrative %}<div class="card-narrative">{{ bet.narrative }}</div>{% endif %}
+            {% if bet.context %}
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              {% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    </div><!-- sub-body wnba-singles -->
+    </div><!-- sub-section wnba-singles -->
+  </div>
+  {% endif %}
+
   {% if report.has_ipl %}
   <div class="section" id="sec-ipl">
     <div class="section-title">🏏 IPL
@@ -1250,7 +1333,7 @@
           <span style="font-size:0.68rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">&nbsp;— no budget allocated, W-L only</span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          {% for sport_key, badge_class, label in [('NHL', 'badge-nhl', '🏒 NHL'), ('IPL', 'badge-ipl', '🏏 IPL')] %}
+          {% for sport_key, badge_class, label in [('NHL', 'badge-nhl', '🏒 NHL'), ('IPL', 'badge-ipl', '🏏 IPL'), ('WNBA', 'badge-wnba', '🏀 WNBA')] %}
           {% set ws = wl.get(sport_key, {}) %}
           <div id="wl-tile-{{ sport_key }}"
                data-hist-won="{{ ws.won }}"
@@ -1431,7 +1514,8 @@
   var ESPN = {
     NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=" + _espnDate,
     MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate,
-    NHL: "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=" + _espnDate
+    NHL: "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=" + _espnDate,
+    WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate
   };
 
   // ── Local timezone formatting ────────────────────────────────────────────
@@ -2299,10 +2383,10 @@
     // Runs independently of budget outcomes so tiles update even on days
     // where there are zero budget bets in play.
     (function updateWatchlistTiles() {
-      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 } };
+      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 } };
 
       document.querySelectorAll(
-        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result]"
+        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
         var result = wlCard.getAttribute("data-live-result");
         if (!result) return;
@@ -2312,7 +2396,7 @@
         else if (result === "LOST") wlLive[sport].lost++;
       });
 
-      ["NHL", "IPL"].forEach(function (sp) {
+      ["NHL", "IPL", "WNBA"].forEach(function (sp) {
         var lw = wlLive[sp].won;
         var ll = wlLive[sp].lost;
         if (lw + ll === 0) return;   // nothing settled live for this sport
@@ -2440,7 +2524,8 @@
           MLB: '<span class="badge badge-mlb">⚾ MLB</span>',
           NFL: '<span class="badge badge-nfl">🏈 NFL</span>',
           NHL: '<span class="badge badge-nhl">🏒 NHL</span>',
-          IPL: '<span class="badge badge-ipl">🏏 IPL</span>'
+          IPL: '<span class="badge badge-ipl">🏏 IPL</span>',
+          WNBA: '<span class="badge badge-wnba">🏀 WNBA</span>'
         }[sport] || '<span style="color:var(--muted);">PARLAYS</span>';
         sportCard.innerHTML =
           '<div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;">' + sportBadgeHtml + '</div>' +
@@ -3485,7 +3570,7 @@
     function onFetch(events) {
       allEvents = allEvents.concat(events);
       done++;
-      if (done < 3) return;
+      if (done < 4) return;
 
       // Update all bet cards (singles, parlays, and NHL watchlist)
       document.querySelectorAll(".card[data-home-team], .card[data-parlay='true']").forEach(function (card) {
@@ -3512,6 +3597,7 @@
       { url: ESPN.NBA, sport: "NBA" },
       { url: ESPN.MLB, sport: "MLB" },
       { url: ESPN.NHL, sport: "NHL" },
+      { url: ESPN.WNBA, sport: "WNBA" },
     ].forEach(function (item) {
       fetch(item.url)
         .then(function (r) { return r.json(); })

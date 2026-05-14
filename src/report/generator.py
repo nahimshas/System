@@ -29,6 +29,8 @@ def build_report(
     ipl_display: Optional[List[Dict]] = None,       # all positive-EV IPL picks (watchlist only)
     singles_display: Optional[List[Dict]] = None,   # all positive-EV picks for league section display
     props_display: Optional[List[Dict]] = None,     # all positive-EV props for league section display
+    wnba_game_count: int = 0,
+    wnba_display: Optional[List[Dict]] = None,
 ) -> Dict:
     change_warnings = change_warnings or []
 
@@ -48,6 +50,12 @@ def build_report(
     # IPL is watchlist-only — never enters budget allocation or parlays.
     ipl_watchlist = sorted(
         ipl_display or [],
+        key=lambda r: (0 if r.get("confidence") == "HIGH" else 1, -r.get("edge", 0)),
+    )
+
+    # WNBA is watchlist-only — never enters budget allocation or parlays.
+    wnba_watchlist = sorted(
+        [s for s in (wnba_display or []) if s.get("sport") == "WNBA"],
         key=lambda r: (0 if r.get("confidence") == "HIGH" else 1, -r.get("edge", 0)),
     )
 
@@ -257,8 +265,11 @@ def build_report(
         from src.data.outcome_checker import load_watchlist_performance
         watchlist_performance = load_watchlist_performance()
     except Exception:
-        watchlist_performance = {"NHL": {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
-                                 "IPL": {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None}}
+        watchlist_performance = {
+            "NHL":  {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
+            "IPL":  {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
+            "WNBA": {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
+        }
 
     try:
         from src.data.outcome_checker import build_chart_data
@@ -321,6 +332,9 @@ def build_report(
         "has_nhl":            nhl_game_count > 0,
         "ipl_watchlist":      ipl_watchlist,
         "has_ipl":            ipl_game_count > 0,
+        "wnba_watchlist":     wnba_watchlist,
+        "wnba_game_count":    wnba_game_count,
+        "has_wnba":           wnba_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),
