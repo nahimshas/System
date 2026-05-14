@@ -112,13 +112,39 @@ def build_report(
     mlb_top_singles_raw = _top_singles_for_sport("MLB")
     nfl_top_singles_raw = _top_singles_for_sport("NFL")
 
-    # Tag which singles are in the budget allocation pool (rank 1-5)
+    # Tag which singles are in the budget allocation pool (rank 1-5).
+    # Also override cost/profit/contracts with the allocation pool's locked values so
+    # the bet card data-attributes always match what the allocation table displays.
+    # Without this, a subsequent run that refreshes odds can silently change the card
+    # data-cost/data-profit while the allocation table retains morning-run pricing,
+    # causing the live "Today's Profit" JS calculation to diverge from what the user sees.
     _alloc_rank_map = {(r["pick"], r["game"]): i for i, r in enumerate(all_singles, 1)}
+    _alloc_data_map = {(r["pick"], r["game"]): r for r in all_singles}
 
     def _tag_alloc(lst):
         out = []
         for rec in lst:
-            out.append({**rec, "alloc_rank": _alloc_rank_map.get((rec["pick"], rec["game"]))})
+            key = (rec["pick"], rec["game"])
+            rank = _alloc_rank_map.get(key)
+            if rank is not None:
+                # Snap cost/profit/contract fields to the locked allocation values
+                alloc = _alloc_data_map[key]
+                rec = {
+                    **rec,
+                    "alloc_rank":           rank,
+                    "total_cost":           alloc["total_cost"],
+                    "profit_if_win":        alloc["profit_if_win"],
+                    "loss_if_lose":         alloc.get("loss_if_lose", alloc["total_cost"]),
+                    "num_contracts":        alloc["num_contracts"],
+                    "contract_price_cents": alloc.get("contract_price_cents",
+                                                      rec.get("contract_price_cents", 0)),
+                    "edge_pct":             alloc["edge_pct"],
+                    "model_prob_pct":       alloc.get("model_prob_pct", rec.get("model_prob_pct", 50)),
+                    "market_prob_pct":      alloc.get("market_prob_pct", rec.get("market_prob_pct", 50)),
+                }
+            else:
+                rec = {**rec, "alloc_rank": None}
+            out.append(rec)
         return out
 
     nba_top_singles = _tag_alloc(nba_top_singles_raw)
