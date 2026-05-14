@@ -1,7 +1,10 @@
 # System Development Plan
 
-This file tracks the implementation roadmap for the sports betting analysis system.
-It exists so any future session can pick up context without relying on conversation history.
+This file tracks the **implementation roadmap** (phases, model changes, architectural decisions) for the sports betting analysis system.
+
+> **Note:** This is NOT the Claude project memory file. The canonical memory file is:
+> `/Users/nahim/.claude/projects/-Users-nahim-Desktop-Claude-Projects-Code-Projects/memory/project_sports_betting.md`
+> Always update that file when asked to "update the project memory."
 
 ---
 
