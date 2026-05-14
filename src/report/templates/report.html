@@ -153,7 +153,7 @@
     <div class="subtitle" style="margin-top:6px;">
       NBA: {{ report.nba_game_count }} game{% if report.nba_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       MLB: {{ report.mlb_game_count }} game{% if report.mlb_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
-      {% if report.has_nfl %}NFL: {{ report.nfl_game_count }} game{% if report.nfl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
+      NFL: {{ report.nfl_game_count }} game{% if report.nfl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       {% if report.has_nhl %}NHL: {{ report.nhl_game_count }} game{% if report.nhl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
       {% if report.has_ipl %}IPL: {{ report.ipl_game_count }} match{% if report.ipl_game_count != 1 %}es{% endif %} &nbsp;|&nbsp; {% endif %}
       {% if report.has_wnba %}WNBA: {{ report.wnba_game_count }} game{% if report.wnba_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
