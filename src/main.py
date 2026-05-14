@@ -633,9 +633,10 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     #  Build parlays from raw BetRecommendation objects (before serialising)
     # ------------------------------------------------------------------ #
     # Budget-qualifying picks only (edge >= MIN_EDGE) — used for allocation table + parlays
-    # IPL is excluded — it is watchlist-only and never enters budget allocation
-    all_singles_raw = nba_singles_raw + mlb_singles_raw + nfl_singles_raw + nhl_singles_raw
+    # NHL, IPL, and WNBA are watchlist-only and never enter budget allocation or parlays
+    all_singles_raw = nba_singles_raw + mlb_singles_raw + nfl_singles_raw
     # All positive-EV picks (no min-edge threshold) — used for display in league sections
+    # NHL display picks are handled separately via nhl_watchlist in generator.py
     all_display_raw = nba_display_raw + mlb_display_raw + nfl_display_raw + nhl_display_raw
     parlays_raw          = build_parlays(all_singles_raw)
     props_raw            = nba_props_raw + mlb_props_raw
