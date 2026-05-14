@@ -804,10 +804,13 @@ def load_prop_accuracy() -> Dict:
             seen_sports.append(sp)
 
     by_sport: Dict[str, Dict] = {}
+    hist_by_sport: Dict[str, Dict] = {}
     for sp in seen_sports:
-        subset = [r for r in records if r.get("sport") == sp]
+        subset      = [r for r in records      if r.get("sport") == sp]
+        hist_subset = [r for r in hist_records if r.get("sport") == sp]
         if subset:
-            by_sport[sp] = _acc(subset)
+            by_sport[sp]      = _acc(subset)
+            hist_by_sport[sp] = _acc(hist_subset)
 
     hist_all = _acc(hist_records)
 
@@ -823,6 +826,7 @@ def load_prop_accuracy() -> Dict:
         "hist_all":      hist_all,
         "hist_by_type":  hist_by_type,
         "hist_by_conf":  hist_by_conf,
+        "hist_by_sport": hist_by_sport,
         "today_total":   len(today_records),
     }
 
