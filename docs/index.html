@@ -149,7 +149,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Wednesday, May 13, 2026 &middot; Generated May 13, 2026 at 09:27 PM PDT</div>
+    <div class="subtitle">Wednesday, May 13, 2026 &middot; Generated May 13, 2026 at 09:43 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
       MLB: 13 games &nbsp;|&nbsp;
@@ -2830,27 +2830,37 @@
         <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin-bottom:10px;">By League</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           
-          <div style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+          
+          <div id="pa-sport-NBA"
+               style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
+               data-sport="NBA"
+               data-hist-sport-total="99"
+               data-hist-sport-hits="38">
             <div style="font-size:0.68rem;margin-bottom:4px;">
               <span class="badge badge-nba">NBA</span>
             </div>
-            <div style="font-size:1.1rem;font-weight:700;color:#f87171;">
+            <div class="sport-hit-rate" style="font-size:1.1rem;font-weight:700;color:#f87171;">
               38.4%
             </div>
-            <div style="font-size:0.72rem;color:var(--muted);">38H / 61M (99 settled)</div>
+            <div class="sport-count" style="font-size:0.72rem;color:var(--muted);">38H / 61M (99 settled)</div>
             
             <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Avg err: <span style="color:#f87171;">-2.6</span></div>
             
           </div>
           
-          <div style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+          
+          <div id="pa-sport-MLB"
+               style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
+               data-sport="MLB"
+               data-hist-sport-total="95"
+               data-hist-sport-hits="48">
             <div style="font-size:0.68rem;margin-bottom:4px;">
               <span class="badge badge-mlb">MLB</span>
             </div>
-            <div style="font-size:1.1rem;font-weight:700;color:#facc15;">
+            <div class="sport-hit-rate" style="font-size:1.1rem;font-weight:700;color:#facc15;">
               50.5%
             </div>
-            <div style="font-size:0.72rem;color:var(--muted);">48H / 47M (95 settled)</div>
+            <div class="sport-count" style="font-size:0.72rem;color:var(--muted);">48H / 47M (95 settled)</div>
             
             <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Avg err: <span style="color:#f87171;">-1.4</span></div>
             
@@ -4533,6 +4543,39 @@
       }
       var cntEl = block.querySelector(".conf-count");
       if (cntEl) cntEl.textContent = newCH + "H / " + newCM + "M (" + newCT + " settled)";
+    });
+
+    // ── Update by_sport tiles ──────────────────────────────────────────────
+    // Build a per-sport summary from today's settled prop cards
+    var todayBySport = {};
+    document.querySelectorAll(".prop-card[data-prop-result]").forEach(function (card) {
+      var result = card.getAttribute("data-prop-result");
+      if (result === "DNP") return;
+      var sport = card.getAttribute("data-sport") || "";
+      if (!sport) return;
+      if (!todayBySport[sport]) todayBySport[sport] = { hits: 0, total: 0 };
+      todayBySport[sport].total++;
+      if (result === "HIT") todayBySport[sport].hits++;
+    });
+
+    Object.keys(todayBySport).forEach(function (sp) {
+      var tile = document.getElementById("pa-sport-" + sp);
+      if (!tile) return;
+      var histT = parseInt(tile.getAttribute("data-hist-sport-total") || "0", 10);
+      var histH = parseInt(tile.getAttribute("data-hist-sport-hits")  || "0", 10);
+      var td    = todayBySport[sp];
+      var newT  = histT + td.total;
+      var newH  = histH + td.hits;
+      var newHR = newT > 0 ? Math.round(newH / newT * 1000) / 10 : 0;
+      var newM  = newT - newH;
+
+      var hrDiv = tile.querySelector(".sport-hit-rate");
+      if (hrDiv) {
+        hrDiv.textContent = newHR + "%";
+        hrDiv.style.color = newHR >= 55 ? "#4ade80" : newHR >= 45 ? "#facc15" : "#f87171";
+      }
+      var cntDiv = tile.querySelector(".sport-count");
+      if (cntDiv) cntDiv.textContent = newH + "H / " + newM + "M (" + newT + " settled)";
     });
 
     // Show live badge
