@@ -119,6 +119,69 @@ The system analyzes `history.json` for systematic biases and surfaces them as fl
 
 ---
 
+## Recent Model Changes (May 2026)
+
+### MLB: tanh soft cap on run differential
+**File:** `src/models/edge_finder.py` — `analyze_mlb_game()`
+**Problem:** Model was overconfident at high probability levels (70–90% predicted → ~45% actual win rate). Changing `MLB_SPREAD_STD` moved all probabilities and broke calibration in the mid-range.
+**Fix:** `tanh` soft cap applied to the raw run differential before it enters the Normal CDF. Formula: `run_diff_capped = MLB_RUN_DIFF_CAP * tanh(run_diff / MLB_RUN_DIFF_CAP)` where `MLB_RUN_DIFF_CAP = 1.8`. Applies diminishing returns only to stacked large edges without affecting well-calibrated mid-range picks. `MLB_SPREAD_STD` stays at 1.8.
+
+### MLB: ERA trap severity rework
+**File:** `src/models/edge_finder.py` — `_era_trap_severity()`
+**Problem (1):** Old `ip_weight = 1 - ip/80` counter-intuitively amplified small samples (treating uncertainty as danger), pushing 10-19 IP pitchers to MODERATE/SEVERE on noise.
+**Problem (2):** No K/9 adjustment — high-strikeout pitchers legitimately outperform xFIP via fewer balls in play, but were flagged as traps anyway (e.g. Imanaga K/9 10.1 scored SEVERE).
+**Fix:**
+- `ip_weight` replaced with `ip_conf = min(1.0, max(0.0, (ip - 10) / 20.0))` — grows from 0 at 10 IP to full confidence at 30+ IP. Larger samples = more trust in the gap.
+- K/9 guard added: `k9_factor = max(0.5, 1.0 - max(0.0, (k9 - 9.0) * 0.25))` — each K/9 above 9.0 reduces severity 25%, floored at 50%.
+- Absolute minimum stays at 10 IP. ERA < FIP prerequisite gate and elite-pitcher guard (xFIP < 3.20 → cap at 0.79) unchanged.
+**Downstream effect:** ERA trap severity only affects the confidence label (HIGH/MEDIUM) and which edge threshold triggers HIGH (5%/6%/7%). It does NOT affect projected scores or edge — those use blended xFIP independently.
+
+### MLB: ERA trap terminology alignment
+**File:** `src/report/card_context.py` — `_mlb_narrative()`
+**Fix:** Narrative was mapping MODERATE severity to "notable" while the context section showed the raw word "MODERATE" — confusing and contradictory. Changed to "moderate" to match.
+
+### NBA: B2B double-counting fix
+**File:** `src/models/edge_finder.py` — `analyze_nba_game()`
+**Problem:** Back-to-back penalty (`NBA_BACK_TO_BACK_PENALTY`) was applied to a team, then the rest_diff calculation on top of it double-counted the same fatigue signal.
+**Fix:** `rest_diff` calculation now only fires when both teams have rest > 0 (i.e. neither is on a true back-to-back). The B2B penalty and rest_diff adjustment are now mutually exclusive.
+
+### NHL: ESPN standings + missing return
+**File:** `src/data/nhl_stats.py`
+**Problem (1):** ESPN playoffs standings structure changed: `conference → standings.entries` directly (no division children layer). All team stats were returning 0, silently killing all NHL picks.
+**Problem (2):** `analyze_nhl_game()` was missing a `return recs` statement — always returned `None`.
+**Fix:** Dual-path parsing handles both regular season (division children) and playoff (no division layer) structures. `otLosses` capitalization fixed. `pointsFor/gamesPlayed` fallback added for playoff mode where `avgGoalsFor` is absent.
+
+### Props: HRR target line fix
+**File:** `src/data/odds_client.py`
+**Problem:** Hits + Runs + RBI (HRR) props were showing "Over 1.5" when the system was configured to target "Over 0.5". The fallback silently used 1.5 when no book offered 0.5.
+**Fix:** When `target_found` is populated, `pref_lines` is completely replaced with only target-line entries. When `target_found` is empty (no book offers the target line), `pref_lines` is cleared entirely so the market is skipped rather than falling back to a wrong line.
+
+---
+
+## Card Narrative + Context System (May 2026)
+
+**Files:** `src/report/card_context.py` (new), `src/state/manager.py`, `src/report/templates/report.html`
+
+**What it does:** Replaces the separate "Key Signals" and "Research & Stats" card sections with:
+1. A plain-English narrative paragraph ("Why this pick") explaining the primary driver
+2. A single merged/deduplicated context list (signals + research, with superseded lines removed)
+
+Both sections are wrapped in a collapsible `card-insight` panel (clickable "Why this pick ▾" header).
+
+**Key design decision:** Confidence labels are computed upstream in `edge_finder` before `bet_to_dict` is called. The card context system runs at display time (`bet_to_dict` / `prop_to_dict`) and never affects pick selection or sizing.
+
+**Narrative logic per sport:**
+- MLB: detects ERA trap (primary driver) → pitcher xFIP mismatch → injury → generic fallback. Totals get a separate projection-vs-line narrative.
+- NBA: detects B2B → injury → generic net rating edge. Totals get over/under projection narrative.
+- NHL: detects B2B → injury → generic season net rating narrative.
+- Props: covers Hits/HRR/TB/Strikeouts/Points/Rebounds/Assists.
+
+**Signal deduplication:** Pitcher stat lines, park factor, weather signals, and umpire signal lines are dropped from signals when research has the fuller version. Internal model debug lines (tanh cap, expected runs, form weights) are suppressed from the context display.
+
+**Hydration for state-loaded picks:** `_hydrate_bet()` and `_hydrate_prop()` in `src/main.py` recompute `narrative`/`context` for any pick dict loaded from a state file that was saved before this feature was deployed. Applied in both the normal run path and the `code_only` (re-render) path.
+
+---
+
 ## How to continue in a future session
 
 Tell Claude: **"Continue work on the sports betting system. Check `docs/DEVELOPMENT_PLAN.md` for the roadmap."**
