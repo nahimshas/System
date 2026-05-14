@@ -252,17 +252,6 @@
   </div>
   {% endif %}
 
-  {% if not report.has_nba %}
-  <div class="card" style="margin-bottom:12px;">
-    <div class="empty-state"><div class="icon">🏀</div>No NBA games today.</div>
-  </div>
-  {% endif %}
-  {% if not report.has_mlb %}
-  <div class="card" style="margin-bottom:12px;">
-    <div class="empty-state"><div class="icon">⚾</div>No MLB games today.</div>
-  </div>
-  {% endif %}
-
   {% if not report.has_bets %}
   <div class="card">
     <div class="empty-state">
@@ -275,14 +264,17 @@
 
   {# ── Per-league collapsible sections ─────────────────────────────────── #}
 
-  {% if report.has_nba %}
   <div class="section" id="sec-nba">
     <div class="section-title">🏀 NBA
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {% if report.nba_top_singles or report.nba_props %}{{ report.nba_top_singles|length }} pick{% if report.nba_top_singles|length != 1 %}s{% endif %}{% if report.nba_props %} &middot; {{ report.nba_props|length }} prop{% if report.nba_props|length != 1 %}s{% endif %}{% endif %}{% else %}no qualifying picks{% endif %}
+        {% if not report.has_nba %}no games today{% elif report.nba_top_singles or report.nba_props %}{{ report.nba_top_singles|length }} pick{% if report.nba_top_singles|length != 1 %}s{% endif %}{% if report.nba_props %} &middot; {{ report.nba_props|length }} prop{% if report.nba_props|length != 1 %}s{% endif %}{% endif %}{% else %}no qualifying picks{% endif %}
       </span>
     </div>
-    {% if not (report.nba_top_singles or report.nba_props) %}
+    {% if not report.has_nba %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      🏀 No NBA games scheduled today.
+    </div>
+    {% elif not (report.nba_top_singles or report.nba_props) %}
     <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
       😕 No picks found with edge &gt; 3% today — the model scanned all NBA games and found no suitable edges.
     </div>
@@ -447,16 +439,18 @@
     </div><!-- sub-section nba-props -->
     {% endif %}
   </div>
-  {% endif %}
 
-  {% if report.has_mlb %}
   <div class="section" id="sec-mlb">
     <div class="section-title">⚾ MLB
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {% if report.mlb_top_singles or report.mlb_props %}{{ report.mlb_top_singles|length }} pick{% if report.mlb_top_singles|length != 1 %}s{% endif %}{% if report.mlb_props %} &middot; {{ report.mlb_props|length }} prop{% if report.mlb_props|length != 1 %}s{% endif %}{% endif %}{% else %}no qualifying picks{% endif %}
+        {% if not report.has_mlb %}no games today{% elif report.mlb_top_singles or report.mlb_props %}{{ report.mlb_top_singles|length }} pick{% if report.mlb_top_singles|length != 1 %}s{% endif %}{% if report.mlb_props %} &middot; {{ report.mlb_props|length }} prop{% if report.mlb_props|length != 1 %}s{% endif %}{% endif %}{% else %}no qualifying picks{% endif %}
       </span>
     </div>
-    {% if not (report.mlb_top_singles or report.mlb_props) %}
+    {% if not report.has_mlb %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      ⚾ No MLB games scheduled today.
+    </div>
+    {% elif not (report.mlb_top_singles or report.mlb_props) %}
     <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
       😕 No picks found with edge &gt; 3% today — the model scanned all MLB games and found no suitable edges.
     </div>
@@ -621,16 +615,18 @@
     </div><!-- sub-section mlb-props -->
     {% endif %}
   </div>
-  {% endif %}
 
-  {% if report.has_nfl %}
   <div class="section" id="sec-nfl">
     <div class="section-title">🏈 NFL
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {% if report.nfl_top_singles %}{{ report.nfl_top_singles|length }} pick{% if report.nfl_top_singles|length != 1 %}s{% endif %} &middot; monitoring only{% else %}no qualifying picks{% endif %}
+        {% if not report.has_nfl %}no games today{% elif report.nfl_top_singles %}{{ report.nfl_top_singles|length }} pick{% if report.nfl_top_singles|length != 1 %}s{% endif %} &middot; monitoring only{% else %}no qualifying picks{% endif %}
       </span>
     </div>
-    {% if not report.nfl_top_singles %}
+    {% if not report.has_nfl %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      🏈 No NFL games scheduled today.
+    </div>
+    {% elif not report.nfl_top_singles %}
     <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
       😕 No picks found with edge &gt; 3% today — the model scanned all NFL games and found no suitable edges.
     </div>
@@ -705,7 +701,6 @@
     </div><!-- sub-body nfl-singles -->
     </div><!-- sub-section nfl-singles -->
   </div>
-  {% endif %}
 
   {% if report.has_nhl %}
   <div class="section" id="sec-nhl">

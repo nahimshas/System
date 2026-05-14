@@ -363,6 +363,142 @@ def _prop_narrative(prop_type: str, player: str, team: str, opponent: str,
     return " ".join(parts)
 
 
+# ── WNBA narrative ────────────────────────────────────────────────────────────
+
+def _wnba_narrative(pick: str, signals: List[str], research: List[str],
+                    edge: float) -> str:
+    ew = _edge_word(edge)
+    # Pattern: "{team} injuries benefit {other_team} (+X%)"
+    inj_m = _search_first(
+        r"(.+?) injuries benefit (.+?) \(\+(\d+(?:\.\d+)?)%\)", signals
+    )
+    # Pattern: "{team} lineup impact (-X%)" — that team is short-handed
+    own_inj = _search_first(
+        r"(.+?) lineup impact \(-(\d+(?:\.\d+)?)%\)", signals
+    )
+    # B2B: "{team} on back-to-back (-X%)"
+    b2b_m = _search_first(r"(.+?) on back-to-back", signals)
+
+    parts = []
+
+    if inj_m:
+        injured_team = inj_m.group(1).strip()
+        beneficiary  = inj_m.group(2).strip()
+        inj_pct      = float(inj_m.group(3))
+
+        pick_is_beneficiary = (pick in beneficiary or beneficiary in pick)
+        pick_is_injured     = (pick in injured_team or injured_team in pick)
+
+        if pick_is_beneficiary:
+            # Pick's opponent is injured
+            if own_inj and (pick in own_inj.group(1) or own_inj.group(1) in pick):
+                own_pct = float(own_inj.group(2))
+                parts.append(
+                    f"Despite {pick}'s own lineup losses ({own_pct:.0f}% pts-share), "
+                    f"{injured_team}'s heavier absences ({inj_pct:.0f}%) give the model a net edge."
+                )
+            else:
+                parts.append(
+                    f"Key absences for {injured_team} ({inj_pct:.0f}% of their scoring output) "
+                    f"shift win probability toward {pick}."
+                )
+        elif pick_is_injured:
+            # Pick's own team is injured but model still favors them
+            if b2b_m:
+                b2b_team = b2b_m.group(1).strip()
+                parts.append(
+                    f"Although {pick} is missing key contributors ({inj_pct:.0f}% pts-share), "
+                    f"{b2b_team}'s back-to-back fatigue and the underlying net rating advantage "
+                    f"still favor {pick}."
+                )
+            else:
+                parts.append(
+                    f"The model continues to favor {pick} despite their lineup losses "
+                    f"({inj_pct:.0f}% pts-share), as their net rating edge holds a {ew} advantage."
+                )
+
+    if not parts and b2b_m:
+        b2b_team = b2b_m.group(1).strip()
+        if b2b_team not in pick and pick not in b2b_team:
+            parts.append(
+                f"{b2b_team}'s back-to-back fatigue reduces their effective strength, "
+                f"creating a {ew} {edge*100:.1f}% edge for {pick}."
+            )
+
+    if not parts:
+        parts.append(
+            f"The model rates {pick} at a {ew} {edge*100:.1f}% edge based on "
+            f"blended season and recent net ratings."
+        )
+
+    return " ".join(parts)
+
+
+# ── IPL narrative ─────────────────────────────────────────────────────────────
+
+def _ipl_narrative(pick: str, signals: List[str], research: List[str],
+                   edge: float) -> str:
+    ew = _edge_word(edge)
+    form_m  = _search_first(
+        r"Form edge: (.+?) \(blended win-rate gap (\d+)%\)", signals
+    )
+    venue_m = _search_first(
+        r"Home venue advantage: (.+?) \(\+", signals
+    )
+
+    parts = []
+
+    if form_m:
+        form_team = form_m.group(1).strip()
+        gap       = int(form_m.group(2))
+        pick_has_form = (pick in form_team or form_team in pick)
+
+        if pick_has_form:
+            if venue_m:
+                venue_team = venue_m.group(1).strip()
+                pick_is_home = (pick in venue_team or venue_team in pick)
+                if pick_is_home:
+                    parts.append(
+                        f"{pick} combines home venue advantage with a {gap}% form edge "
+                        f"for a {ew} {edge*100:.1f}% model advantage."
+                    )
+                else:
+                    parts.append(
+                        f"{pick}'s {gap}% blended win-rate edge overcomes "
+                        f"{venue_team}'s home venue advantage, giving the model a {ew} edge."
+                    )
+            else:
+                parts.append(
+                    f"{pick}'s {gap}% blended win-rate form edge drives "
+                    f"a {ew} {edge*100:.1f}% advantage over current market odds."
+                )
+        else:
+            # Pick doesn't have form edge but is still favored (venue or other)
+            if venue_m:
+                venue_team = venue_m.group(1).strip()
+                if pick in venue_team or venue_team in pick:
+                    parts.append(
+                        f"{pick} benefits from home venue advantage — "
+                        f"the market underestimates their win probability by {edge*100:.1f}%."
+                    )
+
+    elif venue_m:
+        venue_team = venue_m.group(1).strip()
+        if pick in venue_team or venue_team in pick:
+            parts.append(
+                f"{pick} holds home venue advantage, which the model rates at "
+                f"a {ew} {edge*100:.1f}% edge over market odds."
+            )
+
+    if not parts:
+        parts.append(
+            f"The model rates {pick} at a {ew} {edge*100:.1f}% edge based on "
+            f"form, venue, and head-to-head context."
+        )
+
+    return " ".join(parts)
+
+
 # ── Main entry points ─────────────────────────────────────────────────────────
 
 def build_card_context(
@@ -392,6 +528,10 @@ def build_card_context(
         narrative = _nba_narrative(pick, bet_type, signals, research, edge)
     elif sport == "NHL":
         narrative = _nhl_narrative(pick, bet_type, signals, research, edge)
+    elif sport == "WNBA":
+        narrative = _wnba_narrative(pick, signals, research, edge)
+    elif sport == "IPL":
+        narrative = _ipl_narrative(pick, signals, research, edge)
     else:
         narrative = ""
 

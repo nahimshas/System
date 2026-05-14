@@ -67,7 +67,9 @@ logger = logging.getLogger("main")
 # ---------------------------------------------------------------------------
 
 def _hydrate_bet(d: dict) -> dict:
-    if "narrative" in d:
+    # Re-compute if narrative key is missing OR empty (e.g. saved before a sport's
+    # narrative was implemented — WNBA/IPL added May 2026).
+    if d.get("narrative"):
         return d
     narrative, context = build_card_context(
         d.get("sport", ""), d.get("pick", ""), d.get("bet_type", ""),
@@ -932,10 +934,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 logger.warning(f"  {w.get('reason', w)}")
 
     # Hydrate narrative/context for any state-loaded picks missing those keys
+    # (also catches WNBA/IPL picks saved before those sports had narrative support)
     final_singles_display = [_hydrate_bet(d) for d in final_singles_display]
     final_singles         = [_hydrate_bet(d) for d in final_singles]
     final_props_display   = [_hydrate_prop(d) for d in final_props_display]
     final_props           = [_hydrate_prop(d) for d in final_props]
+    fresh_ipl_display     = [_hydrate_bet(d) for d in fresh_ipl_display]
+    fresh_wnba_display    = [_hydrate_bet(d) for d in fresh_wnba_display]
 
     # ------------------------------------------------------------------ #
     #  Build report & render HTML
