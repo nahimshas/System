@@ -42,6 +42,7 @@
     .badge-nhl { background: #0d9488; color: #fff; }
     .badge-ipl { background: #d97706; color: #fff; }
     .badge-wnba { background: #f97316; color: #fff; }
+    .badge-mls { background:#14532d; color:#bbf7d0; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
@@ -149,7 +150,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Thursday, May 14, 2026 &middot; Generated May 14, 2026 at 02:56 PM PDT</div>
+    <div class="subtitle">Thursday, May 14, 2026 &middot; Generated May 14, 2026 at 03:53 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 0 games &nbsp;|&nbsp;
       MLB: 4 games &nbsp;|&nbsp;
@@ -157,15 +158,16 @@
       NHL: 2 games &nbsp;|&nbsp; 
       IPL: 2 matches &nbsp;|&nbsp; 
       WNBA: 2 games &nbsp;|&nbsp; 
+      
       Budget: $100
     </div>
     
     
     <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
       🔑 Odds API &mdash;
-      3,818 used &middot; 
+      3,848 used &middot; 
       <span style="color:var(--green);">
-        16,182 remaining
+        16,152 remaining
       </span>
     </div>
     
@@ -658,6 +660,78 @@
     </div>
     
     <div class="card budget-single"
+         id="bet-4"
+         data-home-team="Boston Red Sox"
+         data-away-team="Philadelphia Phillies"
+         data-bet-type="Moneyline"
+         data-pick="Philadelphia Phillies"
+         data-sport="MLB"
+         data-cost="4.59"
+         data-profit="4.41"
+         data-confidence="HIGH"
+         data-edge-pct="12.0"
+         data-model-prob-pct="61.0"
+         data-market-prob-pct="49.0"
+         data-commence-time="2026-05-14T22:46:00Z"
+         data-in-budget="true">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <a href="#alloc-4" class="nav-link" title="Jump to allocation table">Philadelphia Phillies <span class="nav-arrow">↓</span></a>
+            </div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;ML &nbsp;&middot;&nbsp; Philadelphia Phillies @ Boston Red Sox
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 49.0% → Model <b style="color:var(--blue)">61.0%</b></span>
+          <span class="edge-chip green">+12.0% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">49.0%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">61.0%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+12.0%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model finds a strong edge against Boston Red Sox, driven by a significant ERA trap on Ranger Suarez — 2.77 ERA vs 3.79 xFIP in 39 innings suggests regression risk the market hasn't fully priced. Model projects Philadelphia Phillies by 0.5 runs (Boston Red Sox 3.4 — Philadelphia Phillies 3.9).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">⚠ ERA trap [SEVERE] — Ranger Suarez: ERA 2.77 vs xFIP 3.79 over 39 IP (severity 1.02) — Boston Red Sox ML may be overpriced by market</div><div class="context-item">Boston Red Sox injury impact (-1.6%)</div><div class="context-item">Philadelphia Phillies injury impact (-1.4%)</div><div class="context-item">🌧️ 100% precipitation chance at Boston (rain likely) — monitor for delays/postponement</div><div class="context-item">⚠ Boston Red Sox schedule load: 6 games in 7 days</div><div class="context-item">⚠ Philadelphia Phillies schedule load: 6 games in 7 days</div><div class="context-item">Model projected score: Boston Red Sox 3.4 — Philadelphia Phillies 3.9</div><div class="context-item">🔵 Ranger Suarez: ERA 2.77 | FIP 3.33 / xFIP 3.79 | K/9 7.4 | BB/9 2.3 | IP 39</div><div class="context-item">🔴 Jesús Luzardo: ERA 5.77 | FIP 2.9 / xFIP 2.12 | K/9 11.9 | BB/9 2.5 | IP 43</div><div class="context-item">Boston Red Sox offense: OPS 0.667 | AVG 0.236 | R/G 3.81</div><div class="context-item">Philadelphia Phillies offense: OPS 0.689 | AVG 0.232 | R/G 4.02</div><div class="context-item">Bullpen ERA — Boston Red Sox: 3.68 (WHIP 1.31) | Philadelphia Phillies: 4.08 (WHIP 1.49)</div><div class="context-item">Venue: Fenway Park — park factor 1.08 (hitter-friendly)</div><div class="context-item">⚕ Boston Red Sox — Connor Wong (C): DAY-TO-DAY</div><div class="context-item">⚕ Boston Red Sox — Hobie Harris (RP): DAY-TO-DAY</div><div class="context-item">⚕ Boston Red Sox — Brendan Rodgers (2B): OUT</div><div class="context-item">⚕ Philadelphia Phillies — Trea Turner (SS): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Keaton Anthony (1B): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Rene Pinto (C): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Daniel Robert (RP): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Andrew Bechtold (3B): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Mark Kolozsvary (C): DAY-TO-DAY</div><div class="context-item">👨‍⚖️ HP Umpire: Mark Ripperger (near-neutral tendencies)</div><div class="context-item">🌤 Weather (Boston): 52°F | Wind 5 mph E (blowing in) | Precip 100%</div>
+            </div>
+            
+          </div>
+        </div>
+        
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-4" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #4 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="card budget-single"
          id="bet-3"
          data-home-team="Chicago White Sox"
          data-away-team="Kansas City Royals"
@@ -667,9 +741,9 @@
          data-cost="8.28"
          data-profit="5.72"
          data-confidence="HIGH"
-         data-edge-pct="15.9"
+         data-edge-pct="15.8"
          data-model-prob-pct="73.0"
-         data-market-prob-pct="57.0"
+         data-market-prob-pct="57.2"
          data-commence-time="2026-05-14T23:41:00Z"
          data-in-budget="true">
       <div class="card-toggle-header">
@@ -691,16 +765,16 @@
         </div>
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
         <div class="card-compact">
-          <span class="mkt-mdl">Mkt 57.0% → Model <b style="color:var(--blue)">73.0%</b></span>
-          <span class="edge-chip green">+15.9% edge</span>
+          <span class="mkt-mdl">Mkt 57.2% → Model <b style="color:var(--blue)">73.0%</b></span>
+          <span class="edge-chip green">+15.8% edge</span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">57.0%</div></div>
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">57.2%</div></div>
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">73.0%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.8%</div></div>
         </div>
         
         <div class="card-insight">
@@ -730,7 +804,7 @@
     </div>
     
     <div class="card"
-         id="mlb-4"
+         id="mlb-5"
          data-home-team="Pittsburgh Pirates"
          data-away-team="Colorado Rockies"
          data-bet-type="Spread"
@@ -799,78 +873,6 @@
       </div>
     </div>
     
-    <div class="card budget-single"
-         id="bet-4"
-         data-home-team="Boston Red Sox"
-         data-away-team="Philadelphia Phillies"
-         data-bet-type="Moneyline"
-         data-pick="Philadelphia Phillies"
-         data-sport="MLB"
-         data-cost="4.59"
-         data-profit="4.41"
-         data-confidence="HIGH"
-         data-edge-pct="12.0"
-         data-model-prob-pct="61.0"
-         data-market-prob-pct="49.0"
-         data-commence-time="2026-05-14T22:46:00Z"
-         data-in-budget="true">
-      <div class="card-toggle-header">
-        <div class="card-header">
-          <div>
-            <div class="card-title">
-              <a href="#alloc-4" class="nav-link" title="Jump to allocation table">Philadelphia Phillies <span class="nav-arrow">↓</span></a>
-            </div>
-            <div class="card-subtitle">
-              <span class="badge badge-mlb">MLB</span>
-              &nbsp;ML &nbsp;&middot;&nbsp; Philadelphia Phillies @ Boston Red Sox
-            </div>
-            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            
-            <span class="confidence-badge HIGH">HIGH</span>
-          </div>
-        </div>
-        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
-        <div class="card-compact">
-          <span class="mkt-mdl">Mkt 49.0% → Model <b style="color:var(--blue)">61.0%</b></span>
-          <span class="edge-chip green">+12.0% edge</span>
-          <span class="card-chevron">▾</span>
-        </div>
-      </div>
-      <div class="card-details">
-        <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">49.0%</div></div>
-          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">61.0%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+12.0%</div></div>
-        </div>
-        
-        <div class="card-insight">
-          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
-            <span class="card-insight-label">Why this pick</span>
-            <span class="card-insight-chevron">▾</span>
-          </div>
-          <div class="card-insight-body">
-            <div class="card-narrative">The model finds a strong edge against Boston Red Sox, driven by a significant ERA trap on Ranger Suarez — 2.77 ERA vs 3.79 xFIP in 39 innings suggests regression risk the market hasn't fully priced. Model projects Philadelphia Phillies by 0.5 runs (Boston Red Sox 3.4 — Philadelphia Phillies 3.9).</div>
-            
-            <div class="context-section">
-              <div class="context-title">Context &amp; Stats</div>
-              <div class="context-item">⚠ ERA trap [SEVERE] — Ranger Suarez: ERA 2.77 vs xFIP 3.79 over 39 IP (severity 1.02) — Boston Red Sox ML may be overpriced by market</div><div class="context-item">Boston Red Sox injury impact (-1.6%)</div><div class="context-item">Philadelphia Phillies injury impact (-1.4%)</div><div class="context-item">🌧️ 100% precipitation chance at Boston (rain likely) — monitor for delays/postponement</div><div class="context-item">⚠ Boston Red Sox schedule load: 6 games in 7 days</div><div class="context-item">⚠ Philadelphia Phillies schedule load: 6 games in 7 days</div><div class="context-item">Model projected score: Boston Red Sox 3.4 — Philadelphia Phillies 3.9</div><div class="context-item">🔵 Ranger Suarez: ERA 2.77 | FIP 3.33 / xFIP 3.79 | K/9 7.4 | BB/9 2.3 | IP 39</div><div class="context-item">🔴 Jesús Luzardo: ERA 5.77 | FIP 2.9 / xFIP 2.12 | K/9 11.9 | BB/9 2.5 | IP 43</div><div class="context-item">Boston Red Sox offense: OPS 0.667 | AVG 0.236 | R/G 3.81</div><div class="context-item">Philadelphia Phillies offense: OPS 0.689 | AVG 0.232 | R/G 4.02</div><div class="context-item">Bullpen ERA — Boston Red Sox: 3.68 (WHIP 1.31) | Philadelphia Phillies: 4.08 (WHIP 1.49)</div><div class="context-item">Venue: Fenway Park — park factor 1.08 (hitter-friendly)</div><div class="context-item">⚕ Boston Red Sox — Connor Wong (C): DAY-TO-DAY</div><div class="context-item">⚕ Boston Red Sox — Hobie Harris (RP): DAY-TO-DAY</div><div class="context-item">⚕ Boston Red Sox — Brendan Rodgers (2B): OUT</div><div class="context-item">⚕ Philadelphia Phillies — Trea Turner (SS): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Keaton Anthony (1B): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Rene Pinto (C): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Daniel Robert (RP): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Andrew Bechtold (3B): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Mark Kolozsvary (C): DAY-TO-DAY</div><div class="context-item">👨‍⚖️ HP Umpire: Mark Ripperger (near-neutral tendencies)</div><div class="context-item">🌤 Weather (Boston): 52°F | Wind 5 mph E (blowing in) | Precip 100%</div>
-            </div>
-            
-          </div>
-        </div>
-        
-        
-        <div style="margin-top:10px;font-size:0.75rem;">
-          <a href="#alloc-4" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
-            📋 Slot #4 in Budget Allocation <span class="nav-arrow">↓</span>
-          </a>
-        </div>
-        
-      </div>
-    </div>
-    
     </div><!-- sub-body mlb-singles -->
     </div><!-- sub-section mlb-singles -->
     
@@ -894,7 +896,7 @@
          data-confidence="HIGH"
          data-commence-time="2026-05-14T23:16:00Z"
          data-market-line="3.5"
-         data-edge-pct="36.9">
+         data-edge-pct="36.8">
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -911,18 +913,18 @@
           </div>
         </div>
         <div class="card-compact">
-          <span class="mkt-mdl">Over <b>3.5</b> <span style="color:#94a3b8;font-size:0.8em;">54.1%</span> &middot; Model <b style="color:var(--blue)">5.8</b> &middot; <b style="color:var(--green)">+36.9%</b></span>
+          <span class="mkt-mdl">Over <b>3.5</b> <span style="color:#94a3b8;font-size:0.8em;">52.4%</span> &middot; Model <b style="color:var(--blue)">5.8</b> &middot; <b style="color:var(--green)">+36.8%</b></span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
       <div class="card-details">
         <div class="stats-grid">
           <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 3.5</div></div>
-          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">54.1%</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">52.4%</div></div>
           <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">5.8</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+36.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+36.8%</div></div>
         </div>
-        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 3.5 Ks at 54.1%. Model: 5.8 Ks in 7.0 inn.</div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 3.5 Ks at 52.4%. Model: 5.8 Ks in 7.0 inn.</div>
         
         <div class="card-insight">
           <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
@@ -934,7 +936,7 @@
             
             <div class="context-section">
               <div class="context-title">Context &amp; Stats</div>
-              <div class="context-item">Market: Over 3.5 Ks at 54.1% (draftkings)</div><div class="context-item">K/9 8.3 (adj 7.5) → 5.8 Ks in 7.0 inn | Edge +36.9%</div><div class="context-item">Opp K%: 20.5% vs league avg 22.8%</div><div class="context-item">Ben Brown: ERA 1.82 | FIP 2.72 / xFIP 3.48 | K/9 8.3 | BB/9 2.8 | HR/9 0.31</div><div class="context-item">Season IP: 29 | Projected start: ~7.0 inn (actual avg: 29.2 inn/start)</div><div class="context-item">Venue: Truist Park (park factor 1.03)</div>
+              <div class="context-item">Market: Over 3.5 Ks at 52.4% (draftkings)</div><div class="context-item">K/9 8.3 (adj 7.5) → 5.8 Ks in 7.0 inn | Edge +36.8%</div><div class="context-item">Opp K%: 20.5% vs league avg 22.8%</div><div class="context-item">Ben Brown: ERA 1.82 | FIP 2.72 / xFIP 3.48 | K/9 8.3 | BB/9 2.8 | HR/9 0.31</div><div class="context-item">Season IP: 29 | Projected start: ~7.0 inn (actual avg: 29.2 inn/start)</div><div class="context-item">Venue: Truist Park (park factor 1.03)</div>
             </div>
             
           </div>
@@ -1295,9 +1297,9 @@
          data-bet-type="Moneyline"
          data-pick="Vegas Golden Knights"
          data-sport="NHL"
-         data-edge-pct="22.2"
+         data-edge-pct="22.9"
          data-model-prob-pct="73.2"
-         data-market-prob-pct="50.9"
+         data-market-prob-pct="50.3"
          data-commence-time="2026-05-15T01:50:00Z">
       <div class="card-toggle-header">
         <div class="card-header">
@@ -1315,16 +1317,16 @@
         </div>
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
         <div class="card-compact">
-          <span class="mkt-mdl">Mkt 50.9% → Model <b style="color:var(--blue)">73.2%</b></span>
-          <span class="edge-chip green">+22.2% edge</span>
+          <span class="mkt-mdl">Mkt 50.3% → Model <b style="color:var(--blue)">73.2%</b></span>
+          <span class="edge-chip green">+22.9% edge</span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">50.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">50.3%</div></div>
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">73.2%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+22.2%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+22.9%</div></div>
         </div>
         
         <div class="card-insight">
@@ -1356,9 +1358,9 @@
          data-bet-type="Spread"
          data-pick="Montreal Canadiens +1.5"
          data-sport="NHL"
-         data-edge-pct="20.5"
+         data-edge-pct="19.5"
          data-model-prob-pct="88.8"
-         data-market-prob-pct="68.3"
+         data-market-prob-pct="69.3"
          data-commence-time="2026-05-14T23:10:46Z">
       <div class="card-toggle-header">
         <div class="card-header">
@@ -1376,16 +1378,16 @@
         </div>
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
         <div class="card-compact">
-          <span class="mkt-mdl">Mkt 68.3% → Model <b style="color:var(--blue)">88.8%</b></span>
-          <span class="edge-chip green">+20.5% edge</span>
+          <span class="mkt-mdl">Mkt 69.3% → Model <b style="color:var(--blue)">88.8%</b></span>
+          <span class="edge-chip green">+19.5% edge</span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">68.3%</div></div>
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">69.3%</div></div>
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">88.8%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+20.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+19.5%</div></div>
         </div>
         
         <div class="card-insight">
@@ -1417,7 +1419,7 @@
          data-bet-type="Total"
          data-pick="Under 6.5"
          data-sport="NHL"
-         data-edge-pct="16.3"
+         data-edge-pct="16.4"
          data-model-prob-pct="67.9"
          data-market-prob-pct="51.6"
          data-commence-time="2026-05-15T01:50:00Z">
@@ -1438,7 +1440,7 @@
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
         <div class="card-compact">
           <span class="mkt-mdl">Mkt 51.6% → Model <b style="color:var(--blue)">67.9%</b></span>
-          <span class="edge-chip green">+16.3% edge</span>
+          <span class="edge-chip green">+16.4% edge</span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
@@ -1446,7 +1448,7 @@
         <div class="stats-grid">
           <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">51.6%</div></div>
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">67.9%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+16.3%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+16.4%</div></div>
         </div>
         
         <div class="card-insight">
@@ -1497,9 +1499,9 @@
          data-bet-type="Moneyline"
          data-pick="Portland Fire"
          data-sport="WNBA"
-         data-edge-pct="13.5"
+         data-edge-pct="13.6"
          data-model-prob-pct="30.3"
-         data-market-prob-pct="16.8"
+         data-market-prob-pct="16.7"
          data-commence-time="2026-05-15T02:00:00Z">
       <div class="card-toggle-header">
         <div class="card-header">
@@ -1517,16 +1519,16 @@
         </div>
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
         <div class="card-compact">
-          <span class="mkt-mdl">Mkt 16.8% → Model <b style="color:var(--blue)">30.3%</b></span>
-          <span class="edge-chip green">+13.5% edge</span>
+          <span class="mkt-mdl">Mkt 16.7% → Model <b style="color:var(--blue)">30.3%</b></span>
+          <span class="edge-chip green">+13.6% edge</span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">16.8%</div></div>
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">16.7%</div></div>
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">30.3%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+13.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+13.6%</div></div>
         </div>
         
         <div class="card-insight">
@@ -1535,11 +1537,11 @@
             <span class="card-insight-chevron">▾</span>
           </div>
           <div class="card-insight-body">
-            
+            <div class="card-narrative">Despite Portland Fire's own lineup losses (17% pts-share), New York Liberty's heavier absences (30%) give the model a net edge.</div>
             
             <div class="context-section">
               <div class="context-title">Context &amp; Stats</div>
-              <div class="context-item">Home court: Portland Fire (+2%)</div><div class="context-item">Portland Fire lineup impact (-16.9%)</div><div class="context-item">New York Liberty injuries benefit Portland Fire (+30.0%)</div><div class="context-item">Portland Fire: 90.5 PPG | FG 45.3% | AST/TO 1.67 | NetRtg +27.2</div><div class="context-item">New York Liberty: 100.0 PPG | FG 51.0% | AST/TO 1.39 | NetRtg +36.0</div><div class="context-item">Rest — Portland Fire: 0 day(s) | New York Liberty: 0 day(s)</div><div class="context-item">⚕ New York Liberty — Satou Sabally (15.9 PPG, 16% pts share): OUT</div><div class="context-item">⚕ New York Liberty — Rebecca Allen (5.8 PPG, 6% pts share): OUT</div><div class="context-item">⚕ New York Liberty — Raquel Carrera: OUT</div><div class="context-item">⚕ New York Liberty — Leonie Fiebich (7.6 PPG, 8% pts share): OUT</div><div class="context-item">⚕ New York Liberty — Sabrina Ionescu (16.7 PPG, 17% pts share): OUT</div><div class="context-item">⚕ New York Liberty — Marine Fauthoux: OUT</div><div class="context-item">⚕ Portland Fire — Karlie Samuelson (5.3 PPG, 6% pts share): OUT</div><div class="context-item">⚕ Portland Fire — Carla Leite (7.9 PPG, 9% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Portland Fire — Sug Sutton (6.0 PPG, 7% pts share): DAY-TO-DAY</div>
+              <div class="context-item">Home court: Portland Fire (+2%)</div><div class="context-item">Portland Fire lineup impact (-16.9%)</div><div class="context-item">New York Liberty injuries benefit Portland Fire (+30.0%)</div><div class="context-item">Portland Fire: 90.5 PPG | FG 45.3% | AST/TO 1.67 | NetRtg +27.2</div><div class="context-item">New York Liberty: 100.0 PPG | FG 51.0% | AST/TO 1.39 | NetRtg +36.0</div><div class="context-item">Rest — Portland Fire: 0 day(s) | New York Liberty: 0 day(s)</div><div class="context-item">⚕ New York Liberty — Satou Sabally (15.9 PPG, 16% pts share): OUT</div><div class="context-item">⚕ New York Liberty — Leonie Fiebich (7.6 PPG, 8% pts share): OUT</div><div class="context-item">⚕ New York Liberty — Rebecca Allen (5.8 PPG, 6% pts share): OUT</div><div class="context-item">⚕ New York Liberty — Raquel Carrera: OUT</div><div class="context-item">⚕ New York Liberty — Sabrina Ionescu (16.7 PPG, 17% pts share): OUT</div><div class="context-item">⚕ New York Liberty — Marine Fauthoux: OUT</div><div class="context-item">⚕ Portland Fire — Karlie Samuelson (5.3 PPG, 6% pts share): OUT</div><div class="context-item">⚕ Portland Fire — Carla Leite (7.9 PPG, 9% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Portland Fire — Sug Sutton (6.0 PPG, 7% pts share): DAY-TO-DAY</div>
             </div>
             
           </div>
@@ -1555,9 +1557,9 @@
          data-bet-type="Moneyline"
          data-pick="Minnesota Lynx"
          data-sport="WNBA"
-         data-edge-pct="11.6"
-         data-model-prob-pct="50.3"
-         data-market-prob-pct="38.8"
+         data-edge-pct="8.9"
+         data-model-prob-pct="47.9"
+         data-market-prob-pct="39.1"
          data-commence-time="2026-05-15T00:00:00Z">
       <div class="card-toggle-header">
         <div class="card-header">
@@ -1575,16 +1577,16 @@
         </div>
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
         <div class="card-compact">
-          <span class="mkt-mdl">Mkt 38.8% → Model <b style="color:var(--blue)">50.3%</b></span>
-          <span class="edge-chip green">+11.6% edge</span>
+          <span class="mkt-mdl">Mkt 39.1% → Model <b style="color:var(--blue)">47.9%</b></span>
+          <span class="edge-chip green">+8.9% edge</span>
           <span class="card-chevron">▾</span>
         </div>
       </div>
       <div class="card-details">
         <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">38.8%</div></div>
-          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">50.3%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+11.6%</div></div>
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">39.1%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">47.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+8.9%</div></div>
         </div>
         
         <div class="card-insight">
@@ -1593,11 +1595,11 @@
             <span class="card-insight-chevron">▾</span>
           </div>
           <div class="card-insight-body">
-            
+            <div class="card-narrative">Although Minnesota Lynx is missing key contributors (28% pts-share), Dallas Wings's back-to-back fatigue and the underlying net rating advantage still favor Minnesota Lynx.</div>
             
             <div class="context-section">
               <div class="context-title">Context &amp; Stats</div>
-              <div class="context-item">Home court: Dallas Wings (+2%)</div><div class="context-item">Dallas Wings on back-to-back (-4%)</div><div class="context-item">Dallas Wings lineup impact (-2.4%)</div><div class="context-item">Minnesota Lynx injuries benefit Dallas Wings (+28.2%)</div><div class="context-item">Dallas Wings: 89.5 PPG | FG 48.2% | AST/TO 1.78 | NetRtg +21.0</div><div class="context-item">Minnesota Lynx: 89.0 PPG | FG 50.0% | AST/TO 1.33 | NetRtg +26.5</div><div class="context-item">Rest — Dallas Wings: 1 day(s) | Minnesota Lynx: 0 day(s)</div><div class="context-item">⚕ Dallas Wings — Azzi Fudd (3.0 PPG, 3% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Minnesota Lynx — Nia Coffey (4.8 PPG, 5% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Minnesota Lynx — Dorka Juhasz (5.4 PPG, 6% pts share): OUT</div><div class="context-item">⚕ Minnesota Lynx — Napheesa Collier (18.4 PPG, 21% pts share): OUT</div>
+              <div class="context-item">Home court: Dallas Wings (+2%)</div><div class="context-item">Dallas Wings on back-to-back (-4%)</div><div class="context-item">Minnesota Lynx injuries benefit Dallas Wings (+28.2%)</div><div class="context-item">Dallas Wings: 89.5 PPG | FG 48.2% | AST/TO 1.78 | NetRtg +21.0</div><div class="context-item">Minnesota Lynx: 89.0 PPG | FG 50.0% | AST/TO 1.33 | NetRtg +26.5</div><div class="context-item">Rest — Dallas Wings: 1 day(s) | Minnesota Lynx: 0 day(s)</div><div class="context-item">⚕ Minnesota Lynx — Nia Coffey (4.8 PPG, 5% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Minnesota Lynx — Dorka Juhasz (5.4 PPG, 6% pts share): OUT</div><div class="context-item">⚕ Minnesota Lynx — Napheesa Collier (18.4 PPG, 21% pts share): OUT</div>
             </div>
             
           </div>
@@ -1609,6 +1611,8 @@
     </div><!-- sub-body wnba-singles -->
     </div><!-- sub-section wnba-singles -->
   </div>
+  
+
   
 
   
@@ -1680,7 +1684,7 @@
             <span class="card-insight-chevron">▾</span>
           </div>
           <div class="card-insight-body">
-            
+            <div class="card-narrative">Chennai Super Kings's 32% blended win-rate edge overcomes Lucknow Super Giants's home venue advantage, giving the model a solid edge.</div>
             
             <div class="context-section">
               <div class="context-title">Context &amp; Stats</div>
@@ -1742,6 +1746,17 @@
           <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">44.9%</div></div>
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">54.0%</div></div>
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+9.1%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model rates Mumbai Indians at a solid 9.1% edge based on form, venue, and head-to-head context.</div>
+            
+          </div>
         </div>
         
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
@@ -1906,7 +1921,7 @@
               data-bet-type="Spread"
               data-pick="Chicago White Sox +1.5"
               data-sport="MLB"
-              data-market-prob-pct="57.0"
+              data-market-prob-pct="57.2"
               data-commence-time="2026-05-14T23:41:00Z"
               >
             <td style="color:var(--muted);font-size:0.78rem;">3</td>
@@ -1921,7 +1936,7 @@
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
             </td>
             <td style="vertical-align:top;text-align:center;">
-              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+15.9%</div>
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+15.8%</div>
               <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
             </td>
             <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
@@ -1980,7 +1995,7 @@
               
               <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
               <div style="color:var(--muted);font-size:0.7rem;">Philadelphia Phillies @ Boston Red Sox</div>
-              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+              
             </td>
             <td style="vertical-align:top;text-align:center;">
               <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+12.0%</div>
@@ -1995,7 +2010,7 @@
                 <div style="font-size:0.8rem;">$4.59</div>
                 <div style="color:#16a34a;font-size:0.75rem;">+$4.41</div>
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:inline;">🔒</span>
                   <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
                 </div>
               </div>
@@ -2030,7 +2045,7 @@
               data-bet-type="Total"
               data-pick="Over 7.5"
               data-sport="MLB"
-              data-market-prob-pct="50.6"
+              data-market-prob-pct="50.9"
               data-commence-time="2026-05-14T23:16:00Z"
               >
             <td style="color:var(--muted);font-size:0.78rem;">5</td>
@@ -2045,7 +2060,7 @@
               <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
             </td>
             <td style="vertical-align:top;text-align:center;">
-              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+11.4%</div>
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+11.1%</div>
               <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
             </td>
             <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
@@ -2765,6 +2780,24 @@
             
           </div>
           
+          
+          <div id="wl-tile-MLS"
+               data-hist-won="0"
+               data-hist-lost="0"
+               style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.68rem;margin-bottom:6px;">
+              <span class="badge badge-mls">⚽ MLS</span>
+            </div>
+            <div class="wl-record" style="font-size:0.9rem;font-weight:700;
+                        color:var(--muted);">
+              0W–0L
+              
+            </div>
+            
+            <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">No picks settled yet</div>
+            
+          </div>
+          
         </div>
       </div>
       
@@ -2978,7 +3011,8 @@
     NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=" + _espnDate,
     MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate,
     NHL: "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=" + _espnDate,
-    WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate
+    WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate,
+    MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _espnDate
   };
 
   // ── Local timezone formatting ────────────────────────────────────────────
@@ -3846,10 +3880,10 @@
     // Runs independently of budget outcomes so tiles update even on days
     // where there are zero budget bets in play.
     (function updateWatchlistTiles() {
-      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 } };
+      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 } };
 
       document.querySelectorAll(
-        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result]"
+        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
         var result = wlCard.getAttribute("data-live-result");
         if (!result) return;
@@ -3859,7 +3893,7 @@
         else if (result === "LOST") wlLive[sport].lost++;
       });
 
-      ["NHL", "IPL", "WNBA"].forEach(function (sp) {
+      ["NHL", "IPL", "WNBA", "MLS"].forEach(function (sp) {
         var lw = wlLive[sp].won;
         var ll = wlLive[sp].lost;
         if (lw + ll === 0) return;   // nothing settled live for this sport
@@ -3988,7 +4022,8 @@
           NFL: '<span class="badge badge-nfl">🏈 NFL</span>',
           NHL: '<span class="badge badge-nhl">🏒 NHL</span>',
           IPL: '<span class="badge badge-ipl">🏏 IPL</span>',
-          WNBA: '<span class="badge badge-wnba">🏀 WNBA</span>'
+          WNBA: '<span class="badge badge-wnba">🏀 WNBA</span>',
+          MLS: '<span class="badge badge-mls">⚽ MLS</span>'
         }[sport] || '<span style="color:var(--muted);">PARLAYS</span>';
         sportCard.innerHTML =
           '<div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;">' + sportBadgeHtml + '</div>' +
@@ -5094,6 +5129,7 @@
       { url: ESPN.MLB, sport: "MLB" },
       { url: ESPN.NHL, sport: "NHL" },
       { url: ESPN.WNBA, sport: "WNBA" },
+      { url: ESPN.MLS, sport: "MLS" },
     ].forEach(function (item) {
       fetch(item.url)
         .then(function (r) { return r.json(); })
@@ -5139,7 +5175,7 @@
     lsSave("sub-" + id, el.classList.contains("sub-collapsed"));
   };
   // Restore sub-section collapse states on load (default: expanded)
-  ["sub-nba-singles","sub-nba-props","sub-mlb-singles","sub-mlb-props","sub-nfl-singles","sub-nhl-singles"].forEach(function(id) {
+  ["sub-nba-singles","sub-nba-props","sub-mlb-singles","sub-mlb-props","sub-nfl-singles","sub-nhl-singles","sub-mls-singles"].forEach(function(id) {
     if (lsGet("sub-" + id) === "1") {
       var el = document.getElementById(id);
       if (el) el.classList.add("sub-collapsed");
