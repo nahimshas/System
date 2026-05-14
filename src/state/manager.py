@@ -352,8 +352,15 @@ def merge_picks(
     """
     warnings: List[Dict] = []
 
+    # Sports that are watchlist-only and must never appear in the budget pool or parlays.
+    # Picks saved from a buggy run where these entered the budget pool are silently dropped here.
+    _WATCHLIST_SPORTS = {"NHL", "IPL", "WNBA"}
+
     # ── Singles ──────────────────────────────────────────────────────────────
-    locked_singles: List[Dict] = _dedup_cached_singles(state.get("singles", []))
+    locked_singles: List[Dict] = _dedup_cached_singles([
+        s for s in state.get("singles", [])
+        if s.get("sport", "") not in _WATCHLIST_SPORTS
+    ])
     _update_lock_flags(locked_singles)
 
     started  = [p for p in locked_singles if p.get("locked")]
@@ -517,7 +524,9 @@ def merge_picks(
 
     # ── Parlays ───────────────────────────────────────────────────────────────
     locked_parlays: List[Dict] = [
-        p for p in state.get("parlays", []) if _cached_parlay_valid(p)
+        p for p in state.get("parlays", [])
+        if _cached_parlay_valid(p)
+        and not any(leg.get("sport", "") in _WATCHLIST_SPORTS for leg in p.get("legs", []))
     ]
     _update_lock_flags(locked_parlays, use_any_leg=True)
 
