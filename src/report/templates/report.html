@@ -817,7 +817,8 @@
          data-edge-pct="{{ bet.edge_pct }}"
          data-model-prob-pct="{{ bet.model_prob_pct }}"
          data-market-prob-pct="{{ bet.market_prob_pct }}"
-         data-commence-time="{{ bet.commence_time }}">
+         data-commence-time="{{ bet.commence_time }}"
+         {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-espn-done="1"{% endif %}>
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -3267,19 +3268,16 @@
     }
     renderIplCommenceTimes();
 
-    // ── IPL live updates via core.espnuk.org ─────────────────────────────────
-    // Same ESPN family as NBA/MLB/NHL, CORS-enabled, no API key required.
-    // Polls every 30 s; stops once all IPL cards are ESPN-finalized.
-    // Handles both JS-unsettled cards ([data-ipl-commence]) and server-settled
-    // cards ("Match Ended" already in card-time) — both get the ESPN score.
+    // ── IPL live updates via site.api.espn.com (cricket scoreboard) ─────────
+    // Same domain and CORS policy as NBA/MLB/NHL scoreboards — no key required.
+    // Single call per poll (linescores embedded in response — no nested fetches).
+    // Polls every 30 s; stops once all IPL cards are finalized.
     (function () {
-      var IPL_EVENTS_URL =
-        "https://core.espnuk.org/v2/sports/cricket/leagues/8048/events";
+      var IPL_SCOREBOARD =
+        "https://site.api.espn.com/apis/site/v2/sports/cricket/8048/scoreboard";
       var pollTimer = null;
 
-      function sigmoid(x) {
-        return 1 / (1 + Math.exp(-x));
-      }
+      function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
 
       function iplNameMatch(a, b) {
         a = (a || "").toLowerCase().trim();
@@ -3287,165 +3285,55 @@
         return a && b && (a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1);
       }
 
-      // Blended win probability: market → model as overs progress.
-      // lsByComp: array of { p1, p2 } linescore objects per competitor.
-      function calcIplWinProb(lsByComp, marketProb) {
-        var battingFirst  = null;  // first innings batting team (p1, isCurrent)
-        var battingSecond = null;  // second innings batting team (p2, isCurrent)
-        var firstInningsRuns = 0;
+      // Blended win probability derived from embedded linescores.
+      // competitors: ESPN competitor objects with .team.displayName and .linescores[].
+      // pickName:    the team name our card is backing (data-pick attribute).
+      // marketProb:  starting market probability [0–1].
+      function calcIplWinProb(competitors, pickName, marketProb) {
+        var firstBatter = null;  // { name, ls } for the team batting in period 1
+        var chaseBatter = null;  // { name, ls } for the team currently batting in period 2
 
-        for (var i = 0; i < lsByComp.length; i++) {
-          var ls = lsByComp[i];
-          if (ls && ls.p2 && ls.p2.isCurrent) battingSecond = ls.p2;
-          if (ls && ls.p1 && ls.p1.isCurrent && ls.p1.isBatting) battingFirst = ls.p1;
-          // Capture completed first innings score for target fallback
-          if (ls && ls.p1 && !ls.p1.isCurrent && ls.p1.runs !== undefined) {
-            if (ls.p1.runs > firstInningsRuns) firstInningsRuns = ls.p1.runs;
-          }
-        }
-
-        if (battingSecond) {
-          var overs2       = battingSecond.overs   || 0;
-          var runs2        = battingSecond.runs     || 0;
-          var wkts2        = battingSecond.wickets  || 0;
-          var target       = battingSecond.target   || (firstInningsRuns + 1);
-          var runsNeeded   = Math.max(0, target - runs2);
-          var oversLeft    = Math.max(0.1, 20 - overs2);
-          var wicketsLeft  = Math.max(1, 10 - wkts2);
-          var rrr          = runsNeeded / oversLeft;
-          var P_model2     = sigmoid(3 * (1 - rrr / (8 * wicketsLeft / 10)));
-          var alpha2       = Math.min(1, (20 + overs2) / 40);
-          return (1 - alpha2) * marketProb + alpha2 * P_model2;
-        }
-
-        if (battingFirst && battingFirst.overs > 0) {
-          var overs1    = battingFirst.overs;
-          var runs1     = battingFirst.runs || 0;
-          var projected = runs1 * (20 / overs1);
-          var P_model1  = sigmoid(0.04 * (projected - 170));
-          var alpha1    = overs1 / 40;
-          return (1 - alpha1) * marketProb + alpha1 * P_model1;
-        }
-
-        return marketProb; // fallback — match not yet underway
-      }
-
-      // Fetch period-1 and period-2 linescores for every competitor in parallel.
-      function fetchLinescores(evId, competitors) {
-        var fetches = competitors.map(function (comp) {
-          var cid = comp.id;
-          if (!cid) return Promise.resolve({ p1: null, p2: null });
-          var base = IPL_EVENTS_URL + "/" + evId + "/competitions/" + evId +
-                     "/competitors/" + cid + "/linescores/1/";
-          var p1p = fetch(base + "1")
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .catch(function () { return null; });
-          var p2p = fetch(base + "2")
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .catch(function () { return null; });
-          return Promise.all([p1p, p2p]).then(function (r) {
-            return { p1: r[0], p2: r[1] };
+        competitors.forEach(function (comp) {
+          var name = (comp.team || {}).displayName || "";
+          var ls1 = null, ls2 = null;
+          (comp.linescores || []).forEach(function (ls) {
+            if (ls.period === 1) ls1 = ls;
+            if (ls.period === 2) ls2 = ls;
           });
-        });
-        return Promise.all(fetches);
-      }
-
-      function applyIplEvent(ev, status, lsByComp) {
-        // Target all IPL cards not yet ESPN-finalized.
-        // data-espn-done is set here once ESPN confirms the final result —
-        // this covers both server-settled cards ("Match Ended" from Jinja) and
-        // JS-unsettled cards ([data-ipl-commence] upcoming/live).
-        var cards = document.querySelectorAll(
-          ".ipl-watchlist-card:not([data-espn-done])"
-        );
-        if (!cards.length) return;
-
-        var comp = (ev.competitions || [])[0];
-        if (!comp) return;
-
-        var competitors = (comp.competitors || []).slice().sort(function (a, b) {
-          return (a.order || 0) - (b.order || 0);
+          if (ls1 && ls1.isBatting)                   firstBatter = { name: name, ls: ls1 };
+          if (ls2 && ls2.isBatting && ls2.isCurrent)  chaseBatter = { name: name, ls: ls2 };
         });
 
-        // event.name = "Team A v Team B" — index matches competitor order
-        var nameParts = (ev.name || "").split(" v ");
-        var teams = competitors.map(function (c, i) {
-          return { name: (nameParts[i] || "").trim(), winner: !!c.winner };
-        });
-
-        var winnerTeam  = teams.find(function (t) { return t.winner; });
-        var state       = ((status || {}).type || {}).state || "";
-        var liveSummary = (status || {}).longSummary
-                       || ((status || {}).type || {}).detail
-                       || ((status || {}).type || {}).longDetail
-                       || "";
-        var isComplete  = state === "post" || !!winnerTeam;
-        var isLive      = state === "in";
-
-        // Fallback: parse winner from liveSummary when c.winner isn't set by the API.
-        // liveSummary format: "Gujarat Titans won by 3 wickets"
-        if (isComplete && !winnerTeam && liveSummary) {
-          var wonIdx = liveSummary.toLowerCase().indexOf(" won by");
-          if (wonIdx !== -1) {
-            var parsedName = liveSummary.slice(0, wonIdx).trim();
-            var matched = teams.find(function (t) { return iplNameMatch(t.name, parsedName); });
-            if (matched) winnerTeam = matched;
-          }
+        if (chaseBatter) {
+          // Second innings: chasing team is live
+          var runs2   = chaseBatter.ls.runs    || 0;
+          var wkts2   = chaseBatter.ls.wickets || 0;
+          var overs2  = chaseBatter.ls.overs   || 0;
+          var target  = firstBatter ? (firstBatter.ls.runs + 1) : 170;
+          var needed  = Math.max(0, target - runs2);
+          var left    = Math.max(0.1, 20 - overs2);
+          var wleft   = Math.max(1, 10 - wkts2);
+          var rrr     = needed / left;
+          var P_chase = sigmoid(3 * (1 - rrr / (8 * wleft / 10)));
+          var alpha   = Math.min(1, (20 + overs2) / 40);
+          var pickChases = iplNameMatch(pickName, chaseBatter.name);
+          var P_pick  = pickChases ? P_chase : (1 - P_chase);
+          return (1 - alpha) * marketProb + alpha * P_pick;
         }
 
-        cards.forEach(function (card) {
-          var homeTeam = card.getAttribute("data-home-team") || "";
-          var awayTeam = card.getAttribute("data-away-team") || "";
-          var evHome   = teams[0] ? teams[0].name : "";
-          var evAway   = teams[1] ? teams[1].name : "";
-          if (!iplNameMatch(homeTeam, evHome) || !iplNameMatch(awayTeam, evAway)) return;
-
-          var timeDiv = card.querySelector(".card-time");
-          var liveDiv = card.querySelector(".live-status");
-
-          if (isComplete && winnerTeam) {
-            var pick   = card.getAttribute("data-pick") || "";
-            var result = iplNameMatch(pick, winnerTeam.name) ? "WON" : "LOST";
-            card.setAttribute("data-live-result", result);
-            card.setAttribute("data-espn-done", "1");
-            showLockBadge(card);
-            if (timeDiv) {
-              timeDiv.removeAttribute("data-ipl-commence");
-              timeDiv.textContent = "";
-            }
-            if (liveDiv) {
-              liveDiv.innerHTML =
-                '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
-                (liveSummary || "Match complete") + "</span>" +
-                "&nbsp;&nbsp;" + outcomeHtml(result);
-            }
-          } else if (isLive) {
-            showLockBadge(card);
-            card.removeAttribute("data-live-result");
-            // Clear card-time — live info lives entirely in live-status (matches other leagues)
-            if (timeDiv) {
-              timeDiv.removeAttribute("data-ipl-commence");
-              timeDiv.textContent = "";
-            }
-            var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
-            var winProb    = lsByComp ? calcIplWinProb(lsByComp, marketProb) : marketProb;
-            if (liveDiv) {
-              liveDiv.innerHTML =
-                '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
-                (liveSummary
-                  ? ' <span style="color:#94a3b8;font-size:0.72rem;">' + liveSummary + "</span>"
-                  : "") +
-                "&nbsp;&nbsp;" + probHtml(winProb);
-            }
-          }
-          // state === "pre": renderIplCommenceTimes already shows the scheduled time
-        });
-
-        // Stop interval once every IPL card has been ESPN-finalized
-        if (pollTimer && !document.querySelector(".ipl-watchlist-card:not([data-espn-done])")) {
-          clearInterval(pollTimer);
-          pollTimer = null;
+        if (firstBatter && firstBatter.ls.overs > 0) {
+          // First innings: project total for the batting team
+          var overs1    = firstBatter.ls.overs;
+          var runs1     = firstBatter.ls.runs || 0;
+          var projected = runs1 * (20 / overs1);
+          var P_first   = sigmoid(0.04 * (projected - 170));
+          var alpha1    = overs1 / 40;
+          var pickFirst = iplNameMatch(pickName, firstBatter.name);
+          var P_pick1   = pickFirst ? P_first : (1 - P_first);
+          return (1 - alpha1) * marketProb + alpha1 * P_pick1;
         }
+
+        return marketProb; // pre-match fallback
       }
 
       function utcDateStr(d) {
@@ -3456,61 +3344,140 @@
         ].join("");
       }
 
+      function applyIplEvent(ev) {
+        var cards = document.querySelectorAll(".ipl-watchlist-card:not([data-espn-done])");
+        if (!cards.length) return;
+
+        var comp0 = (ev.competitions || [])[0];
+        if (!comp0) return;
+
+        var competitors = (comp0.competitors || []).slice().sort(function (a, b) {
+          return (a.order || 0) - (b.order || 0);
+        });
+        if (!competitors.length) return;
+
+        var status   = ev.status || {};
+        var state    = (status.type || {}).state || "";
+        var summary  = status.summary || (status.type || {}).detail || "";
+        var isPost   = state === "post";
+        var isLive   = state === "in";
+
+        // Build simple team info from competitor objects
+        var teams = competitors.map(function (c) {
+          return {
+            name:   (c.team || {}).displayName || "",
+            score:  c.score || "",
+            winner: !!c.winner,
+          };
+        });
+
+        var winnerTeam = teams.find(function (t) { return t.winner; });
+
+        // Fallback: parse winner from summary string "Team won by …"
+        if (isPost && !winnerTeam && summary) {
+          var wonIdx = summary.toLowerCase().indexOf(" won by");
+          if (wonIdx !== -1) {
+            var parsedName = summary.slice(0, wonIdx).trim();
+            var matched = teams.find(function (t) { return iplNameMatch(t.name, parsedName); });
+            if (matched) winnerTeam = matched;
+          }
+        }
+
+        cards.forEach(function (card) {
+          var homeTeam = card.getAttribute("data-home-team") || "";
+          var awayTeam = card.getAttribute("data-away-team") || "";
+          // Accept either orientation (home↔home or home↔away) since the event
+          // may list teams in a different home/away order than the odds feed.
+          var t0 = teams[0] ? teams[0].name : "";
+          var t1 = teams[1] ? teams[1].name : "";
+          var matchesPair =
+            (iplNameMatch(homeTeam, t0) && iplNameMatch(awayTeam, t1)) ||
+            (iplNameMatch(homeTeam, t1) && iplNameMatch(awayTeam, t0));
+          if (!matchesPair) return;
+
+          var pickName   = card.getAttribute("data-pick") || "";
+          var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
+          var timeDiv    = card.querySelector(".card-time");
+          var liveDiv    = card.querySelector(".live-status");
+
+          if (isPost && winnerTeam) {
+            var result = iplNameMatch(pickName, winnerTeam.name) ? "WON" : "LOST";
+            card.setAttribute("data-live-result", result);
+            card.setAttribute("data-espn-done", "1");
+            showLockBadge(card);
+            if (timeDiv) {
+              timeDiv.removeAttribute("data-ipl-commence");
+              timeDiv.textContent = "";
+            }
+            if (liveDiv) {
+              liveDiv.innerHTML =
+                '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
+                (summary || "Match complete") + "</span>" +
+                "&nbsp;&nbsp;" + outcomeHtml(result);
+            }
+            updatePerformance();
+          } else if (isLive) {
+            showLockBadge(card);
+            card.removeAttribute("data-live-result");
+            if (timeDiv) {
+              timeDiv.removeAttribute("data-ipl-commence");
+              timeDiv.textContent = "";
+            }
+            // Build a compact live score string from embedded competitor scores
+            var scoreStr = teams.map(function (t) {
+              var abbr = t.name.split(" ").pop() || t.name;
+              return abbr + (t.score ? " " + t.score : "");
+            }).join("  ·  ");
+            var winProb = calcIplWinProb(competitors, pickName, marketProb);
+            if (liveDiv) {
+              liveDiv.innerHTML =
+                '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
+                (scoreStr
+                  ? ' <span style="color:#94a3b8;font-size:0.72rem;">&nbsp;' + scoreStr + "</span>"
+                  : "") +
+                (summary
+                  ? ' <span style="color:#94a3b8;font-size:0.72rem;"> — ' + summary + "</span>"
+                  : "") +
+                "&nbsp;&nbsp;" + probHtml(winProb);
+            }
+          }
+          // state === "pre": renderIplCommenceTimes already shows the scheduled time
+        });
+
+        // Stop polling once every IPL card has been ESPN-finalized
+        if (pollTimer && !document.querySelector(".ipl-watchlist-card:not([data-espn-done])")) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
       function pollIplLive() {
         if (!document.querySelector(".ipl-watchlist-card")) return;
         var unsettled = document.querySelectorAll(".ipl-watchlist-card:not([data-espn-done])");
         if (!unsettled.length) return;
 
         var now = new Date();
-        // Always include today and yesterday UTC — covers midnight crossover and
-        // the case where commence-time is empty (server-settled picks may lack it).
-        var datesToFetch = {};
-        datesToFetch[utcDateStr(now)] = true;
-        datesToFetch[utcDateStr(new Date(now.getTime() - 86400000))] = true;
-
-        // Also include the explicit match date for each unsettled card
+        // Always check today and yesterday (UTC) — covers midnight crossover.
+        var dates = {};
+        dates[utcDateStr(now)] = true;
+        dates[utcDateStr(new Date(now.getTime() - 86400000))] = true;
+        // Also include the explicit match date for each unsettled card.
         unsettled.forEach(function (card) {
           var ct = card.getAttribute("data-commence-time") || "";
-          if (ct) {
-            try { datesToFetch[utcDateStr(new Date(ct))] = true; } catch (e) {}
-          }
+          if (ct) { try { dates[utcDateStr(new Date(ct))] = true; } catch (e) {} }
         });
 
-        Object.keys(datesToFetch).forEach(function (d) {
-          fetch(IPL_EVENTS_URL + "?dates=" + d)
+        Object.keys(dates).forEach(function (d) {
+          fetch(IPL_SCOREBOARD + "?dates=" + d)
             .then(function (r) { return r.json(); })
             .then(function (data) {
-              (data.items || []).forEach(function (item) {
-                var m = (item.$ref || "").match(/\/events\/(\d+)$/);
-                if (!m) return;
-                var id    = m[1];
-                var evUrl = IPL_EVENTS_URL + "/" + id;
-                var stUrl = IPL_EVENTS_URL + "/" + id + "/competitions/" + id + "/status";
-                Promise.all([
-                  fetch(evUrl).then(function (r) { return r.json(); }),
-                  fetch(stUrl).then(function (r) { return r.json(); }),
-                ])
-                  .then(function (res) {
-                    var ev     = res[0];
-                    var status = res[1];
-                    var st     = ((status.type || {}).state || "");
-                    if (st === "in") {
-                      var comps = ((ev.competitions || [])[0] || {}).competitors || [];
-                      fetchLinescores(id, comps).then(function (lsByComp) {
-                        applyIplEvent(ev, status, lsByComp);
-                      });
-                    } else {
-                      applyIplEvent(ev, status, null);
-                    }
-                  })
-                  .catch(function () {});
-              });
+              (data.events || []).forEach(function (ev) { applyIplEvent(ev); });
             })
             .catch(function () {});
         });
       }
 
-      // Run immediately then every 30 seconds
+      // Run immediately, then every 30 seconds
       pollIplLive();
       pollTimer = setInterval(pollIplLive, 30 * 1000);
     }());
