@@ -158,6 +158,41 @@ The system analyzes `history.json` for systematic biases and surfaces them as fl
 
 ---
 
+## WNBA Integration (May 2026)
+
+**Watchlist-only sport (never enters budget pool or parlays). Active May–September.**
+
+**Files:** `src/data/wnba_stats.py` (new), `src/config.py`, `src/models/edge_finder.py`, `src/data/outcome_checker.py`, `src/report/generator.py`, `src/main.py`, `src/report/templates/report.html`, `.github/workflows/daily_report.yml`
+
+**Model:** Moneyline-only. Normal CDF on blended net ratings (season + recent form weighted 45/55). Home advantage +2%, B2B penalty −4%. Compound lineup penalty from injured players using points-share formula: `player_weight = max(player_ppg/team_ppg, mpg/40 * 0.6)` → continuously differentiates stars from role players. Capped at 30% total lineup penalty.
+
+**Data sources:** All ESPN public APIs (no key). Team stats, schedule-based rest days, recent form from last 8 games, injury report with per-player PPG/MPG fetched from `sports.core.api.espn.com`.
+
+**Constants in `src/config.py`:** `WNBA_HOME_ADVANTAGE=0.020`, `WNBA_BACK_TO_BACK_PENALTY=0.040`, `WNBA_RECENT_WEIGHT=0.45`, `WNBA_SPREAD_STD=8.5`, `WNBA_REPLACEMENT_RATE=0.55`, `WNBA_MAX_LINEUP_PENALTY=0.30`, `WNBA_STATUS_WEIGHTS`.
+
+**Settlement:** Date-based via `check_and_settle_watchlist()` (same pattern as NHL/IPL). Live scores via 4th ESPN fetch in the browser (`basketball/wnba` scoreboard). Dedicated tile in the watchlist performance section.
+
+---
+
+## Bug Fixes (May 2026)
+
+### IPL live score fix
+**File:** `src/report/templates/report.html`
+**Problem:** `core.espnuk.org` API was dead (connection refused), silently killing all IPL live score updates.
+**Fix:** Replaced with `site.api.espn.com/apis/site/v2/sports/cricket/8048/scoreboard` — CORS-open, returns linescores (runs/wickets/overs) and match result in a single call. New `calcIplWinProb()` is directional (checks which team we picked). Server-settled IPL cards get `data-live-result` and `data-espn-done` baked in at render time.
+
+### Today's Profit mismatch on re-runs
+**File:** `src/report/generator.py` — `_tag_alloc()`
+**Problem:** Subsequent intra-day runs refresh pick sizing with updated odds for games that haven't started yet. Bet cards in the league sections pulled from `singles_display` (refreshed prices) while the allocation table used `all_singles` (morning prices). The JS reads `data-cost`/`data-profit` from cards, not the table, so "Today's Profit" diverged from what the user saw.
+**Fix:** `_tag_alloc()` now snaps `total_cost`, `profit_if_win`, `num_contracts`, and `edge_pct` on any card with an `alloc_rank` to the locked `all_singles` values. Cards and table always agree. Safe because users only buy contracts once the game is locked (started), at which point pricing is already frozen by the lock mechanism.
+
+### Props by-sport tiles not updating live
+**Files:** `src/data/outcome_checker.py`, `src/report/templates/report.html`
+**Problem:** The NBA/MLB by-sport accuracy tiles were Python-rendered only — `updatePropAccuracy()` updated the overall hit rate, by-type rows, and by-conf blocks live, but never touched the by-sport tiles. A good day for NBA props had no visible effect on the NBA tile.
+**Fix:** `load_prop_accuracy()` now computes `hist_by_sport` (pre-today baseline per sport). Each by-sport tile gets `data-hist-sport-total`/`data-hist-sport-hits` attributes. `updatePropAccuracy()` now includes a by-sport update block that reads today's settled prop cards grouped by sport and updates each tile in real time.
+
+---
+
 ## Card Narrative + Context System (May 2026)
 
 **Files:** `src/report/card_context.py` (new), `src/state/manager.py`, `src/report/templates/report.html`
