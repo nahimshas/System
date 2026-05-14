@@ -31,6 +31,8 @@ def build_report(
     props_display: Optional[List[Dict]] = None,     # all positive-EV props for league section display
     wnba_game_count: int = 0,
     wnba_display: Optional[List[Dict]] = None,
+    mls_display: Optional[List[Dict]] = None,
+    mls_game_count: int = 0,
 ) -> Dict:
     change_warnings = change_warnings or []
 
@@ -57,6 +59,12 @@ def build_report(
     wnba_watchlist = sorted(
         [s for s in (wnba_display or []) if s.get("sport") == "WNBA"],
         key=lambda r: (0 if r.get("confidence") == "HIGH" else 1, -r.get("edge", 0)),
+    )
+
+    # MLS is watchlist-only — never enters budget allocation or parlays.
+    mls_watchlist = sorted(
+        [s for s in (mls_display or []) if s.get("sport") == "MLS"],
+        key=lambda s: (0 if s.get("confidence") == "HIGH" else 1, -s.get("edge", 0)),
     )
 
     # Top picks: HIGH confidence first, then by edge within each tier.
@@ -295,6 +303,7 @@ def build_report(
             "NHL":  {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
             "IPL":  {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
             "WNBA": {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
+            "MLS":  {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
         }
 
     try:
@@ -361,6 +370,9 @@ def build_report(
         "wnba_watchlist":     wnba_watchlist,
         "wnba_game_count":    wnba_game_count,
         "has_wnba":           wnba_game_count > 0,
+        "mls_watchlist":      mls_watchlist,
+        "mls_game_count":     mls_game_count,
+        "has_mls":            mls_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),

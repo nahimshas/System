@@ -19,6 +19,7 @@ NFL_SPORT = "americanfootball_nfl"
 NHL_SPORT = "icehockey_nhl"
 IPL_SPORT = "cricket_ipl"
 WNBA_SPORT = "basketball_wnba"
+MLS_SPORT = "soccer_usa_mls"
 SPORT_LABELS = {
     NBA_SPORT: "NBA",
     MLB_SPORT: "MLB",
@@ -26,6 +27,7 @@ SPORT_LABELS = {
     NHL_SPORT: "NHL",
     IPL_SPORT: "IPL",
     WNBA_SPORT: "WNBA",
+    MLS_SPORT: "MLS",
 }
 
 # --- Active-season calendar (month numbers) ---
@@ -38,6 +40,7 @@ SPORT_ACTIVE_MONTHS = {
     "nhl": list(range(10, 13)) + list(range(1, 7)),    # Oct – Jun
     "ipl": [3, 4, 5],                                  # Mar – May
     "wnba": [5, 6, 7, 8, 9],                           # May – Sep
+    "mls":  list(range(2, 12)),                        # Feb – Nov
 }
 
 # --- Betting parameters ---
@@ -91,6 +94,21 @@ WNBA_SPREAD_STD = 8.5
 WNBA_REPLACEMENT_RATE = 0.55
 WNBA_MAX_LINEUP_PENALTY = 0.30
 WNBA_STATUS_WEIGHTS: dict = {"Out": 1.0, "Doubtful": 0.75, "Questionable": 0.40, "Day-To-Day": 0.20, "Probable": 0.05}
+
+# --- MLS (Soccer) model constants ---
+MLS_LEAGUE_HOME_XG    = 1.35    # league baseline home xG per game
+MLS_LEAGUE_AWAY_XG    = 1.15    # league baseline away xG per game
+MLS_RECENT_WEIGHT     = 0.40    # 40% recent form, 60% season
+MLS_MIN_HOME_GAMES    = 5       # min home games to use team-specific home advantage
+MLS_HOME_ADV_DEFAULT  = 0.02    # league-wide home win prob boost (2%)
+MLS_STRONG_VENUE_ADV  = 0.03    # fortress venue boost (3%)
+MLS_MAX_INJURY_PENALTY = 0.15   # max 15% lambda reduction from injuries per team
+# Teams with notably strong home atmospheres
+MLS_STRONG_VENUES = {
+    "Seattle Sounders", "Portland Timbers", "Atlanta United",
+    "FC Cincinnati", "Columbus Crew", "LAFC", "LA Galaxy",
+    "Sporting Kansas City", "Toronto FC",
+}
 
 # --- IPL (Indian Premier League cricket) — watchlist only ---
 # T20 home advantage is substantial; ~5% raw but market prices most of it.

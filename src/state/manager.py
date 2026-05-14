@@ -354,7 +354,7 @@ def merge_picks(
 
     # Sports that are watchlist-only and must never appear in the budget pool or parlays.
     # Picks saved from a buggy run where these entered the budget pool are silently dropped here.
-    _WATCHLIST_SPORTS = {"NHL", "IPL", "WNBA"}
+    _WATCHLIST_SPORTS = {"NHL", "IPL", "WNBA", "MLS"}
 
     # ── Singles ──────────────────────────────────────────────────────────────
     locked_singles: List[Dict] = _dedup_cached_singles([

@@ -17,7 +17,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
-    NBA_SPORT, MLB_SPORT, NFL_SPORT, NHL_SPORT, IPL_SPORT, WNBA_SPORT,
+    NBA_SPORT, MLB_SPORT, NFL_SPORT, NHL_SPORT, IPL_SPORT, WNBA_SPORT, MLS_SPORT,
     MAX_SINGLE_BETS, SPORT_ACTIVE_MONTHS, MIN_EDGE,
 )
 from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits, fetch_player_props
@@ -30,10 +30,11 @@ from src.data.nfl_stats import get_nfl_context
 from src.data.nhl_stats import get_nhl_context
 from src.data.ipl_stats import get_ipl_context
 from src.data.wnba_stats import get_wnba_context, get_wnba_injuries
+from src.data.mls_stats import get_mls_context, get_mls_injuries
 from src.data.injuries import get_nba_injuries, get_mlb_injuries, get_nfl_injuries, get_nhl_injuries
 from src.data.umpire import get_home_plate_umpires, get_umpire_tendency
 from src.data.weather import get_game_weather
-from src.models.edge_finder import analyze_nba_game, analyze_mlb_game, analyze_nfl_game, analyze_nhl_game, analyze_ipl_game, analyze_wnba_game
+from src.models.edge_finder import analyze_nba_game, analyze_mlb_game, analyze_nfl_game, analyze_nhl_game, analyze_ipl_game, analyze_wnba_game, analyze_mls_game
 from src.models.parlay_builder import build_parlays
 from src.models.props_analyzer import nba_player_props, mlb_player_props
 from src.state.manager import (
@@ -117,12 +118,14 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_props_display   = state.get("props_display")   or final_props
             final_ipl_display     = state.get("ipl_display", [])
             final_wnba_display    = state.get("wnba_display", [])
+            final_mls_display     = state.get("mls_display", [])
 
             # Hydrate narrative/context for picks saved before the card context feature
             final_singles_display = [_hydrate_bet(d) for d in final_singles_display]
             final_singles         = [_hydrate_bet(d) for d in final_singles]
             final_props_display   = [_hydrate_prop(d) for d in final_props_display]
             final_props           = [_hydrate_prop(d) for d in final_props]
+            final_mls_display     = [_hydrate_bet(d) for d in final_mls_display]
 
             report_data = build_report(
                 run_date=today,
@@ -139,6 +142,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 ipl_display=final_ipl_display,
                 wnba_game_count=state.get("wnba_game_count", 0),
                 wnba_display=final_wnba_display,
+                mls_display=final_mls_display,
+                mls_game_count=state.get("mls_game_count", 0),
                 errors=errors,
                 change_warnings=change_warnings,
                 odds_api_credits=saved_credits,
@@ -198,6 +203,12 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     if not ODDS_API_KEY:
         logger.error("ODDS_API_KEY is not set.")
         errors.append("ODDS_API_KEY missing — odds data unavailable. Set the secret in GitHub.")
+
+    # ------------------------------------------------------------------ #
+    #  MLS / WNBA / IPL / NHL watchlist init
+    # ------------------------------------------------------------------ #
+    mls_display_raw = []
+    mls_game_count  = 0
 
     # ------------------------------------------------------------------ #
     #  NBA
@@ -632,6 +643,55 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 logger.info(f"WNBA: {len(wnba_qualifying)} qualifying edge(s) ({len(wnba_display_raw)} total) across {wnba_game_count} games")
 
     # ------------------------------------------------------------------ #
+    #  MLS (watchlist only — same as WNBA, never enters budget)
+    # ------------------------------------------------------------------ #
+
+    if "mls" in leagues:
+        if today.month not in SPORT_ACTIVE_MONTHS.get("mls", []):
+            logger.info("MLS is out of season — skipping")
+        else:
+            logger.info("=== MLS Analysis ===")
+            mls_odds_games = []
+            if ODDS_API_KEY:
+                mls_odds_games = get_game_odds(MLS_SPORT)
+
+            mls_game_count = len(mls_odds_games)
+
+            if mls_game_count == 0:
+                api_err = get_last_api_error()
+                if api_err:
+                    errors.append(f"MLS odds unavailable: {api_err}")
+                else:
+                    logger.info("No MLS games today or odds unavailable")
+            else:
+                mls_team_names = list({
+                    t for g in mls_odds_games
+                    for t in [g["home_team"], g["away_team"]]
+                })
+                try:
+                    mls_ctx = get_mls_context(today, team_names=mls_team_names)
+                except Exception as e:
+                    logger.error(f"MLS stats fetch failed: {e}")
+                    mls_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}, "injuries": {}}
+                    errors.append(f"MLS stats partially unavailable: {e}")
+
+                try:
+                    mls_injuries = get_mls_injuries()
+                except Exception as e:
+                    logger.warning(f"MLS injuries unavailable: {e}")
+                    mls_injuries = {}
+
+                for game in mls_odds_games:
+                    try:
+                        recs = analyze_mls_game(game, mls_ctx, mls_injuries, min_edge=0.0)
+                        mls_display_raw.extend(recs)
+                    except Exception as e:
+                        logger.error(f"MLS game analysis error ({game.get('home_team')}): {e}")
+
+                mls_qualifying = [r for r in mls_display_raw if r.edge >= MIN_EDGE]
+                logger.info(f"MLS: {len(mls_qualifying)} qualifying edge(s) ({len(mls_display_raw)} total) across {mls_game_count} games")
+
+    # ------------------------------------------------------------------ #
     #  Build parlays from raw BetRecommendation objects (before serialising)
     # ------------------------------------------------------------------ #
     # Budget-qualifying picks only (edge >= MIN_EDGE) — used for allocation table + parlays
@@ -715,6 +775,11 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # WNBA display picks — serialised separately (watchlist only, never in budget pool).
     fresh_wnba_display = [bet_to_dict(r) for r in sorted(
         wnba_display_raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
+    )]
+
+    # MLS display picks — serialised separately (watchlist only, never in budget pool).
+    fresh_mls_display = [bet_to_dict(r) for r in sorted(
+        mls_display_raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
     )]
 
     # ------------------------------------------------------------------ #
@@ -821,6 +886,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "ipl_display":     fresh_ipl_display,
             "wnba_game_count": wnba_game_count,
             "wnba_display":    fresh_wnba_display,
+            "mls_game_count":  mls_game_count,
+            "mls_display":     fresh_mls_display,
         })
     else:
         # ── Subsequent run — merge locked picks with new analysis ────────
@@ -844,7 +911,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             sp for sp, cnt in [
                 ("NBA", nba_game_count), ("MLB", mlb_game_count),
                 ("NFL", nfl_game_count), ("NHL", nhl_game_count),
-                ("WNBA", wnba_game_count),
+                ("WNBA", wnba_game_count), ("MLS", mls_game_count),
             ] if cnt > 0
         }
         # Use the write-once morning backup as the preservation source.
@@ -860,7 +927,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # Sports skipped by a league filter this run — always preserve their morning picks.
         _not_analyzed = {
             sp for sp, flag in [
-                ("NBA", "nba"), ("MLB", "mlb"), ("NFL", "nfl"), ("NHL", "nhl"),
+                ("NBA", "nba"), ("MLB", "mlb"), ("NFL", "nfl"), ("NHL", "nhl"), ("MLS", "mls"),
             ] if flag not in leagues
         }
 
@@ -894,6 +961,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         nfl_game_count  = nfl_game_count  or state.get("nfl_game_count", 0)
         nhl_game_count  = nhl_game_count  or state.get("nhl_game_count", 0)
         wnba_game_count = wnba_game_count or state.get("wnba_game_count", 0)
+        mls_game_count  = mls_game_count  or state.get("mls_game_count", 0)
 
         # Props display: preserve morning props for sports not analyzed this run,
         # and any locked props (game already started) from analyzed sports.
@@ -926,6 +994,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "ipl_display":     fresh_ipl_display,
             "wnba_game_count": wnba_game_count,
             "wnba_display":    fresh_wnba_display,
+            "mls_game_count":  mls_game_count,
+            "mls_display":     fresh_mls_display,
         })
 
         if change_warnings:
@@ -941,6 +1011,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     final_props           = [_hydrate_prop(d) for d in final_props]
     fresh_ipl_display     = [_hydrate_bet(d) for d in fresh_ipl_display]
     fresh_wnba_display    = [_hydrate_bet(d) for d in fresh_wnba_display]
+    fresh_mls_display     = [_hydrate_bet(d) for d in fresh_mls_display]
 
     # ------------------------------------------------------------------ #
     #  Build report & render HTML
@@ -960,6 +1031,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         ipl_display=fresh_ipl_display,
         wnba_game_count=wnba_game_count,
         wnba_display=fresh_wnba_display,
+        mls_display=fresh_mls_display,
+        mls_game_count=mls_game_count,
         errors=errors,
         change_warnings=change_warnings,
         odds_api_credits=get_api_credits(),
@@ -985,7 +1058,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
 def main():
     parser = argparse.ArgumentParser(description="Sports Betting Analysis System")
-    parser.add_argument("--league", choices=["nba", "mlb", "nfl", "nhl", "ipl", "wnba"], help="Run for one league only")
+    parser.add_argument("--league", choices=["nba", "mlb", "nfl", "nhl", "ipl", "wnba", "mls"], help="Run for one league only")
     parser.add_argument("--no-email", action="store_true", help="Skip email delivery")
     parser.add_argument("--reevaluate", action="store_true",
                         help="Re-evaluate unlocked picks and replace any no longer in the top options")
@@ -993,7 +1066,7 @@ def main():
                         help="Re-render report from saved state — zero Odds API calls (for visual/template deploys)")
     args = parser.parse_args()
 
-    leagues   = [args.league] if args.league else ["nba", "mlb", "nfl", "nhl", "ipl", "wnba"]
+    leagues   = [args.league] if args.league else ["nba", "mlb", "nfl", "nhl", "ipl", "wnba", "mls"]
     bet_count = run(leagues=leagues, send_email=not args.no_email,
                     reevaluate=args.reevaluate, code_only=args.code_only)
     logger.info(f"Done. {bet_count} bet recommendation(s) generated.")

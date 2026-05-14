@@ -2389,3 +2389,297 @@ def analyze_wnba_game(
         ))
 
     return recs
+
+
+# ---------------------------------------------------------------------------
+# MLS — Poisson goal model
+# ---------------------------------------------------------------------------
+
+def _poisson_prob(lam: float, k: int) -> float:
+    from math import exp, factorial
+    if lam <= 0:
+        return 1.0 if k == 0 else 0.0
+    return exp(-lam) * (lam ** k) / factorial(k)
+
+
+def _mls_prob_matrix(lam_home: float, lam_away: float, max_goals: int = 10) -> dict:
+    """Returns {(i, j): probability} for all goal combinations 0..max_goals."""
+    matrix = {}
+    for i in range(max_goals + 1):
+        ph = _poisson_prob(lam_home, i)
+        for j in range(max_goals + 1):
+            matrix[(i, j)] = ph * _poisson_prob(lam_away, j)
+    return matrix
+
+
+def analyze_mls_game(
+    game: Dict,
+    mls_ctx: Dict,
+    mls_injuries: Dict,
+    min_edge: float = None,
+) -> List[BetRecommendation]:
+    """
+    Poisson-based edge finder for MLS (watchlist, no budget allocation).
+    Generates Moneyline, Draw, Total (Over/Under), and Spread picks.
+    """
+    from src.data.mls_stats import normalize as mls_normalize
+    from src.config import (
+        MLS_LEAGUE_HOME_XG, MLS_LEAGUE_AWAY_XG, MLS_RECENT_WEIGHT,
+        MLS_MIN_HOME_GAMES, MLS_HOME_ADV_DEFAULT, MLS_STRONG_VENUES,
+        MLS_STRONG_VENUE_ADV, MLS_MAX_INJURY_PENALTY,
+    )
+
+    _zero_sizing = BetSizing(
+        dollar_allocation=0, num_contracts=0, contract_price=0,
+        total_cost=0, profit_if_win=0, loss_if_lose=0,
+        expected_value=0, kelly_fraction=0,
+    )
+
+    home_raw = game["home_team"]
+    away_raw = game["away_team"]
+    label    = f"{away_raw} @ {home_raw}"
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
+    _min = min_edge if min_edge is not None else MIN_EDGE
+    recs = []
+
+    ml = game.get("moneyline")
+    if not ml or "draw_prob" not in ml:
+        return recs  # soccer moneyline must have 3-way probs
+
+    market_home_prob = ml["home_prob"]
+    market_draw_prob = ml["draw_prob"]
+    market_away_prob = ml["away_prob"]
+
+    # Resolve names
+    season_stats = mls_ctx.get("season_stats", {})
+    recent_form  = mls_ctx.get("recent_form", {})
+    rest_days    = mls_ctx.get("rest_days", {})
+
+    home = mls_normalize(home_raw, season_stats)
+    away = mls_normalize(away_raw, season_stats)
+
+    home_stats  = season_stats.get(home, {})
+    away_stats  = season_stats.get(away, {})
+    home_recent = recent_form.get(home, {})
+    away_recent = recent_form.get(away, {})
+
+    stats_available = bool(home_stats or away_stats)
+
+    signals  = []
+    research = []
+
+    # Base xGF/xGA (season)
+    home_xgf = home_stats.get("xgf_per_game", MLS_LEAGUE_HOME_XG)
+    home_xga = home_stats.get("xga_per_game", MLS_LEAGUE_AWAY_XG)
+    away_xgf = away_stats.get("xgf_per_game", MLS_LEAGUE_AWAY_XG)
+    away_xga = away_stats.get("xga_per_game", MLS_LEAGUE_HOME_XG)
+
+    # Recent form blend
+    home_rxgf = home_recent.get("recent_xgf", home_xgf)
+    home_rxga = home_recent.get("recent_xga", home_xga)
+    away_rxgf = away_recent.get("recent_xgf", away_xgf)
+    away_rxga = away_recent.get("recent_xga", away_xga)
+
+    blended_home_xgf = (1 - MLS_RECENT_WEIGHT) * home_xgf + MLS_RECENT_WEIGHT * home_rxgf
+    blended_home_xga = (1 - MLS_RECENT_WEIGHT) * home_xga + MLS_RECENT_WEIGHT * home_rxga
+    blended_away_xgf = (1 - MLS_RECENT_WEIGHT) * away_xgf + MLS_RECENT_WEIGHT * away_rxgf
+    blended_away_xga = (1 - MLS_RECENT_WEIGHT) * away_xga + MLS_RECENT_WEIGHT * away_rxga
+
+    # Attack / defense ratings (normalized to league baseline)
+    attack_home   = blended_home_xgf / MLS_LEAGUE_HOME_XG
+    defense_away  = blended_away_xga / MLS_LEAGUE_AWAY_XG
+    attack_away   = blended_away_xgf / MLS_LEAGUE_AWAY_XG
+    defense_home  = blended_home_xga / MLS_LEAGUE_HOME_XG
+
+    lam_home = max(0.3, min(4.0, MLS_LEAGUE_HOME_XG * attack_home * defense_away))
+    lam_away = max(0.3, min(4.0, MLS_LEAGUE_AWAY_XG * attack_away * defense_home))
+
+    # Home advantage
+    home_games = home_stats.get("home_games", 0)
+    away_games = away_stats.get("away_games", 0)
+    if home_games >= MLS_MIN_HOME_GAMES and away_games >= MLS_MIN_HOME_GAMES:
+        home_home_xgd = home_stats.get("home_xgf", lam_home) - home_stats.get("home_xga", lam_away)
+        home_away_xgd = home_stats.get("away_xgf", lam_away) - home_stats.get("away_xga", lam_home)
+        venue_delta   = home_home_xgd - home_away_xgd
+        lam_boost = max(0.0, min(0.3, venue_delta * 0.15))
+        lam_home  = min(4.0, lam_home + lam_boost)
+        adv_label = "fortress " if home_raw in MLS_STRONG_VENUES else ""
+        signals.append(f"Home {adv_label}venue: {home_raw} (data-driven advantage)")
+    else:
+        adv = MLS_STRONG_VENUE_ADV if home_raw in MLS_STRONG_VENUES else MLS_HOME_ADV_DEFAULT
+        lam_home = min(4.0, lam_home * (1 + adv * 2))
+        label_adv = "fortress " if home_raw in MLS_STRONG_VENUES else ""
+        signals.append(f"Home {label_adv}venue: {home_raw} (+{adv*100:.0f}%)")
+
+    # Research: team stats
+    n_home = home_recent.get("games", 0)
+    n_away = away_recent.get("games", 0)
+    if home_stats:
+        research.append(
+            f"{home_raw}: {home_xgf:.2f} xGF/g | {home_xga:.2f} xGA/g | "
+            f"{home_xgf - home_xga:+.2f} xGD/g"
+        )
+    if away_stats:
+        research.append(
+            f"{away_raw}: {away_xgf:.2f} xGF/g | {away_xga:.2f} xGA/g | "
+            f"{away_xgf - away_xga:+.2f} xGD/g"
+        )
+    if n_home >= 3:
+        research.append(
+            f"Recent ({n_home}g) — {home_raw}: {home_rxgf:.2f} xGF | {home_rxga:.2f} xGA"
+        )
+        if home_rxgf - home_rxga > 0.4:
+            signals.append(f"{home_raw} recent form: {home_rxgf - home_rxga:+.2f} xGD last {n_home} games")
+        elif home_rxgf - home_rxga < -0.4:
+            signals.append(f"{home_raw} struggling recently: {home_rxgf - home_rxga:+.2f} xGD last {n_home} games")
+    if n_away >= 3:
+        research.append(
+            f"Recent ({n_away}g) — {away_raw}: {away_rxgf:.2f} xGF | {away_rxga:.2f} xGA"
+        )
+        if away_rxgf - away_rxga > 0.4:
+            signals.append(f"{away_raw} recent form: {away_rxgf - away_rxga:+.2f} xGD last {n_away} games")
+        elif away_rxgf - away_rxga < -0.4:
+            signals.append(f"{away_raw} struggling recently: {away_rxgf - away_rxga:+.2f} xGD last {n_away} games")
+
+    # xG edge signal
+    home_xgd = blended_home_xgf - blended_home_xga
+    away_xgd = blended_away_xgf - blended_away_xga
+    xgd_diff = home_xgd - away_xgd
+    if abs(xgd_diff) >= 0.25:
+        stronger = home_raw if xgd_diff > 0 else away_raw
+        signals.append(f"xG edge: {stronger} ({xgd_diff:+.2f} xGD advantage)")
+
+    # Injury penalties
+    def _injury_penalty(team_display: str) -> float:
+        inj_list = []
+        for key, val in mls_injuries.items():
+            if key.lower() == team_display.lower() or team_display.lower() in key.lower() or key.lower() in team_display.lower():
+                inj_list = val
+                break
+        if not inj_list:
+            return 0.0
+        compound = 1.0
+        for p in inj_list:
+            if p.get("status", "").lower() in ("out", "doubtful"):
+                gc = p.get("goals_contrib", 0.3)
+                single = min(0.08, gc * 0.15)
+                compound *= (1.0 - single)
+        return min(MLS_MAX_INJURY_PENALTY, 1.0 - compound)
+
+    home_inj_pen = _injury_penalty(home_raw)
+    away_inj_pen = _injury_penalty(away_raw)
+    if home_inj_pen > 0.02:
+        lam_home *= (1.0 - home_inj_pen)
+        signals.append(f"⚕ {home_raw} injury impact (-{home_inj_pen*100:.0f}%)")
+    if away_inj_pen > 0.02:
+        lam_away *= (1.0 - away_inj_pen)
+        signals.append(f"⚕ {away_raw} injury impact (-{away_inj_pen*100:.0f}%)")
+
+    # Log injury research
+    for key, inj_list in mls_injuries.items():
+        if key.lower() in home_raw.lower() or home_raw.lower() in key.lower():
+            for p in inj_list:
+                research.append(f"⚕ {home_raw} — {p['player']}: {p['status']}")
+        if key.lower() in away_raw.lower() or away_raw.lower() in key.lower():
+            for p in inj_list:
+                research.append(f"⚕ {away_raw} — {p['player']}: {p['status']}")
+
+    # Clip lambdas after injury adjustments
+    lam_home = max(0.3, min(4.0, lam_home))
+    lam_away = max(0.3, min(4.0, lam_away))
+
+    # Probability matrix
+    matrix = _mls_prob_matrix(lam_home, lam_away)
+    p_home_win = sum(v for (i, j), v in matrix.items() if i > j)
+    p_draw     = sum(v for (i, j), v in matrix.items() if i == j)
+    p_away_win = sum(v for (i, j), v in matrix.items() if i < j)
+
+    total_p = p_home_win + p_draw + p_away_win
+    if total_p > 0:
+        p_home_win /= total_p
+        p_draw     /= total_p
+        p_away_win /= total_p
+
+    research.append(
+        f"xG projection: {home_raw} {lam_home:.2f} – {away_raw} {lam_away:.2f}"
+    )
+    research.append(
+        f"Win probs: H {p_home_win:.1%} | D {p_draw:.1%} | A {p_away_win:.1%}"
+    )
+    signals.append(f"xG projection: {lam_home:.2f} – {lam_away:.2f} goals")
+
+    # Credibility cap: don't stray > 20% from market on any single outcome
+    p_home_win = min(p_home_win, market_home_prob + 0.20)
+    p_home_win = max(p_home_win, market_home_prob - 0.20)
+    p_draw     = min(p_draw,     market_draw_prob + 0.20)
+    p_draw     = max(p_draw,     market_draw_prob - 0.20)
+    p_away_win = 1.0 - p_home_win - p_draw
+
+    # Build BetRecommendations
+    def _make_rec(pick_str, bet_type, model_prob, market_prob):
+        edge = model_prob - market_prob
+        if edge < _min:
+            return None
+        conf = _confidence_label(edge, len(signals), stats_available)
+        return BetRecommendation(
+            sport="MLS", game=label,
+            home_team=home_raw, away_team=away_raw,
+            pick=pick_str, bet_type=bet_type,
+            model_prob=model_prob, market_prob=market_prob, edge=edge,
+            contract_price=market_prob,
+            sizing=_zero_sizing, confidence=conf,
+            signals=signals[:], research=research[:],
+            game_time=game_time, commence_time=commence_time,
+        )
+
+    # Moneyline
+    for pick_str, model_p, market_p in [
+        (home_raw, p_home_win, market_home_prob),
+        (away_raw, p_away_win, market_away_prob),
+    ]:
+        r = _make_rec(pick_str, "Moneyline", model_p, market_p)
+        if r:
+            recs.append(r)
+
+    # Draw
+    r = _make_rec("Draw", "Draw", p_draw, market_draw_prob)
+    if r:
+        recs.append(r)
+
+    # Totals
+    tot = game.get("total")
+    if tot:
+        line = tot.get("point") or tot.get("line", 2.5)
+        market_over_prob  = tot.get("over_prob", 0.5)
+        market_under_prob = tot.get("under_prob", 0.5)
+        model_over  = sum(v for (i, j), v in matrix.items() if i + j > line)
+        model_under = sum(v for (i, j), v in matrix.items() if i + j < line)
+        for pick_str, model_p, market_p in [
+            (f"Over {line}", model_over, market_over_prob),
+            (f"Under {line}", model_under, market_under_prob),
+        ]:
+            r = _make_rec(pick_str, "Total", model_p, market_p)
+            if r:
+                recs.append(r)
+
+    # Spread (Asian handicap)
+    sp = game.get("spread")
+    if sp:
+        home_point     = sp.get("home_spread") or sp.get("home_point", 0)
+        market_home_sp = sp.get("home_prob", 0.5)
+        market_away_sp = sp.get("away_prob", 0.5)
+        model_home_sp = sum(
+            v for (i, j), v in matrix.items() if (i - j) > -home_point
+        )
+        model_away_sp = 1.0 - model_home_sp
+        away_point = -home_point
+        for pick_str, model_p, market_p, pt in [
+            (f"{home_raw} {home_point:+.1f}", model_home_sp, market_home_sp, home_point),
+            (f"{away_raw} {away_point:+.1f}", model_away_sp, market_away_sp, away_point),
+        ]:
+            r = _make_rec(pick_str, "Spread", model_p, market_p)
+            if r:
+                recs.append(r)
+
+    return recs

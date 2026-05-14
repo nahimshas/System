@@ -499,6 +499,100 @@ def _ipl_narrative(pick: str, signals: List[str], research: List[str],
     return " ".join(parts)
 
 
+# ── MLS narrative ─────────────────────────────────────────────────────────────
+
+def _mls_narrative(pick: str, bet_type: str, signals: List[str], research: List[str],
+                   edge: float) -> str:
+    ew = _edge_word(edge)
+    proj_m   = _search_first(r"xG projection: ([\d.]+) – ([\d.]+)", signals)
+    xgd_m    = _search_first(r"xG edge: (.+?) \(([+-][\d.]+) xGD", signals)
+    form_m   = _search_first(r"(.+?) recent form: ([+-][\d.]+) xGD last (\d+)", signals)
+    inj_m    = _search_first(r"⚕ (.+?) injury impact \(-(\d+)%\)", signals)
+    venue_m  = _search_first(r"Home (?:fortress )?venue: (.+?) \(", signals)
+
+    bt = bet_type.lower()
+    parts = []
+
+    if bt == "draw":
+        if proj_m:
+            lh, la = proj_m.group(1), proj_m.group(2)
+            parts.append(
+                f"The model projects a closely contested match ({lh} – {la} xG) "
+                f"with a {_edge_word(edge)} edge on the draw — above the market's implied probability."
+            )
+        else:
+            parts.append(
+                f"The model gives a {ew} edge on the draw, rating both teams as evenly matched."
+            )
+
+    elif bt == "total":
+        direction = "over" if pick.lower().startswith("over") else "under"
+        if proj_m:
+            lh, la = proj_m.group(1), proj_m.group(2)
+            total_proj = float(lh) + float(la)
+            line_m = _search_first(r"([\d.]+)$", pick)
+            line = line_m.group(1) if line_m else "?"
+            parts.append(
+                f"Model projects {total_proj:.2f} total goals ({lh} + {la}), "
+                f"{'above' if direction == 'over' else 'below'} the line of {line} — a {ew} edge."
+            )
+        else:
+            parts.append(
+                f"The model finds a {ew} {edge*100:.1f}% edge on the {pick} total."
+            )
+
+    elif bt == "spread":
+        line_m = _search_first(r"([+-][\d.]+)\s*$", pick)
+        line = line_m.group(1) if line_m else ""
+        if proj_m:
+            lh, la = proj_m.group(1), proj_m.group(2)
+            parts.append(
+                f"With a {lh} – {la} xG projection, "
+                f"the model gives a {ew} edge on {pick}."
+            )
+        else:
+            parts.append(
+                f"The model gives a {ew} edge on {pick} covering the {line} spread."
+            )
+
+    else:  # Moneyline
+        if xgd_m:
+            team = xgd_m.group(1)
+            diff = xgd_m.group(2)
+            parts.append(
+                f"{team} holds a {diff} xGD advantage, giving the model a {ew} edge on {pick} ML."
+            )
+        elif form_m:
+            team = form_m.group(1)
+            xgd  = form_m.group(2)
+            n    = form_m.group(3)
+            parts.append(
+                f"{team}'s recent form ({xgd} xGD over last {n} games) "
+                f"drives a {ew} {edge*100:.1f}% edge on {pick}."
+            )
+        elif inj_m:
+            inj_team = inj_m.group(1)
+            pct = inj_m.group(2)
+            if inj_team.lower() not in pick.lower():
+                parts.append(
+                    f"Injuries to {inj_team} ({pct}% lineup impact) shift the edge toward {pick}."
+                )
+            else:
+                parts.append(
+                    f"Despite injuries affecting {pick} ({pct}%), the model still sees a {ew} edge on their ML."
+                )
+        elif venue_m:
+            parts.append(
+                f"Home venue advantage for {venue_m.group(1)} supports the {ew} {edge*100:.1f}% edge on {pick}."
+            )
+        else:
+            parts.append(
+                f"The model rates {pick} at a {ew} {edge*100:.1f}% edge based on xG-adjusted team strength."
+            )
+
+    return " ".join(parts)
+
+
 # ── Main entry points ─────────────────────────────────────────────────────────
 
 def build_card_context(
@@ -532,6 +626,8 @@ def build_card_context(
         narrative = _wnba_narrative(pick, signals, research, edge)
     elif sport == "IPL":
         narrative = _ipl_narrative(pick, signals, research, edge)
+    elif sport == "MLS":
+        narrative = _mls_narrative(pick, bet_type, signals, research, edge)
     else:
         narrative = ""
 

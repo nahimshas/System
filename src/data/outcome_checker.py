@@ -24,12 +24,13 @@ ESPN_SPORT_PATHS = {
     "MLB": "baseball/mlb",
 }
 
-# Watchlist-only leagues (NHL, IPL) — separate history file, no PnL tracking
+# Watchlist-only leagues (NHL, IPL, WNBA, MLS) — separate history file, no PnL tracking
 WATCHLIST_HISTORY_PATH = Path("state/watchlist_history.json")
 ESPN_WATCHLIST_PATHS = {
     "NHL": "hockey/nhl",
     "IPL": "cricket/ipl",
     "WNBA": "basketball/wnba",
+    "MLS": "soccer/usa.1",
 }
 
 # Rolling pending list for leagues whose games finish AFTER the morning run.
@@ -404,6 +405,34 @@ def _determine_outcome(
 
     logger.warning(f"Unrecognised bet type '{bet_type}' — cannot settle")
     return "UNKNOWN"
+
+
+def _determine_mls_outcome(pick: str, bet_type: str, home_team: str, away_team: str,
+                            home_score: float, away_score: float) -> str:
+    """
+    MLS-specific outcome determination.
+    Key difference from _determine_outcome():
+      - Moneyline: draw (home_score == away_score) -> LOST (not PUSH)
+      - Draw bet_type: WON if draw, LOST otherwise
+      - Total, Spread: delegate to _determine_outcome()
+    """
+    bt = bet_type.lower().strip()
+    if bt == "draw":
+        return "WON" if home_score == away_score else "LOST"
+    if bt in ("moneyline", "h2h"):
+        if home_score == away_score:
+            return "LOST"  # soccer: draw = loss for ML picks
+        pick_lower = pick.lower()
+        home_lower = home_team.lower()
+        away_lower = away_team.lower()
+        home_won = home_score > away_score
+        if home_lower and (home_lower in pick_lower or pick_lower in home_lower):
+            return "WON" if home_won else "LOST"
+        if away_lower and (away_lower in pick_lower or pick_lower in away_lower):
+            return "WON" if not home_won else "LOST"
+        return "UNKNOWN"
+    # Total and Spread use existing logic
+    return _determine_outcome(pick, bet_type, home_team, away_team, home_score, away_score)
 
 
 # ---------------------------------------------------------------------------
@@ -1033,8 +1062,8 @@ def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
 
 def check_and_settle_watchlist(today: date) -> int:
     """
-    Settle yesterday's NHL and WNBA watchlist picks against ESPN final scores.
-    NHL and WNBA games always finish before the 9am PST morning run, so date-based
+    Settle yesterday's NHL, WNBA, and MLS watchlist picks against ESPN final scores.
+    NHL, WNBA, and MLS games always finish before the 9am PST morning run, so date-based
     settlement (look at yesterday's state) is correct.
 
     IPL (and other WATCHLIST_PENDING_SPORTS) are settled by
@@ -1124,6 +1153,41 @@ def check_and_settle_watchlist(today: date) -> int:
             "result":          result,
         })
         logger.info(f"WNBA watchlist settled: {pick.get('pick')} → {result}")
+
+    # ── MLS ──────────────────────────────────────────────────────────────────
+    mls_picks = [p for p in (state.get("mls_display") or []) if p.get("sport") == "MLS"]
+    mls_scores = _fetch_watchlist_final_scores("MLS", yesterday) if mls_picks else {}
+
+    for pick in mls_picks:
+        key = (yesterday.isoformat(), "MLS", pick.get("pick", ""), pick.get("game", ""))
+        if key in settled_keys:
+            continue
+        score_data = _find_game_score(mls_scores, pick.get("home_team", ""), pick.get("away_team", ""))
+        if not score_data:
+            logger.debug(f"MLS watchlist: score not found for {pick.get('game')} on {yesterday}")
+            continue
+        result = _determine_mls_outcome(
+            pick.get("pick", ""), pick.get("bet_type", ""),
+            pick.get("home_team", ""), pick.get("away_team", ""),
+            score_data["home_score"], score_data["away_score"],
+        )
+        if result not in ("WON", "LOST"):
+            continue
+        new_records.append({
+            "date":            yesterday.isoformat(),
+            "sport":           "MLS",
+            "game":            pick.get("game", ""),
+            "pick":            pick.get("pick", ""),
+            "bet_type":        pick.get("bet_type", "Moneyline"),
+            "home_team":       pick.get("home_team", ""),
+            "away_team":       pick.get("away_team", ""),
+            "edge_pct":        pick.get("edge_pct", 0),
+            "confidence":      pick.get("confidence", "MEDIUM"),
+            "model_prob_pct":  pick.get("model_prob_pct", 0),
+            "market_prob_pct": pick.get("market_prob_pct", 0),
+            "result":          result,
+        })
+        logger.info(f"MLS watchlist settled: {pick.get('pick')} → {result}")
 
     if new_records:
         _save_watchlist_history(existing + new_records)
@@ -1351,7 +1415,7 @@ def load_watchlist_performance() -> Dict[str, Dict]:
     """
     records = _load_watchlist_history()
     result: Dict[str, Dict] = {}
-    for sport in ("NHL", "IPL", "WNBA"):
+    for sport in ("NHL", "IPL", "WNBA", "MLS"):
         subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
         won  = sum(1 for r in subset if r.get("result") == "WON")
         lost = len(subset) - won

@@ -158,6 +158,36 @@ def _consensus_probs(bookmakers: List[Dict], market_key: str) -> Optional[Dict]:
     return avg
 
 
+def _consensus_probs_3way(bookmakers: list, market_key: str = "h2h") -> Optional[Dict]:
+    """
+    Consensus probabilities for 3-outcome markets (soccer h2h: Home/Draw/Away).
+    Normalizes raw probabilities across all 3 outcomes to remove vig, then averages across books.
+    Returns {outcome_name: avg_no_vig_prob, "book_count": n} or None.
+    """
+    probs_by_name: Dict[str, List[float]] = {}
+    book_count = 0
+    for book in bookmakers:
+        for mkt in book.get("markets", []):
+            if mkt["key"] != market_key:
+                continue
+            outcomes = mkt["outcomes"]
+            if len(outcomes) < 3:
+                continue
+            raw = {o["name"]: american_to_prob(o["price"]) for o in outcomes}
+            total = sum(raw.values())
+            if total <= 0:
+                continue
+            for name, p in raw.items():
+                probs_by_name.setdefault(name, []).append(p / total)
+            book_count += 1
+            break
+    if not probs_by_name or book_count == 0:
+        return None
+    avg = {n: sum(ps) / len(ps) for n, ps in probs_by_name.items()}
+    avg["book_count"] = book_count
+    return avg
+
+
 def _consensus_probs_for_spread(
     bookmakers: List[Dict], home: str, home_point: float
 ) -> Optional[Dict]:
@@ -241,7 +271,9 @@ def get_game_odds(sport: str, hours_lookahead: Optional[int] = None) -> List[Dic
     """
     now_utc = datetime.now(timezone.utc)
 
-    if hours_lookahead is not None:
+    is_soccer = sport.startswith("soccer_")
+
+    if hours_lookahead is not None and not is_soccer:
         # Wide window: from now until now + N hours (any calendar date)
         commence_from = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
         commence_to   = (now_utc + timedelta(hours=hours_lookahead)).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -296,28 +328,42 @@ def get_game_odds(sport: str, hours_lookahead: Optional[int] = None) -> List[Dic
 
         # --- Moneyline ---
         ml      = _pick_book_odds(bookmakers, "h2h")    # for reference odds
-        ml_cons = _consensus_probs(bookmakers, "h2h")   # for probability
-        if ml and ml_cons and home in ml_cons and away in ml_cons:
-            hp = ml_cons[home]
-            ap = ml_cons[away]
-            entry["moneyline"] = {
-                "book": f"consensus({ml_cons.get('book_count', 1)})",
-                "home_prob": hp,
-                "away_prob": ap,
-                "home_odds": next((o["price"] for o in ml["outcomes"] if o["name"] == home), None),
-                "away_odds": next((o["price"] for o in ml["outcomes"] if o["name"] == away), None),
-            }
-        elif ml:
-            probs = {o["name"]: american_to_prob(o["price"]) for o in ml["outcomes"]}
-            if home in probs and away in probs:
-                hp, ap = remove_vig(probs[home], probs[away])
+        if is_soccer:
+            # Soccer: 3-way market (Home / Draw / Away)
+            ml_cons_3 = _consensus_probs_3way(bookmakers, "h2h")
+            if ml_cons_3 and home in ml_cons_3 and away in ml_cons_3:
+                draw_key = next(
+                    (k for k in ml_cons_3 if k not in (home, away, "book_count")), None
+                )
                 entry["moneyline"] = {
-                    "book": ml["book"],
+                    "book": f"consensus({ml_cons_3.get('book_count', 1)})",
+                    "home_prob": ml_cons_3[home],
+                    "draw_prob": ml_cons_3.get(draw_key, ml_cons_3.get("Draw", 0.25)),
+                    "away_prob": ml_cons_3[away],
+                }
+        else:
+            ml_cons = _consensus_probs(bookmakers, "h2h")   # for probability
+            if ml and ml_cons and home in ml_cons and away in ml_cons:
+                hp = ml_cons[home]
+                ap = ml_cons[away]
+                entry["moneyline"] = {
+                    "book": f"consensus({ml_cons.get('book_count', 1)})",
                     "home_prob": hp,
                     "away_prob": ap,
-                    "home_odds": next(o["price"] for o in ml["outcomes"] if o["name"] == home),
-                    "away_odds": next(o["price"] for o in ml["outcomes"] if o["name"] == away),
+                    "home_odds": next((o["price"] for o in ml["outcomes"] if o["name"] == home), None),
+                    "away_odds": next((o["price"] for o in ml["outcomes"] if o["name"] == away), None),
                 }
+            elif ml:
+                probs = {o["name"]: american_to_prob(o["price"]) for o in ml["outcomes"]}
+                if home in probs and away in probs:
+                    hp, ap = remove_vig(probs[home], probs[away])
+                    entry["moneyline"] = {
+                        "book": ml["book"],
+                        "home_prob": hp,
+                        "away_prob": ap,
+                        "home_odds": next(o["price"] for o in ml["outcomes"] if o["name"] == home),
+                        "away_odds": next(o["price"] for o in ml["outcomes"] if o["name"] == away),
+                    }
 
         # --- Spread ---
         sp = _pick_book_odds(bookmakers, "spreads")
