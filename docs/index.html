@@ -150,7 +150,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Friday, May 15, 2026 &middot; Generated May 15, 2026 at 02:50 PM PDT</div>
+    <div class="subtitle">Friday, May 15, 2026 &middot; Generated May 15, 2026 at 03:27 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 2 games &nbsp;|&nbsp;
       MLB: 15 games &nbsp;|&nbsp;
@@ -2193,12 +2193,10 @@
               &nbsp;Match Winner &nbsp;&middot;&nbsp; Gujarat Titans @ Kolkata Knight Riders
             </div>
             
-            
             <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"
                  data-ipl-commence="2026-05-16T14:00:00Z">
               📅 loading…
             </div>
-            
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
             
@@ -2207,7 +2205,6 @@
         </div>
         
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
-        
         <div class="card-compact">
           <span class="mkt-mdl">Mkt 55.0% → Model <b style="color:var(--blue)">65.7%</b></span>
           <span class="edge-chip green">+10.7% edge</span>
@@ -2254,7 +2251,7 @@
          data-model-prob-pct="68.6"
          data-market-prob-pct="57.7"
          data-commence-time=""
-         data-live-result="LOST" data-espn-done="1">
+         data-live-result="LOST" data-in-history="1">
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -2264,9 +2261,10 @@
               &nbsp;Match Winner &nbsp;&middot;&nbsp; Chennai Super Kings @ Lucknow Super Giants
             </div>
             
-            
-            <div class="card-time" style="color:var(--muted);font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
-            
+            <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"
+                 >
+              
+            </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
             <span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>
@@ -2274,10 +2272,7 @@
           </div>
         </div>
         
-        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;">
-          <span style="color:#94a3b8;font-size:0.75rem;">Final: Lucknow Super Giants won by 7 wkts</span>&nbsp;&nbsp;<span style="color:#ef4444;font-weight:700;font-size:0.9rem;">✗ LOST</span>
-        </div>
-        
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
         <div class="card-compact">
           <span class="mkt-mdl">Mkt 57.7% → Model <b style="color:var(--blue)">68.6%</b></span>
           <span class="edge-chip green">+10.9% edge</span>
@@ -4423,11 +4418,13 @@
       document.querySelectorAll(
         ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
-        // Skip server-rendered settled picks (data-espn-done="1") — they are
-        // already included in data-hist-won / data-hist-lost on the tile element.
+        // Skip picks already counted in data-hist-won / data-hist-lost:
+        //   data-espn-done="1"  — set by JS after live polling resolves a pick
+        //   data-in-history="1" — set server-side for IPL picks already in history
         // Only count picks whose data-live-result was set dynamically by JS
         // (live ESPN polling that resolved during the user's current session).
-        if (wlCard.getAttribute("data-espn-done") === "1") return;
+        if (wlCard.getAttribute("data-espn-done") === "1" ||
+            wlCard.getAttribute("data-in-history") === "1") return;
         var result = wlCard.getAttribute("data-live-result");
         if (!result) return;
         var sport = wlCard.getAttribute("data-sport") || "";
@@ -5504,6 +5501,9 @@
       }
 
       function applyIplEvent(ev) {
+        // Select cards not yet fully resolved by JS.
+        // data-in-history cards (server-settled) are intentionally included so JS
+        // can display the final score — they are excluded from tile counting separately.
         var cards = document.querySelectorAll(".ipl-watchlist-card:not([data-espn-done])");
         if (!cards.length) return;
 
@@ -5569,9 +5569,15 @@
               timeDiv.textContent = "";
             }
             if (liveDiv) {
+              // Show final score as "Abbr Score · Abbr Score" — same format as live,
+              // no "won by X" narrative text (consistent with other sports).
+              var finalScoreStr = teams.map(function (t) {
+                var abbr = t.name.split(" ").pop() || t.name;
+                return abbr + (t.score ? " " + t.score : "");
+              }).join("  ·  ");
               liveDiv.innerHTML =
-                '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
-                (summary || "Match complete") + "</span>" +
+                '<span style="color:#94a3b8;font-size:0.75rem;">Final' +
+                (finalScoreStr ? ": " + finalScoreStr : "") + "</span>" +
                 "&nbsp;&nbsp;" + outcomeHtml(result);
             }
             updatePerformance();
