@@ -1318,15 +1318,9 @@ def settle_watchlist_pending(now_utc: datetime) -> int:
 
     Returns the count of picks newly settled this run.
     """
-    pending = _load_watchlist_pending()
-    if not pending:
-        return 0
-
+    # Self-heal runs unconditionally — before the early-return so it always
+    # executes even when there are no pending picks to settle.
     existing = _load_watchlist_history()
-
-    # Self-heal: remove duplicate records from history (same date+sport+game+pick).
-    # Keeps LOST over WON so an erroneous WON is corrected by a later LOST entry.
-    # Runs every workflow cycle — permanently cleans up any accumulated duplicates.
     _seen_hkeys: dict = {}
     _cleaned: List[Dict] = []
     for _r in existing:
@@ -1340,6 +1334,10 @@ def settle_watchlist_pending(now_utc: datetime) -> int:
         logger.info(f"History self-heal: removed {len(existing) - len(_cleaned)} duplicate record(s)")
         _save_watchlist_history(_cleaned)
         existing = _cleaned
+
+    pending = _load_watchlist_pending()
+    if not pending:
+        return 0
 
     settled_keys = {(r["date"], r["sport"], r["pick"], r["game"]) for r in existing}
     new_records: List[Dict] = []
