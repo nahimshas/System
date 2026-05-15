@@ -3618,7 +3618,14 @@
           var liveDiv    = card.querySelector(".live-status");
 
           if (isPost && winnerTeam) {
-            var result = iplNameMatch(pickName, winnerTeam.name) ? "WON" : "LOST";
+            // For server-settled picks (data-in-history="1") Python already wrote the
+            // correct WON/LOST into data-live-result. Trust it — don't recompute from
+            // ESPN name matching, which can fail on full team names vs short pick names.
+            // For live-resolved picks (no data-in-history) compute from ESPN as normal.
+            var existingResult = card.getAttribute("data-live-result");
+            var result = (existingResult && card.getAttribute("data-in-history") === "1")
+              ? existingResult
+              : (iplNameMatch(pickName, winnerTeam.name) ? "WON" : "LOST");
             card.setAttribute("data-live-result", result);
             card.setAttribute("data-espn-done", "1");
             showLockBadge(card);
