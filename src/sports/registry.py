@@ -5,10 +5,16 @@ REGISTRY maps each sport's short slug (the key used in --league flags and
 SPORT_ACTIVE_MONTHS) to a SportEntry — a lightweight record combining the
 odds-api key, display label, and SportCapabilities.
 
-This is intentionally a *data* registry, not a class registry.  Phase 2
-will add concrete Sport implementations; at that point each entry gains a
-``module`` reference.  Until then, main.py can already query capabilities
-without touching the implementation.
+Display routing quick-reference
+--------------------------------
+Sport   enters_budget  in_main_display_pool  track_in_main_history  uses_pending
+NBA     True           True                  True                   False
+MLB     True           True                  True                   False
+NFL     True           True                  True                   False
+NHL     False          True                  False                  False   ← display-only in main card
+IPL     False          False                 False                  True    ← own tile + pending file
+WNBA    False          False                 False                  False   ← own tile
+MLS     False          False                 False                  False   ← own tile
 
 Usage::
 
@@ -59,7 +65,7 @@ class SportEntry:
 
 REGISTRY: dict[str, SportEntry] = {
 
-    # ── Budget sports (enter daily pool + parlays) ────────────────────── #
+    # ── Budget sports (enter daily pool + parlays + main history) ─────── #
 
     "nba": SportEntry(
         slug="nba",
@@ -70,6 +76,7 @@ REGISTRY: dict[str, SportEntry] = {
             enters_parlays=True,
             track_in_main_history=True,
             uses_pending_file=False,
+            in_main_display_pool=True,
             active_months=frozenset({10, 11, 12, 1, 2, 3, 4, 5, 6}),
             hours_lookahead=24,
         ),
@@ -84,6 +91,7 @@ REGISTRY: dict[str, SportEntry] = {
             enters_parlays=True,
             track_in_main_history=True,
             uses_pending_file=False,
+            in_main_display_pool=True,
             active_months=frozenset({3, 4, 5, 6, 7, 8, 9, 10}),
             hours_lookahead=24,
         ),
@@ -98,26 +106,33 @@ REGISTRY: dict[str, SportEntry] = {
             enters_parlays=True,
             track_in_main_history=True,
             uses_pending_file=False,
+            in_main_display_pool=True,
             active_months=frozenset({9, 10, 11, 12, 1, 2}),
             hours_lookahead=24,
         ),
     ),
+
+    # ── NHL — display-only in main card, watchlist history, no budget ─── #
+    # NHL picks appear in the per-league card section alongside budget sports
+    # (in_main_display_pool=True) but are never allocated budget dollars,
+    # never enter parlays, and settle into watchlist_history.json not history.json.
 
     "nhl": SportEntry(
         slug="nhl",
         key="icehockey_nhl",
         label="NHL",
         caps=SportCapabilities(
-            enters_budget=True,
-            enters_parlays=True,
-            track_in_main_history=True,
+            enters_budget=False,
+            enters_parlays=False,
+            track_in_main_history=False,
             uses_pending_file=False,
+            in_main_display_pool=True,
             active_months=frozenset({10, 11, 12, 1, 2, 3, 4, 5, 6}),
             hours_lookahead=24,
         ),
     ),
 
-    # ── Watchlist sports (monitor only — no budget allocation) ────────── #
+    # ── Watchlist sports (own display tile, watchlist history) ────────── #
 
     "ipl": SportEntry(
         slug="ipl",
@@ -128,6 +143,7 @@ REGISTRY: dict[str, SportEntry] = {
             enters_parlays=False,
             track_in_main_history=False,
             uses_pending_file=True,   # games span the 9am run window
+            in_main_display_pool=False,
             active_months=frozenset({3, 4, 5, 6}),
             hours_lookahead=36,       # capture tomorrow's match tonight
         ),
@@ -142,6 +158,7 @@ REGISTRY: dict[str, SportEntry] = {
             enters_parlays=False,
             track_in_main_history=False,
             uses_pending_file=False,
+            in_main_display_pool=False,
             active_months=frozenset({5, 6, 7, 8, 9, 10}),
             hours_lookahead=24,
         ),
@@ -156,6 +173,7 @@ REGISTRY: dict[str, SportEntry] = {
             enters_parlays=False,
             track_in_main_history=False,
             uses_pending_file=False,
+            in_main_display_pool=False,
             active_months=frozenset({2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
             hours_lookahead=24,
         ),
@@ -197,5 +215,15 @@ def budget_sports() -> dict[str, SportEntry]:
 
 
 def watchlist_sports() -> dict[str, SportEntry]:
-    """Return only watchlist/monitor sports."""
+    """Return only watchlist/monitor sports (no budget allocation)."""
     return {slug: e for slug, e in REGISTRY.items() if e.caps.is_watchlist}
+
+
+def main_display_sports() -> dict[str, SportEntry]:
+    """Return sports whose picks merge into the shared main display pool (NBA/MLB/NFL/NHL)."""
+    return {slug: e for slug, e in REGISTRY.items() if e.caps.in_main_display_pool}
+
+
+def own_display_sports() -> dict[str, SportEntry]:
+    """Return sports that have their own separate display tile (IPL/WNBA/MLS)."""
+    return {slug: e for slug, e in REGISTRY.items() if not e.caps.in_main_display_pool}

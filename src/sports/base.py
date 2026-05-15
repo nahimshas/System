@@ -49,6 +49,15 @@ class SportCapabilities:
             False → picks are settled by date on the next morning run
                     (NHL/WNBA pattern) or by the budget settler.
 
+        in_main_display_pool:
+            True  → this sport's BetRecommendation objects are merged into
+                    the shared ``all_display_raw`` list that produces the
+                    per-league card section in the report.
+                    Budget sports (NBA/MLB/NFL) and NHL use this.
+            False → the sport has its own display variable
+                    (``ipl_display``, ``wnba_display``, ``mls_display``)
+                    and its own tile/section in the report.
+
         active_months:
             Set of calendar month numbers (1–12) when this sport is in
             season.  Empty set means always active.
@@ -64,12 +73,17 @@ class SportCapabilities:
     enters_parlays: bool = False
     track_in_main_history: bool = False
     uses_pending_file: bool = False
+    in_main_display_pool: bool = False
     active_months: frozenset[int] = field(default_factory=frozenset)
     hours_lookahead: int = 24
 
     @property
     def is_watchlist(self) -> bool:
-        """Convenience: True when the sport never touches the budget pool."""
+        """Convenience: True when the sport never touches the budget pool.
+
+        Note: NHL returns True here (watchlist history, no budget allocation)
+        even though it shares the main display pool with budget sports.
+        """
         return not self.enters_budget
 
 
