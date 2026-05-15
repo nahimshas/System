@@ -117,9 +117,15 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             saved_credits   = state.get("odds_api_credits", {})
             final_singles_display = state.get("singles_display") or final_singles
             final_props_display   = state.get("props_display")   or final_props
-            final_ipl_display     = state.get("ipl_display", [])
-            final_wnba_display    = state.get("wnba_display", [])
-            final_mls_display     = state.get("mls_display", [])
+            # Own-tile display picks — loaded per registered own-tile sport.
+            _own_displays_loaded = {
+                _s: state.get(f"{_s}_display", [])
+                for _s in REGISTRY
+                if not REGISTRY[_s].caps.in_main_display_pool
+            }
+            final_ipl_display  = _own_displays_loaded.get("ipl",  [])
+            final_wnba_display = _own_displays_loaded.get("wnba", [])
+            final_mls_display  = _own_displays_loaded.get("mls",  [])
 
             # Hydrate narrative/context for picks saved before the card context feature
             final_singles_display = [_hydrate_bet(d) for d in final_singles_display]
@@ -360,20 +366,19 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # Display props — all positive-EV props (no MIN_PROP_EDGE gate).
     fresh_props_display = [prop_to_dict(p) for p in props_display_raw]
 
-    # IPL display picks — serialised separately (never enter budget pool).
-    fresh_ipl_display = [bet_to_dict(r) for r in sorted(
-        ipl_display_raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
-    )]
-
-    # WNBA display picks — serialised separately (watchlist only, never in budget pool).
-    fresh_wnba_display = [bet_to_dict(r) for r in sorted(
-        wnba_display_raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
-    )]
-
-    # MLS display picks — serialised separately (watchlist only, never in budget pool).
-    fresh_mls_display = [bet_to_dict(r) for r in sorted(
-        mls_display_raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
-    )]
+    # Own-tile display picks — serialised per sport (IPL / WNBA / MLS / future sports).
+    # IPL pending section will overwrite fresh_own_displays["ipl"] below.
+    fresh_own_displays: dict[str, list] = {
+        slug: [bet_to_dict(r) for r in sorted(
+            raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
+        )]
+        for slug, raw in own_display.items()
+    }
+    # Named aliases — kept for backward-compat with the IPL pending section,
+    # carry-forward logic, hydration, and build_report parameters.
+    fresh_ipl_display  = fresh_own_displays.get("ipl",  [])
+    fresh_wnba_display = fresh_own_displays.get("wnba", [])
+    fresh_mls_display  = fresh_own_displays.get("mls",  [])
 
     # ------------------------------------------------------------------ #
     #  IPL rolling pending management
@@ -432,6 +437,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # The report shows all picks: settled (with result) + in-play + upcoming
         fresh_ipl_display = _today_settled + _wl_pending
         ipl_game_count    = len(fresh_ipl_display)
+        # Sync so registry-driven save_state picks up the pending-managed values.
+        fresh_own_displays["ipl"] = fresh_ipl_display
+        game_counts["ipl"]        = ipl_game_count
         logger.info(
             f"IPL pending: {len(_wl_pending)} unsettled pick(s) "
             f"({sum(1 for p in _wl_pending if p.get('status')=='in_progress')} in-play, "
@@ -471,21 +479,18 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "props_display": fresh_props_display,
             "warnings":      [],
             "odds_api_credits": get_api_credits(),
-            "nba_game_count": nba_game_count,
-            "mlb_game_count": mlb_game_count,
-            "nfl_game_count": nfl_game_count,
-            "nhl_game_count": nhl_game_count,
-            "ipl_game_count":  ipl_game_count,
-            "ipl_display":     fresh_ipl_display,
-            "wnba_game_count": wnba_game_count,
-            "wnba_display":    fresh_wnba_display,
-            # Write-once morning backup — same pattern as morning_singles_display.
-            # Subsequent runs read from this so locked picks survive even when
-            # the Odds API drops games after they start.
-            "morning_wnba_display": fresh_wnba_display,
-            "mls_game_count":  mls_game_count,
-            "mls_display":     fresh_mls_display,
-            "morning_mls_display": fresh_mls_display,
+            # Per-sport game counts — one key per registry sport.
+            **{f"{_s}_game_count": game_counts.get(_s, 0) for _s in REGISTRY},
+            # Own-tile display picks — one key per own-tile sport.
+            # For IPL the pending section has already updated fresh_own_displays["ipl"].
+            **{f"{_s}_display": fresh_own_displays.get(_s, [])
+               for _s in REGISTRY if not REGISTRY[_s].caps.in_main_display_pool},
+            # Write-once morning backups for carry-forward.
+            # IPL is excluded — its display is managed by the rolling pending section.
+            **{f"morning_{_s}_display": fresh_own_displays.get(_s, [])
+               for _s in REGISTRY
+               if not REGISTRY[_s].caps.in_main_display_pool
+               and not REGISTRY[_s].caps.uses_pending_file},
         })
     else:
         # ── Subsequent run — merge locked picks with new analysis ────────
@@ -552,55 +557,47 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # The odds API stops listing a game the moment it begins, so a subsequent run
         # sees 0 games even though picks exist — falling back to the morning count keeps
         # the header summary and has_* flags correct.
-        nba_game_count  = nba_game_count  or state.get("nba_game_count", 0)
-        mlb_game_count  = mlb_game_count  or state.get("mlb_game_count", 0)
-        nfl_game_count  = nfl_game_count  or state.get("nfl_game_count", 0)
-        nhl_game_count  = nhl_game_count  or state.get("nhl_game_count", 0)
-        wnba_game_count = wnba_game_count or state.get("wnba_game_count", 0)
-        mls_game_count  = mls_game_count  or state.get("mls_game_count", 0)
+        # Skips uses_pending_file sports (IPL): their count is managed by the pending
+        # section above and already reflected in game_counts["ipl"].
+        for _slug in list(game_counts):
+            if not REGISTRY[_slug].caps.uses_pending_file and not game_counts[_slug]:
+                game_counts[_slug] = state.get(f"{_slug}_game_count", 0)
+        # Sync named variables after the fallback pass.
+        nba_game_count  = game_counts.get("nba",  nba_game_count)
+        mlb_game_count  = game_counts.get("mlb",  mlb_game_count)
+        nfl_game_count  = game_counts.get("nfl",  nfl_game_count)
+        nhl_game_count  = game_counts.get("nhl",  nhl_game_count)
+        ipl_game_count  = game_counts.get("ipl",  ipl_game_count)
+        wnba_game_count = game_counts.get("wnba", wnba_game_count)
+        mls_game_count  = game_counts.get("mls",  mls_game_count)
 
-        # Carry forward locked WNBA picks (odds API drops games once they start,
-        # leaving fresh_wnba_display empty even though picks are in progress).
-        # Reads from the write-once morning backup (same pattern as budget singles)
-        # so a previous run that wiped wnba_display doesn't break carry-forward.
-        _morning_wnba = (
-            state.get("morning_wnba_display")
-            or state.get("wnba_display", [])
-        )
-        if _morning_wnba:
-            _fresh_wnba_keys = {
-                (r.get("home_team"), r.get("away_team")) for r in fresh_wnba_display
-            }
-            for _wr in _morning_wnba:
-                if _game_started(_wr.get("commence_time", "")):
-                    _wkey = (_wr.get("home_team"), _wr.get("away_team"))
-                    if _wkey not in _fresh_wnba_keys:
-                        fresh_wnba_display.append({**_wr, "locked": True})
-                        _fresh_wnba_keys.add(_wkey)
+        # Carry forward locked picks for own-tile sports (WNBA, MLS, any future sport).
+        # Reads from write-once morning backup — same pattern as budget singles.
+        # Skips IPL: its display is fully managed by the rolling pending section above.
+        for _own_slug, _own_entry in REGISTRY.items():
+            if _own_entry.caps.in_main_display_pool or _own_entry.caps.uses_pending_file:
+                continue
+            _morning_own = (
+                state.get(f"morning_{_own_slug}_display")
+                or state.get(f"{_own_slug}_display", [])
+            )
+            if not _morning_own:
+                continue
+            _fresh_own      = fresh_own_displays.setdefault(_own_slug, [])
+            _fresh_own_keys = {(r.get("home_team"), r.get("away_team")) for r in _fresh_own}
+            for _or in _morning_own:
+                if _game_started(_or.get("commence_time", "")):
+                    _okey = (_or.get("home_team"), _or.get("away_team"))
+                    if _okey not in _fresh_own_keys:
+                        _fresh_own.append({**_or, "locked": True})
+                        _fresh_own_keys.add(_okey)
                         logger.info(
-                            f"WNBA: carrying forward locked pick "
-                            f"'{_wr.get('pick')}' ({_wr.get('game')})"
+                            f"{_own_entry.label}: carrying forward locked pick "
+                            f"'{_or.get('pick')}' ({_or.get('game')})"
                         )
-
-        # Same for MLS — reads from write-once morning backup
-        _morning_mls = (
-            state.get("morning_mls_display")
-            or state.get("mls_display", [])
-        )
-        if _morning_mls:
-            _fresh_mls_keys = {
-                (r.get("home_team"), r.get("away_team")) for r in fresh_mls_display
-            }
-            for _mr in _morning_mls:
-                if _game_started(_mr.get("commence_time", "")):
-                    _mkey = (_mr.get("home_team"), _mr.get("away_team"))
-                    if _mkey not in _fresh_mls_keys:
-                        fresh_mls_display.append({**_mr, "locked": True})
-                        _fresh_mls_keys.add(_mkey)
-                        logger.info(
-                            f"MLS: carrying forward locked pick "
-                            f"'{_mr.get('pick')}' ({_mr.get('game')})"
-                        )
+        # Refresh named aliases after the carry-forward loop.
+        fresh_wnba_display = fresh_own_displays.get("wnba", fresh_wnba_display)
+        fresh_mls_display  = fresh_own_displays.get("mls",  fresh_mls_display)
 
         # Props display: preserve morning props for sports not analyzed this run,
         # and any locked props (game already started) from analyzed sports.
@@ -625,18 +622,18 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "props_display": final_props_display,
             "warnings":      change_warnings,
             "odds_api_credits": get_api_credits(),
-            "nba_game_count": nba_game_count,
-            "mlb_game_count": mlb_game_count,
-            "nfl_game_count": nfl_game_count,
-            "nhl_game_count":  nhl_game_count,
-            "ipl_game_count":  ipl_game_count,
-            "ipl_display":     fresh_ipl_display,
-            "wnba_game_count": wnba_game_count,
-            "wnba_display":    fresh_wnba_display,
-            "morning_wnba_display": state.get("morning_wnba_display"),
-            "mls_game_count":  mls_game_count,
-            "mls_display":     fresh_mls_display,
-            "morning_mls_display": state.get("morning_mls_display"),
+            # Per-sport game counts — falls back to morning state for sports not
+            # analyzed this run (e.g. filtered out by --league).
+            **{f"{_s}_game_count": game_counts.get(_s, state.get(f"{_s}_game_count", 0))
+               for _s in REGISTRY},
+            # Own-tile display picks — falls back to morning state for unanalyzed sports.
+            **{f"{_s}_display": fresh_own_displays.get(_s, state.get(f"{_s}_display", []))
+               for _s in REGISTRY if not REGISTRY[_s].caps.in_main_display_pool},
+            # Morning backups — intentionally NOT updated; stay locked to first-run values.
+            **{f"morning_{_s}_display": state.get(f"morning_{_s}_display")
+               for _s in REGISTRY
+               if not REGISTRY[_s].caps.in_main_display_pool
+               and not REGISTRY[_s].caps.uses_pending_file},
         })
 
         if change_warnings:
@@ -650,9 +647,14 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     final_singles         = [_hydrate_bet(d) for d in final_singles]
     final_props_display   = [_hydrate_prop(d) for d in final_props_display]
     final_props           = [_hydrate_prop(d) for d in final_props]
-    fresh_ipl_display     = [_hydrate_bet(d) for d in fresh_ipl_display]
-    fresh_wnba_display    = [_hydrate_bet(d) for d in fresh_wnba_display]
-    fresh_mls_display     = [_hydrate_bet(d) for d in fresh_mls_display]
+    # Hydrate all own-tile sports in one pass, then refresh named aliases.
+    fresh_own_displays = {
+        _s: [_hydrate_bet(d) for d in _disp]
+        for _s, _disp in fresh_own_displays.items()
+    }
+    fresh_ipl_display  = fresh_own_displays.get("ipl",  fresh_ipl_display)
+    fresh_wnba_display = fresh_own_displays.get("wnba", fresh_wnba_display)
+    fresh_mls_display  = fresh_own_displays.get("mls",  fresh_mls_display)
 
     # ------------------------------------------------------------------ #
     #  Build report & render HTML
