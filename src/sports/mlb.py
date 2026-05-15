@@ -239,6 +239,30 @@ class MLBModule:
         return results
 
     # ------------------------------------------------------------------
+    # Props
+    # ------------------------------------------------------------------
+
+    def fetch_props(
+        self,
+        games: list[dict[str, Any]],
+        context: dict[str, Any],
+        *,
+        min_edge: float = 0.0,
+    ) -> list[Any]:
+        """
+        Return MLB player-prop picks.
+
+        Uses context["schedule"] and context["pitcher_stats_map"] which are
+        populated by fetch_games() and analyze_games() respectively.
+        Call analyze_games() before fetch_props() to ensure pitcher stats
+        are available.
+        """
+        from src.models.props_analyzer import mlb_player_props
+        schedule          = context.get("schedule", [])
+        pitcher_stats_map = context.get("pitcher_stats_map", {})
+        return mlb_player_props(schedule, pitcher_stats_map, min_edge=min_edge)
+
+    # ------------------------------------------------------------------
     # Settlement
     # ------------------------------------------------------------------
 

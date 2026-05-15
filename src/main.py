@@ -21,8 +21,7 @@ from src.config import (
 )
 from src.data.odds_client import get_last_api_error, get_api_credits
 from src.models.parlay_builder import build_parlays
-from src.models.props_analyzer import nba_player_props, mlb_player_props
-# Sport modules — each encapsulates fetch / context / analyze for its sport
+# Sport modules — each encapsulates fetch / context / analyze / props for its sport
 from src.sports.nba  import nba
 from src.sports.mlb  import mlb
 from src.sports.nfl  import nfl
@@ -232,8 +231,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 errors.append("NBA stats partially unavailable")
             nba_display_raw = nba.analyze_games(nba_games, nba_ctx)
             nba_singles_raw = [r for r in nba_display_raw if r.edge >= MIN_EDGE]
-            nba_props_raw = nba_player_props(nba_games, nba_ctx)
-            nba_props_display_raw = nba_player_props(nba_games, nba_ctx, min_edge=0.0)
+            nba_props_raw         = nba.fetch_props(nba_games, nba_ctx, min_edge=MIN_EDGE)
+            nba_props_display_raw = nba.fetch_props(nba_games, nba_ctx, min_edge=0.0)
             logger.info(f"NBA: {len(nba_singles_raw)} qualifying edge(s) ({len(nba_display_raw)} total) "
                         f"across {nba_game_count} games | {len(nba_props_raw)} prop pick(s)")
 
@@ -266,10 +265,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             # onto mlb_ctx["schedule"] so the props analyzer can use them.
             mlb_display_raw = mlb.analyze_games(mlb_games, mlb_ctx)
             mlb_singles_raw = [r for r in mlb_display_raw if r.edge >= MIN_EDGE]
-            mlb_schedule      = mlb_ctx.get("schedule", [])
-            pitcher_stats_map = mlb_ctx.get("pitcher_stats_map", {})
-            mlb_props_raw         = mlb_player_props(mlb_schedule, pitcher_stats_map)
-            mlb_props_display_raw = mlb_player_props(mlb_schedule, pitcher_stats_map, min_edge=0.0)
+            mlb_props_raw         = mlb.fetch_props(mlb_games, mlb_ctx, min_edge=MIN_EDGE)
+            mlb_props_display_raw = mlb.fetch_props(mlb_games, mlb_ctx, min_edge=0.0)
             logger.info(f"MLB: {len(mlb_singles_raw)} qualifying edge(s) ({len(mlb_display_raw)} total) "
                         f"across {mlb_game_count} games | {len(mlb_props_raw)} prop pick(s)")
 

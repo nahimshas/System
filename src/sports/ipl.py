@@ -106,6 +106,20 @@ class IPLModule:
         return results
 
     # ------------------------------------------------------------------
+    # Props
+    # ------------------------------------------------------------------
+
+    def fetch_props(
+        self,
+        games: list[dict[str, Any]],
+        context: dict[str, Any],
+        *,
+        min_edge: float = 0.0,
+    ) -> list[Any]:
+        """No IPL props currently. Returns [] until has_props=True is set."""
+        return []
+
+    # ------------------------------------------------------------------
     # Settlement
     # ------------------------------------------------------------------
 

@@ -100,6 +100,21 @@ class NBAModule:
         return results
 
     # ------------------------------------------------------------------
+    # Props
+    # ------------------------------------------------------------------
+
+    def fetch_props(
+        self,
+        games: list[dict[str, Any]],
+        context: dict[str, Any],
+        *,
+        min_edge: float = 0.0,
+    ) -> list[Any]:
+        """Return NBA player-prop picks."""
+        from src.models.props_analyzer import nba_player_props
+        return nba_player_props(games, context, min_edge=min_edge)
+
+    # ------------------------------------------------------------------
     # Settlement
     # ------------------------------------------------------------------
 

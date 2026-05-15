@@ -94,6 +94,23 @@ class NFLModule:
         return results
 
     # ------------------------------------------------------------------
+    # Props
+    # ------------------------------------------------------------------
+
+    def fetch_props(
+        self,
+        games: list[dict[str, Any]],
+        context: dict[str, Any],
+        *,
+        min_edge: float = 0.0,
+    ) -> list[Any]:
+        """
+        No NFL props yet.  To enable: set has_props=True in the registry
+        and implement the body here (follow the NBA/MLB pattern).
+        """
+        return []
+
+    # ------------------------------------------------------------------
     # Settlement
     # ------------------------------------------------------------------
 

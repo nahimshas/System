@@ -49,6 +49,14 @@ class SportCapabilities:
             False → picks are settled by date on the next morning run
                     (NHL/WNBA pattern) or by the budget settler.
 
+        has_props:
+            True  → the sport can produce player-prop picks via fetch_props().
+                    Currently NBA and MLB.  Setting this True for a sport
+                    causes main.py to call fetch_props() and merge the results
+                    into the props pool — no main.py edits needed when new
+                    sports gain prop coverage.
+            False → fetch_props() returns [] (no-op).
+
         in_main_display_pool:
             True  → this sport's BetRecommendation objects are merged into
                     the shared ``all_display_raw`` list that produces the
@@ -73,6 +81,7 @@ class SportCapabilities:
     enters_parlays: bool = False
     track_in_main_history: bool = False
     uses_pending_file: bool = False
+    has_props: bool = False
     in_main_display_pool: bool = False
     active_months: frozenset[int] = field(default_factory=frozenset)
     hours_lookahead: int = 24
@@ -169,6 +178,35 @@ class Sport(Protocol):
         Returns:
             List of Bet-like objects (namedtuple or dataclass) with at
             least: .edge, .home_team, .away_team, .pick, .bet_type.
+        """
+        ...
+
+    def fetch_props(
+        self,
+        games: list[dict[str, Any]],
+        context: dict[str, Any],
+        *,
+        min_edge: float = 0.0,
+    ) -> list[Any]:
+        """
+        Return player-prop picks for this sport.
+
+        Only called when caps.has_props is True.  Sports without props
+        must still implement this method — return [] (the default provided
+        by each concrete module's base implementation).
+
+        Args:
+            games:    Output of fetch_games() — enriched game dicts.
+            context:  Output of fetch_context() — may contain sport-specific
+                      keys needed for props (e.g. MLB's pitcher_stats_map,
+                      schedule).
+            min_edge: Minimum fractional edge threshold.  Pass 0.0 for the
+                      full display list; pass MIN_PROP_EDGE for qualified
+                      picks only.
+
+        Returns:
+            List of Prop-like objects.  Empty list if the sport has no props
+            or none meet the min_edge threshold.
         """
         ...
 
