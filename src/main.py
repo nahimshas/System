@@ -17,26 +17,19 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
-    NBA_SPORT, MLB_SPORT, NFL_SPORT, NHL_SPORT, IPL_SPORT, WNBA_SPORT, MLS_SPORT,
-    MAX_SINGLE_BETS, SPORT_ACTIVE_MONTHS, MIN_EDGE,
+    MAX_SINGLE_BETS, MIN_EDGE,
 )
-from src.data.odds_client import get_game_odds, get_last_api_error, get_api_credits, fetch_player_props
-from src.data.nba_stats import get_nba_context
-from src.data.mlb_stats import (
-    get_todays_games, get_pitcher_stats, get_pitcher_recent_stats,
-    get_team_batting_stats, get_bullpen_stats, get_team_schedule_load,
-)
-from src.data.nfl_stats import get_nfl_context
-from src.data.nhl_stats import get_nhl_context
-from src.data.ipl_stats import get_ipl_context
-from src.data.wnba_stats import get_wnba_context, get_wnba_injuries
-from src.data.mls_stats import get_mls_context, get_mls_injuries
-from src.data.injuries import get_nba_injuries, get_mlb_injuries, get_nfl_injuries, get_nhl_injuries
-from src.data.umpire import get_home_plate_umpires, get_umpire_tendency
-from src.data.weather import get_game_weather
-from src.models.edge_finder import analyze_nba_game, analyze_mlb_game, analyze_nfl_game, analyze_nhl_game, analyze_ipl_game, analyze_wnba_game, analyze_mls_game
+from src.data.odds_client import get_last_api_error, get_api_credits
 from src.models.parlay_builder import build_parlays
 from src.models.props_analyzer import nba_player_props, mlb_player_props
+# Sport modules — each encapsulates fetch / context / analyze for its sport
+from src.sports.nba  import nba
+from src.sports.mlb  import mlb
+from src.sports.nfl  import nfl
+from src.sports.nhl  import nhl
+from src.sports.ipl  import ipl
+from src.sports.wnba import wnba
+from src.sports.mls  import mls
 from src.state.manager import (
     load_state, save_state, merge_picks,
     bet_to_dict, parlay_to_dict, prop_to_dict,
@@ -99,7 +92,8 @@ def _hydrate_prop(d: dict) -> dict:
 def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         code_only: bool = False) -> int:
     from src.data.odds_client import _today_pacific
-    today = _today_pacific()
+    today     = _today_pacific()
+    today_str = today.isoformat()   # string form used by sport module APIs
     errors: list[str] = []
 
     # ------------------------------------------------------------------ #
@@ -221,58 +215,25 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
     if "nba" in leagues:
         logger.info("=== NBA Analysis ===")
-        nba_odds_games = []
-        if ODDS_API_KEY:
-            nba_odds_games = get_game_odds(NBA_SPORT)
-        # Fetch Odds API player prop lines for each NBA game
-        for _g in nba_odds_games:
-            try:
-                _g["player_props"] = fetch_player_props(_g["game_id"], NBA_SPORT)
-            except Exception as _e:
-                logger.warning(f"NBA player props fetch failed ({_g.get('home_team')}): {_e}")
-                _g["player_props"] = {}
-        # Surface any prop API error so it appears in the report
-        _prop_err = get_last_api_error()
-        if _prop_err and not any(_g.get("player_props") for _g in nba_odds_games):
-            errors.append(f"NBA player props unavailable: {_prop_err}")
+        nba_games = nba.fetch_games(today_str) if ODDS_API_KEY else []
+        nba_game_count = len(nba_games)
 
-        nba_game_count = len(nba_odds_games)
+        _prop_err = get_last_api_error()
+        if _prop_err and not any(g.get("player_props") for g in nba_games):
+            errors.append(f"NBA player props unavailable: {_prop_err}")
 
         if nba_game_count == 0:
             api_err = get_last_api_error()
             if api_err:
                 errors.append(f"NBA odds unavailable: {api_err}")
-                logger.error(f"NBA odds unavailable: {api_err}")
-            else:
-                logger.info("No NBA games today or odds unavailable")
         else:
-            team_names_today = list({
-                t for g in nba_odds_games
-                for t in [g["home_team"], g["away_team"]]
-            })
-            try:
-                nba_ctx = get_nba_context(today, team_names=team_names_today)
-            except Exception as e:
-                logger.error(f"NBA stats fetch failed: {e}")
-                nba_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}, "team_leaders": {}}
-                errors.append(f"NBA stats partially unavailable: {e}")
-
-            try:
-                nba_injuries = get_nba_injuries()
-            except Exception as e:
-                logger.warning(f"NBA injuries unavailable: {e}")
-                nba_injuries = {}
-
-            for game in nba_odds_games:
-                try:
-                    recs = analyze_nba_game(game, nba_ctx, nba_injuries, min_edge=0.0)
-                    nba_display_raw.extend(recs)
-                except Exception as e:
-                    logger.error(f"NBA game analysis error ({game.get('home_team')}): {e}")
-
+            nba_ctx = nba.fetch_context(today_str, nba_games)
+            if not nba_ctx.get("season_stats") and not nba_ctx.get("recent_form"):
+                errors.append("NBA stats partially unavailable")
+            nba_display_raw = nba.analyze_games(nba_games, nba_ctx)
             nba_singles_raw = [r for r in nba_display_raw if r.edge >= MIN_EDGE]
-            nba_props_raw = nba_player_props(nba_odds_games, nba_ctx)
-            nba_props_display_raw = nba_player_props(nba_odds_games, nba_ctx, min_edge=0.0)
+            nba_props_raw = nba_player_props(nba_games, nba_ctx)
+            nba_props_display_raw = nba_player_props(nba_games, nba_ctx, min_edge=0.0)
             logger.info(f"NBA: {len(nba_singles_raw)} qualifying edge(s) ({len(nba_display_raw)} total) "
                         f"across {nba_game_count} games | {len(nba_props_raw)} prop pick(s)")
 
@@ -287,145 +248,30 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
     if "mlb" in leagues:
         logger.info("=== MLB Analysis ===")
-        mlb_odds_games = []
-        if ODDS_API_KEY:
-            mlb_odds_games = get_game_odds(MLB_SPORT)
-        # Fetch Odds API player prop lines for each MLB game
-        for _g in mlb_odds_games:
-            try:
-                _g["player_props"] = fetch_player_props(_g["game_id"], MLB_SPORT)
-            except Exception as _e:
-                logger.warning(f"MLB player props fetch failed ({_g.get('home_team')}): {_e}")
-                _g["player_props"] = {}
-        # Surface any prop API error so it appears in the report
-        _prop_err = get_last_api_error()
-        if _prop_err and not any(_g.get("player_props") for _g in mlb_odds_games):
-            errors.append(f"MLB player props unavailable: {_prop_err}")
+        mlb_games = mlb.fetch_games(today_str) if ODDS_API_KEY else []
+        mlb_game_count = len(mlb_games)
 
-        mlb_schedule = get_todays_games(today)
-        mlb_game_count = len(mlb_odds_games)
+        _prop_err = get_last_api_error()
+        if _prop_err and not any(g.get("player_props") for g in mlb_games):
+            errors.append(f"MLB player props unavailable: {_prop_err}")
 
         if mlb_game_count == 0 and ODDS_API_KEY:
             api_err = get_last_api_error()
             if api_err:
                 errors.append(f"MLB odds unavailable: {api_err}")
-                logger.error(f"MLB odds unavailable: {api_err}")
-            else:
-                logger.info(f"No MLB odds available today (schedule has {len(mlb_schedule)} games)")
-
-        schedule_map = {g["home_team"]: g for g in mlb_schedule}
-        schedule_map.update({g["away_team"]: g for g in mlb_schedule})
-
-        try:
-            mlb_injuries = get_mlb_injuries()
-        except Exception as e:
-            logger.warning(f"MLB injuries unavailable: {e}")
-            mlb_injuries = {}
-
-        # Fetch umpires once for all today's games (single API call)
-        try:
-            umpire_map = get_home_plate_umpires(today)  # {game_pk: umpire_name}
-        except Exception as e:
-            logger.warning(f"Umpire fetch failed: {e}")
-            umpire_map = {}
-
-        pitcher_stats_map: dict = {}
-
-        for game in mlb_odds_games:
-            home = game["home_team"]
-            away = game["away_team"]
-
-            sched_game = schedule_map.get(home) or schedule_map.get(away)
-            if sched_game:
-                game.update({
-                    "home_pitcher_id":   sched_game.get("home_pitcher_id"),
-                    "home_pitcher_name": sched_game.get("home_pitcher_name", "TBD"),
-                    "away_pitcher_id":   sched_game.get("away_pitcher_id"),
-                    "away_pitcher_name": sched_game.get("away_pitcher_name", "TBD"),
-                    "venue":             sched_game.get("venue", ""),
-                    "home_team_id":      sched_game.get("home_team_id"),
-                    "away_team_id":      sched_game.get("away_team_id"),
-                    "game_pk":           sched_game.get("game_pk"),
-                })
-                # Stamp commence_time back onto schedule game so props
-                # (generated from mlb_schedule) get the correct game start time
-                # for the client-side lock badge check.
-                sched_game["commence_time"] = game.get("commence_time", "")
-                sched_game["player_props"] = game.get("player_props", {})
-
-            # Stamp umpire name + k_factor onto game dict (used by edge_finder + props)
-            game_pk = game.get("game_pk")
-            ump_name = umpire_map.get(game_pk, "")
-            ump_tendency = get_umpire_tendency(ump_name)
-            game["umpire_name"]     = ump_name
-            game["umpire_k_factor"] = ump_tendency.get("k_factor", 1.0)
-
-            # Fetch weather for this venue (cached by city across games at the same park)
-            try:
-                wx = get_game_weather(game.get("venue", ""), game.get("commence_time", ""))
-            except Exception as e:
-                logger.debug(f"Weather fetch failed ({game.get('venue', '')}): {e}")
-                wx = {}
-
-            try:
-                hp_stats  = get_pitcher_stats(game.get("home_pitcher_id"))
-                ap_stats  = get_pitcher_stats(game.get("away_pitcher_id"))
-
-                # Merge recent form (last 4 starts) into season stats dicts.
-                # edge_finder will blend these with season xFIP for the quality score.
-                # Falls back gracefully — if the game log fetch fails, season stats are used as-is.
-                hp_recent = get_pitcher_recent_stats(game.get("home_pitcher_id"))
-                ap_recent = get_pitcher_recent_stats(game.get("away_pitcher_id"))
-                if hp_recent:
-                    hp_stats = {**hp_stats, **hp_recent}
-                if ap_recent:
-                    ap_stats = {**ap_stats, **ap_recent}
-
-                home_bat  = get_team_batting_stats(game.get("home_team_id"))
-                away_bat  = get_team_batting_stats(game.get("away_team_id"))
-                home_bp   = get_bullpen_stats(game.get("home_team_id"))
-                away_bp   = get_bullpen_stats(game.get("away_team_id"))
-                home_load = get_team_schedule_load(game.get("home_team_id"), today)
-                away_load = get_team_schedule_load(game.get("away_team_id"), today)
-
-                if game.get("home_pitcher_name"):
-                    pitcher_stats_map[game["home_pitcher_name"]] = hp_stats
-                if game.get("away_pitcher_name"):
-                    pitcher_stats_map[game["away_pitcher_name"]] = ap_stats
-
-                recs = analyze_mlb_game(game, hp_stats, ap_stats, home_bat, away_bat,
-                                        home_bp, away_bp, mlb_injuries,
-                                        home_schedule_load=home_load,
-                                        away_schedule_load=away_load,
-                                        umpire_tendency=ump_tendency,
-                                        weather=wx,
-                                        min_edge=0.0)
-                mlb_display_raw.extend(recs)
-            except Exception as e:
-                logger.error(f"MLB game analysis error ({home} vs {away}): {e}")
-
-        # Stamp umpire k_factor onto schedule games too (used by props_analyzer)
-        for sg in mlb_schedule:
-            gpk = sg.get("game_pk")
-            ump = umpire_map.get(gpk, "")
-            sg["umpire_name"]     = ump
-            sg["umpire_k_factor"] = get_umpire_tendency(ump).get("k_factor", 1.0)
-
-        # Propagate singles model projections to schedule games so MLB props can use them.
-        # analyze_mlb_game stamps model_total/market_total onto the odds game dict;
-        # mlb_player_props uses schedule games, so we copy them across here.
-        _odds_by_matchup = {(g["home_team"], g["away_team"]): g for g in mlb_odds_games}
-        for _sg in mlb_schedule:
-            _og = _odds_by_matchup.get((_sg.get("home_team"), _sg.get("away_team")))
-            if _og:
-                _sg["model_total"]  = _og.get("model_total")
-                _sg["market_total"] = _og.get("market_total")
-
-        mlb_singles_raw = [r for r in mlb_display_raw if r.edge >= MIN_EDGE]
-        mlb_props_raw = mlb_player_props(mlb_schedule, pitcher_stats_map)
-        mlb_props_display_raw = mlb_player_props(mlb_schedule, pitcher_stats_map, min_edge=0.0)
-        logger.info(f"MLB: {len(mlb_singles_raw)} qualifying edge(s) ({len(mlb_display_raw)} total) "
-                    f"across {mlb_game_count} games | {len(mlb_props_raw)} prop pick(s)")
+        else:
+            mlb_ctx = mlb.fetch_context(today_str, mlb_games)
+            # analyze_games fetches per-game pitcher/weather/bullpen stats and
+            # populates mlb_ctx["pitcher_stats_map"] + propagates model totals
+            # onto mlb_ctx["schedule"] so the props analyzer can use them.
+            mlb_display_raw = mlb.analyze_games(mlb_games, mlb_ctx)
+            mlb_singles_raw = [r for r in mlb_display_raw if r.edge >= MIN_EDGE]
+            mlb_schedule      = mlb_ctx.get("schedule", [])
+            pitcher_stats_map = mlb_ctx.get("pitcher_stats_map", {})
+            mlb_props_raw         = mlb_player_props(mlb_schedule, pitcher_stats_map)
+            mlb_props_display_raw = mlb_player_props(mlb_schedule, pitcher_stats_map, min_edge=0.0)
+            logger.info(f"MLB: {len(mlb_singles_raw)} qualifying edge(s) ({len(mlb_display_raw)} total) "
+                        f"across {mlb_game_count} games | {len(mlb_props_raw)} prop pick(s)")
 
     # ------------------------------------------------------------------ #
     #  NFL
@@ -435,102 +281,50 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     nfl_game_count  = 0
 
     if "nfl" in leagues:
-        if today.month not in SPORT_ACTIVE_MONTHS.get("nfl", []):
+        if today.month not in nfl.caps.active_months:
             logger.info("NFL is out of season — skipping")
         else:
             logger.info("=== NFL Analysis ===")
-            nfl_odds_games = []
-            if ODDS_API_KEY:
-                nfl_odds_games = get_game_odds(NFL_SPORT)
-
-            nfl_game_count = len(nfl_odds_games)
+            nfl_games = nfl.fetch_games(today_str) if ODDS_API_KEY else []
+            nfl_game_count = len(nfl_games)
 
             if nfl_game_count == 0:
                 api_err = get_last_api_error()
                 if api_err:
                     errors.append(f"NFL odds unavailable: {api_err}")
-                    logger.error(f"NFL odds unavailable: {api_err}")
-                else:
-                    logger.info("No NFL games today or odds unavailable")
             else:
-                nfl_team_names = list({
-                    t for g in nfl_odds_games
-                    for t in [g["home_team"], g["away_team"]]
-                })
-                try:
-                    nfl_ctx = get_nfl_context(today, team_names=nfl_team_names)
-                except Exception as e:
-                    logger.error(f"NFL stats fetch failed: {e}")
-                    nfl_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}}
-                    errors.append(f"NFL stats partially unavailable: {e}")
-
-                try:
-                    nfl_injuries = get_nfl_injuries()
-                except Exception as e:
-                    logger.warning(f"NFL injuries unavailable: {e}")
-                    nfl_injuries = {}
-
-                for game in nfl_odds_games:
-                    try:
-                        recs = analyze_nfl_game(game, nfl_ctx, nfl_injuries, min_edge=0.0)
-                        nfl_display_raw.extend(recs)
-                    except Exception as e:
-                        logger.error(f"NFL game analysis error ({game.get('home_team')}): {e}")
-
+                nfl_ctx = nfl.fetch_context(today_str, nfl_games)
+                if not nfl_ctx.get("season_stats") and not nfl_ctx.get("recent_form"):
+                    errors.append("NFL stats partially unavailable")
+                nfl_display_raw = nfl.analyze_games(nfl_games, nfl_ctx)
                 nfl_singles_raw = [r for r in nfl_display_raw if r.edge >= MIN_EDGE]
                 logger.info(f"NFL: {len(nfl_singles_raw)} qualifying edge(s) ({len(nfl_display_raw)} total) "
                             f"across {nfl_game_count} games")
 
     # ------------------------------------------------------------------ #
-    #  NHL
+    #  NHL (display-only in main card — never enters budget or parlays)
     # ------------------------------------------------------------------ #
     nhl_display_raw = []
     nhl_singles_raw = []
     nhl_game_count  = 0
 
     if "nhl" in leagues:
-        if today.month not in SPORT_ACTIVE_MONTHS.get("nhl", []):
+        if today.month not in nhl.caps.active_months:
             logger.info("NHL is out of season — skipping")
         else:
             logger.info("=== NHL Analysis ===")
-            nhl_odds_games = []
-            if ODDS_API_KEY:
-                nhl_odds_games = get_game_odds(NHL_SPORT)
-
-            nhl_game_count = len(nhl_odds_games)
+            nhl_games = nhl.fetch_games(today_str) if ODDS_API_KEY else []
+            nhl_game_count = len(nhl_games)
 
             if nhl_game_count == 0:
                 api_err = get_last_api_error()
                 if api_err:
                     errors.append(f"NHL odds unavailable: {api_err}")
-                    logger.error(f"NHL odds unavailable: {api_err}")
-                else:
-                    logger.info("No NHL games today or odds unavailable")
             else:
-                nhl_team_names = list({
-                    t for g in nhl_odds_games
-                    for t in [g["home_team"], g["away_team"]]
-                })
-                try:
-                    nhl_ctx = get_nhl_context(today, team_names=nhl_team_names)
-                except Exception as e:
-                    logger.error(f"NHL stats fetch failed: {e}")
-                    nhl_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}}
-                    errors.append(f"NHL stats partially unavailable: {e}")
-
-                try:
-                    nhl_injuries = get_nhl_injuries()
-                except Exception as e:
-                    logger.warning(f"NHL injuries unavailable: {e}")
-                    nhl_injuries = {}
-
-                for game in nhl_odds_games:
-                    try:
-                        recs = analyze_nhl_game(game, nhl_ctx, nhl_injuries, min_edge=0.0)
-                        nhl_display_raw.extend(recs)
-                    except Exception as e:
-                        logger.error(f"NHL game analysis error ({game.get('home_team')}): {e}")
-
+                nhl_ctx = nhl.fetch_context(today_str, nhl_games)
+                if not nhl_ctx.get("season_stats") and not nhl_ctx.get("recent_form"):
+                    errors.append("NHL stats partially unavailable")
+                nhl_display_raw = nhl.analyze_games(nhl_games, nhl_ctx)
                 nhl_singles_raw = [r for r in nhl_display_raw if r.edge >= MIN_EDGE]
                 logger.info(f"NHL: {len(nhl_singles_raw)} qualifying edge(s) ({len(nhl_display_raw)} total) "
                             f"across {nhl_game_count} games")
@@ -542,154 +336,73 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     ipl_game_count  = 0
 
     if "ipl" in leagues:
-        if today.month not in SPORT_ACTIVE_MONTHS.get("ipl", []):
+        if today.month not in ipl.caps.active_months:
             logger.info("IPL is out of season — skipping")
         else:
             logger.info("=== IPL Analysis ===")
-            ipl_odds_games = []
-            if ODDS_API_KEY:
-                # IPL games start at ~7am PST and finish ~11am — after the 9am run.
-                # Use a 36-hour lookahead so tomorrow's match is always captured.
-                ipl_odds_games = get_game_odds(IPL_SPORT, hours_lookahead=36)
-
-            ipl_game_count = len(ipl_odds_games)
+            ipl_games = ipl.fetch_games(today_str) if ODDS_API_KEY else []
+            ipl_game_count = len(ipl_games)
 
             if ipl_game_count == 0:
                 api_err = get_last_api_error()
                 if api_err:
                     errors.append(f"IPL odds unavailable: {api_err}")
-                    logger.error(f"IPL odds unavailable: {api_err}")
-                else:
-                    logger.info("No IPL games today or odds unavailable")
             else:
-                ipl_team_names = list({
-                    t for g in ipl_odds_games
-                    for t in [g["home_team"], g["away_team"]]
-                })
-                ipl_matchups = [
-                    (g["home_team"], g["away_team"]) for g in ipl_odds_games
-                ]
-                try:
-                    ipl_ctx = get_ipl_context(
-                        today,
-                        team_names=ipl_team_names,
-                        matchups=ipl_matchups,
-                    )
-                except Exception as e:
-                    logger.error(f"IPL stats fetch failed: {e}")
-                    ipl_ctx = {"season_form": {}, "rest_days": {}, "venue_stats": {}, "venue_config": {}, "match_venues": {}, "h2h": {}, "match_flags": {}, "unavailabilities": {}}
-                    errors.append(f"IPL stats partially unavailable: {e}")
-
-                for game in ipl_odds_games:
-                    try:
-                        recs = analyze_ipl_game(game, ipl_ctx, min_edge=0.0)
-                        ipl_display_raw.extend(recs)
-                    except Exception as e:
-                        logger.error(f"IPL game analysis error ({game.get('home_team')}): {e}")
-
+                ipl_ctx = ipl.fetch_context(today_str, ipl_games)
+                if not ipl_ctx.get("season_form"):
+                    errors.append("IPL stats partially unavailable")
+                ipl_display_raw = ipl.analyze_games(ipl_games, ipl_ctx)
                 ipl_qualifying = [r for r in ipl_display_raw if r.edge >= MIN_EDGE]
                 logger.info(f"IPL: {len(ipl_qualifying)} qualifying edge(s) ({len(ipl_display_raw)} total) "
                             f"across {ipl_game_count} games")
 
     # ------------------------------------------------------------------ #
-    #  WNBA (watchlist only — same as NHL, never enters budget)
+    #  WNBA (watchlist only — never enters budget)
     # ------------------------------------------------------------------ #
     wnba_display_raw = []
     wnba_game_count  = 0
 
     if "wnba" in leagues:
-        if today.month not in SPORT_ACTIVE_MONTHS.get("wnba", []):
+        if today.month not in wnba.caps.active_months:
             logger.info("WNBA is out of season — skipping")
         else:
             logger.info("=== WNBA Analysis ===")
-            wnba_odds_games = []
-            if ODDS_API_KEY:
-                wnba_odds_games = get_game_odds(WNBA_SPORT)
-
-            wnba_game_count = len(wnba_odds_games)
+            wnba_games = wnba.fetch_games(today_str) if ODDS_API_KEY else []
+            wnba_game_count = len(wnba_games)
 
             if wnba_game_count == 0:
                 api_err = get_last_api_error()
                 if api_err:
                     errors.append(f"WNBA odds unavailable: {api_err}")
-                else:
-                    logger.info("No WNBA games today or odds unavailable")
             else:
-                wnba_team_names = list({
-                    t for g in wnba_odds_games
-                    for t in [g["home_team"], g["away_team"]]
-                })
-                try:
-                    wnba_ctx = get_wnba_context(today, team_names=wnba_team_names)
-                except Exception as e:
-                    logger.error(f"WNBA stats fetch failed: {e}")
-                    wnba_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}}
-                    errors.append(f"WNBA stats partially unavailable: {e}")
-
-                try:
-                    wnba_injuries = get_wnba_injuries()
-                except Exception as e:
-                    logger.warning(f"WNBA injuries unavailable: {e}")
-                    wnba_injuries = {}
-
-                for game in wnba_odds_games:
-                    try:
-                        recs = analyze_wnba_game(game, wnba_ctx, wnba_injuries, min_edge=0.0)
-                        wnba_display_raw.extend(recs)
-                    except Exception as e:
-                        logger.error(f"WNBA game analysis error ({game.get('home_team')}): {e}")
-
+                wnba_ctx = wnba.fetch_context(today_str, wnba_games)
+                wnba_display_raw = wnba.analyze_games(wnba_games, wnba_ctx)
                 wnba_qualifying = [r for r in wnba_display_raw if r.edge >= MIN_EDGE]
-                logger.info(f"WNBA: {len(wnba_qualifying)} qualifying edge(s) ({len(wnba_display_raw)} total) across {wnba_game_count} games")
+                logger.info(f"WNBA: {len(wnba_qualifying)} qualifying edge(s) ({len(wnba_display_raw)} total) "
+                            f"across {wnba_game_count} games")
 
     # ------------------------------------------------------------------ #
-    #  MLS (watchlist only — same as WNBA, never enters budget)
+    #  MLS (watchlist only — never enters budget)
     # ------------------------------------------------------------------ #
 
     if "mls" in leagues:
-        if today.month not in SPORT_ACTIVE_MONTHS.get("mls", []):
+        if today.month not in mls.caps.active_months:
             logger.info("MLS is out of season — skipping")
         else:
             logger.info("=== MLS Analysis ===")
-            mls_odds_games = []
-            if ODDS_API_KEY:
-                mls_odds_games = get_game_odds(MLS_SPORT)
-
-            mls_game_count = len(mls_odds_games)
+            mls_games = mls.fetch_games(today_str) if ODDS_API_KEY else []
+            mls_game_count = len(mls_games)
 
             if mls_game_count == 0:
                 api_err = get_last_api_error()
                 if api_err:
                     errors.append(f"MLS odds unavailable: {api_err}")
-                else:
-                    logger.info("No MLS games today or odds unavailable")
             else:
-                mls_team_names = list({
-                    t for g in mls_odds_games
-                    for t in [g["home_team"], g["away_team"]]
-                })
-                try:
-                    mls_ctx = get_mls_context(today, team_names=mls_team_names)
-                except Exception as e:
-                    logger.error(f"MLS stats fetch failed: {e}")
-                    mls_ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}, "injuries": {}}
-                    errors.append(f"MLS stats partially unavailable: {e}")
-
-                try:
-                    mls_injuries = get_mls_injuries()
-                except Exception as e:
-                    logger.warning(f"MLS injuries unavailable: {e}")
-                    mls_injuries = {}
-
-                for game in mls_odds_games:
-                    try:
-                        recs = analyze_mls_game(game, mls_ctx, mls_injuries, min_edge=0.0)
-                        mls_display_raw.extend(recs)
-                    except Exception as e:
-                        logger.error(f"MLS game analysis error ({game.get('home_team')}): {e}")
-
+                mls_ctx = mls.fetch_context(today_str, mls_games)
+                mls_display_raw = mls.analyze_games(mls_games, mls_ctx)
                 mls_qualifying = [r for r in mls_display_raw if r.edge >= MIN_EDGE]
-                logger.info(f"MLS: {len(mls_qualifying)} qualifying edge(s) ({len(mls_display_raw)} total) across {mls_game_count} games")
+                logger.info(f"MLS: {len(mls_qualifying)} qualifying edge(s) ({len(mls_display_raw)} total) "
+                            f"across {mls_game_count} games")
 
     # ------------------------------------------------------------------ #
     #  Build parlays from raw BetRecommendation objects (before serialising)
@@ -790,7 +503,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     #  not yet settled) and a fresh upcoming pick — becomes fresh_ipl_display
     #  so the report always shows the correct live picture.
     # ------------------------------------------------------------------ #
-    if "ipl" in leagues and today.month in SPORT_ACTIVE_MONTHS.get("ipl", []):
+    if "ipl" in leagues and today.month in ipl.caps.active_months:
         _wl_pending  = load_watchlist_pending()
         _pending_keys = {p.get("game_key", "") for p in _wl_pending}
 
