@@ -1266,6 +1266,19 @@ def _settle_ipl_pick(pick: Dict, game_date: date) -> Optional[tuple]:
     norm_pick = normalize(our_pick)
 
     for m in completed:
+        # Guard: teams in this season can meet more than once.
+        # Only consider matches whose UTC date matches game_date so we never
+        # accidentally settle today's pick using a previous encounter.
+        try:
+            m_date = datetime.fromtimestamp(
+                m.get("start_ms", 0) / 1000, tz=timezone.utc
+            ).date()
+        except Exception:
+            m_date = None
+
+        if m_date != game_date:
+            continue
+
         t1 = normalize(m.get("team1", ""))
         t2 = normalize(m.get("team2", ""))
         if (t1 == norm_home and t2 == norm_away) or (t1 == norm_away and t2 == norm_home):
