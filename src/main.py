@@ -963,6 +963,42 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         wnba_game_count = wnba_game_count or state.get("wnba_game_count", 0)
         mls_game_count  = mls_game_count  or state.get("mls_game_count", 0)
 
+        # Carry forward locked WNBA picks (odds API drops games once they start,
+        # leaving fresh_wnba_display empty even though picks are in progress).
+        # Mirrors the _morning_locked logic used for budget singles.
+        _morning_wnba = state.get("wnba_display", [])
+        if _morning_wnba:
+            _fresh_wnba_keys = {
+                (r.get("home_team"), r.get("away_team")) for r in fresh_wnba_display
+            }
+            for _wr in _morning_wnba:
+                if _game_started(_wr.get("commence_time", "")):
+                    _wkey = (_wr.get("home_team"), _wr.get("away_team"))
+                    if _wkey not in _fresh_wnba_keys:
+                        fresh_wnba_display.append({**_wr, "locked": True})
+                        _fresh_wnba_keys.add(_wkey)
+                        logger.info(
+                            f"WNBA: carrying forward locked pick "
+                            f"'{_wr.get('pick')}' ({_wr.get('game')})"
+                        )
+
+        # Same for MLS
+        _morning_mls = state.get("mls_display", [])
+        if _morning_mls:
+            _fresh_mls_keys = {
+                (r.get("home_team"), r.get("away_team")) for r in fresh_mls_display
+            }
+            for _mr in _morning_mls:
+                if _game_started(_mr.get("commence_time", "")):
+                    _mkey = (_mr.get("home_team"), _mr.get("away_team"))
+                    if _mkey not in _fresh_mls_keys:
+                        fresh_mls_display.append({**_mr, "locked": True})
+                        _fresh_mls_keys.add(_mkey)
+                        logger.info(
+                            f"MLS: carrying forward locked pick "
+                            f"'{_mr.get('pick')}' ({_mr.get('game')})"
+                        )
+
         # Props display: preserve morning props for sports not analyzed this run,
         # and any locked props (game already started) from analyzed sports.
         _morning_props_display = state.get("props_display") or []
