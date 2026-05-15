@@ -150,7 +150,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Thursday, May 14, 2026 &middot; Generated May 14, 2026 at 08:14 PM PDT</div>
+    <div class="subtitle">Thursday, May 14, 2026 &middot; Generated May 14, 2026 at 08:37 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 0 games &nbsp;|&nbsp;
       MLB: 3 games &nbsp;|&nbsp;
@@ -165,9 +165,9 @@
     
     <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
       🔑 Odds API &mdash;
-      3,883 used &middot; 
+      3,893 used &middot; 
       <span style="color:var(--green);">
-        16,117 remaining
+        16,107 remaining
       </span>
     </div>
     
@@ -3568,7 +3568,10 @@
       // Game over — show score line + WON/LOST
       var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore);
       // Store result on the card so updatePerformance() can read it
-      if (result) card.setAttribute("data-live-result", result);
+      if (result) {
+        card.setAttribute("data-live-result", result);
+        cacheBetResult(card, result);
+      }
       liveDiv.innerHTML =
         '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
         ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore + '</span>' +
@@ -3718,9 +3721,11 @@
         if (anyLost) {
           cell.innerHTML = outcomeHtml("LOST") + legSummary;
           row.setAttribute("data-live-result", "LOST");
+          cacheParlayResult(row, "LOST");
         } else if (allFinal) {
           cell.innerHTML = outcomeHtml("WON") + legSummary;
           row.setAttribute("data-live-result", "WON");
+          cacheParlayResult(row, "WON");
         } else {
           var pctP  = Math.min(99, Math.max(1, Math.round(combined * 100)));
           var colP  = pctP >= 60 ? "#16a34a" : pctP >= 40 ? "#eab308" : "#ef4444";
@@ -5123,7 +5128,64 @@
     });
   }
 
+  // ── Settled-result cache (localStorage) ─────────────────────────────────
+  // Saves WON/LOST outcomes to localStorage so Today's Profit survives a
+  // page reload without waiting for ESPN to re-confirm every finished game.
+  // Keys are scoped to TODAY_DATE so stale entries from other days are ignored.
+  var _RK = "bsr_" + TODAY_DATE + "_";   // bet settled result prefix
+
+  function _betKey(card) {
+    var h = card.getAttribute("data-home-team") || "";
+    var a = card.getAttribute("data-away-team") || "";
+    var b = card.getAttribute("data-bet-type")  || "";
+    var p = card.getAttribute("data-pick")      || "";
+    return h && a ? _RK + h + "|" + a + "|" + b + "|" + p : null;
+  }
+  function cacheBetResult(card, result) {
+    try { var k = _betKey(card); if (k) localStorage.setItem(k, result); } catch(e) {}
+  }
+  function _parlayKey(row) {
+    var p = row.getAttribute("data-pick") || row.getAttribute("data-label") || "";
+    return p ? _RK + "parlay|" + p : null;
+  }
+  function cacheParlayResult(row, result) {
+    try { var k = _parlayKey(row); if (k) localStorage.setItem(k, result); } catch(e) {}
+  }
+  function restoreSettledResults() {
+    try {
+      // Remove stale entries from previous days
+      var stale = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var lk = localStorage.key(i);
+        if (lk && lk.startsWith("bsr_") && !lk.startsWith(_RK)) stale.push(lk);
+      }
+      stale.forEach(function(lk) { localStorage.removeItem(lk); });
+
+      // Restore budget single results
+      document.querySelectorAll(".card[data-home-team][data-in-budget='true']").forEach(function(card) {
+        if (card.getAttribute("data-live-result")) return;  // already set (server-rendered IPL)
+        var cached = localStorage.getItem(_betKey(card));
+        if (!cached) return;
+        card.setAttribute("data-live-result", cached);
+        var ld = card.querySelector(".live-score");
+        if (ld) ld.innerHTML = outcomeHtml(cached);
+      });
+
+      // Restore parlay results
+      document.querySelectorAll("tr.alloc-main-row[data-bet-type='Parlay']").forEach(function(row) {
+        if (row.getAttribute("data-live-result")) return;
+        var cached = localStorage.getItem(_parlayKey(row));
+        if (!cached) return;
+        row.setAttribute("data-live-result", cached);
+        var cell = row.querySelector(".alloc-score-cell");
+        if (cell) cell.innerHTML = outcomeHtml(cached);
+      });
+    } catch(e) {}
+  }
+
   initLocalTimes();
+  restoreSettledResults();   // populate Today's Profit immediately from cache
+  updatePerformance();       // re-run with restored results before first ESPN poll
   refresh();
   setInterval(refresh, 30000);
 
