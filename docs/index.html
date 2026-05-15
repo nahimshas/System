@@ -150,7 +150,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Friday, May 15, 2026 &middot; Generated May 15, 2026 at 12:47 PM PDT</div>
+    <div class="subtitle">Friday, May 15, 2026 &middot; Generated May 15, 2026 at 01:29 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 2 games &nbsp;|&nbsp;
       MLB: 15 games &nbsp;|&nbsp;
@@ -2273,17 +2273,6 @@
           <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">57.7%</div></div>
           <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">68.6%</div></div>
           <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+10.9%</div></div>
-        </div>
-        
-        <div class="card-insight">
-          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
-            <span class="card-insight-label">Why this pick</span>
-            <span class="card-insight-chevron">▾</span>
-          </div>
-          <div class="card-insight-body">
-            <div class="card-narrative">The model rates Chennai Super Kings at a solid 10.9% edge based on form, venue, and head-to-head context.</div>
-            
-          </div>
         </div>
         
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
@@ -4419,6 +4408,11 @@
       document.querySelectorAll(
         ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
+        // Skip server-rendered settled picks (data-espn-done="1") — they are
+        // already included in data-hist-won / data-hist-lost on the tile element.
+        // Only count picks whose data-live-result was set dynamically by JS
+        // (live ESPN polling that resolved during the user's current session).
+        if (wlCard.getAttribute("data-espn-done") === "1") return;
         var result = wlCard.getAttribute("data-live-result");
         if (!result) return;
         var sport = wlCard.getAttribute("data-sport") || "";
