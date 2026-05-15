@@ -79,3 +79,5 @@ There are TWO config locations. Always use `src/config/{sport}.py`, never `src/c
 - Never change main.py's analysis loop to add per-sport special cases — add a capability flag to the registry instead.
 - `morning_singles_display` and `morning_{slug}_display` are **write-once** — never update them on subsequent runs.
 - IPL game count is set by the pending file, not the odds API. After the IPL pending section, `game_counts["ipl"]` is synced explicitly.
+- Watchlist tile (`wl-tile-IPL` etc.) `data-hist-won/lost` already includes **all** settled picks including today's. The JS `updateWatchlistTiles()` skips cards with `data-espn-done="1"` (server-settled) to avoid double-counting. Only live ESPN-polled resolutions (new results during the user's session) increment the tile beyond the baseline.
+- `load_watchlist_performance()` dedup key is `(date, game, pick)` — three picks on the same game (ML + spread + total) all count separately. Do not change it to `(date, game)`.
