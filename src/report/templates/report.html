@@ -2482,6 +2482,11 @@
       document.querySelectorAll(
         ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
+        // Skip server-rendered settled picks (data-espn-done="1") — they are
+        // already included in data-hist-won / data-hist-lost on the tile element.
+        // Only count picks whose data-live-result was set dynamically by JS
+        // (live ESPN polling that resolved during the user's current session).
+        if (wlCard.getAttribute("data-espn-done") === "1") return;
         var result = wlCard.getAttribute("data-live-result");
         if (!result) return;
         var sport = wlCard.getAttribute("data-sport") || "";
