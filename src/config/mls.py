@@ -1,0 +1,20 @@
+"""
+MLS (Major League Soccer) model constants — watchlist only. Active February–November.
+
+Uses a Poisson goal-scoring model with xG data from the ASA API.
+"""
+
+MLS_LEAGUE_HOME_XG    = 1.35    # league baseline home xG per game
+MLS_LEAGUE_AWAY_XG    = 1.15    # league baseline away xG per game
+MLS_RECENT_WEIGHT     = 0.40    # 40% recent form, 60% season
+MLS_MIN_HOME_GAMES    = 5       # min home games to use team-specific home advantage
+MLS_HOME_ADV_DEFAULT  = 0.02    # league-wide home win prob boost (2%)
+MLS_STRONG_VENUE_ADV  = 0.03    # fortress venue boost (3%)
+MLS_MAX_INJURY_PENALTY = 0.15   # max 15% lambda reduction from injuries per team
+
+# Teams with notably strong home atmospheres
+MLS_STRONG_VENUES = {
+    "Seattle Sounders", "Portland Timbers", "Atlanta United",
+    "FC Cincinnati", "Columbus Crew", "LAFC", "LA Galaxy",
+    "Sporting Kansas City", "Toronto FC",
+}
