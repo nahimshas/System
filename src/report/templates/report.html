@@ -155,9 +155,9 @@
       NBA: {{ report.nba_game_count }} game{% if report.nba_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       MLB: {{ report.mlb_game_count }} game{% if report.mlb_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       NFL: {{ report.nfl_game_count }} game{% if report.nfl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
-      {% if report.has_nhl %}NHL: {{ report.nhl_game_count }} game{% if report.nhl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
-      {% if report.has_ipl %}IPL: {{ report.ipl_game_count }} match{% if report.ipl_game_count != 1 %}es{% endif %} &nbsp;|&nbsp; {% endif %}
-      {% if report.has_wnba %}WNBA: {{ report.wnba_game_count }} game{% if report.wnba_game_count != 1 %}s{% endif %} &nbsp;|&nbsp; {% endif %}
+      NHL: {{ report.nhl_game_count }} game{% if report.nhl_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
+      IPL: {{ report.ipl_game_count }} match{% if report.ipl_game_count != 1 %}es{% endif %} &nbsp;|&nbsp;
+      WNBA: {{ report.wnba_game_count }} game{% if report.wnba_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       MLS: {{ report.mls_game_count }} game{% if report.mls_game_count != 1 %}s{% endif %} &nbsp;|&nbsp;
       Budget: ${{ "%.0f"|format(report.daily_budget) }}
     </div>
@@ -704,14 +704,17 @@
     </div><!-- sub-section nfl-singles -->
   </div>
 
-  {% if report.has_nhl %}
   <div class="section" id="sec-nhl">
     <div class="section-title">🏒 NHL
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {% if report.nhl_watchlist %}{{ report.nhl_watchlist|length }} pick{% if report.nhl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
+        {% if not report.has_nhl %}no games today{% elif report.nhl_watchlist %}{{ report.nhl_watchlist|length }} pick{% if report.nhl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
       </span>
     </div>
-    {% if not report.nhl_watchlist %}
+    {% if not report.has_nhl %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      📅 No NHL games scheduled today.
+    </div>
+    {% elif not report.nhl_watchlist %}
     <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
       😕 No picks found with edge &gt; 3% today — the model scanned all NHL games and found no suitable edges.
     </div>
@@ -786,16 +789,18 @@
     </div><!-- sub-body nhl-singles -->
     </div><!-- sub-section nhl-singles -->
   </div>
-  {% endif %}
 
-  {% if report.has_wnba %}
   <div class="section" id="sec-wnba">
     <div class="section-title">🏀 WNBA
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {% if report.wnba_watchlist %}{{ report.wnba_watchlist|length }} pick{% if report.wnba_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
+        {% if not report.has_wnba %}no games today{% elif report.wnba_watchlist %}{{ report.wnba_watchlist|length }} pick{% if report.wnba_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
       </span>
     </div>
-    {% if not report.wnba_watchlist %}
+    {% if not report.has_wnba %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      📅 No WNBA games scheduled today.
+    </div>
+    {% elif not report.wnba_watchlist %}
     <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
       😕 No picks found with edge &gt; 3% today — the model scanned all WNBA games and found no suitable edges.
     </div>
@@ -867,7 +872,6 @@
     </div><!-- sub-body wnba-singles -->
     </div><!-- sub-section wnba-singles -->
   </div>
-  {% endif %}
 
   <div class="section" id="sec-mls">
     <div class="section-title">⚽ MLS
@@ -955,14 +959,17 @@
     </div><!-- sub-section mls-singles -->
   </div>
 
-  {% if report.has_ipl %}
   <div class="section" id="sec-ipl">
     <div class="section-title">🏏 IPL
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {% if report.ipl_watchlist %}{{ report.ipl_watchlist|length }} pick{% if report.ipl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
+        {% if not report.has_ipl %}no games today{% elif report.ipl_watchlist %}{{ report.ipl_watchlist|length }} pick{% if report.ipl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
       </span>
     </div>
-    {% if not report.ipl_watchlist %}
+    {% if not report.has_ipl %}
+    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
+      📅 No IPL matches scheduled today.
+    </div>
+    {% elif not report.ipl_watchlist %}
     <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
       😕 No picks found with edge &gt; 3% today — the model scanned all IPL matches and found no suitable edges.
     </div>
@@ -1059,7 +1066,6 @@
     </div><!-- sub-body ipl-singles -->
     </div><!-- sub-section ipl-singles -->
   </div>
-  {% endif %}
 
   {% if report.has_bets %}
   <div class="section" id="sec-allocation">
