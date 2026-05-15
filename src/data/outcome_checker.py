@@ -1323,6 +1323,24 @@ def settle_watchlist_pending(now_utc: datetime) -> int:
         return 0
 
     existing = _load_watchlist_history()
+
+    # Self-heal: remove duplicate records from history (same date+sport+game+pick).
+    # Keeps LOST over WON so an erroneous WON is corrected by a later LOST entry.
+    # Runs every workflow cycle — permanently cleans up any accumulated duplicates.
+    _seen_hkeys: dict = {}
+    _cleaned: List[Dict] = []
+    for _r in existing:
+        _hk = (_r.get("date", ""), _r.get("sport", ""), _r.get("game", ""), _r.get("pick", ""))
+        if _hk not in _seen_hkeys:
+            _seen_hkeys[_hk] = len(_cleaned)
+            _cleaned.append(_r)
+        elif _r.get("result") == "LOST" and _cleaned[_seen_hkeys[_hk]].get("result") == "WON":
+            _cleaned[_seen_hkeys[_hk]] = _r  # replace erroneous WON with correct LOST
+    if len(_cleaned) < len(existing):
+        logger.info(f"History self-heal: removed {len(existing) - len(_cleaned)} duplicate record(s)")
+        _save_watchlist_history(_cleaned)
+        existing = _cleaned
+
     settled_keys = {(r["date"], r["sport"], r["pick"], r["game"]) for r in existing}
     new_records: List[Dict] = []
     still_pending: List[Dict] = []
