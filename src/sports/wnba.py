@@ -53,12 +53,14 @@ class WNBAModule:
 
     def fetch_context(self, today: str, games: list[dict[str, Any]]) -> dict[str, Any]:
         """Fetch WNBA season stats, recent form, rest days, and injuries."""
+        from datetime import date as _date
         from src.data.wnba_stats import get_wnba_context, get_wnba_injuries
 
+        today_date = _date.fromisoformat(today)
         team_names = list({t for g in games for t in [g["home_team"], g["away_team"]]})
 
         try:
-            ctx = get_wnba_context(today, team_names=team_names)
+            ctx = get_wnba_context(today_date, team_names=team_names)
         except Exception as e:
             logger.error(f"WNBA stats fetch failed: {e}")
             ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}}

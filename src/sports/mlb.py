@@ -43,10 +43,12 @@ class MLBModule:
 
         Returns enriched game dicts ready for analyze_games().
         """
+        from datetime import date as _date
         from src.data.odds_client import get_game_odds, fetch_player_props, get_last_api_error
         from src.data.mlb_stats import get_todays_games
         from src.config import MLB_SPORT
 
+        today_date = _date.fromisoformat(today)   # get_todays_games needs a date object
         games = get_game_odds(MLB_SPORT)
 
         for g in games:
@@ -64,7 +66,7 @@ class MLBModule:
                 logger.info(f"No MLB odds available today")
 
         # Enrich odds games with schedule data (pitcher IDs, venue, team IDs)
-        schedule = get_todays_games(today)
+        schedule = get_todays_games(today_date)
         schedule_map = {g["home_team"]: g for g in schedule}
         schedule_map.update({g["away_team"]: g for g in schedule})
 
@@ -97,14 +99,18 @@ class MLBModule:
         use it after analyze_games().  Initialises pitcher_stats_map as an
         empty dict; analyze_games() populates it as a side-effect.
         """
+        from datetime import date as _date
         from src.data.injuries import get_mlb_injuries
         from src.data.umpire import get_home_plate_umpires, get_umpire_tendency
+
+        today_date = _date.fromisoformat(today)   # get_home_plate_umpires needs a date object
 
         ctx: dict[str, Any] = {
             "injuries":          {},
             "umpire_map":        {},
             "schedule":          getattr(self, "_last_schedule", []),
             "pitcher_stats_map": {},   # populated by analyze_games()
+            "today_date":        today_date,  # date object needed by get_team_schedule_load
         }
 
         try:
@@ -113,7 +119,7 @@ class MLBModule:
             logger.warning(f"MLB injuries unavailable: {e}")
 
         try:
-            ctx["umpire_map"] = get_home_plate_umpires(today)
+            ctx["umpire_map"] = get_home_plate_umpires(today_date)
         except Exception as e:
             logger.warning(f"MLB umpire fetch failed: {e}")
 
@@ -163,9 +169,11 @@ class MLBModule:
         from src.data.weather import get_game_weather
         from src.models.edge_finder import analyze_mlb_game
 
+        from datetime import date as _date
         injuries          = context.get("injuries", {})
         pitcher_stats_map = context.setdefault("pitcher_stats_map", {})
         get_tendency      = context.get("get_umpire_tendency", get_umpire_tendency)
+        today_date        = context.get("today_date", _date.today())
 
         results: list[Any] = []
 
@@ -195,8 +203,8 @@ class MLBModule:
                 away_bat  = get_team_batting_stats(game.get("away_team_id"))
                 home_bp   = get_bullpen_stats(game.get("home_team_id"))
                 away_bp   = get_bullpen_stats(game.get("away_team_id"))
-                home_load = get_team_schedule_load(game.get("home_team_id"), "")
-                away_load = get_team_schedule_load(game.get("away_team_id"), "")
+                home_load = get_team_schedule_load(game.get("home_team_id"), today_date)
+                away_load = get_team_schedule_load(game.get("away_team_id"), today_date)
 
                 # Collect pitcher stats for props_analyzer
                 if game.get("home_pitcher_name"):

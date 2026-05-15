@@ -63,13 +63,15 @@ class IPLModule:
         Fetch IPL season form, rest days, venue stats, head-to-head records,
         and player unavailabilities.
         """
+        from datetime import date as _date
         from src.data.ipl_stats import get_ipl_context
 
+        today_date = _date.fromisoformat(today)
         team_names = list({t for g in games for t in [g["home_team"], g["away_team"]]})
         matchups   = [(g["home_team"], g["away_team"]) for g in games]
 
         try:
-            ctx = get_ipl_context(today, team_names=team_names, matchups=matchups)
+            ctx = get_ipl_context(today_date, team_names=team_names, matchups=matchups)
         except Exception as e:
             logger.error(f"IPL stats fetch failed: {e}")
             ctx = {

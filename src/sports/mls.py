@@ -53,12 +53,14 @@ class MLSModule:
 
     def fetch_context(self, today: str, games: list[dict[str, Any]]) -> dict[str, Any]:
         """Fetch MLS season stats, recent form, rest days, and injuries."""
+        from datetime import date as _date
         from src.data.mls_stats import get_mls_context, get_mls_injuries
 
+        today_date = _date.fromisoformat(today)
         team_names = list({t for g in games for t in [g["home_team"], g["away_team"]]})
 
         try:
-            ctx = get_mls_context(today, team_names=team_names)
+            ctx = get_mls_context(today_date, team_names=team_names)
         except Exception as e:
             logger.error(f"MLS stats fetch failed: {e}")
             ctx = {"season_stats": {}, "recent_form": {}, "rest_days": {}, "injuries": {}}
