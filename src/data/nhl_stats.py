@@ -127,6 +127,7 @@ def _fetch_all_team_stats() -> Dict[str, Dict]:
             "win_pct":  win_pct,
             "wins":     int(wins),
             "losses":   int(losses),
+            "ot_losses": int(ot_losses),
             "points":   int(points),
         }
 

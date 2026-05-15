@@ -184,14 +184,18 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
 
         # --- Team strength research ---
         if home_stats:
+            _h_w, _h_l = home_stats.get('wins', 0), home_stats.get('losses', 0)
+            _h_rec = f"{_h_w}W-{_h_l}L | " if _h_w + _h_l > 0 else ""
             research.append(
-                f"{home}: OffRtg {home_stats.get('off_rtg', '?'):.1f} | "
+                f"{home}: {_h_rec}OffRtg {home_stats.get('off_rtg', '?'):.1f} | "
                 f"DefRtg {home_stats.get('def_rtg', '?'):.1f} | "
                 f"NetRtg {home_stats.get('net_rtg', '?'):.1f}"
             )
         if away_stats:
+            _a_w, _a_l = away_stats.get('wins', 0), away_stats.get('losses', 0)
+            _a_rec = f"{_a_w}W-{_a_l}L | " if _a_w + _a_l > 0 else ""
             research.append(
-                f"{away}: OffRtg {away_stats.get('off_rtg', '?'):.1f} | "
+                f"{away}: {_a_rec}OffRtg {away_stats.get('off_rtg', '?'):.1f} | "
                 f"DefRtg {away_stats.get('def_rtg', '?'):.1f} | "
                 f"NetRtg {away_stats.get('net_rtg', '?'):.1f}"
             )
@@ -723,7 +727,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     stats_available = bool(home_pitcher_stats or away_pitcher_stats)
 
     # --- Pitcher research ---
-    def _pitcher_lines(name: str, stats: Dict, colour: str) -> None:
+    def _pitcher_lines(name: str, stats: Dict, colour: str, team: str) -> None:
         """Append research + signal lines for one starter; flag ERA traps."""
         era   = stats.get("era", "?")
         fip   = stats.get("fip", "?")
@@ -739,20 +743,20 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         ip_str   = f"{ip:.0f}" if isinstance(ip, float) else str(ip)
 
         research.append(
-            f"{colour} {name}: ERA {era} | {fip_str}{xfip_str} | "
+            f"{colour} {name} ({team}): ERA {era} | {fip_str}{xfip_str} | "
             f"K/9 {k9} | BB/9 {bb9} | IP {ip_str}{babip_str}"
         )
         signals.append(f"{name} {fip_str}{xfip_str} | K/9: {k9}")
 
     if home_pitcher_stats:
-        _pitcher_lines(home_pitcher_name, home_pitcher_stats, "🔵")
+        _pitcher_lines(home_pitcher_name, home_pitcher_stats, "🔵", home)
     else:
-        research.append(f"🔵 {home_pitcher_name} (home): stats unavailable")
+        research.append(f"🔵 {home_pitcher_name} ({home}): stats unavailable")
 
     if away_pitcher_stats:
-        _pitcher_lines(away_pitcher_name, away_pitcher_stats, "🔴")
+        _pitcher_lines(away_pitcher_name, away_pitcher_stats, "🔴", away)
     else:
-        research.append(f"🔴 {away_pitcher_name} (away): stats unavailable")
+        research.append(f"🔴 {away_pitcher_name} ({away}): stats unavailable")
 
     # --- ERA trap severity (continuous score) ---
     # Computed here so the same values feed BOTH signal generation and
@@ -1319,14 +1323,18 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
 
         # Team strength research
         if home_stats:
+            _h_w, _h_l = home_stats.get('wins', 0), home_stats.get('losses', 0)
+            _h_rec = f"{_h_w}W-{_h_l}L | " if _h_w + _h_l > 0 else ""
             research.append(
-                f"{home}: {home_stats.get('ppg', '?'):.1f} PPG | "
+                f"{home}: {_h_rec}{home_stats.get('ppg', '?'):.1f} PPG | "
                 f"{home_stats.get('oppg', '?'):.1f} OPP PPG | "
                 f"NetRtg {home_stats.get('net_rtg', '?'):.1f}"
             )
         if away_stats:
+            _a_w, _a_l = away_stats.get('wins', 0), away_stats.get('losses', 0)
+            _a_rec = f"{_a_w}W-{_a_l}L | " if _a_w + _a_l > 0 else ""
             research.append(
-                f"{away}: {away_stats.get('ppg', '?'):.1f} PPG | "
+                f"{away}: {_a_rec}{away_stats.get('ppg', '?'):.1f} PPG | "
                 f"{away_stats.get('oppg', '?'):.1f} OPP PPG | "
                 f"NetRtg {away_stats.get('net_rtg', '?'):.1f}"
             )
@@ -1626,14 +1634,22 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
 
         # Team stats
         if home_stats:
+            _h_w  = home_stats.get('wins', 0)
+            _h_l  = home_stats.get('losses', 0)
+            _h_otl = home_stats.get('ot_losses', 0)
+            _h_rec = f"{_h_w}W-{_h_l}L-{_h_otl}OTL | " if _h_w + _h_l > 0 else ""
             research.append(
-                f"{home}: {home_stats.get('gpg', '?'):.2f} GPG | "
+                f"{home}: {_h_rec}{home_stats.get('gpg', '?'):.2f} GPG | "
                 f"{home_stats.get('gapg', '?'):.2f} GAPG | "
                 f"NetRtg {home_stats.get('net_rtg', '?'):.2f}"
             )
         if away_stats:
+            _a_w  = away_stats.get('wins', 0)
+            _a_l  = away_stats.get('losses', 0)
+            _a_otl = away_stats.get('ot_losses', 0)
+            _a_rec = f"{_a_w}W-{_a_l}L-{_a_otl}OTL | " if _a_w + _a_l > 0 else ""
             research.append(
-                f"{away}: {away_stats.get('gpg', '?'):.2f} GPG | "
+                f"{away}: {_a_rec}{away_stats.get('gpg', '?'):.2f} GPG | "
                 f"{away_stats.get('gapg', '?'):.2f} GAPG | "
                 f"NetRtg {away_stats.get('net_rtg', '?'):.2f}"
             )
@@ -2261,13 +2277,17 @@ def analyze_wnba_game(
 
     # ── Stats research ────────────────────────────────────────────────────────
     if home_stats:
+        _h_w, _h_l = home_stats.get('wins', 0), home_stats.get('losses', 0)
+        _h_rec = f"{_h_w}W-{_h_l}L | " if _h_w + _h_l > 0 else ""
         research.append(
-            f"{home_raw}: {home_ppg} PPG | FG {home_stats.get('fg_pct', 0):.1f}% | "
+            f"{home_raw}: {_h_rec}{home_ppg} PPG | FG {home_stats.get('fg_pct', 0):.1f}% | "
             f"AST/TO {home_stats.get('ast_to', 0):.2f} | NetRtg {home_net:+.1f}"
         )
     if away_stats:
+        _a_w, _a_l = away_stats.get('wins', 0), away_stats.get('losses', 0)
+        _a_rec = f"{_a_w}W-{_a_l}L | " if _a_w + _a_l > 0 else ""
         research.append(
-            f"{away_raw}: {away_ppg} PPG | FG {away_stats.get('fg_pct', 0):.1f}% | "
+            f"{away_raw}: {_a_rec}{away_ppg} PPG | FG {away_stats.get('fg_pct', 0):.1f}% | "
             f"AST/TO {away_stats.get('ast_to', 0):.2f} | NetRtg {away_net:+.1f}"
         )
 
@@ -2516,13 +2536,17 @@ def analyze_mls_game(
     n_home = home_recent.get("games", 0)
     n_away = away_recent.get("games", 0)
     if home_stats:
+        _h_w, _h_l = home_stats.get('wins', 0), home_stats.get('losses', 0)
+        _h_rec = f"{_h_w}W-{_h_l}L | " if _h_w + _h_l > 0 else ""
         research.append(
-            f"{home_raw}: {home_xgf:.2f} xGF/g | {home_xga:.2f} xGA/g | "
+            f"{home_raw}: {_h_rec}{home_xgf:.2f} xGF/g | {home_xga:.2f} xGA/g | "
             f"{home_xgf - home_xga:+.2f} xGD/g"
         )
     if away_stats:
+        _a_w, _a_l = away_stats.get('wins', 0), away_stats.get('losses', 0)
+        _a_rec = f"{_a_w}W-{_a_l}L | " if _a_w + _a_l > 0 else ""
         research.append(
-            f"{away_raw}: {away_xgf:.2f} xGF/g | {away_xga:.2f} xGA/g | "
+            f"{away_raw}: {_a_rec}{away_xgf:.2f} xGF/g | {away_xga:.2f} xGA/g | "
             f"{away_xgf - away_xga:+.2f} xGD/g"
         )
     if n_home >= 3:
