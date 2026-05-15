@@ -22,13 +22,21 @@ from src.config import (
 from src.data.odds_client import get_last_api_error, get_api_credits
 from src.models.parlay_builder import build_parlays
 # Sport modules — each encapsulates fetch / context / analyze / props for its sport
-from src.sports.nba  import nba
-from src.sports.mlb  import mlb
-from src.sports.nfl  import nfl
-from src.sports.nhl  import nhl
-from src.sports.ipl  import ipl
-from src.sports.wnba import wnba
-from src.sports.mls  import mls
+from src.sports.nba      import nba
+from src.sports.mlb      import mlb
+from src.sports.nfl      import nfl
+from src.sports.nhl      import nhl
+from src.sports.ipl      import ipl
+from src.sports.wnba     import wnba
+from src.sports.mls      import mls
+from src.sports.registry import REGISTRY
+
+# Maps every registry slug to its module singleton — used by the analysis loop.
+# Add a new entry here when a new sport module is created.
+SPORT_MODULES: dict = {
+    "nba": nba, "mlb": mlb, "nfl": nfl, "nhl": nhl,
+    "ipl": ipl, "wnba": wnba, "mls": mls,
+}
 from src.state.manager import (
     load_state, save_state, merge_picks,
     bet_to_dict, parlay_to_dict, prop_to_dict,
@@ -198,221 +206,96 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         errors.append("ODDS_API_KEY missing — odds data unavailable. Set the secret in GitHub.")
 
     # ------------------------------------------------------------------ #
-    #  MLS / WNBA / IPL / NHL watchlist init
+    #  Sport analysis — registry-driven loop
+    #
+    #  Capability flags (SportCapabilities) route each sport's output:
+    #    enters_budget      → qualifying picks enter all_singles_raw (budget pool)
+    #    in_main_display_pool → display picks enter all_display_raw (main card)
+    #    has_props          → sport.fetch_props() called; results enter props pools
+    #    own-tile sports    → picks stored in own_display[slug] instead
+    #
+    #  Adding a new sport: create the module, register it in REGISTRY,
+    #  add it to SPORT_MODULES at the top of this file. No other edits needed.
     # ------------------------------------------------------------------ #
-    mls_display_raw = []
-    mls_game_count  = 0
+    all_singles_raw:   list = []   # budget picks (edge >= MIN_EDGE) → budget pool + parlays
+    all_display_raw:   list = []   # main display pool (budget sports + NHL)
+    props_raw:         list = []   # qualified props for P&L tracking
+    props_display_raw: list = []   # all positive-EV props for display
+    game_counts:       dict = {}   # slug → int  (0 if skipped / out of season)
+    own_display:       dict = {}   # slug → list[BetRecommendation]  (own-tile sports)
 
-    # ------------------------------------------------------------------ #
-    #  NBA
-    # ------------------------------------------------------------------ #
-    nba_display_raw = []
-    nba_singles_raw = []
-    nba_game_count  = 0
-    nba_props_raw   = []
-    nba_props_display_raw = []
+    for slug, entry in REGISTRY.items():
+        if slug not in leagues:
+            continue
+        caps = entry.caps
+        if caps.active_months and today.month not in caps.active_months:
+            logger.info(f"{entry.label} is out of season — skipping")
+            continue
 
-    if "nba" in leagues:
-        logger.info("=== NBA Analysis ===")
-        nba_games = nba.fetch_games(today_str) if ODDS_API_KEY else []
-        nba_game_count = len(nba_games)
+        module = SPORT_MODULES[slug]
+        logger.info(f"=== {entry.label} Analysis ===")
 
-        _prop_err = get_last_api_error()
-        if _prop_err and not any(g.get("player_props") for g in nba_games):
-            errors.append(f"NBA player props unavailable: {_prop_err}")
+        games = module.fetch_games(today_str) if ODDS_API_KEY else []
+        game_counts[slug] = len(games)
 
-        if nba_game_count == 0:
-            api_err = get_last_api_error()
-            if api_err:
-                errors.append(f"NBA odds unavailable: {api_err}")
+        # Surface prop-line API errors before checking game count
+        if caps.has_props and games and not any(g.get("player_props") for g in games):
+            _prop_err = get_last_api_error()
+            if _prop_err:
+                errors.append(f"{entry.label} player props unavailable: {_prop_err}")
+
+        if not games:
+            _api_err = get_last_api_error()
+            if _api_err:
+                errors.append(f"{entry.label} odds unavailable: {_api_err}")
+            continue
+
+        ctx         = module.fetch_context(today_str, games)
+        display_raw = module.analyze_games(games, ctx)
+        qualifying  = [r for r in display_raw if r.edge >= MIN_EDGE]
+
+        # Route display picks based on capability flags
+        if caps.in_main_display_pool:
+            all_display_raw.extend(display_raw)
+            if caps.enters_budget:
+                all_singles_raw.extend(qualifying)
         else:
-            nba_ctx = nba.fetch_context(today_str, nba_games)
-            if not nba_ctx.get("season_stats") and not nba_ctx.get("recent_form"):
-                errors.append("NBA stats partially unavailable")
-            nba_display_raw = nba.analyze_games(nba_games, nba_ctx)
-            nba_singles_raw = [r for r in nba_display_raw if r.edge >= MIN_EDGE]
-            nba_props_raw         = nba.fetch_props(nba_games, nba_ctx, min_edge=MIN_EDGE)
-            nba_props_display_raw = nba.fetch_props(nba_games, nba_ctx, min_edge=0.0)
-            logger.info(f"NBA: {len(nba_singles_raw)} qualifying edge(s) ({len(nba_display_raw)} total) "
-                        f"across {nba_game_count} games | {len(nba_props_raw)} prop pick(s)")
+            own_display[slug] = display_raw   # IPL / WNBA / MLS → own tile
+
+        # Collect props (only if sport has them)
+        _sport_props_raw = []
+        if caps.has_props:
+            _sport_props_raw      = module.fetch_props(games, ctx, min_edge=MIN_EDGE)
+            _sport_props_display  = module.fetch_props(games, ctx, min_edge=0.0)
+            props_raw.extend(_sport_props_raw)
+            props_display_raw.extend(_sport_props_display)
+
+        _prop_str = f" | {len(_sport_props_raw)} prop pick(s)" if caps.has_props else ""
+        logger.info(
+            f"{entry.label}: {len(qualifying)} qualifying edge(s) ({len(display_raw)} total) "
+            f"across {game_counts[slug]} games{_prop_str}"
+        )
+
+    # Extract named game counts — used by state management and build_report.
+    # Phase 5 will generalise these into registry-driven dicts.
+    nba_game_count  = game_counts.get("nba", 0)
+    mlb_game_count  = game_counts.get("mlb", 0)
+    nfl_game_count  = game_counts.get("nfl", 0)
+    nhl_game_count  = game_counts.get("nhl", 0)
+    ipl_game_count  = game_counts.get("ipl", 0)
+    wnba_game_count = game_counts.get("wnba", 0)
+    mls_game_count  = game_counts.get("mls", 0)
+
+    # Extract named display lists for own-tile sports (IPL / WNBA / MLS).
+    ipl_display_raw  = own_display.get("ipl",  [])
+    wnba_display_raw = own_display.get("wnba", [])
+    mls_display_raw  = own_display.get("mls",  [])
 
     # ------------------------------------------------------------------ #
-    #  MLB
+    #  Build parlays — budget-qualifying picks only (edge >= MIN_EDGE).
+    #  all_singles_raw and props pools are already assembled by the loop.
     # ------------------------------------------------------------------ #
-    mlb_display_raw = []
-    mlb_singles_raw = []
-    mlb_game_count  = 0
-    mlb_props_display_raw = []
-    mlb_props_raw   = []
-
-    if "mlb" in leagues:
-        logger.info("=== MLB Analysis ===")
-        mlb_games = mlb.fetch_games(today_str) if ODDS_API_KEY else []
-        mlb_game_count = len(mlb_games)
-
-        _prop_err = get_last_api_error()
-        if _prop_err and not any(g.get("player_props") for g in mlb_games):
-            errors.append(f"MLB player props unavailable: {_prop_err}")
-
-        if mlb_game_count == 0 and ODDS_API_KEY:
-            api_err = get_last_api_error()
-            if api_err:
-                errors.append(f"MLB odds unavailable: {api_err}")
-        else:
-            mlb_ctx = mlb.fetch_context(today_str, mlb_games)
-            # analyze_games fetches per-game pitcher/weather/bullpen stats and
-            # populates mlb_ctx["pitcher_stats_map"] + propagates model totals
-            # onto mlb_ctx["schedule"] so the props analyzer can use them.
-            mlb_display_raw = mlb.analyze_games(mlb_games, mlb_ctx)
-            mlb_singles_raw = [r for r in mlb_display_raw if r.edge >= MIN_EDGE]
-            mlb_props_raw         = mlb.fetch_props(mlb_games, mlb_ctx, min_edge=MIN_EDGE)
-            mlb_props_display_raw = mlb.fetch_props(mlb_games, mlb_ctx, min_edge=0.0)
-            logger.info(f"MLB: {len(mlb_singles_raw)} qualifying edge(s) ({len(mlb_display_raw)} total) "
-                        f"across {mlb_game_count} games | {len(mlb_props_raw)} prop pick(s)")
-
-    # ------------------------------------------------------------------ #
-    #  NFL
-    # ------------------------------------------------------------------ #
-    nfl_display_raw = []
-    nfl_singles_raw = []
-    nfl_game_count  = 0
-
-    if "nfl" in leagues:
-        if today.month not in nfl.caps.active_months:
-            logger.info("NFL is out of season — skipping")
-        else:
-            logger.info("=== NFL Analysis ===")
-            nfl_games = nfl.fetch_games(today_str) if ODDS_API_KEY else []
-            nfl_game_count = len(nfl_games)
-
-            if nfl_game_count == 0:
-                api_err = get_last_api_error()
-                if api_err:
-                    errors.append(f"NFL odds unavailable: {api_err}")
-            else:
-                nfl_ctx = nfl.fetch_context(today_str, nfl_games)
-                if not nfl_ctx.get("season_stats") and not nfl_ctx.get("recent_form"):
-                    errors.append("NFL stats partially unavailable")
-                nfl_display_raw = nfl.analyze_games(nfl_games, nfl_ctx)
-                nfl_singles_raw = [r for r in nfl_display_raw if r.edge >= MIN_EDGE]
-                logger.info(f"NFL: {len(nfl_singles_raw)} qualifying edge(s) ({len(nfl_display_raw)} total) "
-                            f"across {nfl_game_count} games")
-
-    # ------------------------------------------------------------------ #
-    #  NHL (display-only in main card — never enters budget or parlays)
-    # ------------------------------------------------------------------ #
-    nhl_display_raw = []
-    nhl_singles_raw = []
-    nhl_game_count  = 0
-
-    if "nhl" in leagues:
-        if today.month not in nhl.caps.active_months:
-            logger.info("NHL is out of season — skipping")
-        else:
-            logger.info("=== NHL Analysis ===")
-            nhl_games = nhl.fetch_games(today_str) if ODDS_API_KEY else []
-            nhl_game_count = len(nhl_games)
-
-            if nhl_game_count == 0:
-                api_err = get_last_api_error()
-                if api_err:
-                    errors.append(f"NHL odds unavailable: {api_err}")
-            else:
-                nhl_ctx = nhl.fetch_context(today_str, nhl_games)
-                if not nhl_ctx.get("season_stats") and not nhl_ctx.get("recent_form"):
-                    errors.append("NHL stats partially unavailable")
-                nhl_display_raw = nhl.analyze_games(nhl_games, nhl_ctx)
-                nhl_singles_raw = [r for r in nhl_display_raw if r.edge >= MIN_EDGE]
-                logger.info(f"NHL: {len(nhl_singles_raw)} qualifying edge(s) ({len(nhl_display_raw)} total) "
-                            f"across {nhl_game_count} games")
-
-    # ------------------------------------------------------------------ #
-    #  IPL (watchlist only — never enters budget allocation or parlays)
-    # ------------------------------------------------------------------ #
-    ipl_display_raw = []
-    ipl_game_count  = 0
-
-    if "ipl" in leagues:
-        if today.month not in ipl.caps.active_months:
-            logger.info("IPL is out of season — skipping")
-        else:
-            logger.info("=== IPL Analysis ===")
-            ipl_games = ipl.fetch_games(today_str) if ODDS_API_KEY else []
-            ipl_game_count = len(ipl_games)
-
-            if ipl_game_count == 0:
-                api_err = get_last_api_error()
-                if api_err:
-                    errors.append(f"IPL odds unavailable: {api_err}")
-            else:
-                ipl_ctx = ipl.fetch_context(today_str, ipl_games)
-                if not ipl_ctx.get("season_form"):
-                    errors.append("IPL stats partially unavailable")
-                ipl_display_raw = ipl.analyze_games(ipl_games, ipl_ctx)
-                ipl_qualifying = [r for r in ipl_display_raw if r.edge >= MIN_EDGE]
-                logger.info(f"IPL: {len(ipl_qualifying)} qualifying edge(s) ({len(ipl_display_raw)} total) "
-                            f"across {ipl_game_count} games")
-
-    # ------------------------------------------------------------------ #
-    #  WNBA (watchlist only — never enters budget)
-    # ------------------------------------------------------------------ #
-    wnba_display_raw = []
-    wnba_game_count  = 0
-
-    if "wnba" in leagues:
-        if today.month not in wnba.caps.active_months:
-            logger.info("WNBA is out of season — skipping")
-        else:
-            logger.info("=== WNBA Analysis ===")
-            wnba_games = wnba.fetch_games(today_str) if ODDS_API_KEY else []
-            wnba_game_count = len(wnba_games)
-
-            if wnba_game_count == 0:
-                api_err = get_last_api_error()
-                if api_err:
-                    errors.append(f"WNBA odds unavailable: {api_err}")
-            else:
-                wnba_ctx = wnba.fetch_context(today_str, wnba_games)
-                wnba_display_raw = wnba.analyze_games(wnba_games, wnba_ctx)
-                wnba_qualifying = [r for r in wnba_display_raw if r.edge >= MIN_EDGE]
-                logger.info(f"WNBA: {len(wnba_qualifying)} qualifying edge(s) ({len(wnba_display_raw)} total) "
-                            f"across {wnba_game_count} games")
-
-    # ------------------------------------------------------------------ #
-    #  MLS (watchlist only — never enters budget)
-    # ------------------------------------------------------------------ #
-
-    if "mls" in leagues:
-        if today.month not in mls.caps.active_months:
-            logger.info("MLS is out of season — skipping")
-        else:
-            logger.info("=== MLS Analysis ===")
-            mls_games = mls.fetch_games(today_str) if ODDS_API_KEY else []
-            mls_game_count = len(mls_games)
-
-            if mls_game_count == 0:
-                api_err = get_last_api_error()
-                if api_err:
-                    errors.append(f"MLS odds unavailable: {api_err}")
-            else:
-                mls_ctx = mls.fetch_context(today_str, mls_games)
-                mls_display_raw = mls.analyze_games(mls_games, mls_ctx)
-                mls_qualifying = [r for r in mls_display_raw if r.edge >= MIN_EDGE]
-                logger.info(f"MLS: {len(mls_qualifying)} qualifying edge(s) ({len(mls_display_raw)} total) "
-                            f"across {mls_game_count} games")
-
-    # ------------------------------------------------------------------ #
-    #  Build parlays from raw BetRecommendation objects (before serialising)
-    # ------------------------------------------------------------------ #
-    # Budget-qualifying picks only (edge >= MIN_EDGE) — used for allocation table + parlays
-    # NHL, IPL, and WNBA are watchlist-only and never enter budget allocation or parlays
-    all_singles_raw = nba_singles_raw + mlb_singles_raw + nfl_singles_raw
-    # All positive-EV picks (no min-edge threshold) — used for display in league sections
-    # NHL display picks are handled separately via nhl_watchlist in generator.py
-    all_display_raw = nba_display_raw + mlb_display_raw + nfl_display_raw + nhl_display_raw
-    parlays_raw          = build_parlays(all_singles_raw)
-    props_raw            = nba_props_raw + mlb_props_raw
-    props_display_raw    = nba_props_display_raw + mlb_props_display_raw
+    parlays_raw = build_parlays(all_singles_raw)
 
     # ------------------------------------------------------------------ #
     #  Serialise to dicts (template-ready + state-storable)
@@ -623,11 +506,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # (game_count > 0) but the fresh analysis produced nothing, keep morning.
         # If game_count = 0 (no games today / off-season), do NOT preserve.
         _sports_with_games = {
-            sp for sp, cnt in [
-                ("NBA", nba_game_count), ("MLB", mlb_game_count),
-                ("NFL", nfl_game_count), ("NHL", nhl_game_count),
-                ("WNBA", wnba_game_count), ("MLS", mls_game_count),
-            ] if cnt > 0
+            REGISTRY[slug].label
+            for slug, cnt in game_counts.items()
+            if cnt > 0
         }
         # Use the write-once morning backup as the preservation source.
         # Falls back to singles_display for states written before this key existed.
@@ -641,9 +522,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         # Sports skipped by a league filter this run — always preserve their morning picks.
         _not_analyzed = {
-            sp for sp, flag in [
-                ("NBA", "nba"), ("MLB", "mlb"), ("NFL", "nfl"), ("NHL", "nhl"), ("MLS", "mls"),
-            ] if flag not in leagues
+            entry.label
+            for slug, entry in REGISTRY.items()
+            if entry.caps.in_main_display_pool and slug not in leagues
         }
 
         # Preserve: (1) sport not in this run's league filter, OR
