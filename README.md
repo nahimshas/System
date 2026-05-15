@@ -94,15 +94,6 @@ Uses the **¼ Kelly Criterion** adapted for Robinhood's $0.02/contract commissio
 
 ---
 
-## Adding More Leagues (Future)
-To add NFL or NHL later:
-1. Add sport key to `src/config.py`
-2. Add stats fetcher in `src/data/`
-3. Add analyzer in `src/models/edge_finder.py`
-4. Wire up in `src/main.py`
-
----
-
 ## Daily Credit Usage (The Odds API)
 | Call | Credits | Runs/day |
 |---|---|---|

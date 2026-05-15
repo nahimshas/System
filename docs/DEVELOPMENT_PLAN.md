@@ -12,9 +12,15 @@ This file tracks the **implementation roadmap** (phases, model changes, architec
 
 - **Data sources**: The Odds API (market odds), MLB Stats API, ESPN (live scores + settlement), wttr.in (weather), no-key public APIs throughout
 - **State**: `state/picks_YYYY-MM-DD.json` — locked morning picks, merged on re-runs
-- **History**: `state/history.json` — all-time settled bet outcomes, appended daily
+- **History**: `state/history.json` — all-time settled bet outcomes (budget sports only)
+- **Watchlist history**: `state/watchlist_history.json` — settled watchlist picks (NHL/IPL/WNBA/MLS)
 - **Report**: `docs/index.html` — rendered by Jinja2, served via GitHub Pages, auto-refreshes live scores every 60s
 - **CI**: GitHub Actions runs daily at ~9am PDT, commits report + state to repo
+
+### Sport Module Architecture (Phases 1–5, May 2026)
+Each sport has its own module (`src/sports/{sport}.py`) implementing a 5-method protocol: `fetch_games`, `fetch_context`, `analyze_games`, `fetch_props`, `settle`. Sports are registered in `src/sports/registry.py` with capability flags that control all routing (budget pool, parlay eligibility, display section, props, settlement). `src/main.py` runs a single loop over the registry — no per-sport if/else blocks. **Adding a new sport or graduating a watchlist sport to budget requires zero changes to `main.py`.**
+
+See `CLAUDE.md` in the repo root for a quick-start guide, and the project memory file for the full architecture reference.
 
 ---
 
