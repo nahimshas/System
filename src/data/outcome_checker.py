@@ -1435,10 +1435,14 @@ def load_watchlist_performance() -> Dict[str, Dict]:
     result: Dict[str, Dict] = {}
     for sport in ("NHL", "IPL", "WNBA", "MLS"):
         subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
-        # Deduplicate: one entry per (date, game); LOST beats WON
+        # Deduplicate: one entry per (date, game, pick) so that multiple
+        # legitimate picks for the same game (ML + spread + total) are all
+        # counted, while the exact same pick settled twice with different
+        # results (e.g. WON from buggy run + LOST from correction) is
+        # collapsed to one — LOST beats WON.
         deduped: Dict[tuple, str] = {}
         for r in subset:
-            key = (r.get("date", ""), r.get("game", ""))
+            key = (r.get("date", ""), r.get("game", ""), r.get("pick", ""))
             if key not in deduped or r.get("result") == "LOST":
                 deduped[key] = r.get("result", "")
         won  = sum(1 for v in deduped.values() if v == "WON")

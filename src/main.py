@@ -436,7 +436,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         _today_settled_raw = load_watchlist_today_settled("IPL", today)
         _settled_by_game: dict = {}
         for _sr in _today_settled_raw:
-            _sg = _sr.get("game", "")
+            _sg = (_sr.get("game", ""), _sr.get("pick", ""))
             if _sg not in _settled_by_game or _sr.get("result") == "LOST":
                 _settled_by_game[_sg] = _sr
         _today_settled = [
