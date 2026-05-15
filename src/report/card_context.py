@@ -9,7 +9,7 @@ The confidence label is computed upstream (edge_finder → _confidence_label) be
 this runs, so these transformations never affect pick selection or sizing.
 """
 import re
-from typing import List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional
 
 
 # ── Drop patterns ─────────────────────────────────────────────────────────────
@@ -69,6 +69,105 @@ def _filter_research(research: List[str]) -> List[str]:
 def merge_context(signals: List[str], research: List[str]) -> List[str]:
     """Merge signals + research into a single deduplicated display list."""
     return _filter_signals(signals) + _filter_research(research)
+
+
+# ── Context sort ──────────────────────────────────────────────────────────────
+#
+# Priority lists: first matching pattern wins → lower index = shown higher up.
+# Items that match no pattern are appended at the end, preserving their
+# relative insertion order (signals before research within that tail group).
+
+_CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
+    "MLB": [
+        re.compile(r"⚠ ERA trap"),                        # ERA trap warnings first
+        re.compile(r"⚠ K matchup"),                        # K matchup warning
+        re.compile(r"^(?:🔵|🔴)"),                         # pitcher lines (home 🔵 / away 🔴)
+        re.compile(r"^Model projected score"),              # projected score
+        re.compile(r"^Model expected total"),               # expected total
+        re.compile(r"^Weather:"),                           # weather conditions
+        re.compile(r"^👨‍⚖️"),                         # umpire (research version)
+        re.compile(r"^Venue:"),                             # venue / park factor
+        re.compile(r"\bbatting:"),                          # team batting stats
+        re.compile(r"\bbullpen:"),                          # team bullpen stats
+        re.compile(r"(?i)schedule|back-to-back|\brest\b"), # schedule / rest
+        re.compile(r"(?i)injur"),                           # injuries
+    ],
+    "NBA": [
+        re.compile(r"back-to-back"),                        # B2B fatigue first
+        re.compile(r"injury impact"),                       # injuries
+        re.compile(r"^Model projected score"),              # projected score
+        re.compile(r"^Model expected total"),               # expected total
+        re.compile(r"OffRtg|DefRtg|NetRtg"),               # season stats (research lines)
+        re.compile(r"recent"),                              # recent form
+        re.compile(r"[Rr]est"),                             # rest days
+        re.compile(r"[Hh]ome court"),                       # home advantage
+        re.compile(r"schedule"),                            # schedule load
+    ],
+    "NHL": [
+        re.compile(r"back-to-back"),                        # B2B fatigue first
+        re.compile(r"injur"),                               # injuries
+        re.compile(r"GPG|GAPG|NetRtg"),                    # season stats (research lines)
+        re.compile(r"recent"),                              # recent form
+        re.compile(r"[Rr]est"),                             # rest days
+        re.compile(r"[Hh]ome ice"),                         # home advantage
+    ],
+    "NFL": [
+        re.compile(r"injur"),                               # injuries first
+        re.compile(r"^Model projected score"),              # projected score
+        re.compile(r"[Bb]ye week"),                         # bye week rest
+        re.compile(r"PPG|OPP PPG|NetRtg"),                 # season stats (research lines)
+        re.compile(r"recent"),                              # recent form
+        re.compile(r"[Rr]est"),                             # rest days
+        re.compile(r"[Hh]ome field"),                       # home advantage
+    ],
+    "WNBA": [
+        re.compile(r"lineup impact|injuries benefit"),       # injury signals first
+        re.compile(r"⚕"),                                   # injured player details
+        re.compile(r"back-to-back"),                        # B2B fatigue
+        re.compile(r"PPG|NetRtg"),                          # season stats (research lines)
+        re.compile(r"recent"),                              # recent form
+        re.compile(r"[Rr]est"),                             # rest days
+        re.compile(r"[Hh]ome court"),                       # home advantage
+    ],
+    "IPL": [
+        re.compile(r"Form edge"),                           # form edge first
+        re.compile(r"[Hh]ome venue"),                       # home venue advantage
+        re.compile(r"H2H"),                                 # head-to-head
+        re.compile(r"[Rr]est|days since"),                  # rest
+        re.compile(r"[Pp]itch|[Dd]ew"),                    # pitch / dew conditions
+    ],
+    "MLS": [
+        re.compile(r"injur|⚕|🚫"),                          # injuries first
+        re.compile(r"xG projection"),                       # xG projection
+        re.compile(r"xG edge"),                             # xG edge
+        re.compile(r"recent form"),                         # recent form
+        re.compile(r"[Hh]ome.*[Vv]enue|[Ff]ortress"),     # home venue
+        re.compile(r"xGF"),                                 # team season stats
+        re.compile(r"[Rr]est"),                             # rest days
+    ],
+}
+
+
+def _sort_context(sport: str, items: List[str]) -> List[str]:
+    """
+    Sort context items by sport-specific importance order.
+    Items matching an earlier pattern in _CONTEXT_PRIORITY appear first.
+    Items that match no pattern are appended last (preserving insertion order).
+    """
+    patterns = _CONTEXT_PRIORITY.get(sport, [])
+    if not patterns:
+        return items
+
+    n = len(patterns)
+
+    def _priority(item: str) -> int:
+        for i, p in enumerate(patterns):
+            if p.search(item):
+                return i
+        return n  # unmatched → tail
+
+    # stable sort: items at the same priority keep their original order
+    return sorted(items, key=_priority)
 
 
 # ── Narrative helpers ─────────────────────────────────────────────────────────
@@ -615,6 +714,7 @@ def build_card_context(
     Confidence is computed upstream and is NOT affected by this function.
     """
     context = merge_context(signals, research)
+    context = _sort_context(sport, context)
 
     if sport == "MLB":
         narrative = _mlb_narrative(pick, bet_type, signals, research, edge)
