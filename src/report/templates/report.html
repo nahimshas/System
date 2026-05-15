@@ -991,7 +991,7 @@
          data-model-prob-pct="{{ bet.model_prob_pct }}"
          data-market-prob-pct="{{ bet.market_prob_pct }}"
          data-commence-time="{{ bet.commence_time }}"
-         {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-espn-done="1"{% endif %}>
+         {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-in-history="1"{% endif %}>
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -1000,34 +1000,22 @@
               <span class="badge badge-ipl">IPL</span>
               &nbsp;Match Winner &nbsp;&middot;&nbsp; {{ bet.game }}
             </div>
-            {# ── Status badge: settled / in-play / upcoming ── #}
-            {% if bet.status == 'settled' %}
-            <div class="card-time" style="color:var(--muted);font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
-            {% elif bet.status == 'in_progress' %}
-            <div class="card-time" style="color:#ef4444;font-size:0.78rem;font-weight:600;margin-top:3px;">
-              🔴 Match In Progress
-            </div>
-            {% elif bet.commence_time %}
+            {# Upcoming/in-progress: show data-ipl-commence so renderIplCommenceTimes()
+               formats the local kickoff time. Settled: leave empty — the ESPN poll
+               will fill the live-status div with the final score + WON/LOST. #}
             <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"
-                 data-ipl-commence="{{ bet.commence_time }}">
-              📅 loading…
+                 {% if bet.commence_time and bet.status != 'settled' %}data-ipl-commence="{{ bet.commence_time }}"{% endif %}>
+              {% if bet.commence_time and bet.status != 'settled' %}📅 loading…{% endif %}
             </div>
-            {% else %}
-            <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
-            {% endif %}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
             {% if bet.locked or bet.status in ('in_progress', 'settled') %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
             <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
           </div>
         </div>
-        {% if bet.status == 'settled' %}
-        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;">
-          <span style="color:#94a3b8;font-size:0.75rem;">Final: {{ bet.match_summary or 'Match complete' }}</span>&nbsp;&nbsp;{% if bet.result == 'WON' %}<span style="color:#16a34a;font-weight:700;font-size:0.9rem;">✓ WON</span>{% elif bet.result == 'LOST' %}<span style="color:#ef4444;font-weight:700;font-size:0.9rem;">✗ LOST</span>{% endif %}
-        </div>
-        {% else %}
+        {# live-status is always empty server-side — JS fills it with live score,
+           final score + WON/LOST, or win probability as the match progresses #}
         <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
-        {% endif %}
         <div class="card-compact">
           <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
           <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
@@ -2488,11 +2476,13 @@
       document.querySelectorAll(
         ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
-        // Skip server-rendered settled picks (data-espn-done="1") — they are
-        // already included in data-hist-won / data-hist-lost on the tile element.
+        // Skip picks already counted in data-hist-won / data-hist-lost:
+        //   data-espn-done="1"  — set by JS after live polling resolves a pick
+        //   data-in-history="1" — set server-side for IPL picks already in history
         // Only count picks whose data-live-result was set dynamically by JS
         // (live ESPN polling that resolved during the user's current session).
-        if (wlCard.getAttribute("data-espn-done") === "1") return;
+        if (wlCard.getAttribute("data-espn-done") === "1" ||
+            wlCard.getAttribute("data-in-history") === "1") return;
         var result = wlCard.getAttribute("data-live-result");
         if (!result) return;
         var sport = wlCard.getAttribute("data-sport") || "";
@@ -3569,6 +3559,9 @@
       }
 
       function applyIplEvent(ev) {
+        // Select cards not yet fully resolved by JS.
+        // data-in-history cards (server-settled) are intentionally included so JS
+        // can display the final score — they are excluded from tile counting separately.
         var cards = document.querySelectorAll(".ipl-watchlist-card:not([data-espn-done])");
         if (!cards.length) return;
 
@@ -3634,9 +3627,15 @@
               timeDiv.textContent = "";
             }
             if (liveDiv) {
+              // Show final score as "Abbr Score · Abbr Score" — same format as live,
+              // no "won by X" narrative text (consistent with other sports).
+              var finalScoreStr = teams.map(function (t) {
+                var abbr = t.name.split(" ").pop() || t.name;
+                return abbr + (t.score ? " " + t.score : "");
+              }).join("  ·  ");
               liveDiv.innerHTML =
-                '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
-                (summary || "Match complete") + "</span>" +
+                '<span style="color:#94a3b8;font-size:0.75rem;">Final' +
+                (finalScoreStr ? ": " + finalScoreStr : "") + "</span>" +
                 "&nbsp;&nbsp;" + outcomeHtml(result);
             }
             updatePerformance();
