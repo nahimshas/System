@@ -430,6 +430,35 @@ def get_batter_props_stats(team_id: int, player_names: List[str], min_pa: int = 
     return result
 
 
+def get_mlb_team_records() -> Dict[int, Dict]:
+    """
+    Returns {team_id: {"wins": int, "losses": int}} for all MLB teams
+    using the MLB Stats API standings endpoint. Used to display W-L on bet cards.
+    """
+    from datetime import date as _date
+    season = _date.today().year
+    data = _get("/standings", {
+        "leagueId": "103,104",   # AL + NL
+        "season":   season,
+        "standingsTypes": "regularSeason",
+    })
+    if not data:
+        return {}
+
+    result: Dict[int, Dict] = {}
+    for record in data.get("records", []):
+        for tr in record.get("teamRecords", []):
+            team_id = tr.get("team", {}).get("id")
+            if not team_id:
+                continue
+            result[int(team_id)] = {
+                "wins":   int(tr.get("wins",   0)),
+                "losses": int(tr.get("losses", 0)),
+            }
+    logger.info(f"MLB standings: {len(result)} teams loaded (season {season})")
+    return result
+
+
 def get_team_schedule_load(team_id: int, today: date) -> int:
     """
     Returns the number of confirmed games this team played in the last 7 days.

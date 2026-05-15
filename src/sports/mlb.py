@@ -111,7 +111,14 @@ class MLBModule:
             "schedule":          getattr(self, "_last_schedule", []),
             "pitcher_stats_map": {},   # populated by analyze_games()
             "today_date":        today_date,  # date object needed by get_team_schedule_load
+            "team_records":      {},   # {team_id: {wins, losses}} — populated below
         }
+
+        try:
+            from src.data.mlb_stats import get_mlb_team_records
+            ctx["team_records"] = get_mlb_team_records()
+        except Exception as e:
+            logger.warning(f"MLB standings unavailable: {e}")
 
         try:
             ctx["injuries"] = get_mlb_injuries()
@@ -174,6 +181,7 @@ class MLBModule:
         pitcher_stats_map = context.setdefault("pitcher_stats_map", {})
         get_tendency      = context.get("get_umpire_tendency", get_umpire_tendency)
         today_date        = context.get("today_date", _date.today())
+        team_records      = context.get("team_records", {})
 
         results: list[Any] = []
 
@@ -214,6 +222,9 @@ class MLBModule:
 
                 ump_tendency = get_tendency(game.get("umpire_name", ""))
 
+                home_record = team_records.get(game.get("home_team_id")) or {}
+                away_record = team_records.get(game.get("away_team_id")) or {}
+
                 recs = analyze_mlb_game(
                     game, hp_stats, ap_stats, home_bat, away_bat,
                     home_bp, away_bp, injuries,
@@ -221,6 +232,8 @@ class MLBModule:
                     away_schedule_load=away_load,
                     umpire_tendency=ump_tendency,
                     weather=wx,
+                    home_season_stats=home_record,
+                    away_season_stats=away_record,
                     min_edge=min_edge,
                 )
                 results.extend(recs)

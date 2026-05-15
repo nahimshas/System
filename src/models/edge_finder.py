@@ -702,6 +702,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                      away_schedule_load: int = 0,
                      umpire_tendency: Optional[Dict] = None,
                      weather: Optional[Dict] = None,
+                     home_season_stats: Optional[Dict] = None,
+                     away_season_stats: Optional[Dict] = None,
                      min_edge: float = None) -> List[BetRecommendation]:
     from src.data.mlb_stats import get_park_factor
     from src.data.umpire import build_umpire_signals
@@ -793,19 +795,29 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             f"(severity {sev:.2f}) — {team_name} ML may be overpriced by market"
         )
 
-    # --- Batting research ---
+    # --- Batting research (W-L record prepended if standings available) ---
+    _h_ss = home_season_stats or {}
+    _a_ss = away_season_stats or {}
+    _h_w, _h_l = _h_ss.get("wins", 0), _h_ss.get("losses", 0)
+    _a_w, _a_l = _a_ss.get("wins", 0), _a_ss.get("losses", 0)
+    _h_rec = f"{_h_w}W-{_h_l}L | " if _h_w + _h_l > 0 else ""
+    _a_rec = f"{_a_w}W-{_a_l}L | " if _a_w + _a_l > 0 else ""
     if home_batting:
         research.append(
-            f"{home} offense: OPS {home_batting.get('ops', '?'):.3f} | "
+            f"{home} offense: {_h_rec}OPS {home_batting.get('ops', '?'):.3f} | "
             f"AVG {home_batting.get('avg', '?'):.3f} | "
             f"R/G {home_batting.get('runs_per_game', '?'):.2f}"
         )
+    elif _h_w + _h_l > 0:
+        research.append(f"{home}: {_h_rec.rstrip(' | ')}")
     if away_batting:
         research.append(
-            f"{away} offense: OPS {away_batting.get('ops', '?'):.3f} | "
+            f"{away} offense: {_a_rec}OPS {away_batting.get('ops', '?'):.3f} | "
             f"AVG {away_batting.get('avg', '?'):.3f} | "
             f"R/G {away_batting.get('runs_per_game', '?'):.2f}"
         )
+    elif _a_w + _a_l > 0:
+        research.append(f"{away}: {_a_rec.rstrip(' | ')}")
 
     # --- Bullpen research ---
     home_bp_era  = home_bullpen.get("bullpen_era",  4.20)
