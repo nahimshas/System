@@ -1425,13 +1425,24 @@ def load_watchlist_performance() -> Dict[str, Dict]:
     """
     Returns {sport: {won, lost, total, win_rate_pct}} for NHL and IPL.
     Used by generator.py to populate the watchlist tracking tiles.
+
+    Deduplicates by (date, game) before counting so that a history file
+    containing multiple records for the same game (e.g. from a buggy
+    settlement followed by a manual correction) is counted correctly.
+    When duplicates exist the LOST record takes precedence over WON.
     """
     records = _load_watchlist_history()
     result: Dict[str, Dict] = {}
     for sport in ("NHL", "IPL", "WNBA", "MLS"):
         subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
-        won  = sum(1 for r in subset if r.get("result") == "WON")
-        lost = len(subset) - won
+        # Deduplicate: one entry per (date, game); LOST beats WON
+        deduped: Dict[tuple, str] = {}
+        for r in subset:
+            key = (r.get("date", ""), r.get("game", ""))
+            if key not in deduped or r.get("result") == "LOST":
+                deduped[key] = r.get("result", "")
+        won  = sum(1 for v in deduped.values() if v == "WON")
+        lost = sum(1 for v in deduped.values() if v == "LOST")
         result[sport] = {
             "won":          won,
             "lost":         lost,

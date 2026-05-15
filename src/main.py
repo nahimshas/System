@@ -428,10 +428,20 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         save_watchlist_pending(_wl_pending)
 
-        # Include today's settled picks so the card shows "Match Ended + WON/LOST"
+        # Include today's settled picks so the card shows "Match Ended + WON/LOST".
+        # Deduplicate by game in case history has multiple records for the same
+        # game (e.g. from a buggy settlement run followed by a manual correction).
+        # If both WON and LOST exist for the same game, the LOST record wins
+        # (manual corrections always change WON→LOST, never the reverse).
+        _today_settled_raw = load_watchlist_today_settled("IPL", today)
+        _settled_by_game: dict = {}
+        for _sr in _today_settled_raw:
+            _sg = _sr.get("game", "")
+            if _sg not in _settled_by_game or _sr.get("result") == "LOST":
+                _settled_by_game[_sg] = _sr
         _today_settled = [
             {**r, "status": "settled"}
-            for r in load_watchlist_today_settled("IPL", today)
+            for r in _settled_by_game.values()
         ]
 
         # The report shows all picks: settled (with result) + in-play + upcoming
