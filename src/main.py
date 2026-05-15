@@ -886,8 +886,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "ipl_display":     fresh_ipl_display,
             "wnba_game_count": wnba_game_count,
             "wnba_display":    fresh_wnba_display,
+            # Write-once morning backup — same pattern as morning_singles_display.
+            # Subsequent runs read from this so locked picks survive even when
+            # the Odds API drops games after they start.
+            "morning_wnba_display": fresh_wnba_display,
             "mls_game_count":  mls_game_count,
             "mls_display":     fresh_mls_display,
+            "morning_mls_display": fresh_mls_display,
         })
     else:
         # ── Subsequent run — merge locked picks with new analysis ────────
@@ -965,8 +970,12 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         # Carry forward locked WNBA picks (odds API drops games once they start,
         # leaving fresh_wnba_display empty even though picks are in progress).
-        # Mirrors the _morning_locked logic used for budget singles.
-        _morning_wnba = state.get("wnba_display", [])
+        # Reads from the write-once morning backup (same pattern as budget singles)
+        # so a previous run that wiped wnba_display doesn't break carry-forward.
+        _morning_wnba = (
+            state.get("morning_wnba_display")
+            or state.get("wnba_display", [])
+        )
         if _morning_wnba:
             _fresh_wnba_keys = {
                 (r.get("home_team"), r.get("away_team")) for r in fresh_wnba_display
@@ -982,8 +991,11 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                             f"'{_wr.get('pick')}' ({_wr.get('game')})"
                         )
 
-        # Same for MLS
-        _morning_mls = state.get("mls_display", [])
+        # Same for MLS — reads from write-once morning backup
+        _morning_mls = (
+            state.get("morning_mls_display")
+            or state.get("mls_display", [])
+        )
         if _morning_mls:
             _fresh_mls_keys = {
                 (r.get("home_team"), r.get("away_team")) for r in fresh_mls_display
@@ -1009,8 +1021,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         ]
         final_props_display = fresh_props_display + _preserved_props
 
-        # Persist updated state — morning_singles_display is intentionally NOT
-        # updated here; it stays locked to the first run's value all day.
+        # Persist updated state — morning_*_display keys are intentionally NOT
+        # updated here; they stay locked to the first run's values all day.
         save_state(today, {
             "date":          today.isoformat(),
             "first_run_at":  state.get("first_run_at"),
@@ -1030,8 +1042,10 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "ipl_display":     fresh_ipl_display,
             "wnba_game_count": wnba_game_count,
             "wnba_display":    fresh_wnba_display,
+            "morning_wnba_display": state.get("morning_wnba_display"),
             "mls_game_count":  mls_game_count,
             "mls_display":     fresh_mls_display,
+            "morning_mls_display": state.get("morning_mls_display"),
         })
 
         if change_warnings:
