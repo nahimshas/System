@@ -1778,14 +1778,14 @@
       var periRemW  = Math.max(0, 4 - period);
       var clockMinW = Math.max(0, clock / 60);
       remUnits = periRemW * 10 + clockMinW;
-      _v = 2.5;  _T = 40;
+      _v = 3.5;  _T = 40;  // calibrated: trailing by 6 at half → ~24% (book ~22-25%)
 
     } else if (sport === "NFL") {
       // NFL: 4 × 15-min quarters. Clock counts down.
       var periRemNFL  = Math.max(0, 4 - period);
       var clockMinNFL = Math.max(0, clock / 60);
       remUnits = periRemNFL * 15 + clockMinNFL;
-      _v = 3.5;  _T = 60;
+      _v = 8.0;  _T = 60;  // calibrated: trailing by 10 at half → ~26% (book ~25-28%)
 
     } else if (sport === "NHL") {
       // NHL: 3 × 20-min periods + OT (5 min reg / 20 min playoffs). Clock counts down.
@@ -1802,7 +1802,7 @@
       // Remaining = (full halves not yet started) × 45 + (time left in current half)
       // period=1: (2-1)*45 + (45-elapsed) = 90-elapsed; period=2: 0*45 + (45-elapsed)
       remUnits = Math.max(0, (3 - period) * 45 - elapsedMLS);
-      _v = 0.028;  _T = 90;
+      _v = 0.055;  _T = 90;  // calibrated: trailing by 1 at half → ~26% (book ~26-30%)
 
     } else {
       // MLB (and any unknown sport): half-innings remaining.
@@ -1836,12 +1836,12 @@
 
     // ── Total (Over / Under) ─────────────────────────────────────────────────
     // Total variance uses combined scoring rate (≈ 2× single-team variance).
-    // NBA: ~4.0 pts²/min combined (sportsbook-implied; effective vol higher than empirical)
-    // NHL: ~0.097 goals²/min combined (empirical total std ≈ 2.4 goals)
-    // MLB: ~0.9 runs²/half-inn (scaled with moneyline v to match book totals)
-    // WNBA: ~3.0 pts²/min combined
-    // MLS: ~0.055 goals²/min combined (≈ 0.097 goals/min total rate, low)
-    // NFL: ~5.0 pts²/min combined
+    // NBA:  ~4.0 pts²/min combined  (sportsbook-implied; v ratio ~0.80 of moneyline)
+    // WNBA: ~3.5 pts²/min combined  (scaled with moneyline v=3.5)
+    // NFL:  ~6.0 pts²/min combined  (scaled with moneyline v=8.0, ratio 0.75)
+    // NHL:  ~0.097 goals²/min combined (empirical total std ≈ 2.4 goals; well-calibrated)
+    // MLS:  ~0.042 goals²/min combined (scaled with moneyline v=0.055)
+    // MLB:  ~0.9 runs²/half-inn (scaled with moneyline v=1.2)
     if (betType === "Total") {
       var parsed = parsePick(pick, "Total");
       if (!parsed) return 0.5;
@@ -1850,10 +1850,10 @@
       var needed   = lineVal - curTotal;
 
       var _vT = (sport === "NBA")  ? 4.0
-              : (sport === "WNBA") ? 3.0
-              : (sport === "NFL")  ? 5.0
+              : (sport === "WNBA") ? 3.5
+              : (sport === "NFL")  ? 6.0
               : (sport === "NHL")  ? 0.097
-              : (sport === "MLS")  ? 0.055
+              : (sport === "MLS")  ? 0.042
               : 0.9;  // MLB — proportionally scaled with moneyline v
 
       var mu_tot  = lineVal + normalPPF(_mp) * Math.sqrt(_T * _vT);
