@@ -607,6 +607,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 state.get(f"morning_{_own_slug}_display")
                 or state.get(f"{_own_slug}_display", [])
             )
+            # Cap the morning backup to MAX_SINGLE_BETS so that state files
+            # written before the cap was introduced don't flood the carry-forward.
+            _morning_own = _morning_own[:MAX_SINGLE_BETS]
             if not _morning_own:
                 continue
             _fresh_own      = fresh_own_displays.setdefault(_own_slug, [])
@@ -653,7 +656,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             **{f"{_s}_game_count": game_counts.get(_s, state.get(f"{_s}_game_count", 0))
                for _s in REGISTRY},
             # Own-tile display picks — falls back to morning state for unanalyzed sports.
-            **{f"{_s}_display": fresh_own_displays.get(_s, state.get(f"{_s}_display", []))
+            # Always capped at MAX_SINGLE_BETS so stale oversized states are corrected.
+            **{f"{_s}_display": (fresh_own_displays.get(_s, state.get(f"{_s}_display", [])))[:MAX_SINGLE_BETS]
                for _s in REGISTRY if not REGISTRY[_s].caps.in_main_display_pool},
             # Morning backups — intentionally NOT updated; stay locked to first-run values.
             **{f"morning_{_s}_display": state.get(f"morning_{_s}_display")
