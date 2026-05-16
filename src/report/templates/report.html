@@ -2483,21 +2483,23 @@
     });
 
     // ── Watchlist W-L tiles (NHL + IPL — no budget, no PnL) ─────────────
-    // Runs independently of budget outcomes so tiles update even on days
-    // where there are zero budget bets in play.
-    (function updateWatchlistTiles() {
+    // Declared as a named function so it can be called again after the IPL
+    // polling loop resolves a pick (the initial call runs at page load when
+    // no results are live yet; subsequent calls update the tile in real-time).
+    function updateWatchlistTiles() {
       var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 } };
 
       document.querySelectorAll(
         ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
-        // Skip picks already counted in data-hist-won / data-hist-lost:
-        //   data-espn-done="1"  — set by JS after live polling resolves a pick
-        //   data-in-history="1" — set server-side for IPL picks already in history
-        // Only count picks whose data-live-result was set dynamically by JS
-        // (live ESPN polling that resolved during the user's current session).
-        if (wlCard.getAttribute("data-espn-done") === "1" ||
-            wlCard.getAttribute("data-in-history") === "1") return;
+        // Skip picks already counted server-side in data-hist-won / data-hist-lost:
+        //   data-in-history="1" — server-side flag: pick is in watchlist_history,
+        //                         its result is already baked into the tile's
+        //                         data-hist-won / data-hist-lost attributes.
+        // data-espn-done="1" must NOT be skipped — that flag means JS just finished
+        // polling and set data-live-result this session; it has NOT been counted
+        // server-side yet and IS the result we need to add to the tile.
+        if (wlCard.getAttribute("data-in-history") === "1") return;
         var result = wlCard.getAttribute("data-live-result");
         if (!result) return;
         var sport = wlCard.getAttribute("data-sport") || "";
@@ -2538,7 +2540,8 @@
           picksDiv.textContent = total + " pick" + (total !== 1 ? "s" : "") + " tracked";
         }
       });
-    })();
+    }
+    updateWatchlistTiles();  // initial call at page load
 
     // No live budget outcomes yet — leave budget performance tables as-is
     if (liveWon + liveLost + livePush === 0) return;
@@ -3657,6 +3660,8 @@
               : (iplNameMatch(pickName, winnerTeam.name) ? "WON" : "LOST");
             card.setAttribute("data-live-result", result);
             card.setAttribute("data-espn-done", "1");
+            // Re-run tile updater so the W-L count reflects this just-settled pick.
+            if (typeof updateWatchlistTiles === "function") updateWatchlistTiles();
             showLockBadge(card);
             if (timeDiv) {
               timeDiv.removeAttribute("data-ipl-commence");
