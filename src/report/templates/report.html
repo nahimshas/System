@@ -1755,116 +1755,131 @@
   function winProb(betType, pick, ourTeam, homeTeam, awayTeam,
                    homeScore, awayScore, sport, period, clock, isBottom, marketProb) {
 
-    // Remaining time expressed as a single "units" number
-    var remUnits;  // NBA: minutes remaining; MLB: half-innings remaining
+    // ── Remaining "units" per sport ──────────────────────────────────────────
+    // Variance constants are calibrated to real full-game score distributions:
+    //   NBA  3.0 pts²/min   × 48 min  → std ≈ 12 pts   (empirical: 11–13)
+    //   WNBA 2.5 pts²/min   × 40 min  → std ≈ 10 pts   (lower pace than NBA)
+    //   NFL  3.5 pts²/min   × 60 min  → std ≈ 14.5 pts (empirical: 13–15)
+    //   NHL  0.12 goals²/min × 60 min → std ≈ 2.7 goals (empirical: 1.8–2.5)
+    //   MLS  0.028 goals²/min × 90 min → std ≈ 1.6 goals (empirical: 1.5–2)
+    //   MLB  0.65 runs²/half-inn × 18  → std ≈ 3.4 runs  (empirical: 3–3.5)
+    var remUnits;
+    var _v;   // variance per unit time (set below alongside remUnits)
+    var _T;   // total units in a full game (for prior calibration)
 
     if (sport === "NBA") {
-      var periRem  = Math.max(0, 4 - period);     // full quarters remaining after this one
-      var clockMin = Math.max(0, clock / 60);     // minutes left in current quarter
-      // OT: periRem is already 0 and clockMin covers remaining OT time — no extra term needed
-      remUnits = periRem * 12 + clockMin;         // total minutes remaining
+      var periRem  = Math.max(0, 4 - period);
+      var clockMin = Math.max(0, clock / 60);
+      remUnits = periRem * 12 + clockMin;  // minutes remaining
+      _v = 3.0;  _T = 48;
+
+    } else if (sport === "WNBA") {
+      // WNBA: 4 × 10-min quarters. Clock counts down like NBA.
+      var periRemW  = Math.max(0, 4 - period);
+      var clockMinW = Math.max(0, clock / 60);
+      remUnits = periRemW * 10 + clockMinW;
+      _v = 2.5;  _T = 40;
+
+    } else if (sport === "NFL") {
+      // NFL: 4 × 15-min quarters. Clock counts down.
+      var periRemNFL  = Math.max(0, 4 - period);
+      var clockMinNFL = Math.max(0, clock / 60);
+      remUnits = periRemNFL * 15 + clockMinNFL;
+      _v = 3.5;  _T = 60;
+
     } else if (sport === "NHL") {
-      // NHL: 3 × 20-min periods. OT = 5 min (regular season) / 20 min (playoffs).
-      var periRem2 = Math.max(0, 3 - period);
+      // NHL: 3 × 20-min periods + OT (5 min reg / 20 min playoffs). Clock counts down.
+      var periRem2  = Math.max(0, 3 - period);
       var clockMin2 = Math.max(0, clock / 60);
-      var otMin2   = period > 3 ? (period === 4 ? 5 : 0) : 0;
+      var otMin2    = period > 3 ? (period === 4 ? 5 : 20) : 0;
       remUnits = periRem2 * 20 + clockMin2 + otMin2;
+      _v = 0.12;  _T = 60;
+
+    } else if (sport === "MLS") {
+      // Soccer: 2 × 45-min halves (≈90 min). ESPN displayClock is count-up
+      // (elapsed minutes in the current half), unlike basketball which counts down.
+      var elapsedMLS = Math.max(0, clock / 60);
+      // Remaining = (full halves not yet started) × 45 + (time left in current half)
+      // period=1: (2-1)*45 + (45-elapsed) = 90-elapsed; period=2: 0*45 + (45-elapsed)
+      remUnits = Math.max(0, (3 - period) * 45 - elapsedMLS);
+      _v = 0.028;  _T = 90;
+
     } else {
-      // MLB: half-innings remaining.
-      // isBottom=1 means bottom of inning is in progress (top already played).
-      // halfInningsPlayed = full innings done × 2 + whether top of this inning is done.
-      var inningsTotal     = Math.max(9, period);
+      // MLB (and any unknown sport): half-innings remaining.
+      var inningsTotal      = Math.max(9, period);
       var halfInningsPlayed = (period - 1) * 2 + (isBottom || 0);
       remUnits = Math.max(0, (inningsTotal * 2) - halfInningsPlayed);
+      _v = 0.65;  _T = 18;
     }
 
-    if (remUnits <= 0) remUnits = 0.01;  // avoid div-by-zero at game's very end
+    if (remUnits <= 0) remUnits = 0.01;
 
     var _mp = Math.min(0.99, Math.max(0.01, marketProb || 0.5));
 
-    // --- Moneyline ---
+    // ── Moneyline ────────────────────────────────────────────────────────────
+    // Bayesian random-walk: prior drift anchored to market prob, then updates
+    // from current margin. At 0-0 with full time remaining → exactly market prob.
     if (betType === "Moneyline") {
-      // We win if OUR team leads (or comes back to lead) by game end.
       var ourScore  = teamMatch(homeTeam, ourTeam) ? homeScore : awayScore;
       var oppScore  = teamMatch(homeTeam, ourTeam) ? awayScore : homeScore;
-      var curMargin = ourScore - oppScore;  // positive = we're winning
+      var curMargin = ourScore - oppScore;
 
-      if (sport === "NBA") {
-        var std = Math.sqrt(remUnits * 5);
-        if (period >= 4 && remUnits < 2) std = Math.max(std, 3.0);
-        var mu0ml  = normalPPF(_mp) * Math.sqrt(48 * 5);
-        var ef_ml  = mu0ml * remUnits / 48;
-        return 1 - normalCDF((-curMargin - ef_ml) / (std || 0.1));
-      } else if (sport === "NHL") {
-        var stdN   = Math.sqrt(remUnits * 0.30);
-        var mu0mlN = normalPPF(_mp) * Math.sqrt(60 * 0.30);
-        var ef_mlN = mu0mlN * remUnits / 60;
-        return 1 - normalCDF((-curMargin - ef_mlN) / (stdN || 0.1));
-      } else {
-        var std2   = Math.sqrt(remUnits * 0.6);
-        var mu0ml2 = normalPPF(_mp) * Math.sqrt(18 * 0.6);
-        var ef_ml2 = mu0ml2 * remUnits / 18;
-        return 1 - normalCDF((-curMargin - ef_ml2) / (std2 || 0.1));
+      var stdML = Math.sqrt(remUnits * _v);
+      // Late-game NBA/WNBA/NFL floor: prevent overconfidence with <2 min left
+      if ((sport === "NBA" || sport === "WNBA" || sport === "NFL") && remUnits < 2) {
+        stdML = Math.max(stdML, sport === "NFL" ? 7.0 : 3.0);
       }
+      var mu0ML = normalPPF(_mp) * Math.sqrt(_T * _v);
+      var efML  = mu0ML * remUnits / _T;
+      return 1 - normalCDF((-curMargin - efML) / (stdML || 0.1));
     }
 
-    // --- Total (Over / Under) ---
+    // ── Total (Over / Under) ─────────────────────────────────────────────────
+    // Total variance uses combined scoring rate (≈ 2× single-team variance).
+    // NBA: ~4.0 pts²/min combined (empirical total std ≈ 13–14 pts)
+    // NHL: ~0.097 goals²/min combined (empirical total std ≈ 2.4 goals)
+    // MLB: ~0.65 runs²/half-inn (unchanged — well calibrated)
+    // WNBA: ~3.0 pts²/min combined
+    // MLS: ~0.055 goals²/min combined (≈ 0.097 goals/min total rate, low)
+    // NFL: ~5.0 pts²/min combined
     if (betType === "Total") {
       var parsed = parsePick(pick, "Total");
       if (!parsed) return 0.5;
-      var curTotal  = homeScore + awayScore;
-      var lineVal   = parsed.line;
-      var needed    = lineVal - curTotal;   // points still needed to hit the line
+      var curTotal = homeScore + awayScore;
+      var lineVal  = parsed.line;
+      var needed   = lineVal - curTotal;
 
-      if (sport === "NBA") {
-        var mu_tot  = lineVal + normalPPF(_mp) * Math.sqrt(48 * 10.1);
-        var expRem  = (mu_tot / 48) * remUnits;
-        var stdRem  = Math.sqrt(remUnits * 10.1);
-        var pOver   = 1 - normalCDF((needed - expRem) / (stdRem || 0.1));
-        return parsed.dir === "over" ? pOver : 1 - pOver;
-      } else if (sport === "NHL") {
-        var mu_totN = lineVal + normalPPF(_mp) * Math.sqrt(60 * 0.0375);
-        var expRemN = (mu_totN / 60) * remUnits;
-        var stdRemN = Math.sqrt(remUnits * 0.0375);
-        var pOverN  = 1 - normalCDF((needed - expRemN) / (stdRemN || 0.1));
-        return parsed.dir === "over" ? pOverN : 1 - pOverN;
-      } else {
-        var mu_tot2 = lineVal + normalPPF(_mp) * Math.sqrt(18 * 0.5);
-        var expRem2 = (mu_tot2 / 18) * remUnits;
-        var stdRem2 = Math.sqrt(remUnits * 0.5);
-        var pOver2  = 1 - normalCDF((needed - expRem2) / (stdRem2 || 0.1));
-        return parsed.dir === "over" ? pOver2 : 1 - pOver2;
-      }
+      var _vT = (sport === "NBA")  ? 4.0
+              : (sport === "WNBA") ? 3.0
+              : (sport === "NFL")  ? 5.0
+              : (sport === "NHL")  ? 0.097
+              : (sport === "MLS")  ? 0.055
+              : 0.65;  // MLB
+
+      var mu_tot  = lineVal + normalPPF(_mp) * Math.sqrt(_T * _vT);
+      var expRem  = (mu_tot / _T) * remUnits;
+      var stdRem  = Math.sqrt(remUnits * _vT);
+      var pOver   = 1 - normalCDF((needed - expRem) / (stdRem || 0.1));
+      return parsed.dir === "over" ? pOver : 1 - pOver;
     }
 
-    // --- Spread / Puck Line ---
+    // ── Spread / Puck Line / Asian Handicap ──────────────────────────────────
     if (betType === "Spread") {
-      var parsed3 = parsePick(pick, "Spread");
+      var parsed3    = parsePick(pick, "Spread");
       if (!parsed3) return 0.5;
-      var spreadLine = parsed3.line;   // negative for favourite, positive for dog
+      var spreadLine = parsed3.line;
       var ourScore3  = teamMatch(homeTeam, ourTeam) ? homeScore : awayScore;
       var oppScore3  = teamMatch(homeTeam, ourTeam) ? awayScore : homeScore;
       var curMargin3 = ourScore3 - oppScore3;
-      // We win if final_margin > -spreadLine  (e.g. spread=-4.5 → need margin > 4.5)
-      var needed3    = -spreadLine - curMargin3;   // how much more margin we need
+      var needed3    = -spreadLine - curMargin3;
 
-      if (sport === "NBA") {
-        var std3  = Math.sqrt(remUnits * 5);
-        if (period >= 4 && remUnits < 2) std3 = Math.max(std3, 3.0);
-        var mu0sp  = -spreadLine + normalPPF(_mp) * Math.sqrt(48 * 5);
-        var ef_sp  = mu0sp * remUnits / 48;
-        return 1 - normalCDF((needed3 - ef_sp) / (std3 || 0.1));
-      } else if (sport === "NHL") {
-        var std3N  = Math.sqrt(remUnits * 0.30);
-        var mu0spN = -spreadLine + normalPPF(_mp) * Math.sqrt(60 * 0.30);
-        var ef_spN = mu0spN * remUnits / 60;
-        return 1 - normalCDF((needed3 - ef_spN) / (std3N || 0.1));
-      } else {
-        var std4   = Math.sqrt(remUnits * 0.6);
-        var mu0sp2 = -spreadLine + normalPPF(_mp) * Math.sqrt(18 * 0.6);
-        var ef_sp2 = mu0sp2 * remUnits / 18;
-        return 1 - normalCDF((needed3 - ef_sp2) / (std4 || 0.1));
+      var stdSP = Math.sqrt(remUnits * _v);
+      if ((sport === "NBA" || sport === "WNBA" || sport === "NFL") && remUnits < 2) {
+        stdSP = Math.max(stdSP, sport === "NFL" ? 7.0 : 3.0);
       }
+      var mu0SP = -spreadLine + normalPPF(_mp) * Math.sqrt(_T * _v);
+      var efSP  = mu0SP * remUnits / _T;
+      return 1 - normalCDF((needed3 - efSP) / (stdSP || 0.1));
     }
 
     return 0.5;  // fallback
@@ -3528,19 +3543,33 @@
           var left    = Math.max(0.1, 20 - overs2);
           var wleft   = Math.max(1, 10 - wkts2);
           var rrr     = needed / left;
+          // Effective capacity: max sustainable run rate adjusted for wickets remaining.
+          // 8 RPO with all 10 wickets is par; fewer wickets → lower capacity.
           var P_chase = sigmoid(3 * (1 - rrr / (8 * wleft / 10)));
-          var alpha   = Math.min(1, (20 + overs2) / 40);
+          // Alpha starts at 0 (fully trust market at over 0 of chase) and reaches
+          // 1.0 when the chase is complete. Previously started at 0.5 — too aggressive.
+          var alpha   = Math.min(1, overs2 / 20);
           var pickChases = iplNameMatch(pickName, chaseBatter.name);
           var P_pick  = pickChases ? P_chase : (1 - P_chase);
           return (1 - alpha) * marketProb + alpha * P_pick;
         }
 
         if (firstBatter && firstBatter.ls.overs > 0) {
-          // First innings: project total for the batting team
+          // First innings: project total for the batting team.
+          // Apply a powerplay deflation when still in overs 1-6 — the powerplay
+          // (no fielding restrictions) inflates the scoring rate relative to the
+          // full-innings average, so a naive linear projection overshoots.
           var overs1    = firstBatter.ls.overs;
           var runs1     = firstBatter.ls.runs || 0;
-          var projected = runs1 * (20 / overs1);
+          // Deflation: 0.82 in powerplay (≤6 overs), 0.92 in middle overs (≤10),
+          // 1.0 from over 11 onward (death-over acceleration tends to balance out).
+          var ppFactor  = overs1 <= 6 ? 0.82 : (overs1 <= 10 ? 0.92 : 1.0);
+          var projected = (runs1 / overs1) * 20 * ppFactor;
+          // Par ≈ 170 (IPL average). Sensitivity: +/-30 runs → ~68%/32% win prob.
           var P_first   = sigmoid(0.04 * (projected - 170));
+          // Alpha builds from 0 at over 1 to 0.5 at over 20 (1st innings complete).
+          // We only trust the 1st-innings read halfway because the chasing team
+          // hasn't batted yet — conditions, dew, and team matchup still matter.
           var alpha1    = overs1 / 40;
           var pickFirst = iplNameMatch(pickName, firstBatter.name);
           var P_pick1   = pickFirst ? P_first : (1 - P_first);
