@@ -338,7 +338,21 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # bets that dropped out of the top-5 since the morning run.
     fresh_singles_all = [bet_to_dict(r) for r in _deduped_raw]
     fresh_parlays = [parlay_to_dict(p) for p in parlays_raw]
-    fresh_props   = [prop_to_dict(p)   for p in props_raw]
+    # Cap props at MAX_PROPS_PER_SPORT per sport before saving to state.
+    # Without this cap, when min_edge is explicitly passed to fetch_props() the
+    # analyzer's internal [:6] guard is bypassed and all qualifying props are
+    # returned — which can be 100+ for MLB — bloating the state and causing
+    # mass re-settlement on subsequent runs.
+    _props_sorted = sorted(props_raw,
+                           key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge))
+    _props_sport_counts: dict = {}
+    _props_capped: list = []
+    for _pr in _props_sorted:
+        _ps = getattr(_pr, "sport", "")
+        if _props_sport_counts.get(_ps, 0) < MAX_PROPS_PER_SPORT:
+            _props_capped.append(_pr)
+            _props_sport_counts[_ps] = _props_sport_counts.get(_ps, 0) + 1
+    fresh_props   = [prop_to_dict(p) for p in _props_capped]
 
     # Display picks — all positive-EV bets (no MIN_EDGE gate), deduplicated per sport.
     # Used for per-league section cards; budget allocation still uses fresh_singles.
@@ -368,10 +382,12 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
     # Own-tile display picks — serialised per sport (IPL / WNBA / MLS / future sports).
     # IPL pending section will overwrite fresh_own_displays["ipl"] below.
+    # Cap non-IPL own-tile sports at MAX_SINGLE_BETS (top 5) — without this cap
+    # WNBA/MLS can produce 40+ picks that clutter their tile sections.
     fresh_own_displays: dict[str, list] = {
         slug: [bet_to_dict(r) for r in sorted(
             raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
-        )]
+        )][:MAX_SINGLE_BETS if slug != "ipl" else len(raw)]
         for slug, raw in own_display.items()
     }
     # Named aliases — kept for backward-compat with the IPL pending section,
