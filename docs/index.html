@@ -150,7 +150,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Friday, May 15, 2026 &middot; Generated May 15, 2026 at 06:37 PM PDT</div>
+    <div class="subtitle">Friday, May 15, 2026 &middot; Generated May 15, 2026 at 07:09 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 2 games &nbsp;|&nbsp;
       MLB: 15 games &nbsp;|&nbsp;
@@ -3713,7 +3713,7 @@
       var periRem  = Math.max(0, 4 - period);
       var clockMin = Math.max(0, clock / 60);
       remUnits = periRem * 12 + clockMin;  // minutes remaining
-      _v = 3.0;  _T = 48;
+      _v = 5.0;  _T = 48;  // calibrated to sportsbook implied volatility
 
     } else if (sport === "WNBA") {
       // WNBA: 4 × 10-min quarters. Clock counts down like NBA.
@@ -3751,7 +3751,7 @@
       var inningsTotal      = Math.max(9, period);
       var halfInningsPlayed = (period - 1) * 2 + (isBottom || 0);
       remUnits = Math.max(0, (inningsTotal * 2) - halfInningsPlayed);
-      _v = 0.65;  _T = 18;
+      _v = 1.2;  _T = 18;  // calibrated: fat-tail Poisson run distribution
     }
 
     if (remUnits <= 0) remUnits = 0.01;
@@ -3778,9 +3778,9 @@
 
     // ── Total (Over / Under) ─────────────────────────────────────────────────
     // Total variance uses combined scoring rate (≈ 2× single-team variance).
-    // NBA: ~4.0 pts²/min combined (empirical total std ≈ 13–14 pts)
+    // NBA: ~4.0 pts²/min combined (sportsbook-implied; effective vol higher than empirical)
     // NHL: ~0.097 goals²/min combined (empirical total std ≈ 2.4 goals)
-    // MLB: ~0.65 runs²/half-inn (unchanged — well calibrated)
+    // MLB: ~0.9 runs²/half-inn (scaled with moneyline v to match book totals)
     // WNBA: ~3.0 pts²/min combined
     // MLS: ~0.055 goals²/min combined (≈ 0.097 goals/min total rate, low)
     // NFL: ~5.0 pts²/min combined
@@ -3796,7 +3796,7 @@
               : (sport === "NFL")  ? 5.0
               : (sport === "NHL")  ? 0.097
               : (sport === "MLS")  ? 0.055
-              : 0.65;  // MLB
+              : 0.9;  // MLB — proportionally scaled with moneyline v
 
       var mu_tot  = lineVal + normalPPF(_mp) * Math.sqrt(_T * _vT);
       var expRem  = (mu_tot / _T) * remUnits;
