@@ -121,8 +121,16 @@ def _fetch_team_stats(display_name: str, tid: str, today: date, ctx: Dict) -> No
         reb     = stats_map.get("avgRebounds", 0.0)
         blk     = stats_map.get("avgBlocks", 0.0)
         stl     = stats_map.get("avgSteals", 0.0)
-        wins    = int(stats_map.get("wins",   0))
-        losses  = int(stats_map.get("losses", 0))
+        # wins/losses are NOT in the stats categories — parse from recordSummary
+        # e.g. team.recordSummary = "2-0" → wins=2, losses=0
+        record_str = data.get("team", {}).get("recordSummary", "")
+        try:
+            _w, _l = record_str.split("-")
+            wins   = int(_w)
+            losses = int(_l)
+        except Exception:
+            wins   = int(stats_map.get("wins",   0))
+            losses = int(stats_map.get("losses", 0))
         # Simple composite net_rtg proxy: PPG + defensive contributions - avg
         net_rtg_proxy = ppg + (blk + stl) * 1.5 - 82.0  # centered around ~82 PPG league avg
 

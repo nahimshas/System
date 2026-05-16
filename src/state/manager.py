@@ -491,6 +491,11 @@ def merge_picks(
                     **pick,
                     "signals":         fresh_signals,
                     "research":        fresh["research"],
+                    # Regenerate display context from fresh research so that any
+                    # model/code improvements (e.g. new W-L fields) show up on
+                    # subsequent runs without requiring a state reset.
+                    "narrative":       fresh.get("narrative", pick.get("narrative", "")),
+                    "context":         fresh.get("context",   pick.get("context",   [])),
                     "model_prob_pct":  fresh["model_prob_pct"],
                     "market_prob_pct": fresh["market_prob_pct"],
                     "edge":            fresh["edge"],
@@ -653,16 +658,19 @@ def merge_picks(
                 fresh_d = fresh if isinstance(fresh, dict) else prop_to_dict(fresh)
                 prop = {
                     **prop,
-                    "signals":      fresh_d.get("signals", prop.get("signals", [])),
-                    "research":     fresh_d.get("research", prop.get("research", [])),
-                    "model_line":   fresh_d.get("model_line", prop.get("model_line")),
-                    "model_prob":   fresh_d.get("model_prob", prop.get("model_prob", 0.0)),
-                    "market_prob":  fresh_d.get("market_prob", prop.get("market_prob", 0.0)),
-                    "market_line":  fresh_d.get("market_line", prop.get("market_line")),
-                    "edge":         fresh_d.get("edge", prop.get("edge", 0.0)),
-                    "edge_pct":     fresh_d.get("edge_pct", prop.get("edge_pct", 0.0)),
+                    "signals":      fresh_d.get("signals",   prop.get("signals",   [])),
+                    "research":     fresh_d.get("research",  prop.get("research",  [])),
+                    # Regenerate display context alongside research (same pattern as singles)
+                    "narrative":    fresh_d.get("narrative", prop.get("narrative", "")),
+                    "context":      fresh_d.get("context",   prop.get("context",   [])),
+                    "model_line":   fresh_d.get("model_line",   prop.get("model_line")),
+                    "model_prob":   fresh_d.get("model_prob",   prop.get("model_prob",   0.0)),
+                    "market_prob":  fresh_d.get("market_prob",  prop.get("market_prob",  0.0)),
+                    "market_line":  fresh_d.get("market_line",  prop.get("market_line")),
+                    "edge":         fresh_d.get("edge",         prop.get("edge",         0.0)),
+                    "edge_pct":     fresh_d.get("edge_pct",     prop.get("edge_pct",     0.0)),
                     "odds_display": fresh_d.get("odds_display", prop.get("odds_display", "")),
-                    "confidence":   fresh_d.get("confidence", prop.get("confidence")),
+                    "confidence":   fresh_d.get("confidence",   prop.get("confidence")),
                 }
             final_props.append(prop)
 
