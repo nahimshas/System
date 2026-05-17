@@ -1572,6 +1572,227 @@
   </div>
   {% endif %}
 
+  {# ────────────────────────────────────────────────────────────────────── #}
+  {# Model Calibration Status (informational, auto-promoted by the engine) #}
+  {# ────────────────────────────────────────────────────────────────────── #}
+  {% if report.calibration %}
+  {% set cal = report.calibration %}
+  <div class="section" id="sec-calibration">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Model Calibration Status</span>
+      {% if cal.computed_at %}
+      <span style="font-size:0.7rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">
+        auto-updated &middot; {{ cal.computed_at[:19].replace('T', ' ') }} UTC
+      </span>
+      {% endif %}
+    </div>
+    <div class="card">
+      <details>
+        <summary style="cursor:pointer;list-style:none;font-size:0.85rem;color:var(--teal);padding:4px 0;">
+          ▶ How calibration works
+        </summary>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;margin:8px 0 14px;padding-left:6px;border-left:2px solid var(--border);">
+          The calibration engine reads outcomes from every settled pick the model has produced (both displayed and shadow-only)
+          and computes a per-sport, per-market <em>realised vs predicted</em> ratio.
+          As sample size grows, each sport × market auto-promotes through phases without any manual intervention:
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li><strong>Phase 0</strong> — &lt; {{ cal.thresholds.phase_a_min or 100 }} settled picks: no adjustment, raw edges shown.</li>
+            <li><strong>Phase A</strong> — single ratio applied to every pick's edge (effective_edge = raw_edge &times; ratio).</li>
+            <li><strong>Phase B</strong> — per-bucket ratios (50–60% / 60–70% / 70–80% / 80%+) — &ge; {{ cal.thresholds.phase_b_min or 400 }} settled picks with &ge; {{ cal.thresholds.bucket_min_n or 30 }} per bucket.</li>
+            <li><strong>Phase C</strong> — isotonic regression smooth curve (reserved, future build-out).</li>
+          </ul>
+          The same effective edge is used to rank picks for the top-5 slots, so a noisier model whose 30% edges historically realise as 10% will have those edges shrunk automatically — no longer crowding out tighter-edge picks from sports with better-calibrated models.
+        </div>
+      </details>
+
+      {% if not cal.has_data %}
+      <div style="font-size:0.85rem;color:var(--muted);margin-top:8px;">
+        No calibration data yet. The shadow log is collecting picks — calibration will activate per sport × market as each crosses its sample-size threshold (&ge; {{ cal.thresholds.phase_a_min or 100 }} settled picks).
+      </div>
+      {% else %}
+
+      {# Phase summary chips #}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px;font-size:0.74rem;">
+        {% for phase, count in [('0', cal.phase_counts.get('0', 0)), ('A', cal.phase_counts.get('A', 0)), ('B', cal.phase_counts.get('B', 0)), ('C', cal.phase_counts.get('C', 0))] %}
+        {% if count > 0 %}
+        <span style="padding:3px 9px;border-radius:99px;
+                     background:{% if phase == '0' %}#3b3a52{% elif phase == 'A' %}#0e7490{% elif phase == 'B' %}#0f766e{% else %}#14532d{% endif %};
+                     color:#fff;font-weight:600;">
+          Phase {{ phase }}: {{ count }} market{{ 's' if count != 1 else '' }}
+        </span>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+      {# Per-market table #}
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
+              <th style="text-align:left;padding:8px 6px;">Sport &middot; Market</th>
+              <th style="text-align:right;padding:8px 6px;">Settled / Total</th>
+              <th style="text-align:left;padding:8px 6px;">Phase</th>
+              <th style="text-align:right;padding:8px 6px;">Ratio</th>
+              <th style="text-align:right;padding:8px 6px;">Predicted</th>
+              <th style="text-align:right;padding:8px 6px;">Realised</th>
+              <th style="text-align:left;padding:8px 6px;">Next milestone</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in cal.markets %}
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:7px 6px;">
+                <strong>{{ m.sport }}</strong> &middot; <span style="color:var(--muted);">{{ m.market_type }}</span>
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">
+                {{ m.n_settled }} / {{ m.n_total }}
+              </td>
+              <td style="padding:7px 6px;">
+                <span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;
+                             background:{% if m.phase == '0' %}#3b3a52{% elif m.phase == 'A' %}#0e7490{% elif m.phase == 'B' %}#0f766e{% else %}#14532d{% endif %};
+                             color:#fff;">
+                  {{ m.phase }}
+                </span>
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;
+                         color:{% if m.phase == '0' %}var(--muted){% elif m.ratio_drift_pct < -3 %}#ef4444{% elif m.ratio_drift_pct > 3 %}#22c55e{% else %}var(--text){% endif %};">
+                {{ m.ratio_display }}
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">
+                {% if m.predicted_rate_pct is not none %}{{ m.predicted_rate_pct }}%{% else %}—{% endif %}
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">
+                {% if m.realized_rate_pct is not none %}{{ m.realized_rate_pct }}%{% else %}—{% endif %}
+              </td>
+              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">
+                {{ m.next_milestone }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:12px;font-size:0.72rem;color:var(--muted);line-height:1.5;">
+        <strong>Reading the ratio:</strong> <code>realised / predicted</code> &middot;
+        <span style="color:#22c55e;">&gt; 1.0</span> = model underconfident (real edge bigger than shown),
+        <span style="color:#ef4444;">&lt; 1.0</span> = model overconfident (real edge smaller than shown).
+        At Phase A the same ratio applies to all picks in that market; at Phase B+ the ratio varies by model probability bucket.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ────────────────────────────────────────────────────────────────────── #}
+  {# Credibility Cap Auto-Adjustment (per sport, bounded self-tuning)      #}
+  {# ────────────────────────────────────────────────────────────────────── #}
+  {% if report.cap_state and report.cap_state.caps %}
+  {% set caps = report.cap_state %}
+  <div class="section" id="sec-cap-state">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Credibility Cap Auto-Adjustment</span>
+      {% if caps.computed_at %}
+      <span style="font-size:0.7rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">
+        auto-updated &middot; {{ caps.computed_at[:19].replace('T', ' ') }} UTC
+      </span>
+      {% endif %}
+    </div>
+    <div class="card">
+      <details>
+        <summary style="cursor:pointer;list-style:none;font-size:0.85rem;color:var(--teal);padding:4px 0;">
+          ▶ How auto-adjustment works
+        </summary>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;margin:8px 0 14px;padding-left:6px;border-left:2px solid var(--border);">
+          The system records every pick where the credibility cap fired (capping the model probability toward market).
+          When a cap fires, the shadow log captures both the <em>raw</em> (uncapped) and <em>capped</em> probabilities — so once enough firings have settled,
+          we can compare which prediction was closer to the actual outcome.
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li><strong>Value tuning:</strong> if raw was more accurate &rarr; <strong>widen +{{ (caps.bounds.tick * 100) | round(1) }}%</strong>; if capped was more accurate &rarr; <strong>tighten -{{ (caps.bounds.tick * 100) | round(1) }}%</strong>; otherwise <strong>keep</strong>.</li>
+            <li><strong>Mode upgrade:</strong> after &gt; 200 cap firings, the system also evaluates whether a smoother mathematical form (Mode 1 — tanh saturation) would have been more accurate than the current Mode 0 (hard clip). If tanh wins by &gt; 1.5% MAE, the cap auto-promotes to Mode 1.</li>
+          </ul>
+          Safety bounds: never tighter than &plusmn;{{ (caps.bounds.min * 100) | round(0) }}%, never wider than &plusmn;{{ (caps.bounds.max * 100) | round(0) }}%.
+          Value adjustments throttled to once per {{ caps.bounds.throttle_days }} days per cap; mode upgrades throttled to once per 60 days per cap. Minimum {{ caps.bounds.min_triggers }} cap firings required for value tuning, 200+ for mode upgrades.
+        </div>
+      </details>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
+              <th style="text-align:left;padding:8px 6px;">Sport &middot; Cap</th>
+              <th style="text-align:left;padding:8px 6px;">Mode</th>
+              <th style="text-align:right;padding:8px 6px;">Current</th>
+              <th style="text-align:right;padding:8px 6px;">Default</th>
+              <th style="text-align:right;padding:8px 6px;">Δ</th>
+              <th style="text-align:right;padding:8px 6px;">Firings</th>
+              <th style="text-align:right;padding:8px 6px;">Raw MAE</th>
+              <th style="text-align:right;padding:8px 6px;">Capped MAE</th>
+              <th style="text-align:left;padding:8px 6px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in caps.caps %}
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:7px 6px;">
+                <strong>{{ c.sport }}</strong> &middot; <span style="color:var(--muted);">{{ c.cap_type }}</span>
+              </td>
+              <td style="padding:7px 6px;">
+                <span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;
+                             background:{% if c.current_mode == 0 %}#3b3a52{% elif c.current_mode == 1 %}#0e7490{% else %}#14532d{% endif %};
+                             color:#fff;">
+                  {{ c.current_mode }} — {{ c.current_mode_label }}
+                </span>
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">
+                &plusmn;{{ (c.current * 100) | round(1) }}%
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">
+                &plusmn;{{ (c.default * 100) | round(1) }}%
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;
+                         color:{% if c.delta_from_default > 0.0005 %}#22c55e{% elif c.delta_from_default < -0.0005 %}#f59e0b{% else %}var(--muted){% endif %};">
+                {{ c.delta_display }}
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">
+                {{ c.counterfactual.trigger_count if c.counterfactual.trigger_count else '—' }}
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">
+                {% if c.counterfactual.raw_mae is defined and c.counterfactual.raw_mae is not none %}
+                  {{ c.counterfactual.raw_mae }}
+                {% else %}—{% endif %}
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">
+                {% if c.counterfactual.capped_mae is defined and c.counterfactual.capped_mae is not none %}
+                  {{ c.counterfactual.capped_mae }}
+                {% else %}—{% endif %}
+              </td>
+              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">
+                <div>{{ c.status_label }}</div>
+                <div style="margin-top:3px;">{{ c.mode_status_label }}</div>
+                {% if c.adjustment_count or c.mode_change_count %}
+                <div style="margin-top:3px;font-size:0.68rem;">
+                  {% if c.adjustment_count %}{{ c.adjustment_count }} value adjustment{{ 's' if c.adjustment_count != 1 else '' }}{% endif %}
+                  {% if c.adjustment_count and c.mode_change_count %} &middot; {% endif %}
+                  {% if c.mode_change_count %}{{ c.mode_change_count }} mode change{{ 's' if c.mode_change_count != 1 else '' }}{% endif %}
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if not caps.has_data %}
+      <div style="margin-top:10px;font-size:0.74rem;color:var(--muted);">
+        No counterfactual data yet — caps will start auto-adjusting once each accumulates {{ caps.bounds.min_triggers }}+ firings with settled outcomes.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="footer">
     Sports Betting Analysis System &middot; Robinhood Contracts
     <div class="disclaimer">

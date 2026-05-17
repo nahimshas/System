@@ -10,7 +10,7 @@ import logging
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from scipy.stats import norm
 
 from src.config import (
@@ -45,6 +45,16 @@ MLB_SPREAD_STD  = 1.8   # calibrated via backtest — do not change without re-r
 # At CAP=1.8: a raw diff of 2.5 runs → capped to 1.71 runs → ~83% max probability.
 MLB_RUN_DIFF_CAP = 1.8
 
+# Standard deviation for actual final-margin variance in an MLB game, used ONLY
+# for the run line (+/-1.5) cover probability conversion. This is a SEPARATE
+# concept from MLB_SPREAD_STD (1.8), which calibrates pitcher-quality →
+# moneyline win probability. The actual SD of historical MLB final-margins is
+# ~3.0–3.5 runs, so 1.5 runs represents ~0.4–0.5σ (not 0.83σ as the prior
+# formula assumed). Using 1.8 here amplified ML→RL jumps to +24–32%; using 3.5
+# brings them to +12–17%, matching the empirical sportsbook spread between ML
+# and RL lines.
+MLB_RUNLINE_SIGMA = 3.5
+
 # Injury credibility gate ─────────────────────────────────────────────────────
 # When a team's injury_adjustment ≥ INJURY_GATE, our season net-rating baseline
 # is stale (the injured player's contributions are baked in but unavailable
@@ -55,6 +65,154 @@ MLB_RUN_DIFF_CAP = 1.8
 # Any bet on an injury-capped team is automatically locked to MEDIUM confidence.
 _INJURY_GATE   = 0.030   # ≈ one key starter fully out
 _INJURY_MARGIN = 0.10    # model allowed at most market_prob × (1 + 10%) for injured team
+
+# General credibility caps ─────────────────────────────────────────────────────
+# Standardised across sports as a safety net during the cold-start period
+# before calibration data accumulates. Bounds how far model probability can
+# drift from market on any pick (not just injury-triggered ones).
+#
+# Once the calibration engine has enough settled picks, it will auto-relax
+# (or tighten) these caps based on counterfactual evidence comparing raw vs
+# capped realised hit rates — see calibration system docs.
+#
+# Tighter for MLS due to small-sample noise in early-season xG data.
+NBA_CRED_CAP  = 0.15
+MLB_CRED_CAP  = 0.15
+NFL_CRED_CAP  = 0.15
+NHL_CRED_CAP  = 0.15
+WNBA_CRED_CAP = 0.15
+IPL_CRED_CAP  = 0.15
+MLS_CRED_CAP  = 0.10
+
+
+def _cred_cap(sport: str, default: float) -> float:
+    """
+    Return the effective credibility cap for `sport`, dynamically adjusted by
+    the cap auto-relaxation system. Falls back to the hardcoded default if
+    cap_state isn't available — so the analyzer continues to work identically
+    on a fresh install or if state files are missing.
+    """
+    try:
+        from src.state.cap_state import get_current_cap
+        return get_current_cap(sport, "credibility")
+    except Exception:
+        return default
+
+
+def _stamp_recs_calibration(
+    recs: List["BetRecommendation"],
+    *,
+    home_team: str = "",
+    away_team: str = "",
+    home_raw: Optional[float] = None,
+    away_raw: Optional[float] = None,
+    cred_fired: bool = False,
+    hardcap_fired: bool = False,
+    home_injury_fired: bool = False,
+    away_injury_fired: bool = False,
+    stats_avail: bool = True,
+) -> None:
+    """
+    Stamp per-game calibration metadata onto every rec just before return.
+
+    Centralises the analyzer integration boilerplate so the shadow log can
+    later run cap counterfactual analysis (raw vs capped realised rates).
+
+    For ML/Spread picks, model_prob_raw is set to the home or away raw
+    probability based on pick text. For Total picks the raw value is left
+    as None (totals use a separate probability distribution that's not
+    currently capped — this can be extended later if needed).
+    """
+    for rec in recs:
+        pick = (rec.pick or "").strip()
+        bt   = rec.bet_type or ""
+
+        rec.credibility_cap_fired = cred_fired
+        rec.hardcap_fired         = hardcap_fired
+        rec.stats_available       = stats_avail
+
+        if bt in ("Moneyline", "Spread"):
+            if home_team and pick.startswith(home_team):
+                rec.model_prob_raw   = home_raw
+                rec.injury_cap_fired = home_injury_fired
+            elif away_team and pick.startswith(away_team):
+                rec.model_prob_raw   = away_raw
+                rec.injury_cap_fired = away_injury_fired
+            # else: pick text doesn't match a team — leave defaults
+
+
+def _apply_credibility_cap(
+    model_prob: float, market_prob: float, max_drift: float
+) -> Tuple[float, bool]:
+    """
+    Mode 0 — Hard clip. Bound model probability to within ±max_drift of market.
+
+    Sharp boundary at ±max_drift. The original / default cap form.
+
+    Returns (capped_prob, fired) — `fired` is True if the value was actually
+    clipped (used by the shadow log for cap counterfactual analysis).
+    """
+    hi = market_prob + max_drift
+    lo = market_prob - max_drift
+    if model_prob > hi:
+        return hi, True
+    if model_prob < lo:
+        return lo, True
+    return model_prob, False
+
+
+def _apply_tanh_saturation_cap(
+    model_prob: float, market_prob: float, max_drift: float
+) -> Tuple[float, bool]:
+    """
+    Mode 1 — tanh saturation. Smooth pull toward market with diminishing returns.
+
+    Unlike Mode 0's sharp clip, this never fully truncates the model's belief
+    — it just bends extreme predictions toward market asymptotically. At small
+    |raw - market| there's essentially no change; as |raw - market| grows the
+    pull approaches max_drift but never exceeds it.
+
+    Mathematically:
+      delta  = raw - market
+      smooth = max_drift × tanh(delta / max_drift)
+      pulled = market + smooth
+
+    The "fired" flag indicates whether the saturation meaningfully changed
+    the value (>0.5pp difference) for counterfactual tracking parity with
+    Mode 0.
+    """
+    delta  = model_prob - market_prob
+    if max_drift <= 0:
+        return model_prob, False
+    smooth = max_drift * math.tanh(delta / max_drift)
+    pulled = market_prob + smooth
+    # Clamp into [0, 1] for safety (tanh keeps it bounded but be paranoid)
+    pulled = max(0.0, min(1.0, pulled))
+    fired  = abs(pulled - model_prob) > 0.005
+    return pulled, fired
+
+
+def _apply_credibility_cap_dispatched(
+    model_prob: float, market_prob: float, max_drift: float, sport: str
+) -> Tuple[float, bool]:
+    """
+    Mode-aware credibility cap dispatcher.
+
+    Looks up the current cap MODE for `sport` from cap_state (0 = hard clip,
+    1 = tanh saturation, future: 2 = logistic blend) and applies the matching
+    function. Falls back to Mode 0 if cap_state isn't available, so behaviour
+    is identical to the original hard-clip implementation on fresh installs.
+    """
+    try:
+        from src.state.cap_state import get_current_cap_mode
+        mode = get_current_cap_mode(sport, "credibility")
+    except Exception:
+        mode = 0
+
+    if mode == 1:
+        return _apply_tanh_saturation_cap(model_prob, market_prob, max_drift)
+    # Mode 0 (default) and any unknown mode → hard clip
+    return _apply_credibility_cap(model_prob, market_prob, max_drift)
 
 # Totals model helpers
 _NBA_INJ_TO_PTS    = 75.0  # converts win-prob injury_adj → expected pts reduction in totals
@@ -112,6 +270,17 @@ class BetRecommendation:
     game_time: str = ""                                  # e.g. "7:10 PM PDT"
     commence_time: str = ""                              # raw UTC ISO — for game-started detection
     locked: bool = False                                 # True once game has started
+
+    # ── Calibration metadata (used by shadow log → calibration engine) ──
+    # These fields are optional and back-compat — defaults preserve old
+    # behaviour. Sport analyzers populate them when they apply caps so the
+    # calibration system can later run counterfactual analysis (raw vs
+    # capped realised rates).
+    model_prob_raw: Optional[float] = None       # pre-any-cap model probability
+    credibility_cap_fired: bool = False          # general ±cred-cap fired
+    injury_cap_fired:      bool = False          # injury cap fired
+    hardcap_fired:         bool = False          # [lo, hi] hard prob bound fired
+    stats_available:       bool = True           # sport stats were available for this game
 
 
 def _confidence_label(edge: float, signal_count: int, stats_available: bool) -> str:
@@ -301,7 +470,18 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                 _exp_away -= 4.0
             signals.append(f"Model projected score: {home} {_exp_home:.0f} — {away} {_exp_away:.0f}")
 
-        adjusted_home_prob = min(0.90, max(0.10, _nba_margin_to_prob(base_margin) + adj))
+        # Calibration capture: raw prob (pre-any-cap) + cap firing trackers.
+        # Stamped onto each rec at the end so the shadow log can later run
+        # cap counterfactual analysis.
+        _nba_raw_home = _nba_margin_to_prob(base_margin) + adj
+        _nba_hardcap_fired = (_nba_raw_home > 0.90) or (_nba_raw_home < 0.10)
+        adjusted_home_prob = min(0.90, max(0.10, _nba_raw_home))
+        adjusted_away_prob = 1 - adjusted_home_prob
+
+        # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
+        adjusted_home_prob, _nba_cred_fired = _apply_credibility_cap_dispatched(
+            adjusted_home_prob, market_home_prob, _cred_cap("nba", NBA_CRED_CAP), "nba"
+        )
         adjusted_away_prob = 1 - adjusted_home_prob
 
         # ── Injury credibility cap ────────────────────────────────────────────
@@ -558,6 +738,22 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                         commence_time=commence_time,
                     ))
 
+    # Stamp per-game calibration metadata onto every rec so the shadow log
+    # can later run cap counterfactual analysis. Vars may not all be defined
+    # if the ml block was skipped — locals().get() handles that safely.
+    _lv = locals()
+    _home_raw = _lv.get("_nba_raw_home")
+    _stamp_recs_calibration(
+        recs,
+        home_team=home, away_team=away,
+        home_raw=_home_raw,
+        away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
+        cred_fired=_lv.get("_nba_cred_fired", False),
+        hardcap_fired=_lv.get("_nba_hardcap_fired", False),
+        home_injury_fired=_lv.get("home_injury_capped", False),
+        away_injury_fired=_lv.get("away_injury_capped", False),
+        stats_avail=stats_available,
+    )
     return recs
 
 
@@ -1075,14 +1271,23 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         research.append(
             f"tanh cap active: raw run diff {run_diff:+.2f} → capped {run_diff_capped:+.2f}"
         )
-    model_home_prob = float(norm.cdf(run_diff_capped, 0, MLB_SPREAD_STD))
-    model_home_prob = min(0.85, max(0.15, model_home_prob))
+    # Calibration capture: raw prob (post-tanh, pre-hardcap) + cap trackers.
+    # Stamped onto each rec at the end (see _stamp_recs_calibration call).
+    _mlb_raw_home = float(norm.cdf(run_diff_capped, 0, MLB_SPREAD_STD))
+    _mlb_hardcap_fired = (_mlb_raw_home > 0.85) or (_mlb_raw_home < 0.15)
+    model_home_prob = min(0.85, max(0.15, _mlb_raw_home))
     model_away_prob = 1 - model_home_prob
 
     ml = game.get("moneyline")
     if ml:
         market_home_prob = ml["home_prob"]
         market_away_prob = ml["away_prob"]
+
+        # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
+        model_home_prob, _mlb_cred_fired = _apply_credibility_cap_dispatched(
+            model_home_prob, market_home_prob, _cred_cap("mlb", MLB_CRED_CAP), "mlb"
+        )
+        model_away_prob = 1 - model_home_prob
 
         # ── Injury credibility cap (MLB) ──────────────────────────────────────
         # Same logic as NBA: when a team's injury adjustment ≥ _INJURY_GATE,
@@ -1163,10 +1368,14 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             market_away_cover = sp.get("away_prob", 0.50)
 
             # Derive effective run margin from the (already injury-capped) win probability.
+            # NOTE: ML→effective_margin uses MLB_SPREAD_STD (pitcher-quality calibration),
+            # but the run line cover probability uses MLB_RUNLINE_SIGMA (actual margin
+            # variance ~3.5 runs). Using the same 1.8σ for both was amplifying ML→RL
+            # jumps to ~+25–32% when sportsbook empirical jumps are ~+12–18%.
             effective_margin = float(norm.ppf(model_home_prob)) * MLB_SPREAD_STD
 
             # P(home covers run line) = P(actual margin > −home_spread_line)
-            model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, MLB_SPREAD_STD))
+            model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, MLB_RUNLINE_SIGMA))
             model_away_cover = 1.0 - model_home_cover
 
             away_spread_line = -home_spread_line
@@ -1258,6 +1467,20 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     commence_time=commence_time,
                 ))
 
+    # Stamp per-game calibration metadata onto every rec.
+    _lv = locals()
+    _home_raw = _lv.get("_mlb_raw_home")
+    _stamp_recs_calibration(
+        recs,
+        home_team=home, away_team=away,
+        home_raw=_home_raw,
+        away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
+        cred_fired=_lv.get("_mlb_cred_fired", False),
+        hardcap_fired=_lv.get("_mlb_hardcap_fired", False),
+        home_injury_fired=_lv.get("home_injury_capped", False),
+        away_injury_fired=_lv.get("away_injury_capped", False),
+        stats_avail=stats_available,
+    )
     return recs
 
 
@@ -1407,7 +1630,16 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
         if not home_inj_list and not away_inj_list:
             research.append("No significant injuries reported for either team")
 
-        adjusted_home_prob = min(0.90, max(0.10, _nfl_margin_to_prob(base_margin) + adj))
+        # Calibration capture: raw prob + cap firing trackers.
+        _nfl_raw_home = _nfl_margin_to_prob(base_margin) + adj
+        _nfl_hardcap_fired = (_nfl_raw_home > 0.90) or (_nfl_raw_home < 0.10)
+        adjusted_home_prob = min(0.90, max(0.10, _nfl_raw_home))
+        adjusted_away_prob = 1 - adjusted_home_prob
+
+        # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
+        adjusted_home_prob, _nfl_cred_fired = _apply_credibility_cap_dispatched(
+            adjusted_home_prob, market_home_prob, _cred_cap("nfl", NFL_CRED_CAP), "nfl"
+        )
         adjusted_away_prob = 1 - adjusted_home_prob
 
         # Injury credibility cap
@@ -1569,6 +1801,20 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                         commence_time=commence_time,
                     ))
 
+    # Stamp per-game calibration metadata onto every rec.
+    _lv = locals()
+    _home_raw = _lv.get("_nfl_raw_home")
+    _stamp_recs_calibration(
+        recs,
+        home_team=home, away_team=away,
+        home_raw=_home_raw,
+        away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
+        cred_fired=_lv.get("_nfl_cred_fired", False),
+        hardcap_fired=_lv.get("_nfl_hardcap_fired", False),
+        home_injury_fired=_lv.get("home_injury_capped", False),
+        away_injury_fired=_lv.get("away_injury_capped", False),
+        stats_avail=stats_available,
+    )
     return recs
 
 
@@ -1722,7 +1968,16 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
         if not home_inj_list and not away_inj_list:
             research.append("No significant injuries reported for either team")
 
-        adjusted_home_prob = min(0.90, max(0.10, _nhl_margin_to_prob(base_margin) + adj))
+        # Calibration capture: raw prob + cap firing trackers.
+        _nhl_raw_home = _nhl_margin_to_prob(base_margin) + adj
+        _nhl_hardcap_fired = (_nhl_raw_home > 0.90) or (_nhl_raw_home < 0.10)
+        adjusted_home_prob = min(0.90, max(0.10, _nhl_raw_home))
+        adjusted_away_prob = 1 - adjusted_home_prob
+
+        # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
+        adjusted_home_prob, _nhl_cred_fired = _apply_credibility_cap_dispatched(
+            adjusted_home_prob, market_home_prob, _cred_cap("nhl", NHL_CRED_CAP), "nhl"
+        )
         adjusted_away_prob = 1 - adjusted_home_prob
 
         # Injury credibility cap
@@ -1911,6 +2166,20 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                         commence_time=commence_time,
                     ))
 
+    # Stamp per-game calibration metadata onto every rec.
+    _lv = locals()
+    _home_raw = _lv.get("_nhl_raw_home")
+    _stamp_recs_calibration(
+        recs,
+        home_team=home, away_team=away,
+        home_raw=_home_raw,
+        away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
+        cred_fired=_lv.get("_nhl_cred_fired", False),
+        hardcap_fired=_lv.get("_nhl_hardcap_fired", False),
+        home_injury_fired=_lv.get("home_injury_capped", False),
+        away_injury_fired=_lv.get("away_injury_capped", False),
+        stats_avail=stats_available,
+    )
     return recs
 
 
@@ -2159,7 +2428,16 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
         signals.append(f"🚫 {away} missing: {names} (+{penalty*100:.0f}% for {home})")
         research.append(f"Unavailable ({away}): {names}")
 
-    adjusted_home_prob = min(0.90, max(0.10, base_home_prob + adj))
+    # Calibration capture: raw prob + cap firing trackers.
+    _ipl_raw_home = base_home_prob + adj
+    _ipl_hardcap_fired = (_ipl_raw_home > 0.90) or (_ipl_raw_home < 0.10)
+    adjusted_home_prob = min(0.90, max(0.10, _ipl_raw_home))
+    adjusted_away_prob = 1.0 - adjusted_home_prob
+
+    # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
+    adjusted_home_prob, _ipl_cred_fired = _apply_credibility_cap_dispatched(
+        adjusted_home_prob, market_home_prob, _cred_cap("ipl", IPL_CRED_CAP), "ipl"
+    )
     adjusted_away_prob = 1.0 - adjusted_home_prob
 
     home_edge = adjusted_home_prob - market_home_prob
@@ -2193,6 +2471,18 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
                 commence_time=commence_time,
             ))
 
+    # Stamp per-game calibration metadata onto every rec.
+    _lv = locals()
+    _home_raw = _lv.get("_ipl_raw_home")
+    _stamp_recs_calibration(
+        recs,
+        home_team=home, away_team=away,
+        home_raw=_home_raw,
+        away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
+        cred_fired=_lv.get("_ipl_cred_fired", False),
+        hardcap_fired=_lv.get("_ipl_hardcap_fired", False),
+        stats_avail=stats_available,
+    )
     return recs
 
 
@@ -2381,13 +2671,18 @@ def analyze_wnba_game(
         research.append("No significant injuries reported for either team")
 
     # ── Final probability ─────────────────────────────────────────────────────
-    adj_home_prob = min(0.90, max(0.10, base_prob + adj))
+    # Calibration capture: raw prob + cap firing trackers.
+    _wnba_raw_home = base_prob + adj
+    _wnba_hardcap_fired = (_wnba_raw_home > 0.90) or (_wnba_raw_home < 0.10)
+    adj_home_prob = min(0.90, max(0.10, _wnba_raw_home))
     adj_away_prob = 1.0 - adj_home_prob
 
-    # Credibility cap: don't stray too far from the market on injury-only signal
-    # (same pattern as NBA/NHL)
-    adj_home_prob = min(adj_home_prob, market_home_prob + 0.20)
-    adj_home_prob = max(adj_home_prob, market_home_prob - 0.20)
+    # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
+    # Standardised across sports; tighter than the prior ±0.20 to limit cold-start
+    # overconfidence on small-sample WNBA stats.
+    adj_home_prob, _wnba_cred_fired = _apply_credibility_cap_dispatched(
+        adj_home_prob, market_home_prob, _cred_cap("wnba", WNBA_CRED_CAP), "wnba"
+    )
     adj_away_prob = 1.0 - adj_home_prob
 
     # ── Build recommendations ─────────────────────────────────────────────────
@@ -2420,6 +2715,18 @@ def analyze_wnba_game(
             commence_time=commence_time,
         ))
 
+    # Stamp per-game calibration metadata onto every rec.
+    _lv = locals()
+    _home_raw = _lv.get("_wnba_raw_home")
+    _stamp_recs_calibration(
+        recs,
+        home_team=home_raw, away_team=away_raw,
+        home_raw=_home_raw,
+        away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
+        cred_fired=_lv.get("_wnba_cred_fired", False),
+        hardcap_fired=_lv.get("_wnba_hardcap_fired", False),
+        stats_avail=stats_available,
+    )
     return recs
 
 
@@ -2645,12 +2952,21 @@ def analyze_mls_game(
     )
     signals.append(f"xG projection: {lam_home:.2f} – {lam_away:.2f} goals")
 
-    # Credibility cap: don't stray > 20% from market on any single outcome
-    p_home_win = min(p_home_win, market_home_prob + 0.20)
-    p_home_win = max(p_home_win, market_home_prob - 0.20)
-    p_draw     = min(p_draw,     market_draw_prob + 0.20)
-    p_draw     = max(p_draw,     market_draw_prob - 0.20)
+    # Calibration capture: raw 3-way probabilities (pre-cred-cap).
+    # No hard cap is applied in MLS (probs come from Poisson matrix and sum to 1),
+    # so hardcap_fired = False.
+    _mls_raw_home = p_home_win
+    _mls_raw_away = p_away_win
+
+    # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
+    # Tighter than other sports (MLS_CRED_CAP = 0.10) due to small-sample noise
+    # in early-season xG data; will be auto-relaxed by the calibration engine as
+    # the season progresses and more game data accumulates.
+    _mls_eff_cap = _cred_cap("mls", MLS_CRED_CAP)
+    p_home_win, _mls_cred_home_fired = _apply_credibility_cap_dispatched(p_home_win, market_home_prob, _mls_eff_cap, "mls")
+    p_draw,     _mls_cred_draw_fired = _apply_credibility_cap_dispatched(p_draw,     market_draw_prob, _mls_eff_cap, "mls")
     p_away_win = 1.0 - p_home_win - p_draw
+    _mls_cred_fired = _mls_cred_home_fired or _mls_cred_draw_fired
 
     # Build BetRecommendations
     def _make_rec(pick_str, bet_type, model_prob, market_prob):
@@ -2718,4 +3034,15 @@ def analyze_mls_game(
             if r:
                 recs.append(r)
 
+    # Stamp per-game calibration metadata onto every rec.
+    _lv = locals()
+    _stamp_recs_calibration(
+        recs,
+        home_team=home_raw, away_team=away_raw,
+        home_raw=_lv.get("_mls_raw_home"),
+        away_raw=_lv.get("_mls_raw_away"),
+        cred_fired=_lv.get("_mls_cred_fired", False),
+        hardcap_fired=False,  # MLS uses Poisson — no hard prob cap currently
+        stats_avail=stats_available,
+    )
     return recs

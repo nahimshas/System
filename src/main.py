@@ -61,6 +61,29 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 
+def _slot_sort_key(rec):
+    """
+    Canonical sort key for slot-filling decisions across budget singles, props,
+    display singles, and own-tile sports.
+
+    Confidence-first: HIGH-confidence picks always rank above MEDIUM regardless
+    of edge magnitude. Within each confidence tier, higher *effective* edge
+    wins — where effective_edge = raw_edge × calibration_ratio.
+
+    During Phase 0 (no calibration data yet), calibration_ratio is 1.0 for
+    every sport × market, so this behaves identically to ranking by raw edge.
+    As shadow log data accumulates and sports auto-promote to Phase A/B, the
+    same chokepoint progressively factors in realised hit rates without any
+    other code changes.
+    """
+    try:
+        from src.state.calibration import effective_edge
+        eff = effective_edge(rec)
+    except Exception:
+        eff = float(getattr(rec, "edge", 0.0) or 0.0)
+    return (0 if rec.confidence == "HIGH" else 1, -eff)
+
+
 # ---------------------------------------------------------------------------
 # Narrative/context hydration helpers
 # Recompute display fields for pick dicts saved before the card context feature
@@ -207,6 +230,31 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     except Exception as e:
         logger.warning(f"Rolling pending settlement failed (non-fatal): {e}")
 
+    # Shadow log: propagate outcomes from the now-updated history files into
+    # matching shadow log entries (calibration data). Runs AFTER all existing
+    # settlers so it picks up the freshest outcomes. Non-fatal — never blocks
+    # the report if it fails.
+    try:
+        from src.state.shadow_log import settle_from_history
+        _settled_shadow = settle_from_history()
+        if _settled_shadow:
+            logger.info(f"Shadow log settlement: {_settled_shadow} entries closed from yesterday")
+    except Exception as _e_shadow_settle:
+        logger.warning(f"Shadow log settlement failed (non-fatal): {_e_shadow_settle}")
+
+    # Cap auto-relaxation: counterfactual analysis on cap-fired picks decides
+    # whether each credibility cap should widen, tighten, or stay. Throttled
+    # to once per 30 days per cap with hard safety bounds (±5% to ±30%).
+    # Runs after shadow log settlement so it has the freshest outcomes.
+    # Non-fatal — falls back to constant cap values if anything fails.
+    try:
+        from src.state.cap_state import evaluate_and_adjust_caps
+        _cap_adjusts = evaluate_and_adjust_caps()
+        if _cap_adjusts:
+            logger.info(f"Cap auto-adjustment: {_cap_adjusts} cap(s) updated")
+    except Exception as _e_cap_eval:
+        logger.warning(f"Cap auto-adjustment failed (non-fatal): {_e_cap_eval}")
+
     if not ODDS_API_KEY:
         logger.error("ODDS_API_KEY is not set.")
         errors.append("ODDS_API_KEY missing — odds data unavailable. Set the secret in GitHub.")
@@ -306,8 +354,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # ------------------------------------------------------------------ #
     #  Serialise to dicts (template-ready + state-storable)
     # ------------------------------------------------------------------ #
-    _sorted_raw   = sorted(all_singles_raw,
-                           key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge))
+    _sorted_raw   = sorted(all_singles_raw, key=_slot_sort_key)
 
     # Dedup: one bet per (game, team/direction) — keep only the higher-edge one
     # when the same underlying bet appears twice (e.g. after a line move).
@@ -343,8 +390,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # analyzer's internal [:6] guard is bypassed and all qualifying props are
     # returned — which can be 100+ for MLB — bloating the state and causing
     # mass re-settlement on subsequent runs.
-    _props_sorted = sorted(props_raw,
-                           key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge))
+    _props_sorted = sorted(props_raw, key=_slot_sort_key)
     _props_sport_counts: dict = {}
     _props_capped: list = []
     for _pr in _props_sorted:
@@ -356,8 +402,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
     # Display picks — all positive-EV bets (no MIN_EDGE gate), deduplicated per sport.
     # Used for per-league section cards; budget allocation still uses fresh_singles.
-    _display_sorted = sorted(all_display_raw,
-                             key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge))
+    _display_sorted = sorted(all_display_raw, key=_slot_sort_key)
     _display_seen: set = set()
     _display_deduped = []
     for _r in _display_sorted:
@@ -385,9 +430,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # Cap non-IPL own-tile sports at MAX_SINGLE_BETS (top 5) — without this cap
     # WNBA/MLS can produce 40+ picks that clutter their tile sections.
     fresh_own_displays: dict[str, list] = {
-        slug: [bet_to_dict(r) for r in sorted(
-            raw, key=lambda r: (0 if r.confidence == "HIGH" else 1, -r.edge)
-        )][:MAX_SINGLE_BETS if slug != "ipl" else len(raw)]
+        slug: [bet_to_dict(r) for r in sorted(raw, key=_slot_sort_key)]
+              [:MAX_SINGLE_BETS if slug != "ipl" else len(raw)]
         for slug, raw in own_display.items()
     }
     # Named aliases — kept for backward-compat with the IPL pending section,
@@ -395,6 +439,51 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     fresh_ipl_display  = fresh_own_displays.get("ipl",  [])
     fresh_wnba_display = fresh_own_displays.get("wnba", [])
     fresh_mls_display  = fresh_own_displays.get("mls",  [])
+
+    # ------------------------------------------------------------------ #
+    #  Shadow log — calibration data foundation.
+    #  Records every pick the model produced (not just the top-5 displayed)
+    #  so the calibration engine can later learn per-sport realised hit
+    #  rates and auto-adjust edges. Idempotent across re-runs (stable keys);
+    #  entries are frozen once commence_time passes. Failure here is
+    #  non-fatal and never blocks the report.
+    # ------------------------------------------------------------------ #
+    try:
+        from src.state.shadow_log import record_picks, compute_top_keys
+
+        # Picks that made the top-5 display slot (singles + per-sport own tiles).
+        # Used to mark `displayed_in_top` so we can later analyse whether
+        # displayed picks outperform shadow-only picks.
+        _top_displayed_recs = list(_deduped_raw[:MAX_SINGLE_BETS])
+        for _slug, _raw in own_display.items():
+            _own_sorted = sorted(_raw, key=_slot_sort_key)
+            _cap = len(_raw) if _slug == "ipl" else MAX_SINGLE_BETS
+            _top_displayed_recs.extend(_own_sorted[:_cap])
+        _top_keys = compute_top_keys(_top_displayed_recs, today)
+
+        # Pool of ALL picks the model produced (top-5 + the rest).
+        # We dedup by stable key inside record_picks(), so passing the union
+        # of every source is safe and ensures we don't miss anything.
+        _shadow_pool = []
+        _shadow_pool.extend(all_display_raw)        # NBA/MLB/NFL/NHL display
+        for _raw in own_display.values():           # IPL/WNBA/MLS
+            _shadow_pool.extend(_raw)
+        _shadow_pool.extend(props_display_raw)      # all positive-EV props
+
+        record_picks(_shadow_pool, today, displayed_top_keys=_top_keys)
+    except Exception as _shadow_err:
+        # Defence in depth — record_picks() already swallows internals,
+        # but catch anything that escapes (e.g. import errors).
+        logger.error(f"Shadow log integration failed (non-fatal): {_shadow_err}")
+
+    # Persist calibration state for the panel layer. Computed lazily on first
+    # call (already used by _slot_sort_key above when applicable), so this
+    # mainly writes the snapshot to disk for external inspection / display.
+    try:
+        from src.state.calibration import persist_state as _persist_calib
+        _persist_calib()
+    except Exception as _calib_err:
+        logger.error(f"Calibration persist failed (non-fatal): {_calib_err}")
 
     # ------------------------------------------------------------------ #
     #  IPL rolling pending management

@@ -1,8 +1,112 @@
 """Assembles pre-serialised pick dicts into the report context for Jinja templating."""
 import json
+import logging
 from datetime import date, datetime, timezone, timedelta
+from pathlib import Path
 from typing import Dict, List, Optional
 from src.config import DAILY_BUDGET, MAX_SINGLE_BETS
+
+logger = logging.getLogger(__name__)
+
+
+def _load_calibration_panel() -> Dict:
+    """
+    Load the persisted calibration state and shape it for the template.
+
+    Returns a dict with:
+        has_data:        bool — True if state file exists and has any markets
+        computed_at:     ISO timestamp
+        markets:         list of per-(sport, market_type) entries with display-friendly fields
+        phase_counts:    {"0": N, "A": N, "B": N, "C": N}
+        thresholds:      phase sample-size thresholds (for "next milestone" labels)
+    """
+    out = {
+        "has_data":     False,
+        "computed_at":  None,
+        "markets":      [],
+        "phase_counts": {"0": 0, "A": 0, "B": 0, "C": 0},
+        "thresholds":   {},
+    }
+    path = Path("state/calibration_state.json")
+    if not path.exists():
+        return out
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except Exception as e:
+        logger.debug(f"Calibration panel load failed (non-fatal): {e}")
+        return out
+
+    out["computed_at"] = data.get("computed_at")
+    out["thresholds"]  = data.get("phase_thresholds", {})
+
+    markets = data.get("markets", []) or []
+    phase_a_min = out["thresholds"].get("phase_a_min", 100)
+    phase_b_min = out["thresholds"].get("phase_b_min", 400)
+
+    for m in markets:
+        phase     = m.get("phase", "0")
+        n_settled = int(m.get("n_settled", 0))
+        n_total   = int(m.get("n_total", n_settled))
+        single_ratio = float(m.get("single_ratio", 1.0))
+
+        # Status label and progress toward next phase
+        if phase == "0":
+            next_milestone = f"{max(0, phase_a_min - n_settled)} settled picks to Phase A"
+            status_label   = "Building data"
+            status_class   = "status-building"
+        elif phase == "A":
+            next_milestone = f"{max(0, phase_b_min - n_settled)} settled picks to Phase B (buckets)"
+            status_label   = "Phase A — single ratio active"
+            status_class   = "status-active"
+        elif phase == "B":
+            next_milestone = "Phase B — per-bucket calibration active"
+            status_label   = "Phase B — bucket calibration"
+            status_class   = "status-active-b"
+        elif phase == "C":
+            next_milestone = "Phase C — isotonic curve active"
+            status_label   = "Phase C — isotonic"
+            status_class   = "status-active-c"
+        else:
+            next_milestone = ""
+            status_label   = phase
+            status_class   = ""
+
+        # Ratio drift indicator (how far from 1.0)
+        ratio_pct_drift = (single_ratio - 1.0) * 100 if phase != "0" else 0.0
+        if phase == "0":
+            ratio_display = "—"
+        else:
+            ratio_display = f"{single_ratio:.3f} ({ratio_pct_drift:+.1f}%)"
+
+        out["phase_counts"][phase] = out["phase_counts"].get(phase, 0) + 1
+        out["markets"].append({
+            "sport":          m.get("sport", ""),
+            "market_type":    m.get("market_type", ""),
+            "phase":          phase,
+            "n_total":        n_total,
+            "n_settled":      n_settled,
+            "single_ratio":   single_ratio,
+            "ratio_display":  ratio_display,
+            "ratio_drift_pct": ratio_pct_drift,
+            "predicted_rate_pct": round(float(m.get("single_predicted_rate", 0)) * 100, 1) if phase != "0" else None,
+            "realized_rate_pct":  round(float(m.get("single_realized_rate",  0)) * 100, 1) if phase != "0" else None,
+            "status_label":   status_label,
+            "status_class":   status_class,
+            "next_milestone": next_milestone,
+            "buckets":        m.get("buckets", []),
+        })
+
+    # Sort: active phases first (more interesting), then by sport / market
+    phase_order = {"C": 0, "B": 1, "A": 2, "0": 3}
+    out["markets"].sort(key=lambda m: (
+        phase_order.get(m["phase"], 9),
+        m["sport"],
+        m["market_type"],
+    ))
+
+    out["has_data"] = bool(out["markets"])
+    return out
 
 
 def _now_pacific_str() -> str:
@@ -397,4 +501,23 @@ def build_report(
         "has_nfl_singles":         len(nfl_top_singles) > 0,
         "prop_accuracy_by_sport":  prop_accuracy_by_sport,
         "watchlist_performance":   watchlist_performance,
+        # Calibration panel — auto-promotes between phases as shadow log data
+        # accumulates. During Phase 0 (cold start) it shows "Building data" for
+        # every sport×market; once Phase A kicks in, ratios appear and live
+        # picks start being calibration-adjusted at the slot-ranking chokepoint.
+        "calibration":             _load_calibration_panel(),
+        "cap_state":               _load_cap_panel(),
     }
+
+
+def _load_cap_panel() -> Dict:
+    """
+    Load the cap auto-relaxation state for the report panel. Safe-default
+    on any error so the panel never breaks the report.
+    """
+    try:
+        from src.state.cap_state import load_panel_data
+        return load_panel_data()
+    except Exception as e:
+        logger.debug(f"Cap panel load failed (non-fatal): {e}")
+        return {"has_data": False, "caps": []}
