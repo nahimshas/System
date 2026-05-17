@@ -48,6 +48,7 @@ class PropPick:
     commence_time: str         = ""
     model_prob_raw:        Optional[float] = None   # pre-cap model probability
     credibility_cap_fired: bool            = False  # credibility cap fired
+    bet_type:              str             = "Prop" # shadow log bet_type field
 
 
 # ---------------------------------------------------------------------------
@@ -371,7 +372,7 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
                 model_prob = _cover_prob(prop_label, model_line, market_line)
                 _prop_raw = model_prob
                 model_prob, _prop_cap_fired = _apply_credibility_cap_dispatched(
-                    model_prob, market_prob, _cred_cap("nba", NBA_CRED_CAP), "nba"
+                    model_prob, market_prob, _cred_cap("nba", NBA_CRED_CAP, "credibility_prop"), "nba", "credibility_prop"
                 )
                 edge       = model_prob - market_prob
                 if edge < _min:
@@ -562,7 +563,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                     model_prob = _cover_prob(prop_label, model_line, market_line)
                     _prop_raw = model_prob
                     model_prob, _prop_cap_fired = _apply_credibility_cap_dispatched(
-                        model_prob, market_prob, _cred_cap("mlb", MLB_CRED_CAP), "mlb"
+                        model_prob, market_prob, _cred_cap("mlb", MLB_CRED_CAP, "credibility_prop"), "mlb", "credibility_prop"
                     )
                     edge       = model_prob - market_prob
                     if edge < _min:
@@ -639,7 +640,7 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                 model_prob = _cover_prob(prop_label, model_line, market_line)
                 _prop_raw = model_prob
                 model_prob, _prop_cap_fired = _apply_credibility_cap_dispatched(
-                    model_prob, market_prob, _cred_cap("mlb", MLB_CRED_CAP), "mlb"
+                    model_prob, market_prob, _cred_cap("mlb", MLB_CRED_CAP, "credibility_prop"), "mlb", "credibility_prop"
                 )
                 edge       = model_prob - market_prob
                 if edge < _min:

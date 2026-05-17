@@ -61,13 +61,36 @@ MODE_PROMOTION_THROTTLE_DAYS    = 60     # 2× value-adjust throttle
 # any data-driven adjustment has occurred. Kept duplicated (rather than
 # imported) to avoid circular dependency with edge_finder.
 _INITIAL_DEFAULT_CAPS: Dict[str, float] = {
-    "nba.credibility":  0.15,
-    "mlb.credibility":  0.15,
-    "nfl.credibility":  0.15,
-    "nhl.credibility":  0.15,
-    "wnba.credibility": 0.15,
-    "ipl.credibility":  0.15,
-    "mls.credibility":  0.10,
+    "nba.credibility":        0.15,
+    "mlb.credibility":        0.15,
+    "nfl.credibility":        0.15,
+    "nhl.credibility":        0.15,
+    "wnba.credibility":       0.15,
+    "ipl.credibility":        0.15,
+    "mls.credibility":        0.10,
+    # Per-bet-type caps — calibrate independently from moneylines
+    "nba.credibility_total":  0.15,
+    "nba.credibility_prop":   0.15,
+    "mlb.credibility_total":  0.15,
+    "mlb.credibility_prop":   0.15,
+    "nfl.credibility_total":  0.15,
+    "nhl.credibility_total":  0.15,
+    "mls.credibility_total":  0.10,
+    "mls.credibility_spread": 0.10,
+}
+
+# Maps cap key suffix → set of shadow log bet_type values covered by that cap.
+# Used in evaluate_and_adjust_caps to filter entries to only those bet types.
+_CAP_BET_TYPE_FILTER: Dict[str, set] = {
+    "credibility":         {"Moneyline", "Spread", "Draw"},  # moneylines (spreads derived from same model for NBA/MLB/NFL/NHL)
+    "credibility_total":   {"Total"},
+    "credibility_prop":    {"Prop", ""},                     # "" covers legacy entries before bet_type was added to PropPick
+    "credibility_spread":  {"Spread"},                       # MLS-specific: Poisson-matrix spread
+}
+
+# Sport+key full overrides — takes precedence over _CAP_BET_TYPE_FILTER suffix lookup.
+_CAP_BET_TYPE_OVERRIDE: Dict[str, set] = {
+    "mls.credibility": {"Moneyline", "Draw"},  # MLS spreads have their own key
 }
 
 # Process cache — invalidated on save
@@ -360,6 +383,12 @@ def evaluate_and_adjust_caps() -> int:
             e for e in all_entries
             if e.get("sport", "").lower() == sport
         ]
+
+        # Filter by bet type for this specific cap
+        cap_type_suffix = key.split(".", 1)[1]
+        _bt_filter = _CAP_BET_TYPE_OVERRIDE.get(key) or _CAP_BET_TYPE_FILTER.get(cap_type_suffix)
+        if _bt_filter is not None:
+            sport_entries = [e for e in sport_entries if e.get("bet_type", "") in _bt_filter]
 
         # ── VALUE adjustment (Step 7) ─────────────────────────────────────
         cf = _compute_counterfactual(sport_entries)

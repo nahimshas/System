@@ -85,16 +85,16 @@ IPL_CRED_CAP  = 0.15
 MLS_CRED_CAP  = 0.10
 
 
-def _cred_cap(sport: str, default: float) -> float:
+def _cred_cap(sport: str, default: float, cap_type: str = "credibility") -> float:
     """
-    Return the effective credibility cap for `sport`, dynamically adjusted by
-    the cap auto-relaxation system. Falls back to the hardcoded default if
-    cap_state isn't available — so the analyzer continues to work identically
-    on a fresh install or if state files are missing.
+    Return the effective credibility cap for `sport`/`cap_type`, dynamically
+    adjusted by the cap auto-relaxation system. Falls back to the hardcoded
+    default if cap_state isn't available — so the analyzer continues to work
+    identically on a fresh install or if state files are missing.
     """
     try:
         from src.state.cap_state import get_current_cap
-        return get_current_cap(sport, "credibility")
+        return get_current_cap(sport, cap_type)
     except Exception:
         return default
 
@@ -195,19 +195,21 @@ def _apply_tanh_saturation_cap(
 
 
 def _apply_credibility_cap_dispatched(
-    model_prob: float, market_prob: float, max_drift: float, sport: str
+    model_prob: float, market_prob: float, max_drift: float, sport: str,
+    cap_type: str = "credibility",
 ) -> Tuple[float, bool]:
     """
     Mode-aware credibility cap dispatcher.
 
-    Looks up the current cap MODE for `sport` from cap_state (0 = hard clip,
-    1 = tanh saturation, future: 2 = logistic blend) and applies the matching
-    function. Falls back to Mode 0 if cap_state isn't available, so behaviour
-    is identical to the original hard-clip implementation on fresh installs.
+    Looks up the current cap MODE for `sport`/`cap_type` from cap_state
+    (0 = hard clip, 1 = tanh saturation, future: 2 = logistic blend) and
+    applies the matching function. Falls back to Mode 0 if cap_state isn't
+    available, so behaviour is identical to the original hard-clip
+    implementation on fresh installs.
     """
     try:
         from src.state.cap_state import get_current_cap_mode
-        mode = get_current_cap_mode(sport, "credibility")
+        mode = get_current_cap_mode(sport, cap_type)
     except Exception:
         mode = 0
 
@@ -681,7 +683,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
 
             _total_raw_over = model_over_prob
             model_over_prob, _total_cred_fired = _apply_credibility_cap_dispatched(
-                model_over_prob, market_over_prob, _cred_cap("nba", NBA_CRED_CAP), "nba"
+                model_over_prob, market_over_prob, _cred_cap("nba", NBA_CRED_CAP, "credibility_total"), "nba", "credibility_total"
             )
 
             base_total_signals = [
@@ -1445,7 +1447,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
 
         _mlb_total_raw_over = model_over_prob
         model_over_prob, _mlb_total_cred_fired = _apply_credibility_cap_dispatched(
-            model_over_prob, market_over_prob, _cred_cap("mlb", MLB_CRED_CAP), "mlb"
+            model_over_prob, market_over_prob, _cred_cap("mlb", MLB_CRED_CAP, "credibility_total"), "mlb", "credibility_total"
         )
 
         total_signals = signals[:] + [f"Model expected total: {blended_total:.1f} vs line {market_line}"]
@@ -1785,7 +1787,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
 
             _nfl_total_raw_over = model_over_prob
             model_over_prob, _nfl_total_cred_fired = _apply_credibility_cap_dispatched(
-                model_over_prob, market_over_prob, _cred_cap("nfl", NFL_CRED_CAP), "nfl"
+                model_over_prob, market_over_prob, _cred_cap("nfl", NFL_CRED_CAP, "credibility_total"), "nfl", "credibility_total"
             )
 
             total_signals = [
@@ -2160,7 +2162,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
 
             _nhl_total_raw_over = model_over_prob
             model_over_prob, _nhl_total_cred_fired = _apply_credibility_cap_dispatched(
-                model_over_prob, market_over_prob, _cred_cap("nhl", NHL_CRED_CAP), "nhl"
+                model_over_prob, market_over_prob, _cred_cap("nhl", NHL_CRED_CAP, "credibility_total"), "nhl", "credibility_total"
             )
 
             total_signals = [
@@ -3059,10 +3061,10 @@ def analyze_mls_game(
         _mls_total_raw_over  = model_over
         _mls_total_raw_under = model_under
         model_over,  _mls_total_cred_over  = _apply_credibility_cap_dispatched(
-            model_over, market_over_prob, _mls_eff_cap, "mls"
+            model_over, market_over_prob, _cred_cap("mls", MLS_CRED_CAP, "credibility_total"), "mls", "credibility_total"
         )
         model_under, _mls_total_cred_under = _apply_credibility_cap_dispatched(
-            model_under, market_under_prob, _mls_eff_cap, "mls"
+            model_under, market_under_prob, _cred_cap("mls", MLS_CRED_CAP, "credibility_total"), "mls", "credibility_total"
         )
         for pick_str, model_p, market_p, raw_p, cap_fired in [
             (f"Over {line}",  model_over,  market_over_prob,  _mls_total_raw_over,  _mls_total_cred_over),
@@ -3087,10 +3089,10 @@ def analyze_mls_game(
         _mls_sp_raw_home = model_home_sp
         _mls_sp_raw_away = model_away_sp
         model_home_sp, _mls_sp_cred_home = _apply_credibility_cap_dispatched(
-            model_home_sp, market_home_sp, _mls_eff_cap, "mls"
+            model_home_sp, market_home_sp, _cred_cap("mls", MLS_CRED_CAP, "credibility_spread"), "mls", "credibility_spread"
         )
         model_away_sp, _mls_sp_cred_away = _apply_credibility_cap_dispatched(
-            model_away_sp, market_away_sp, _mls_eff_cap, "mls"
+            model_away_sp, market_away_sp, _cred_cap("mls", MLS_CRED_CAP, "credibility_spread"), "mls", "credibility_spread"
         )
         away_point = -home_point
         for pick_str, model_p, market_p, raw_p, cap_fired in [
