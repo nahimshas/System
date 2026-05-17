@@ -298,6 +298,53 @@ def _fetch_espn_final_scores(sport: str, game_date: date) -> Dict:
     return scores
 
 
+_TEAM_NAME_SKIP_TOKENS = {
+    "fc", "sc", "ac", "cf", "cd", "sk",
+    "new", "los", "san", "fort", "real", "club", "the",
+}
+
+
+def _team_name_tokens(s: str) -> list:
+    """Tokenise a team name for fallback matching — drops league suffixes and
+    generic city prefixes that don't disambiguate teams."""
+    if not s:
+        return []
+    return [
+        t for t in s.lower().replace(".", " ").split()
+        if len(t) >= 3 and t not in _TEAM_NAME_SKIP_TOKENS
+    ]
+
+
+def _team_token_overlap_match(query: str, key: str) -> bool:
+    """
+    Token-overlap fallback for team-name matching. Handles names that defeat
+    substring matching due to reordering or singular/plural variants.
+
+    Example: ESPN's "Red Bull New York" vs Odds API's "New York Red Bulls" —
+    last token "bulls" (plural) doesn't appear in "red bull new york"
+    (singular). Token overlap catches it via bull↔bulls prefix match.
+
+    Requires ≥ 2 substantial token overlaps to avoid false positives like
+    NYCFC ↔ NY Red Bulls (only "york" overlaps).
+    """
+    q_tok = _team_name_tokens(query)
+    k_tok = _team_name_tokens(key)
+    if len(q_tok) < 2 or len(k_tok) < 2:
+        return False
+    used = set()
+    matched = 0
+    for a in q_tok:
+        for j, b in enumerate(k_tok):
+            if j in used:
+                continue
+            # Exact OR one-is-prefix-of-other (handles bull/bulls, dynamo/dynamos)
+            if a == b or (len(a) >= 4 and len(b) >= 4 and (a.startswith(b) or b.startswith(a))):
+                used.add(j)
+                matched += 1
+                break
+    return matched >= 2
+
+
 def _find_game_score(
     scores: Dict,
     home_team: str,
@@ -318,6 +365,15 @@ def _find_game_score(
         # Partial match: check if query is a substring of any key
         for key, val in scores.items():
             if query and (query in key or key in query):
+                return val
+
+    # Token-overlap fallback — handles reordered / singular-vs-plural names
+    # (e.g. ESPN "Red Bull New York" ↔ Odds API "New York Red Bulls").
+    for query in [home_team, away_team]:
+        if not query:
+            continue
+        for key, val in scores.items():
+            if _team_token_overlap_match(query, key):
                 return val
 
     return None

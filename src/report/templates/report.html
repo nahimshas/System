@@ -1940,7 +1940,43 @@
     var o = ourName.toLowerCase();
     if (e.includes(o) || o.includes(e)) return true;
     var nick = o.split(/\s+/).pop();
-    return nick.length > 3 && e.includes(nick);
+    if (nick.length > 3 && e.includes(nick)) return true;
+
+    // Token-overlap fallback — handles reordered names and singular/plural
+    // forms that defeat substring + nickname matching. Example: ESPN's
+    // "Red Bull New York" vs the Odds API's "New York Red Bulls" — last
+    // word "bulls" (plural) doesn't substring-match "red bull new york"
+    // (singular). Token overlap catches it via the bull↔bulls prefix match.
+    //
+    // Drops short tokens, league suffixes (FC/SC/AC/CF) and generic city
+    // prefixes (new/los/san/...). Requires ≥ 2 substantial token overlaps
+    // to avoid false positives like NYCFC↔NY Red Bulls (only "york" overlaps).
+    var SKIP = {fc:1,sc:1,ac:1,cf:1,cd:1,sk:1,new:1,los:1,san:1,fort:1,real:1,club:1,the:1};
+    function _tokens(s) {
+      return s.split(/[\s.]+/).filter(function (t) {
+        return t.length >= 3 && !SKIP.hasOwnProperty(t);
+      });
+    }
+    var eTok = _tokens(e);
+    var oTok = _tokens(o);
+    if (eTok.length < 2 || oTok.length < 2) return false;
+    var used = {};
+    var matched = 0;
+    for (var i = 0; i < oTok.length; i++) {
+      for (var j = 0; j < eTok.length; j++) {
+        if (used[j]) continue;
+        var a = oTok[i], b = eTok[j];
+        // Exact match OR one is a prefix of the other (handles bull/bulls,
+        // dynamo/dynamos, etc.). Both tokens must be ≥ 4 chars for prefix
+        // matching to avoid short-token false positives.
+        if (a === b || (a.length >= 4 && b.length >= 4 && (a.indexOf(b) === 0 || b.indexOf(a) === 0))) {
+          used[j] = true;
+          matched++;
+          break;
+        }
+      }
+    }
+    return matched >= 2;
   }
 
   // ── Parse a line number from a pick string ───────────────────────────────
