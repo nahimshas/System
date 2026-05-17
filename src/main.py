@@ -17,7 +17,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
-    MAX_SINGLE_BETS, MIN_EDGE,
+    MAX_SINGLE_BETS, MAX_PROPS_PER_SPORT, MIN_EDGE,
 )
 from src.data.odds_client import get_last_api_error, get_api_credits
 from src.models.parlay_builder import build_parlays
