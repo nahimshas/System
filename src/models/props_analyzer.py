@@ -13,7 +13,11 @@ from typing import Dict, List, Optional
 
 from scipy.stats import norm as _norm, poisson as _poisson
 
-from src.models.edge_finder import _is_nba_playoff, _is_mlb_playoff
+from src.models.edge_finder import (
+    _is_nba_playoff, _is_mlb_playoff,
+    _apply_credibility_cap_dispatched, _cred_cap,
+    NBA_CRED_CAP, MLB_CRED_CAP,
+)
 from src.config import MLB_PLAYOFF_STARTER_IP
 
 logger = logging.getLogger(__name__)
@@ -42,6 +46,8 @@ class PropPick:
     signals:       List[str]   = field(default_factory=list)
     research:      List[str]   = field(default_factory=list)
     commence_time: str         = ""
+    model_prob_raw:        Optional[float] = None   # pre-cap model probability
+    credibility_cap_fired: bool            = False  # credibility cap fired
 
 
 # ---------------------------------------------------------------------------
@@ -363,6 +369,10 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
                     continue
 
                 model_prob = _cover_prob(prop_label, model_line, market_line)
+                _prop_raw = model_prob
+                model_prob, _prop_cap_fired = _apply_credibility_cap_dispatched(
+                    model_prob, market_prob, _cred_cap("nba", NBA_CRED_CAP), "nba"
+                )
                 edge       = model_prob - market_prob
                 if edge < _min:
                     continue
@@ -436,6 +446,8 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
                     signals=signals,
                     research=base_research[:],
                     commence_time=game_commence,
+                    model_prob_raw=round(_prop_raw, 4),
+                    credibility_cap_fired=_prop_cap_fired,
                 ))
 
     seen: set = set()
@@ -548,6 +560,10 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                     model_line = round(k9_adj / 9 * expected_innings, 1)
 
                     model_prob = _cover_prob(prop_label, model_line, market_line)
+                    _prop_raw = model_prob
+                    model_prob, _prop_cap_fired = _apply_credibility_cap_dispatched(
+                        model_prob, market_prob, _cred_cap("mlb", MLB_CRED_CAP), "mlb"
+                    )
                     edge       = model_prob - market_prob
                     if edge < _min:
                         continue
@@ -583,6 +599,8 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                             f"Venue: {venue} (park factor {pf:.2f})" if venue else "",
                         ],
                         commence_time=game_commence,
+                        model_prob_raw=round(_prop_raw, 4),
+                        credibility_cap_fired=_prop_cap_fired,
                     ))
                     continue
 
@@ -619,6 +637,10 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                     continue
 
                 model_prob = _cover_prob(prop_label, model_line, market_line)
+                _prop_raw = model_prob
+                model_prob, _prop_cap_fired = _apply_credibility_cap_dispatched(
+                    model_prob, market_prob, _cred_cap("mlb", MLB_CRED_CAP), "mlb"
+                )
                 edge       = model_prob - market_prob
                 if edge < _min:
                     continue
@@ -664,6 +686,8 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                         f"Park factor {pf:.2f} at {venue}" if venue else "",
                     ],
                     commence_time=game_commence,
+                    model_prob_raw=round(_prop_raw, 4),
+                    credibility_cap_fired=_prop_cap_fired,
                 ))
 
     seen: set = set()

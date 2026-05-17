@@ -119,26 +119,28 @@ def _stamp_recs_calibration(
     later run cap counterfactual analysis (raw vs capped realised rates).
 
     For ML/Spread picks, model_prob_raw is set to the home or away raw
-    probability based on pick text. For Total picks the raw value is left
-    as None (totals use a separate probability distribution that's not
-    currently capped — this can be extended later if needed).
+    probability based on pick text. For Total and prop picks the raw value
+    is stamped by bet-specific cap logic before this function is called;
+    this function skips those recs (sentinel: model_prob_raw is not None).
     """
     for rec in recs:
-        pick = (rec.pick or "").strip()
-        bt   = rec.bet_type or ""
+        # Game-level flags — always stamp
+        rec.hardcap_fired   = hardcap_fired
+        rec.stats_available = stats_avail
 
-        rec.credibility_cap_fired = cred_fired
-        rec.hardcap_fired         = hardcap_fired
-        rec.stats_available       = stats_avail
-
-        if bt in ("Moneyline", "Spread"):
-            if home_team and pick.startswith(home_team):
-                rec.model_prob_raw   = home_raw
-                rec.injury_cap_fired = home_injury_fired
-            elif away_team and pick.startswith(away_team):
-                rec.model_prob_raw   = away_raw
-                rec.injury_cap_fired = away_injury_fired
-            # else: pick text doesn't match a team — leave defaults
+        # Per-pick calibration — skip if already stamped by bet-specific cap logic
+        if rec.model_prob_raw is None:
+            bt   = rec.bet_type or ""
+            pick = (rec.pick or "").strip()
+            rec.credibility_cap_fired = cred_fired
+            if bt in ("Moneyline", "Spread"):
+                if home_team and pick.startswith(home_team):
+                    rec.model_prob_raw   = home_raw
+                    rec.injury_cap_fired = home_injury_fired
+                elif away_team and pick.startswith(away_team):
+                    rec.model_prob_raw   = away_raw
+                    rec.injury_cap_fired = away_injury_fired
+        # else: bet-specific cap already populated model_prob_raw / credibility_cap_fired
 
 
 def _apply_credibility_cap(
@@ -677,6 +679,11 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             market_over_prob = total["over_prob"]
             market_under_prob = total["under_prob"]
 
+            _total_raw_over = model_over_prob
+            model_over_prob, _total_cred_fired = _apply_credibility_cap_dispatched(
+                model_over_prob, market_over_prob, _cred_cap("nba", NBA_CRED_CAP), "nba"
+            )
+
             base_total_signals = [
                 f"Model projected score: {home} {expected_home_pts:.0f} — {away} {expected_away_pts:.0f}",
                 f"Model expected total: {blended_total:.1f} vs market line {market_line}",
@@ -714,7 +721,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             if over_edge >= _min and has_positive_ev(model_over_prob, market_over_prob):
                 sizing = robinhood_kelly(model_over_prob, market_over_prob)
                 if sizing.num_contracts > 0:
-                    recs.append(BetRecommendation(
+                    _over_rec = BetRecommendation(
                         sport="NBA", game=label, bet_type="Total", pick=_over_label,
                         market_prob=market_over_prob, model_prob=model_over_prob,
                         edge=over_edge, contract_price=market_over_prob,
@@ -723,11 +730,14 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                         signals=over_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _over_rec.model_prob_raw = _total_raw_over
+                    _over_rec.credibility_cap_fired = _total_cred_fired
+                    recs.append(_over_rec)
             if under_edge >= _min and has_positive_ev(1 - model_over_prob, market_under_prob):
                 sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
                 if sizing.num_contracts > 0:
-                    recs.append(BetRecommendation(
+                    _under_rec = BetRecommendation(
                         sport="NBA", game=label, bet_type="Total", pick=_under_label,
                         market_prob=market_under_prob, model_prob=1 - model_over_prob,
                         edge=under_edge, contract_price=market_under_prob,
@@ -736,7 +746,10 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                         signals=under_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _under_rec.model_prob_raw = 1.0 - _total_raw_over
+                    _under_rec.credibility_cap_fired = _total_cred_fired
+                    recs.append(_under_rec)
 
     # Stamp per-game calibration metadata onto every rec so the shadow log
     # can later run cap counterfactual analysis. Vars may not all be defined
@@ -1430,6 +1443,11 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         market_over_prob = total["over_prob"]
         market_under_prob = total["under_prob"]
 
+        _mlb_total_raw_over = model_over_prob
+        model_over_prob, _mlb_total_cred_fired = _apply_credibility_cap_dispatched(
+            model_over_prob, market_over_prob, _cred_cap("mlb", MLB_CRED_CAP), "mlb"
+        )
+
         total_signals = signals[:] + [f"Model expected total: {blended_total:.1f} vs line {market_line}"]
         total_research = research[:]
 
@@ -1443,7 +1461,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         if over_edge >= _min and has_positive_ev(model_over_prob, market_over_prob):
             sizing = robinhood_kelly(model_over_prob, market_over_prob)
             if sizing.num_contracts > 0:
-                recs.append(BetRecommendation(
+                _over_rec = BetRecommendation(
                     sport="MLB", game=label, bet_type="Total", pick=_over_label,
                     market_prob=market_over_prob, model_prob=model_over_prob,
                     edge=over_edge, contract_price=market_over_prob,
@@ -1452,11 +1470,14 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     signals=total_signals, research=total_research,
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
-                ))
+                )
+                _over_rec.model_prob_raw = _mlb_total_raw_over
+                _over_rec.credibility_cap_fired = _mlb_total_cred_fired
+                recs.append(_over_rec)
         if under_edge >= _min and has_positive_ev(1 - model_over_prob, market_under_prob):
             sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
             if sizing.num_contracts > 0:
-                recs.append(BetRecommendation(
+                _under_rec = BetRecommendation(
                     sport="MLB", game=label, bet_type="Total", pick=_under_label,
                     market_prob=market_under_prob, model_prob=1 - model_over_prob,
                     edge=under_edge, contract_price=market_under_prob,
@@ -1465,7 +1486,10 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     signals=total_signals, research=total_research,
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
-                ))
+                )
+                _under_rec.model_prob_raw = 1.0 - _mlb_total_raw_over
+                _under_rec.credibility_cap_fired = _mlb_total_cred_fired
+                recs.append(_under_rec)
 
     # Stamp per-game calibration metadata onto every rec.
     _lv = locals()
@@ -1759,6 +1783,11 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
             market_over_prob  = total["over_prob"]
             market_under_prob = total["under_prob"]
 
+            _nfl_total_raw_over = model_over_prob
+            model_over_prob, _nfl_total_cred_fired = _apply_credibility_cap_dispatched(
+                model_over_prob, market_over_prob, _cred_cap("nfl", NFL_CRED_CAP), "nfl"
+            )
+
             total_signals = [
                 f"Model projected score: {home} {exp_home:.0f} — {away} {exp_away:.0f}",
                 f"Model expected total: {expected_total:.1f} vs market line {market_line}",
@@ -1777,7 +1806,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
             if over_edge >= _min and has_positive_ev(model_over_prob, market_over_prob):
                 sizing = robinhood_kelly(model_over_prob, market_over_prob)
                 if sizing.num_contracts > 0:
-                    recs.append(BetRecommendation(
+                    _over_rec = BetRecommendation(
                         sport="NFL", game=label, bet_type="Total", pick=_over_label,
                         market_prob=market_over_prob, model_prob=model_over_prob,
                         edge=over_edge, contract_price=market_over_prob,
@@ -1786,11 +1815,14 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                         signals=total_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _over_rec.model_prob_raw = _nfl_total_raw_over
+                    _over_rec.credibility_cap_fired = _nfl_total_cred_fired
+                    recs.append(_over_rec)
             if under_edge >= _min and has_positive_ev(1 - model_over_prob, market_under_prob):
                 sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
                 if sizing.num_contracts > 0:
-                    recs.append(BetRecommendation(
+                    _under_rec = BetRecommendation(
                         sport="NFL", game=label, bet_type="Total", pick=_under_label,
                         market_prob=market_under_prob, model_prob=1 - model_over_prob,
                         edge=under_edge, contract_price=market_under_prob,
@@ -1799,7 +1831,10 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                         signals=total_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _under_rec.model_prob_raw = 1.0 - _nfl_total_raw_over
+                    _under_rec.credibility_cap_fired = _nfl_total_cred_fired
+                    recs.append(_under_rec)
 
     # Stamp per-game calibration metadata onto every rec.
     _lv = locals()
@@ -2123,6 +2158,11 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             market_over_prob  = total["over_prob"]
             market_under_prob = total["under_prob"]
 
+            _nhl_total_raw_over = model_over_prob
+            model_over_prob, _nhl_total_cred_fired = _apply_credibility_cap_dispatched(
+                model_over_prob, market_over_prob, _cred_cap("nhl", NHL_CRED_CAP), "nhl"
+            )
+
             total_signals = [
                 f"Model projected score: {home} {exp_home:.1f} — {away} {exp_away:.1f}",
                 f"Model expected total: {blended_total:.1f} vs market line {market_line}",
@@ -2142,7 +2182,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             if over_edge >= _min and has_positive_ev(model_over_prob, market_over_prob):
                 sizing = robinhood_kelly(model_over_prob, market_over_prob)
                 if sizing.num_contracts > 0:
-                    recs.append(BetRecommendation(
+                    _over_rec = BetRecommendation(
                         sport="NHL", game=label, bet_type="Total", pick=_over_label,
                         market_prob=market_over_prob, model_prob=model_over_prob,
                         edge=over_edge, contract_price=market_over_prob,
@@ -2151,11 +2191,14 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                         signals=total_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _over_rec.model_prob_raw = _nhl_total_raw_over
+                    _over_rec.credibility_cap_fired = _nhl_total_cred_fired
+                    recs.append(_over_rec)
             if under_edge >= _min and has_positive_ev(1 - model_over_prob, market_under_prob):
                 sizing = robinhood_kelly(1 - model_over_prob, market_under_prob)
                 if sizing.num_contracts > 0:
-                    recs.append(BetRecommendation(
+                    _under_rec = BetRecommendation(
                         sport="NHL", game=label, bet_type="Total", pick=_under_label,
                         market_prob=market_under_prob, model_prob=1 - model_over_prob,
                         edge=under_edge, contract_price=market_under_prob,
@@ -2164,7 +2207,10 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                         signals=total_signals, research=total_research,
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _under_rec.model_prob_raw = 1.0 - _nhl_total_raw_over
+                    _under_rec.credibility_cap_fired = _nhl_total_cred_fired
+                    recs.append(_under_rec)
 
     # Stamp per-game calibration metadata onto every rec.
     _lv = locals()
@@ -2966,7 +3012,10 @@ def analyze_mls_game(
     p_home_win, _mls_cred_home_fired = _apply_credibility_cap_dispatched(p_home_win, market_home_prob, _mls_eff_cap, "mls")
     p_draw,     _mls_cred_draw_fired = _apply_credibility_cap_dispatched(p_draw,     market_draw_prob, _mls_eff_cap, "mls")
     p_away_win = 1.0 - p_home_win - p_draw
-    _mls_cred_fired = _mls_cred_home_fired or _mls_cred_draw_fired
+    p_away_win, _mls_cred_away_fired = _apply_credibility_cap_dispatched(
+        p_away_win, market_away_prob, _mls_eff_cap, "mls"
+    )
+    _mls_cred_fired = _mls_cred_home_fired or _mls_cred_draw_fired or _mls_cred_away_fired
 
     # Build BetRecommendations
     def _make_rec(pick_str, bet_type, model_prob, market_prob):
@@ -3007,12 +3056,22 @@ def analyze_mls_game(
         market_under_prob = tot.get("under_prob", 0.5)
         model_over  = sum(v for (i, j), v in matrix.items() if i + j > line)
         model_under = sum(v for (i, j), v in matrix.items() if i + j < line)
-        for pick_str, model_p, market_p in [
-            (f"Over {line}", model_over, market_over_prob),
-            (f"Under {line}", model_under, market_under_prob),
+        _mls_total_raw_over  = model_over
+        _mls_total_raw_under = model_under
+        model_over,  _mls_total_cred_over  = _apply_credibility_cap_dispatched(
+            model_over, market_over_prob, _mls_eff_cap, "mls"
+        )
+        model_under, _mls_total_cred_under = _apply_credibility_cap_dispatched(
+            model_under, market_under_prob, _mls_eff_cap, "mls"
+        )
+        for pick_str, model_p, market_p, raw_p, cap_fired in [
+            (f"Over {line}",  model_over,  market_over_prob,  _mls_total_raw_over,  _mls_total_cred_over),
+            (f"Under {line}", model_under, market_under_prob, _mls_total_raw_under, _mls_total_cred_under),
         ]:
             r = _make_rec(pick_str, "Total", model_p, market_p)
             if r:
+                r.model_prob_raw = raw_p
+                r.credibility_cap_fired = cap_fired
                 recs.append(r)
 
     # Spread (Asian handicap)
@@ -3025,13 +3084,23 @@ def analyze_mls_game(
             v for (i, j), v in matrix.items() if (i - j) > -home_point
         )
         model_away_sp = 1.0 - model_home_sp
+        _mls_sp_raw_home = model_home_sp
+        _mls_sp_raw_away = model_away_sp
+        model_home_sp, _mls_sp_cred_home = _apply_credibility_cap_dispatched(
+            model_home_sp, market_home_sp, _mls_eff_cap, "mls"
+        )
+        model_away_sp, _mls_sp_cred_away = _apply_credibility_cap_dispatched(
+            model_away_sp, market_away_sp, _mls_eff_cap, "mls"
+        )
         away_point = -home_point
-        for pick_str, model_p, market_p, pt in [
-            (f"{home_raw} {home_point:+.1f}", model_home_sp, market_home_sp, home_point),
-            (f"{away_raw} {away_point:+.1f}", model_away_sp, market_away_sp, away_point),
+        for pick_str, model_p, market_p, raw_p, cap_fired in [
+            (f"{home_raw} {home_point:+.1f}", model_home_sp, market_home_sp, _mls_sp_raw_home, _mls_sp_cred_home),
+            (f"{away_raw} {away_point:+.1f}", model_away_sp, market_away_sp, _mls_sp_raw_away, _mls_sp_cred_away),
         ]:
             r = _make_rec(pick_str, "Spread", model_p, market_p)
             if r:
+                r.model_prob_raw = raw_p
+                r.credibility_cap_fired = cap_fired
                 recs.append(r)
 
     # Stamp per-game calibration metadata onto every rec.
