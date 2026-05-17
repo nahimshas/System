@@ -1,5 +1,17 @@
 # Sports Betting Analysis System — Claude Session Guide
 
+## ⚠️ Only one real system exists — read this first
+
+The sole source of truth is `/Users/nahim/Documents/GitHub/System/`.
+
+**Stale copies that no longer exist (do not look for them):**
+- `/Users/nahim/Documents/GitHub/System/sports-betting-system/` — old NBA+MLB-only prototype, deleted from git May 2026
+- `/Users/nahim/Desktop/Claude Projects/Code Projects/sports-betting-system/` — same old prototype, deleted May 2026
+
+If you are running from a working directory other than `/Users/nahim/Documents/GitHub/System`, stop and redirect to the correct path before doing anything.
+
+---
+
 ## Who you're working with
 The user does not write code. All requests come conversationally ("add MLS", "make WNBA a budget sport", "add NFL props", "why isn't the pick showing up"). Implement changes fully, commit, and summarize. Never ask the user to edit a file or run a command — tell them what workflow button to press if anything is needed on their end.
 
