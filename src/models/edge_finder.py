@@ -484,7 +484,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
 
         # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
         adjusted_home_prob, _nba_cred_fired = _apply_credibility_cap_dispatched(
-            adjusted_home_prob, market_home_prob, _cred_cap("nba", NBA_CRED_CAP), "nba"
+            adjusted_home_prob, market_home_prob, _cred_cap("nba", NBA_CRED_CAP, "credibility_moneyline"), "nba", "credibility_moneyline"
         )
         adjusted_away_prob = 1 - adjusted_home_prob
 
@@ -575,6 +575,16 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, NBA_SPREAD_STD))
             model_away_cover = 1.0 - model_home_cover
 
+            # Apply spread credibility cap
+            _sp_raw_home = model_home_cover
+            _sp_raw_away = model_away_cover
+            model_home_cover, _sp_cred_home = _apply_credibility_cap_dispatched(
+                model_home_cover, market_home_cover, _cred_cap("nba", NBA_CRED_CAP, "credibility_spread"), "nba", "credibility_spread"
+            )
+            model_away_cover, _sp_cred_away = _apply_credibility_cap_dispatched(
+                model_away_cover, market_away_cover, _cred_cap("nba", NBA_CRED_CAP, "credibility_spread"), "nba", "credibility_spread"
+            )
+
             away_spread_line = -home_spread_line
 
             home_sp_edge = model_home_cover - market_home_cover
@@ -586,7 +596,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                     conf = _confidence_label(home_sp_edge, len(signals), stats_available)
                     if home_injury_capped:
                         conf = "MEDIUM"
-                    recs.append(BetRecommendation(
+                    _sp_rec = BetRecommendation(
                         sport="NBA", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
                         market_prob=market_home_cover, model_prob=model_home_cover,
@@ -595,7 +605,10 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _sp_rec.model_prob_raw = _sp_raw_home
+                    _sp_rec.credibility_cap_fired = _sp_cred_home
+                    recs.append(_sp_rec)
 
             if away_sp_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
@@ -603,7 +616,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                     conf = _confidence_label(away_sp_edge, len(signals), stats_available)
                     if away_injury_capped:
                         conf = "MEDIUM"
-                    recs.append(BetRecommendation(
+                    _sp_rec = BetRecommendation(
                         sport="NBA", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",
                         market_prob=market_away_cover, model_prob=model_away_cover,
@@ -612,7 +625,10 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _sp_rec.model_prob_raw = _sp_raw_away
+                    _sp_rec.credibility_cap_fired = _sp_cred_away
+                    recs.append(_sp_rec)
 
     # --- Total ---
     total = game.get("total")
@@ -1300,7 +1316,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
 
         # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
         model_home_prob, _mlb_cred_fired = _apply_credibility_cap_dispatched(
-            model_home_prob, market_home_prob, _cred_cap("mlb", MLB_CRED_CAP), "mlb"
+            model_home_prob, market_home_prob, _cred_cap("mlb", MLB_CRED_CAP, "credibility_moneyline"), "mlb", "credibility_moneyline"
         )
         model_away_prob = 1 - model_home_prob
 
@@ -1393,6 +1409,16 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, MLB_RUNLINE_SIGMA))
             model_away_cover = 1.0 - model_home_cover
 
+            # Apply spread credibility cap
+            _mlb_sp_raw_home = model_home_cover
+            _mlb_sp_raw_away = model_away_cover
+            model_home_cover, _mlb_sp_cred_home = _apply_credibility_cap_dispatched(
+                model_home_cover, market_home_cover, _cred_cap("mlb", MLB_CRED_CAP, "credibility_spread"), "mlb", "credibility_spread"
+            )
+            model_away_cover, _mlb_sp_cred_away = _apply_credibility_cap_dispatched(
+                model_away_cover, market_away_cover, _cred_cap("mlb", MLB_CRED_CAP, "credibility_spread"), "mlb", "credibility_spread"
+            )
+
             away_spread_line = -home_spread_line
 
             home_rl_edge = model_home_cover - market_home_cover
@@ -1404,7 +1430,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     conf = _mlb_conf(home_rl_edge, len(signals), stats_available,
                                      own_trap_sev=home_trap_sev, opp_trap_sev=away_trap_sev,
                                      injury_capped=home_injury_capped)
-                    recs.append(BetRecommendation(
+                    _mlb_sp_rec = BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
                         market_prob=market_home_cover, model_prob=model_home_cover,
@@ -1413,7 +1439,10 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _mlb_sp_rec.model_prob_raw = _mlb_sp_raw_home
+                    _mlb_sp_rec.credibility_cap_fired = _mlb_sp_cred_home
+                    recs.append(_mlb_sp_rec)
 
             if away_rl_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
@@ -1421,7 +1450,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                     conf = _mlb_conf(away_rl_edge, len(signals), stats_available,
                                      own_trap_sev=away_trap_sev, opp_trap_sev=home_trap_sev,
                                      injury_capped=away_injury_capped)
-                    recs.append(BetRecommendation(
+                    _mlb_sp_rec = BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",
                         market_prob=market_away_cover, model_prob=model_away_cover,
@@ -1430,7 +1459,10 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _mlb_sp_rec.model_prob_raw = _mlb_sp_raw_away
+                    _mlb_sp_rec.credibility_cap_fired = _mlb_sp_cred_away
+                    recs.append(_mlb_sp_rec)
 
     # --- Total ---
     total = game.get("total")
@@ -1664,7 +1696,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
 
         # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
         adjusted_home_prob, _nfl_cred_fired = _apply_credibility_cap_dispatched(
-            adjusted_home_prob, market_home_prob, _cred_cap("nfl", NFL_CRED_CAP), "nfl"
+            adjusted_home_prob, market_home_prob, _cred_cap("nfl", NFL_CRED_CAP, "credibility_moneyline"), "nfl", "credibility_moneyline"
         )
         adjusted_away_prob = 1 - adjusted_home_prob
 
@@ -1731,6 +1763,17 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
             effective_margin = float(norm.ppf(adjusted_home_prob)) * NFL_SPREAD_STD
             model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, NFL_SPREAD_STD))
             model_away_cover = 1.0 - model_home_cover
+
+            # Apply spread credibility cap
+            _nfl_sp_raw_home = model_home_cover
+            _nfl_sp_raw_away = model_away_cover
+            model_home_cover, _nfl_sp_cred_home = _apply_credibility_cap_dispatched(
+                model_home_cover, market_home_cover, _cred_cap("nfl", NFL_CRED_CAP, "credibility_spread"), "nfl", "credibility_spread"
+            )
+            model_away_cover, _nfl_sp_cred_away = _apply_credibility_cap_dispatched(
+                model_away_cover, market_away_cover, _cred_cap("nfl", NFL_CRED_CAP, "credibility_spread"), "nfl", "credibility_spread"
+            )
+
             away_spread_line = -home_spread_line
 
             home_sp_edge = model_home_cover - market_home_cover
@@ -1742,7 +1785,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                     conf = _confidence_label(home_sp_edge, len(signals), stats_available)
                     if home_injury_capped:
                         conf = "MEDIUM"
-                    recs.append(BetRecommendation(
+                    _nfl_sp_rec = BetRecommendation(
                         sport="NFL", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
                         market_prob=market_home_cover, model_prob=model_home_cover,
@@ -1751,7 +1794,10 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _nfl_sp_rec.model_prob_raw = _nfl_sp_raw_home
+                    _nfl_sp_rec.credibility_cap_fired = _nfl_sp_cred_home
+                    recs.append(_nfl_sp_rec)
 
             if away_sp_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
@@ -1759,7 +1805,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                     conf = _confidence_label(away_sp_edge, len(signals), stats_available)
                     if away_injury_capped:
                         conf = "MEDIUM"
-                    recs.append(BetRecommendation(
+                    _nfl_sp_rec = BetRecommendation(
                         sport="NFL", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",
                         market_prob=market_away_cover, model_prob=model_away_cover,
@@ -1768,7 +1814,10 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _nfl_sp_rec.model_prob_raw = _nfl_sp_raw_away
+                    _nfl_sp_rec.credibility_cap_fired = _nfl_sp_cred_away
+                    recs.append(_nfl_sp_rec)
 
     # --- Total ---
     total = game.get("total")
@@ -2013,7 +2062,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
 
         # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
         adjusted_home_prob, _nhl_cred_fired = _apply_credibility_cap_dispatched(
-            adjusted_home_prob, market_home_prob, _cred_cap("nhl", NHL_CRED_CAP), "nhl"
+            adjusted_home_prob, market_home_prob, _cred_cap("nhl", NHL_CRED_CAP, "credibility_moneyline"), "nhl", "credibility_moneyline"
         )
         adjusted_away_prob = 1 - adjusted_home_prob
 
@@ -2080,6 +2129,17 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             effective_margin = float(norm.ppf(adjusted_home_prob)) * NHL_SPREAD_STD
             model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, NHL_SPREAD_STD))
             model_away_cover = 1.0 - model_home_cover
+
+            # Apply spread credibility cap
+            _nhl_sp_raw_home = model_home_cover
+            _nhl_sp_raw_away = model_away_cover
+            model_home_cover, _nhl_sp_cred_home = _apply_credibility_cap_dispatched(
+                model_home_cover, market_home_cover, _cred_cap("nhl", NHL_CRED_CAP, "credibility_spread"), "nhl", "credibility_spread"
+            )
+            model_away_cover, _nhl_sp_cred_away = _apply_credibility_cap_dispatched(
+                model_away_cover, market_away_cover, _cred_cap("nhl", NHL_CRED_CAP, "credibility_spread"), "nhl", "credibility_spread"
+            )
+
             away_spread_line = -home_spread_line
 
             home_sp_edge = model_home_cover - market_home_cover
@@ -2091,7 +2151,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                     conf = _confidence_label(home_sp_edge, len(signals), stats_available)
                     if home_injury_capped:
                         conf = "MEDIUM"
-                    recs.append(BetRecommendation(
+                    _nhl_sp_rec = BetRecommendation(
                         sport="NHL", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
                         market_prob=market_home_cover, model_prob=model_home_cover,
@@ -2100,7 +2160,10 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _nhl_sp_rec.model_prob_raw = _nhl_sp_raw_home
+                    _nhl_sp_rec.credibility_cap_fired = _nhl_sp_cred_home
+                    recs.append(_nhl_sp_rec)
 
             if away_sp_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
                 sizing = robinhood_kelly(model_away_cover, market_away_cover)
@@ -2108,7 +2171,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                     conf = _confidence_label(away_sp_edge, len(signals), stats_available)
                     if away_injury_capped:
                         conf = "MEDIUM"
-                    recs.append(BetRecommendation(
+                    _nhl_sp_rec = BetRecommendation(
                         sport="NHL", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",
                         market_prob=market_away_cover, model_prob=model_away_cover,
@@ -2117,7 +2180,10 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                         signals=signals[:], research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
-                    ))
+                    )
+                    _nhl_sp_rec.model_prob_raw = _nhl_sp_raw_away
+                    _nhl_sp_rec.credibility_cap_fired = _nhl_sp_cred_away
+                    recs.append(_nhl_sp_rec)
 
     # --- Total (goals) ---
     total = game.get("total")
@@ -2484,7 +2550,7 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
 
     # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
     adjusted_home_prob, _ipl_cred_fired = _apply_credibility_cap_dispatched(
-        adjusted_home_prob, market_home_prob, _cred_cap("ipl", IPL_CRED_CAP), "ipl"
+        adjusted_home_prob, market_home_prob, _cred_cap("ipl", IPL_CRED_CAP, "credibility_moneyline"), "ipl", "credibility_moneyline"
     )
     adjusted_away_prob = 1.0 - adjusted_home_prob
 
@@ -2729,7 +2795,7 @@ def analyze_wnba_game(
     # Standardised across sports; tighter than the prior ±0.20 to limit cold-start
     # overconfidence on small-sample WNBA stats.
     adj_home_prob, _wnba_cred_fired = _apply_credibility_cap_dispatched(
-        adj_home_prob, market_home_prob, _cred_cap("wnba", WNBA_CRED_CAP), "wnba"
+        adj_home_prob, market_home_prob, _cred_cap("wnba", WNBA_CRED_CAP, "credibility_moneyline"), "wnba", "credibility_moneyline"
     )
     adj_away_prob = 1.0 - adj_home_prob
 
@@ -3010,12 +3076,15 @@ def analyze_mls_game(
     # Tighter than other sports (MLS_CRED_CAP = 0.10) due to small-sample noise
     # in early-season xG data; will be auto-relaxed by the calibration engine as
     # the season progresses and more game data accumulates.
-    _mls_eff_cap = _cred_cap("mls", MLS_CRED_CAP)
-    p_home_win, _mls_cred_home_fired = _apply_credibility_cap_dispatched(p_home_win, market_home_prob, _mls_eff_cap, "mls")
-    p_draw,     _mls_cred_draw_fired = _apply_credibility_cap_dispatched(p_draw,     market_draw_prob, _mls_eff_cap, "mls")
+    p_home_win, _mls_cred_home_fired = _apply_credibility_cap_dispatched(
+        p_home_win, market_home_prob, _cred_cap("mls", MLS_CRED_CAP, "credibility_moneyline"), "mls", "credibility_moneyline"
+    )
+    p_draw, _mls_cred_draw_fired = _apply_credibility_cap_dispatched(
+        p_draw, market_draw_prob, _cred_cap("mls", MLS_CRED_CAP, "credibility_draw"), "mls", "credibility_draw"
+    )
     p_away_win = 1.0 - p_home_win - p_draw
     p_away_win, _mls_cred_away_fired = _apply_credibility_cap_dispatched(
-        p_away_win, market_away_prob, _mls_eff_cap, "mls"
+        p_away_win, market_away_prob, _cred_cap("mls", MLS_CRED_CAP, "credibility_moneyline"), "mls", "credibility_moneyline"
     )
     _mls_cred_fired = _mls_cred_home_fired or _mls_cred_draw_fired or _mls_cred_away_fired
 

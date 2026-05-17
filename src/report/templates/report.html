@@ -1720,7 +1720,7 @@
         <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
           <thead>
             <tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
-              <th style="text-align:left;padding:8px 6px;">Sport &middot; Cap</th>
+              <th style="text-align:left;padding:8px 6px;">Cap</th>
               <th style="text-align:left;padding:8px 6px;">Mode</th>
               <th style="text-align:right;padding:8px 6px;">Current</th>
               <th style="text-align:right;padding:8px 6px;">Default</th>
@@ -1734,9 +1734,7 @@
           <tbody>
             {% for c in caps.caps %}
             <tr style="border-bottom:1px solid var(--border);">
-              <td style="padding:7px 6px;">
-                <strong>{{ c.sport }}</strong> &middot; <span style="color:var(--muted);">{{ c.cap_type }}</span>
-              </td>
+              <td style="padding:7px 6px;font-weight:600;">{{ c.display_label }}</td>
               <td style="padding:7px 6px;">
                 <span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;
                              background:{% if c.current_mode == 0 %}#3b3a52{% elif c.current_mode == 1 %}#0e7490{% else %}#14532d{% endif %};

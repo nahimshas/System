@@ -61,36 +61,76 @@ MODE_PROMOTION_THROTTLE_DAYS    = 60     # 2× value-adjust throttle
 # any data-driven adjustment has occurred. Kept duplicated (rather than
 # imported) to avoid circular dependency with edge_finder.
 _INITIAL_DEFAULT_CAPS: Dict[str, float] = {
-    "nba.credibility":        0.15,
-    "mlb.credibility":        0.15,
-    "nfl.credibility":        0.15,
-    "nhl.credibility":        0.15,
-    "wnba.credibility":       0.15,
-    "ipl.credibility":        0.15,
-    "mls.credibility":        0.10,
-    # Per-bet-type caps — calibrate independently from moneylines
-    "nba.credibility_total":  0.15,
-    "nba.credibility_prop":   0.15,
-    "mlb.credibility_total":  0.15,
-    "mlb.credibility_prop":   0.15,
-    "nfl.credibility_total":  0.15,
-    "nhl.credibility_total":  0.15,
-    "mls.credibility_total":  0.10,
-    "mls.credibility_spread": 0.10,
+    # NBA
+    "nba.credibility_moneyline": 0.15,
+    "nba.credibility_spread":    0.15,
+    "nba.credibility_total":     0.15,
+    "nba.credibility_prop":      0.15,
+    # MLB
+    "mlb.credibility_moneyline": 0.15,
+    "mlb.credibility_spread":    0.15,
+    "mlb.credibility_total":     0.15,
+    "mlb.credibility_prop":      0.15,
+    # NFL
+    "nfl.credibility_moneyline": 0.15,
+    "nfl.credibility_spread":    0.15,
+    "nfl.credibility_total":     0.15,
+    # NHL
+    "nhl.credibility_moneyline": 0.15,
+    "nhl.credibility_spread":    0.15,
+    "nhl.credibility_total":     0.15,
+    # MLS
+    "mls.credibility_moneyline": 0.10,
+    "mls.credibility_draw":      0.10,
+    "mls.credibility_total":     0.10,
+    "mls.credibility_spread":    0.10,
+    # WNBA / IPL (moneyline only)
+    "wnba.credibility_moneyline": 0.15,
+    "ipl.credibility_moneyline":  0.15,
+}
+
+_DISPLAY_LABELS: Dict[str, str] = {
+    "nba.credibility_moneyline":  "NBA Moneylines",
+    "nba.credibility_spread":     "NBA Spreads",
+    "nba.credibility_total":      "NBA Over/Unders",
+    "nba.credibility_prop":       "NBA Props",
+    "mlb.credibility_moneyline":  "MLB Moneylines",
+    "mlb.credibility_spread":     "MLB Spreads",
+    "mlb.credibility_total":      "MLB Over/Unders",
+    "mlb.credibility_prop":       "MLB Props",
+    "nfl.credibility_moneyline":  "NFL Moneylines",
+    "nfl.credibility_spread":     "NFL Spreads",
+    "nfl.credibility_total":      "NFL Over/Unders",
+    "nhl.credibility_moneyline":  "NHL Moneylines",
+    "nhl.credibility_spread":     "NHL Spreads",
+    "nhl.credibility_total":      "NHL Over/Unders",
+    "mls.credibility_moneyline":  "MLS Moneylines",
+    "mls.credibility_draw":       "MLS Draws",
+    "mls.credibility_total":      "MLS Over/Unders",
+    "mls.credibility_spread":     "MLS Spreads",
+    "wnba.credibility_moneyline": "WNBA Moneylines",
+    "ipl.credibility_moneyline":  "IPL Moneylines",
+}
+
+_SPORT_ORDER: Dict[str, int] = {
+    "nba": 0, "mlb": 1, "nfl": 2, "nhl": 3, "mls": 4, "wnba": 5, "ipl": 6
+}
+_BET_TYPE_ORDER: Dict[str, int] = {
+    "credibility_moneyline": 0,
+    "credibility_spread":    1,
+    "credibility_total":     2,
+    "credibility_prop":      3,
+    "credibility_draw":      4,
 }
 
 # Maps cap key suffix → set of shadow log bet_type values covered by that cap.
 # Used in evaluate_and_adjust_caps to filter entries to only those bet types.
 _CAP_BET_TYPE_FILTER: Dict[str, set] = {
-    "credibility":         {"Moneyline", "Spread", "Draw"},  # moneylines (spreads derived from same model for NBA/MLB/NFL/NHL)
-    "credibility_total":   {"Total"},
-    "credibility_prop":    {"Prop", ""},                     # "" covers legacy entries before bet_type was added to PropPick
-    "credibility_spread":  {"Spread"},                       # MLS-specific: Poisson-matrix spread
-}
-
-# Sport+key full overrides — takes precedence over _CAP_BET_TYPE_FILTER suffix lookup.
-_CAP_BET_TYPE_OVERRIDE: Dict[str, set] = {
-    "mls.credibility": {"Moneyline", "Draw"},  # MLS spreads have their own key
+    "credibility_moneyline": {"Moneyline"},
+    "credibility_spread":    {"Spread"},
+    "credibility_total":     {"Total"},
+    "credibility_prop":      {"Prop", ""},   # "" covers legacy shadow log entries before PropPick got bet_type
+    "credibility_draw":      {"Draw"},
 }
 
 # Process cache — invalidated on save
@@ -386,7 +426,7 @@ def evaluate_and_adjust_caps() -> int:
 
         # Filter by bet type for this specific cap
         cap_type_suffix = key.split(".", 1)[1]
-        _bt_filter = _CAP_BET_TYPE_OVERRIDE.get(key) or _CAP_BET_TYPE_FILTER.get(cap_type_suffix)
+        _bt_filter = _CAP_BET_TYPE_FILTER.get(cap_type_suffix)
         if _bt_filter is not None:
             sport_entries = [e for e in sport_entries if e.get("bet_type", "") in _bt_filter]
 
@@ -552,6 +592,7 @@ def load_panel_data() -> Dict[str, Any]:
         out["caps"].append({
             "sport":              sport.upper(),
             "cap_type":           cap_type,
+            "display_label":      _DISPLAY_LABELS.get(key, f"{sport.upper()} {cap_type}"),
             "current":            round(current, 4),
             "default":            round(default, 4),
             "delta_from_default": round(delta_from_default, 4),
@@ -570,5 +611,6 @@ def load_panel_data() -> Dict[str, Any]:
             "recent_mode_history": mode_history[-3:],
         })
 
+    out["caps"].sort(key=lambda c: (_SPORT_ORDER.get(c["sport"].lower(), 99), _BET_TYPE_ORDER.get(c["cap_type"], 99)))
     out["has_data"] = any(c["counterfactual"] or c["mode_counterfactual"] for c in out["caps"])
     return out
