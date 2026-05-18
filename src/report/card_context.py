@@ -78,72 +78,85 @@ def merge_context(signals: List[str], research: List[str]) -> List[str]:
 # relative insertion order (signals before research within that tail group).
 
 _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
+    # ── Sports-page order ──────────────────────────────────────────────────────
+    # 1. Projected score / expected total  (headline number)
+    # 2. Team season records / stat lines  (standings context)
+    # 3. Game-specific context             (pitchers, weather, venue)
+    # 4. Schedule / rest                   (situational)
+    # 5. Injuries                          (roster health)
+    # 6. Edge signals                      (why we differ from market)
     "MLB": [
-        re.compile(r"⚠ ERA trap"),                        # ERA trap warnings first
-        re.compile(r"⚠ K matchup"),                        # K matchup warning
-        re.compile(r"^(?:🔵|🔴)"),                         # pitcher lines (home 🔵 / away 🔴)
         re.compile(r"^Model projected score"),              # projected score
         re.compile(r"^Model expected total"),               # expected total
+        re.compile(r"^(?:🔵|🔴)"),                         # pitcher matchup (home 🔵 / away 🔴)
         re.compile(r"^Weather:"),                           # weather conditions
-        re.compile(r"^👨‍⚖️"),                         # umpire (research version)
         re.compile(r"^Venue:"),                             # venue / park factor
         re.compile(r"\bbatting:"),                          # team batting stats
         re.compile(r"\bbullpen:"),                          # team bullpen stats
+        re.compile(r"^👨‍⚖️"),                         # umpire (research version)
         re.compile(r"(?i)schedule|back-to-back|\brest\b"), # schedule / rest
         re.compile(r"(?i)injur"),                           # injuries
+        re.compile(r"⚠ ERA trap"),                        # ERA trap warnings
+        re.compile(r"⚠ K matchup"),                        # K matchup warning
     ],
     "NBA": [
-        re.compile(r"back-to-back"),                        # B2B fatigue first
-        re.compile(r"injury impact"),                       # injuries
         re.compile(r"^Model projected score"),              # projected score
         re.compile(r"^Model expected total"),               # expected total
-        re.compile(r"OffRtg|DefRtg|NetRtg"),               # season stats (research lines)
+        re.compile(r"OffRtg|DefRtg|NetRtg"),               # season records + ratings
         re.compile(r"recent"),                              # recent form
+        re.compile(r"back-to-back"),                        # B2B fatigue
         re.compile(r"[Rr]est"),                             # rest days
-        re.compile(r"[Hh]ome court"),                       # home advantage
         re.compile(r"schedule"),                            # schedule load
+        re.compile(r"⚕"),                                   # injured player details
+        re.compile(r"injury impact"),                       # injury impact signal
+        re.compile(r"[Hh]ome court"),                       # home advantage
     ],
     "NHL": [
-        re.compile(r"back-to-back"),                        # B2B fatigue first
-        re.compile(r"injur"),                               # injuries
-        re.compile(r"GPG|GAPG|NetRtg"),                    # season stats (research lines)
+        re.compile(r"^Model projected score"),              # projected score
+        re.compile(r"GPG|GAPG|NetRtg"),                    # season records + ratings
         re.compile(r"recent"),                              # recent form
+        re.compile(r"back-to-back"),                        # B2B fatigue
         re.compile(r"[Rr]est"),                             # rest days
+        re.compile(r"injur|⚕"),                            # injuries
         re.compile(r"[Hh]ome ice"),                         # home advantage
     ],
     "NFL": [
-        re.compile(r"injur"),                               # injuries first
         re.compile(r"^Model projected score"),              # projected score
-        re.compile(r"[Bb]ye week"),                         # bye week rest
-        re.compile(r"PPG|OPP PPG|NetRtg"),                 # season stats (research lines)
+        re.compile(r"PPG|OPP PPG|NetRtg"),                 # season records + ratings
         re.compile(r"recent"),                              # recent form
+        re.compile(r"[Bb]ye week"),                         # bye week rest
         re.compile(r"[Rr]est"),                             # rest days
+        re.compile(r"injur"),                               # injuries
         re.compile(r"[Hh]ome field"),                       # home advantage
     ],
     "WNBA": [
-        re.compile(r"lineup impact|injuries benefit"),       # injury signals first
-        re.compile(r"⚕"),                                   # injured player details
-        re.compile(r"back-to-back"),                        # B2B fatigue
-        re.compile(r"PPG|NetRtg"),                          # season stats (research lines)
+        re.compile(r"^Model projected score"),              # projected score
+        re.compile(r"PPG|NetRtg"),                          # season records + ratings
         re.compile(r"recent"),                              # recent form
+        re.compile(r"back-to-back"),                        # B2B fatigue
         re.compile(r"[Rr]est"),                             # rest days
+        re.compile(r"⚕"),                                   # injured player details
+        re.compile(r"lineup impact|injuries benefit"),      # injury impact signals
         re.compile(r"[Hh]ome court"),                       # home advantage
     ],
     "IPL": [
-        re.compile(r"Form edge"),                           # form edge first
+        re.compile(r"^Model projected score"),              # projected score
+        re.compile(r"\d+W-\d+L"),                          # team season records
+        re.compile(r"^Venue:"),                             # venue / pitch info
+        re.compile(r"[Pp]itch|[Dd]ew"),                    # pitch / dew conditions
+        re.compile(r"[Rr]est|days since"),                  # rest days
+        re.compile(r"Form edge"),                           # form edge signal
         re.compile(r"[Hh]ome venue"),                       # home venue advantage
         re.compile(r"H2H"),                                 # head-to-head
-        re.compile(r"[Rr]est|days since"),                  # rest
-        re.compile(r"[Pp]itch|[Dd]ew"),                    # pitch / dew conditions
     ],
     "MLS": [
-        re.compile(r"injur|⚕|🚫"),                          # injuries first
-        re.compile(r"xG projection"),                       # xG projection
+        re.compile(r"xG projection"),                       # xG projection (headline)
+        re.compile(r"xGF"),                                 # team season stats
         re.compile(r"xG edge"),                             # xG edge
         re.compile(r"recent form"),                         # recent form
-        re.compile(r"[Hh]ome.*[Vv]enue|[Ff]ortress"),     # home venue
-        re.compile(r"xGF"),                                 # team season stats
         re.compile(r"[Rr]est"),                             # rest days
+        re.compile(r"[Hh]ome.*[Vv]enue|[Ff]ortress"),     # home venue
+        re.compile(r"injur|⚕|🚫"),                          # injuries
     ],
 }
 
