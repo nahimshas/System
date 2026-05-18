@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-05-17T16:27:59.596533+00:00",
+  "computed_at": "2026-05-18T15:58:30.663397+00:00",
   "phase_thresholds": {
     "phase_a_min": 100,
     "phase_b_min": 400,
@@ -18,7 +18,7 @@
       "sport": "IPL",
       "market_type": "Moneyline",
       "phase": "0",
-      "n_total": 5,
+      "n_total": 6,
       "n_settled": 5,
       "single_ratio": 0.9381,
       "single_predicted_rate": 0.6396,
@@ -62,11 +62,11 @@
       "sport": "MLB",
       "market_type": "Moneyline",
       "phase": "0",
-      "n_total": 13,
-      "n_settled": 13,
-      "single_ratio": 0.8762,
-      "single_predicted_rate": 0.7023,
-      "single_realized_rate": 0.6154,
+      "n_total": 25,
+      "n_settled": 15,
+      "single_ratio": 0.8602,
+      "single_predicted_rate": 0.6975,
+      "single_realized_rate": 0.6,
       "buckets": [
         {
           "lo": 0.5,
@@ -79,18 +79,18 @@
         {
           "lo": 0.6,
           "hi": 0.7,
-          "n_settled": 6,
-          "predicted_rate": 0.6425,
-          "realized_rate": 0.6667,
-          "ratio": 1.0376
+          "n_settled": 7,
+          "predicted_rate": 0.6402,
+          "realized_rate": 0.5714,
+          "ratio": 0.8926
         },
         {
           "lo": 0.7,
           "hi": 0.8,
-          "n_settled": 6,
-          "predicted_rate": 0.7375,
-          "realized_rate": 0.5,
-          "ratio": 0.678
+          "n_settled": 7,
+          "predicted_rate": 0.7331,
+          "realized_rate": 0.5714,
+          "ratio": 0.7795
         },
         {
           "lo": 0.8,
@@ -106,7 +106,7 @@
       "sport": "MLB",
       "market_type": "Spread",
       "phase": "0",
-      "n_total": 32,
+      "n_total": 40,
       "n_settled": 32,
       "single_ratio": 0.7972,
       "single_predicted_rate": 0.7448,
@@ -150,11 +150,11 @@
       "sport": "MLB",
       "market_type": "Total",
       "phase": "0",
-      "n_total": 17,
-      "n_settled": 17,
-      "single_ratio": 0.7984,
-      "single_predicted_rate": 0.6999,
-      "single_realized_rate": 0.5588,
+      "n_total": 26,
+      "n_settled": 19,
+      "single_ratio": 0.8665,
+      "single_predicted_rate": 0.6985,
+      "single_realized_rate": 0.6053,
       "buckets": [
         {
           "lo": 0.5,
@@ -167,18 +167,18 @@
         {
           "lo": 0.6,
           "hi": 0.7,
-          "n_settled": 11,
-          "predicted_rate": 0.6599,
-          "realized_rate": 0.5909,
-          "ratio": 0.8954
+          "n_settled": 12,
+          "predicted_rate": 0.6605,
+          "realized_rate": 0.625,
+          "ratio": 0.9462
         },
         {
           "lo": 0.7,
           "hi": 0.8,
-          "n_settled": 3,
-          "predicted_rate": 0.737,
-          "realized_rate": 0.6667,
-          "ratio": 0.9046
+          "n_settled": 4,
+          "predicted_rate": 0.7292,
+          "realized_rate": 0.75,
+          "ratio": 1.0285
         },
         {
           "lo": 0.8,
@@ -191,10 +191,142 @@
       ]
     },
     {
+      "sport": "MLS",
+      "market_type": "Draw",
+      "phase": "0",
+      "n_total": 2,
+      "n_settled": 2,
+      "single_ratio": 0.0,
+      "single_predicted_rate": 0.2691,
+      "single_realized_rate": 0.0,
+      "buckets": [
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        },
+        {
+          "lo": 0.8,
+          "hi": 1.01,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        }
+      ]
+    },
+    {
+      "sport": "MLS",
+      "market_type": "Spread",
+      "phase": "0",
+      "n_total": 2,
+      "n_settled": 0,
+      "single_ratio": 1.0,
+      "single_predicted_rate": 0.0,
+      "single_realized_rate": 0.0,
+      "buckets": [
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        },
+        {
+          "lo": 0.8,
+          "hi": 1.01,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        }
+      ]
+    },
+    {
+      "sport": "MLS",
+      "market_type": "Total",
+      "phase": "0",
+      "n_total": 2,
+      "n_settled": 2,
+      "single_ratio": 0.5945,
+      "single_predicted_rate": 0.8411,
+      "single_realized_rate": 0.5,
+      "buckets": [
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n_settled": 0,
+          "predicted_rate": 0.0,
+          "realized_rate": 0.0,
+          "ratio": 1.0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n_settled": 1,
+          "predicted_rate": 0.7888,
+          "realized_rate": 0.0,
+          "ratio": 0.0
+        },
+        {
+          "lo": 0.8,
+          "hi": 1.01,
+          "n_settled": 1,
+          "predicted_rate": 0.8935,
+          "realized_rate": 1.0,
+          "ratio": 1.1192
+        }
+      ]
+    },
+    {
       "sport": "NBA",
       "market_type": "Moneyline",
       "phase": "0",
-      "n_total": 4,
+      "n_total": 5,
       "n_settled": 4,
       "single_ratio": 1.2899,
       "single_predicted_rate": 0.7752,
@@ -238,7 +370,7 @@
       "sport": "NBA",
       "market_type": "Spread",
       "phase": "0",
-      "n_total": 12,
+      "n_total": 13,
       "n_settled": 12,
       "single_ratio": 0.798,
       "single_predicted_rate": 0.731,
@@ -282,11 +414,11 @@
       "sport": "NBA",
       "market_type": "Total",
       "phase": "0",
-      "n_total": 23,
-      "n_settled": 23,
-      "single_ratio": 0.6488,
-      "single_predicted_rate": 0.7371,
-      "single_realized_rate": 0.4783,
+      "n_total": 24,
+      "n_settled": 24,
+      "single_ratio": 0.6748,
+      "single_predicted_rate": 0.741,
+      "single_realized_rate": 0.5,
       "buckets": [
         {
           "lo": 0.5,
@@ -315,10 +447,10 @@
         {
           "lo": 0.8,
           "hi": 1.01,
-          "n_settled": 4,
-          "predicted_rate": 0.8547,
-          "realized_rate": 0.5,
-          "ratio": 0.585
+          "n_settled": 5,
+          "predicted_rate": 0.8497,
+          "realized_rate": 0.6,
+          "ratio": 0.7062
         }
       ]
     },
@@ -458,11 +590,11 @@
       "sport": "WNBA",
       "market_type": "Moneyline",
       "phase": "0",
-      "n_total": 6,
-      "n_settled": 6,
-      "single_ratio": 0.5889,
-      "single_predicted_rate": 0.566,
-      "single_realized_rate": 0.3333,
+      "n_total": 10,
+      "n_settled": 10,
+      "single_ratio": 0.801,
+      "single_predicted_rate": 0.6242,
+      "single_realized_rate": 0.5,
       "buckets": [
         {
           "lo": 0.5,
@@ -483,18 +615,18 @@
         {
           "lo": 0.7,
           "hi": 0.8,
-          "n_settled": 0,
-          "predicted_rate": 0.0,
-          "realized_rate": 0.0,
-          "ratio": 1.0
+          "n_settled": 2,
+          "predicted_rate": 0.767,
+          "realized_rate": 0.5,
+          "ratio": 0.6519
         },
         {
           "lo": 0.8,
           "hi": 1.01,
-          "n_settled": 2,
+          "n_settled": 3,
           "predicted_rate": 0.9,
-          "realized_rate": 0.5,
-          "ratio": 0.5556
+          "realized_rate": 0.6667,
+          "ratio": 0.7407
         }
       ]
     }
