@@ -150,7 +150,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, May 17, 2026 &middot; Generated May 17, 2026 at 08:44 PM PDT</div>
+    <div class="subtitle">Sunday, May 17, 2026 &middot; Generated May 17, 2026 at 09:09 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
       MLB: 14 games &nbsp;|&nbsp;
@@ -5214,6 +5214,27 @@
     var nick = o.split(/\s+/).pop();
     if (nick.length > 3 && e.includes(nick)) return true;
 
+    // Acronym / abbreviation match — handles ESPN using a team's abbreviation
+    // as its displayName (e.g. ESPN returns "LAFC" while Odds API stores
+    // "Los Angeles FC"). Checks whether the short form (≤ 5 non-space chars)
+    // can be derived by taking a prefix of each consecutive word in the full
+    // name: "LAFC" ↔ "Los Angeles FC" → L·A·FC → "lafc". ✓
+    function _canAbbrev(abbr, fullName) {
+      var words = fullName.split(/\s+/);
+      var ai = 0;
+      for (var wi = 0; wi < words.length && ai < abbr.length; wi++) {
+        for (var li = 0; li < words[wi].length && ai < abbr.length; li++) {
+          if (words[wi][li] === abbr[ai]) ai++;
+          else break;
+        }
+      }
+      return ai === abbr.length;
+    }
+    var eNoSp = e.replace(/\s+/g, "");
+    var oNoSp = o.replace(/\s+/g, "");
+    if (eNoSp.length <= 5 && _canAbbrev(eNoSp, o)) return true;
+    if (oNoSp.length <= 5 && _canAbbrev(oNoSp, e)) return true;
+
     // Token-overlap fallback — handles reordered names and singular/plural
     // forms that defeat substring + nickname matching. Example: ESPN's
     // "Red Bull New York" vs the Odds API's "New York Red Bulls" — last
@@ -5448,9 +5469,16 @@
     if (betType === "Spread") {
       var parsed2 = parsePick(pick, "Spread");
       if (!parsed2) return null;
+      var line2 = parsed2.line;
+      // Integer lines (e.g. +2.0) can produce pushes; nudge ±0.5 toward 0 to
+      // match edge_finder behaviour (picks stored before the .5 fix are adjusted
+      // client-side so they always resolve to WON or LOST, never PUSH).
+      if (line2 % 1 === 0 && line2 !== 0) {
+        line2 = line2 > 0 ? line2 - 0.5 : line2 + 0.5;
+      }
       var weAreHome2 = teamMatch(homeTeam, ourTeam);
       var margin     = weAreHome2 ? (hs - as) : (as - hs);  // positive = our team winning
-      var adj        = margin + parsed2.line;  // margin adjusted for spread (if spread=-4.5, adj = margin-4.5)
+      var adj        = margin + line2;  // margin adjusted for spread (if line=-4.5, adj = margin-4.5)
       if (adj === 0) return "PUSH";
       return adj > 0 ? "WON" : "LOST";
     }
