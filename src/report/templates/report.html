@@ -3420,7 +3420,9 @@
     "Assists Over":  "assists",
     "Steals Over":   "steals",
     "Blocks Over":   "blocks",
-    "Threes Over":   "threePointFieldGoalsMade",
+    // ESPN returns threes as a combined "made-attempted" string (e.g. "3-5").
+    // parseFloat("3-5") = 3, parseFloat("0-7") = 0 — correct WON/LOST result.
+    "Threes Over":   "threePointFieldGoalsMade-threePointFieldGoalsAttempted",
   };
   // ESPN MLB pitching group has no name — detect by pitching-specific keys
   var MLB_PITCHING_MARKERS = ["ERA", "fullInnings.partInnings", "earnedRuns"];
