@@ -735,7 +735,8 @@
          data-edge-pct="{{ bet.edge_pct }}"
          data-model-prob-pct="{{ bet.model_prob_pct }}"
          data-market-prob-pct="{{ bet.market_prob_pct }}"
-         data-commence-time="{{ bet.commence_time }}">
+         data-commence-time="{{ bet.commence_time }}"
+         {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-in-history="1"{% endif %}>
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -821,7 +822,8 @@
          data-edge-pct="{{ bet.edge_pct }}"
          data-model-prob-pct="{{ bet.model_prob_pct }}"
          data-market-prob-pct="{{ bet.market_prob_pct }}"
-         data-commence-time="{{ bet.commence_time }}">
+         data-commence-time="{{ bet.commence_time }}"
+         {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-in-history="1"{% endif %}>
       <div class="card-toggle-header">
         <div class="card-header">
           <div>
@@ -904,7 +906,8 @@
          data-edge-pct="{{ bet.edge_pct }}"
          data-model-prob-pct="{{ bet.model_prob_pct }}"
          data-market-prob-pct="{{ bet.market_prob_pct }}"
-         data-commence-time="{{ bet.commence_time }}">
+         data-commence-time="{{ bet.commence_time }}"
+         {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-in-history="1"{% endif %}>
       <div class="card-toggle-header">
         <div class="card-header">
           <div>

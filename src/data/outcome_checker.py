@@ -760,11 +760,16 @@ def check_and_settle_props(today: date) -> int:
     """
     Settle prop projections against ESPN box score actuals.
 
-    Settles TWO windows each run:
-      1. Yesterday's props  — always attempted (primary settlement)
-      2. Today's props      — settled if games are already final in ESPN
-                              (handles same-day settlement when the workflow
-                              runs after games finish, e.g. a manual evening run)
+    Primary window (runs every day):
+      - yesterday's props  — always attempted
+      - today's props      — settled if games are already final in ESPN
+                             (handles same-day settlement for manual evening runs)
+
+    Catch-up window (days 2 and 3 back) — only runs when those records are
+    genuinely absent from prop_history.  Emits a WARNING log when it fires
+    so unexpected catches are visible in the workflow log.  A catch-up hit
+    means a prior morning run failed to settle that day; the warning is the
+    signal to investigate.
 
     Appends new settled records to state/prop_history.json.
     Returns the total number of props newly settled this run.
@@ -780,14 +785,29 @@ def check_and_settle_props(today: date) -> int:
     existing_keys = {(r["date"], r["player"], r["prop_type"]) for r in existing}
     all_new: List[Dict] = []
 
-    for settle_date in [today - timedelta(days=3), today - timedelta(days=2),
-                        today - timedelta(days=1), today]:
+    # Primary window: yesterday + today
+    primary_dates  = [today - timedelta(days=1), today]
+    # Catch-up window: 2 and 3 days ago (ESPN box scores still available)
+    catchup_dates  = [today - timedelta(days=3), today - timedelta(days=2)]
+
+    for settle_date in primary_dates + catchup_dates:
+        is_catchup = settle_date in catchup_dates
         state = load_state(settle_date)
         if not state:
             continue
         props = state.get("props", [])
         if not props:
             continue
+
+        # For catch-up dates: skip entirely if every prop for that date is already
+        # settled — avoids ESPN calls on days that settled correctly.
+        if is_catchup:
+            props_in_history = sum(
+                1 for p in props
+                if (settle_date.isoformat(), p.get("player", ""), p.get("prop_type", "")) in existing_keys
+            )
+            if props_in_history == len(props):
+                continue  # all settled — no catch-up needed
 
         settled = check_prop_outcomes(props, settle_date)
         if not settled:
@@ -797,8 +817,14 @@ def check_and_settle_props(today: date) -> int:
             r for r in settled
             if (r["date"], r["player"], r["prop_type"]) not in existing_keys
         ]
+        if new and is_catchup:
+            logger.warning(
+                f"Prop catch-up settlement: {len(new)} prop(s) for {settle_date} "
+                f"were not in prop_history — prior morning run may have failed. "
+                f"Players: {[r['player'] for r in new]}"
+            )
         all_new.extend(new)
-        # Keep existing_keys current so today's records don't double-count yesterday's
+        # Keep existing_keys current so later dates don't double-count earlier ones
         for r in new:
             existing_keys.add((r["date"], r["player"], r["prop_type"]))
 

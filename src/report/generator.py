@@ -171,6 +171,46 @@ def build_report(
         key=lambda s: (0 if s.get("confidence") == "HIGH" else 1, -s.get("edge", 0)),
     )
 
+    # Decorate settled NHL / WNBA / MLS watchlist cards with status='settled'
+    # and result='WON'/'LOST' so the HTML template can stamp data-in-history="1"
+    # on them.  Without this flag the JS updateWatchlistTiles() would count them
+    # again on top of the data-hist-won/lost baseline that the morning run already
+    # wrote (double-count).  IPL is handled separately via watchlist_pending.json.
+    try:
+        from src.data.outcome_checker import _load_watchlist_history
+        from datetime import datetime as _dt
+        _wl_hist = _load_watchlist_history()
+        # Build lookup: (sport, pick, game, date) → result
+        _wl_settled: Dict = {}
+        for _r in _wl_hist:
+            if _r.get("result") in ("WON", "LOST"):
+                _wl_settled[(_r["sport"], _r["pick"], _r["game"], _r["date"])] = _r["result"]
+
+        def _card_date(card: Dict) -> str:
+            ct = card.get("commence_time", "")
+            if ct:
+                try:
+                    return _dt.fromisoformat(ct.replace("Z", "+00:00")).date().isoformat()
+                except Exception:
+                    pass
+            return ""
+
+        def _mark_settled(cards: List[Dict], sport: str) -> List[Dict]:
+            out = []
+            for c in cards:
+                key = (sport, c.get("pick", ""), c.get("game", ""), _card_date(c))
+                result = _wl_settled.get(key)
+                if result:
+                    c = {**c, "status": "settled", "result": result}
+                out.append(c)
+            return out
+
+        nhl_watchlist  = _mark_settled(nhl_watchlist,  "NHL")
+        wnba_watchlist = _mark_settled(wnba_watchlist, "WNBA")
+        mls_watchlist  = _mark_settled(mls_watchlist,  "MLS")
+    except Exception as _e:
+        logger.debug(f"Watchlist settled decoration skipped: {_e}")
+
     # Top picks: HIGH confidence first, then by edge within each tier.
     # Deduplicate by (sport, home_team, away_team, bet_type) — a line move creates
     # a new pick label but it's the same bet; keep the first (highest-edge) occurrence.
