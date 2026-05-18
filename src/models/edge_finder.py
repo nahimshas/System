@@ -329,6 +329,41 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
     home_inj = injury_adjustment(home, nba_injuries, "nba")
     away_inj = injury_adjustment(away, nba_injuries, "nba")
 
+    # ── Pre-compute projected score shared by all bet types ───────────────────
+    # Uses the blended formula (season + recent form + B2B + injury pts) so
+    # ML, Spread, and Total cards always show the same number for a given game.
+    _proj_score_signal: Optional[str] = None
+    _home_stats_pre = nba_ctx["season_stats"].get(home, {})
+    _away_stats_pre = nba_ctx["season_stats"].get(away, {})
+    if _home_stats_pre and _away_stats_pre:
+        _hrf_pre = nba_ctx["recent_form"].get(home, {})
+        _arf_pre = nba_ctx["recent_form"].get(away, {})
+        _w_pre = NBA_PLAYOFF_RECENT_WEIGHT if playoff else NBA_RECENT_FORM_WEIGHT
+        _home_off_pre = ((1 - _w_pre) * _home_stats_pre.get("off_rtg", 110)
+                         + _w_pre * _hrf_pre.get("recent_ppg", _home_stats_pre.get("off_rtg", 110)))
+        _home_def_pre = ((1 - _w_pre) * _home_stats_pre.get("def_rtg", 110)
+                         + _w_pre * _hrf_pre.get("recent_oppg", _home_stats_pre.get("def_rtg", 110)))
+        _away_off_pre = ((1 - _w_pre) * _away_stats_pre.get("off_rtg", 110)
+                         + _w_pre * _arf_pre.get("recent_ppg", _away_stats_pre.get("off_rtg", 110)))
+        _away_def_pre = ((1 - _w_pre) * _away_stats_pre.get("def_rtg", 110)
+                         + _w_pre * _arf_pre.get("recent_oppg", _away_stats_pre.get("def_rtg", 110)))
+        _avg_pace_pre = (_home_stats_pre.get("pace", 100) + _away_stats_pre.get("pace", 100)) / 2
+        if playoff:
+            _avg_pace_pre *= NBA_PLAYOFF_PACE_FACTOR
+        _proj_home = (_home_off_pre + _away_def_pre) / 2 * _avg_pace_pre / 100
+        _proj_away = (_away_off_pre + _home_def_pre) / 2 * _avg_pace_pre / 100
+        if home_rest == 0:
+            _proj_home -= 4.0
+        if away_rest == 0:
+            _proj_away -= 4.0
+        _inj_home_pts_pre = min(home_inj * _NBA_INJ_TO_PTS, 6.0)
+        _inj_away_pts_pre = min(away_inj * _NBA_INJ_TO_PTS, 6.0)
+        if _inj_home_pts_pre > 0.5:
+            _proj_home -= _inj_home_pts_pre
+        if _inj_away_pts_pre > 0.5:
+            _proj_away -= _inj_away_pts_pre
+        _proj_score_signal = f"Model projected score: {home} {_proj_home:.0f} — {away} {_proj_away:.0f}"
+
     ml = game.get("moneyline")
     if ml:
         market_home_prob = ml["home_prob"]
@@ -456,23 +491,9 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         if not home_inj_list and not away_inj_list:
             research.append("No significant injuries reported for either team")
 
-        # --- Model projected score (shown on all bet cards for this game) ---
-        # B2B adjustment applied here so ML/Spread/Total all show the same number.
-        if home_stats and away_stats:
-            _avg_pace = (home_stats.get("pace", 100) + away_stats.get("pace", 100)) / 2
-            if playoff:
-                _avg_pace *= NBA_PLAYOFF_PACE_FACTOR
-            _exp_home = (home_stats.get("off_rtg", 110) + away_stats.get("def_rtg", 110)) / 2 * _avg_pace / 100
-            _exp_away = (away_stats.get("off_rtg", 110) + home_stats.get("def_rtg", 110)) / 2 * _avg_pace / 100
-            if playoff:
-                _exp_home *= NBA_PLAYOFF_SCORING_FACTOR
-                _exp_away *= NBA_PLAYOFF_SCORING_FACTOR
-            # Apply the same -4 pt B2B penalty used in the Total block
-            if home_rest == 0:
-                _exp_home -= 4.0
-            if away_rest == 0:
-                _exp_away -= 4.0
-            signals.append(f"Model projected score: {home} {_exp_home:.0f} — {away} {_exp_away:.0f}")
+        # --- Model projected score (pre-computed above; same formula as Total block) ---
+        if _proj_score_signal:
+            signals.append(_proj_score_signal)
 
         # Calibration capture: raw prob (pre-any-cap) + cap firing trackers.
         # Stamped onto each rec at the end so the shadow log can later run
@@ -703,7 +724,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             )
 
             base_total_signals = [
-                f"Model projected score: {home} {expected_home_pts:.0f} — {away} {expected_away_pts:.0f}",
+                _proj_score_signal or f"Model projected score: {home} {expected_home_pts:.0f} — {away} {expected_away_pts:.0f}",
                 f"Model expected total: {blended_total:.1f} vs market line {market_line}",
                 f"Combined pace: {avg_pace:.1f} possessions/game",
             ]
