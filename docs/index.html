@@ -150,7 +150,7 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Sunday, May 17, 2026 &middot; Generated May 17, 2026 at 09:57 PM PDT</div>
+    <div class="subtitle">Sunday, May 17, 2026 &middot; Generated May 17, 2026 at 10:01 PM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
       NBA: 1 game &nbsp;|&nbsp;
       MLB: 14 games &nbsp;|&nbsp;
@@ -6658,9 +6658,10 @@
 
     // ── Calibration table ───────────────────────────────────────────────
     var CAL_BUCKETS = [
-      { label: "3–8%",  lo: 0.03, hi: 0.08 },
-      { label: "8–15%", lo: 0.08, hi: 0.15 },
-      { label: "15%+",  lo: 0.15, hi: 1.00 },
+      { label: "3–8%",   lo: 0.03, hi: 0.08 },
+      { label: "8–15%",  lo: 0.08, hi: 0.15 },
+      { label: "15–25%", lo: 0.15, hi: 0.25 },
+      { label: "25%+",   lo: 0.25, hi: 1.00 },
     ];
     var calTbody = document.getElementById("chart-cal-tbody");
     if (calTbody) {
