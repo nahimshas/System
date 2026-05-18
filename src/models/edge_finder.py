@@ -3151,6 +3151,11 @@ def analyze_mls_game(
         home_point     = sp.get("home_spread") or sp.get("home_point", 0)
         market_home_sp = sp.get("home_prob", 0.5)
         market_away_sp = sp.get("away_prob", 0.5)
+        # Adjust integer spread lines to .5 to eliminate push risk.
+        # Robinhood only offers .5 lines; integer lines (e.g. +2) can push
+        # (e.g. team wins by exactly 2). Shift toward 0 by 0.5 to match.
+        if home_point % 1 == 0 and home_point != 0:
+            home_point = (home_point - 0.5) if home_point > 0 else (home_point + 0.5)
         model_home_sp = sum(
             v for (i, j), v in matrix.items() if (i - j) > -home_point
         )
