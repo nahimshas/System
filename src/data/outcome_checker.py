@@ -441,6 +441,10 @@ def _determine_outcome(
             logger.warning(f"Spread: cannot parse spread from pick '{pick}'")
             return "UNKNOWN"
         spread = float(match.group(1))
+        # Integer lines (e.g. +2.0) can produce pushes; nudge ±0.5 toward zero
+        # to match edge_finder behaviour (picks stored before the .5 fix).
+        if spread != 0 and spread % 1 == 0:
+            spread = spread - 0.5 if spread > 0 else spread + 0.5
 
         # Determine which team the spread applies to
         pick_team = re.sub(r"[+-][\d.]+\s*$", "", pick).strip().lower()

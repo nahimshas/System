@@ -14,12 +14,15 @@ ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports"
 
 # Map prop_type strings → ESPN NBA box score stat key
 # ESPN uses lowercase full words (confirmed from live API): "points", "rebounds", "assists"
+# Threes are returned as a combined "made-attempted" string (e.g. "3-5") under the
+# combined key — _get_nba_player_stat handles the split to extract the made count.
 NBA_STAT_KEY = {
     "Points Over":   "points",
     "Rebounds Over": "rebounds",
     "Assists Over":  "assists",
     "Steals Over":   "steals",
     "Blocks Over":   "blocks",
+    "Threes Over":   "threePointFieldGoalsMade-threePointFieldGoalsAttempted",
 }
 
 # ESPN MLB pitching group has no name — detect by pitching-specific keys
@@ -113,7 +116,8 @@ def _find_event_id(events: List[Dict], team: str, opponent: str) -> Optional[str
 def _get_nba_player_stat(summary: Dict, player_name: str, stat_key: str) -> Optional[float]:
     """
     Walk the NBA box score and return a single player's stat value.
-    stat_key: 'PTS', 'REB', 'AST'
+    stat_key: 'points', 'rebounds', 'assists', or the combined
+    'threePointFieldGoalsMade-threePointFieldGoalsAttempted' (returns made count).
     """
     for team_data in summary.get("boxscore", {}).get("players", []):
         for stat_group in team_data.get("statistics", []):
@@ -127,7 +131,12 @@ def _get_nba_player_stat(summary: Dict, player_name: str, stat_key: str) -> Opti
                     stats = athlete_entry.get("stats", [])
                     if idx < len(stats):
                         try:
-                            return float(stats[idx])
+                            val_str = str(stats[idx])
+                            # ESPN returns combined "made-attempted" strings for some
+                            # stats (e.g. "3-5" for threes) — extract the made count.
+                            if "-" in val_str and not val_str.startswith("-"):
+                                val_str = val_str.split("-")[0]
+                            return float(val_str)
                         except (ValueError, TypeError):
                             pass
     return None
