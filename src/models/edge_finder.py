@@ -2611,6 +2611,15 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
         signals.append(f"🚫 {away} missing: {names} (+{penalty*100:.0f}% for {home})")
         research.append(f"Unavailable ({away}): {names}")
 
+    # --- Projected score (runs) ---
+    _ipl_avg_fi = 165.0
+    _fi = vstats.get("avg_first_innings") or _ipl_avg_fi
+    _home_margin = home_form.get("avg_margin", 0.0)
+    _away_margin = away_form.get("avg_margin", 0.0)
+    _proj_home_runs = _fi + _home_margin * 0.15
+    _proj_away_runs = _fi + _away_margin * 0.15
+    signals.append(f"Model projected score: {home} {_proj_home_runs:.0f} — {away} {_proj_away_runs:.0f}")
+
     # Calibration capture: raw prob + cap firing trackers.
     _ipl_raw_home = base_home_prob + adj
     _ipl_hardcap_fired = (_ipl_raw_home > 0.90) or (_ipl_raw_home < 0.10)
@@ -2805,6 +2814,14 @@ def analyze_wnba_game(
     if away_rest == 1:
         adj += WNBA_BACK_TO_BACK_PENALTY
         signals.append(f"{away_raw} on back-to-back — favors {home_raw} (+{WNBA_BACK_TO_BACK_PENALTY*100:.0f}%)")
+
+    # ── Projected score ───────────────────────────────────────────────────────
+    _wnba_avg = 82.0
+    _away_def_allowed = away_recent.get("recent_opp_ppg", away_stats.get("opp_ppg", _wnba_avg))
+    _home_def_allowed = home_recent.get("recent_opp_ppg", home_stats.get("opp_ppg", _wnba_avg))
+    _proj_home_pts = (home_ppg + _away_def_allowed) / 2
+    _proj_away_pts = (away_ppg + _home_def_allowed) / 2
+    signals.append(f"Model projected score: {home_raw} {_proj_home_pts:.0f} — {away_raw} {_proj_away_pts:.0f}")
 
     # ── Lineup penalty (points-share based) ───────────────────────────────────
     def _lineup_penalty(team_display: str, team_raw: str) -> float:
