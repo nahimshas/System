@@ -1972,6 +1972,35 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
     home_rest = nhl_ctx["rest_days"].get(home, 2)
     away_rest = nhl_ctx["rest_days"].get(away, 2)
 
+    # ── Pre-compute projected score shared by all bet types ───────────────────
+    # Uses the blended formula (season + recent form + B2B + playoff factor) so
+    # ML, Spread, and Total cards always show the same number for a given game.
+    _nhl_proj_signal: Optional[str] = None
+    _nhl_hs_pre = nhl_ctx["season_stats"].get(home, {})
+    _nhl_as_pre = nhl_ctx["season_stats"].get(away, {})
+    if _nhl_hs_pre and _nhl_as_pre:
+        _nhl_hrf = nhl_ctx["recent_form"].get(home, {})
+        _nhl_arf = nhl_ctx["recent_form"].get(away, {})
+        _nhl_w = 0.55 if playoff else NHL_RECENT_WEIGHT
+        _nhl_hgpg  = ((1 - _nhl_w) * _nhl_hs_pre.get("gpg",  3.0)
+                      + _nhl_w * _nhl_hrf.get("recent_gpg",  _nhl_hs_pre.get("gpg",  3.0)))
+        _nhl_hgapg = ((1 - _nhl_w) * _nhl_hs_pre.get("gapg", 3.0)
+                      + _nhl_w * _nhl_hrf.get("recent_gapg", _nhl_hs_pre.get("gapg", 3.0)))
+        _nhl_agpg  = ((1 - _nhl_w) * _nhl_as_pre.get("gpg",  3.0)
+                      + _nhl_w * _nhl_arf.get("recent_gpg",  _nhl_as_pre.get("gpg",  3.0)))
+        _nhl_agapg = ((1 - _nhl_w) * _nhl_as_pre.get("gapg", 3.0)
+                      + _nhl_w * _nhl_arf.get("recent_gapg", _nhl_as_pre.get("gapg", 3.0)))
+        _nhl_ph = (_nhl_hgpg  + _nhl_agapg) / 2
+        _nhl_pa = (_nhl_agpg  + _nhl_hgapg) / 2
+        if home_rest == 1:
+            _nhl_ph -= 0.20
+        if away_rest == 1:
+            _nhl_pa -= 0.20
+        if playoff:
+            _nhl_ph *= NHL_PLAYOFF_SCORING_FACTOR
+            _nhl_pa *= NHL_PLAYOFF_SCORING_FACTOR
+        _nhl_proj_signal = f"Model projected score: {home} {_nhl_ph:.1f} — {away} {_nhl_pa:.1f}"
+
     ml = game.get("moneyline")
     if ml:
         market_home_prob = ml["home_prob"]
@@ -2074,6 +2103,10 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
 
         if not home_inj_list and not away_inj_list:
             research.append("No significant injuries reported for either team")
+
+        # Projected score (pre-computed above; same formula as Total block)
+        if _nhl_proj_signal:
+            signals.append(_nhl_proj_signal)
 
         # Calibration capture: raw prob + cap firing trackers.
         _nhl_raw_home = _nhl_margin_to_prob(base_margin) + adj
@@ -2253,7 +2286,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             )
 
             total_signals = [
-                f"Model projected score: {home} {exp_home:.1f} — {away} {exp_away:.1f}",
+                _nhl_proj_signal or f"Model projected score: {home} {exp_home:.1f} — {away} {exp_away:.1f}",
                 f"Model expected total: {blended_total:.1f} vs market line {market_line}",
             ]
             total_research = [
