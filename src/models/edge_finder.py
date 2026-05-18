@@ -1610,6 +1610,17 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
     home_rest = nfl_ctx["rest_days"].get(home, 7)
     away_rest = nfl_ctx["rest_days"].get(away, 7)
 
+    # ── Pre-compute projected score shared by all bet types ───────────────────
+    # Mirrors the Total block formula (season ppg/oppg average) so ML, Spread,
+    # and Total cards always show the same number for a given game.
+    _nfl_proj_signal: Optional[str] = None
+    _nfl_hs_pre = nfl_ctx["season_stats"].get(home, {})
+    _nfl_as_pre = nfl_ctx["season_stats"].get(away, {})
+    if _nfl_hs_pre and _nfl_as_pre:
+        _nfl_ph = (_nfl_hs_pre.get("ppg", 21.0) + _nfl_as_pre.get("oppg", 21.0)) / 2
+        _nfl_pa = (_nfl_as_pre.get("ppg", 21.0) + _nfl_hs_pre.get("oppg", 21.0)) / 2
+        _nfl_proj_signal = f"Model projected score: {home} {_nfl_ph:.0f} — {away} {_nfl_pa:.0f}"
+
     ml = game.get("moneyline")
     if ml:
         market_home_prob = ml["home_prob"]
@@ -1708,6 +1719,10 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
 
         if not home_inj_list and not away_inj_list:
             research.append("No significant injuries reported for either team")
+
+        # Projected score (pre-computed above; same formula as Total block)
+        if _nfl_proj_signal:
+            signals.append(_nfl_proj_signal)
 
         # Calibration capture: raw prob + cap firing trackers.
         _nfl_raw_home = _nfl_margin_to_prob(base_margin) + adj
@@ -1861,7 +1876,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
             )
 
             total_signals = [
-                f"Model projected score: {home} {exp_home:.0f} — {away} {exp_away:.0f}",
+                _nfl_proj_signal or f"Model projected score: {home} {exp_home:.0f} — {away} {exp_away:.0f}",
                 f"Model expected total: {expected_total:.1f} vs market line {market_line}",
             ]
             total_research = [
