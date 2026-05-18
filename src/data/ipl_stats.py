@@ -157,16 +157,19 @@ def _extract_payload(html: str) -> str:
     return "\n".join(parts)
 
 
-def _fetch_series_matches(series_id: str) -> List[Dict]:
+def _fetch_series_matches(series_id: str, force_refresh: bool = False) -> List[Dict]:
     """
     Parse all IPL matches from the Cricbuzz series matches page.
 
     Each returned dict:
       {match_id, state, status, team1, team2, ground, city,
        start_ms, team1_runs, team1_wkts, team2_runs, team2_wkts}
+
+    force_refresh=True bypasses the module-level cache (used by settlement
+    paths so they always fetch current data rather than a stale context-run cache).
     """
     global _matches_cache
-    if _matches_cache is not None:
+    if not force_refresh and _matches_cache is not None:
         return _matches_cache
 
     # Use the cached slug if available; fall back to constructing from current year.
@@ -601,7 +604,10 @@ def get_ipl_completed_matches(today: date) -> List[Dict]:
     series_id = _discover_series_id(today.year)
     if not series_id:
         return []
-    matches = _fetch_series_matches(series_id)
+    # Always force a fresh fetch for settlement — the module-level cache may
+    # hold stale/partial data from an earlier context-generation call in the
+    # same pipeline run, which caused completed matches to be missed.
+    matches = _fetch_series_matches(series_id, force_refresh=True)
     result = []
     for m in matches:
         if m.get("state") != "Complete":
