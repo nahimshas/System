@@ -208,6 +208,7 @@ def build_report(
         nhl_watchlist  = _mark_settled(nhl_watchlist,  "NHL")
         wnba_watchlist = _mark_settled(wnba_watchlist, "WNBA")
         mls_watchlist  = _mark_settled(mls_watchlist,  "MLS")
+        ipl_watchlist  = _mark_settled(ipl_watchlist,  "IPL")
     except Exception as _e:
         logger.debug(f"Watchlist settled decoration skipped: {_e}")
 
