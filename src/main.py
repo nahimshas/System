@@ -189,6 +189,15 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             out_path.write_text(html, encoding="utf-8")
             logger.info(f"Report written to {out_path} (code-only)")
 
+            try:
+                spa_template = jinja_env.get_template("report_spa.html")
+                spa_html     = spa_template.render(report=report_data)
+                spa_path     = out_dir / "index_spa.html"
+                spa_path.write_text(spa_html, encoding="utf-8")
+                logger.info(f"SPA report written to {spa_path} (code-only)")
+            except Exception as e:
+                logger.warning(f"SPA render skipped: {e}")
+
             bet_count = len(final_singles) + len(final_parlays)
             if send_email:
                 send_report(html, today, bet_count)
@@ -802,6 +811,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
     template_dir = Path(__file__).parent / "report" / "templates"
     env          = Environment(loader=FileSystemLoader(str(template_dir)))
+
+    # Classic report
     template     = env.get_template("report.html")
     html         = template.render(report=report_data)
 
@@ -810,6 +821,16 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     out_path = out_dir / REPORT_FILE
     out_path.write_text(html, encoding="utf-8")
     logger.info(f"Report written to {out_path}")
+
+    # SPA report
+    try:
+        spa_template = env.get_template("report_spa.html")
+        spa_html     = spa_template.render(report=report_data)
+        spa_path     = out_dir / "index_spa.html"
+        spa_path.write_text(spa_html, encoding="utf-8")
+        logger.info(f"SPA report written to {spa_path}")
+    except Exception as e:
+        logger.warning(f"SPA render skipped: {e}")
 
     bet_count = len(report_data["all_singles"]) + len(final_parlays)
     if send_email:
