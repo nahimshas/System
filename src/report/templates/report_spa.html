@@ -580,6 +580,13 @@
       padding: 12px 14px;
       margin-bottom: 10px;
     }
+    .alloc-card.tappable { cursor: pointer; }
+    .alloc-card.tappable:active { background: rgba(255,255,255,0.04); }
+    .alloc-goto {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 0.68rem; color: var(--teal); margin-top: 6px;
+      opacity: 0.75;
+    }
     .alloc-card-top {
       display: flex;
       gap: 10px;
@@ -753,6 +760,9 @@
         <span class="alloc-chip">Cost ${{ "%.2f"|format(row.cost) }}</span>
         <span class="alloc-chip win">+${{ "%.2f"|format(row.profit_if_win) }} if win</span>
       </div>
+      {% if row.bet_type != "Parlay" %}
+      <div class="alloc-goto">View full card in {{ row.sport }} tab ›</div>
+      {% endif %}
     </div>
     {% endfor %}
 
@@ -1451,6 +1461,39 @@
     var saved = localStorage.getItem("spa-tab");
     if (saved && TABS.indexOf(saved) >= 0) showTab(saved);
   } catch(e) {}
+
+  // ── Today card → sport tab deep-link ─────────────────────────────────────
+  document.querySelectorAll(".alloc-card").forEach(function(card) {
+    if (card.hasAttribute("data-legs")) return;          // parlays — no single card to link to
+    var sport = (card.getAttribute("data-sport") || "").toLowerCase();
+    var rank  = card.id.replace("alloc-", "");
+    if (!sport || !rank || TABS.indexOf(sport) < 0) return;
+    card.classList.add("tappable");
+    card.addEventListener("click", function(e) {
+      if (e.target.closest("a, button")) return;        // let inner links/buttons fire normally
+      showTab(sport);
+      setTimeout(function() {
+        var target = document.getElementById("bet-" + rank);
+        if (!target) return;
+        // Open any collapsed <details> ancestors so the card is visible
+        var el = target;
+        while ((el = el.parentElement)) {
+          if (el.tagName === "DETAILS" && !el.open) {
+            el.open = true;
+            try { localStorage.setItem("spa-det-" + el.id, "1"); } catch(e2) {}
+          }
+        }
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Brief teal outline flash to highlight the card
+        target.style.outline = "2px solid var(--teal)";
+        target.style.borderRadius = "12px";
+        setTimeout(function() {
+          target.style.outline = "";
+          target.style.borderRadius = "";
+        }, 1400);
+      }, 50);
+    });
+  });
 
   // ── Swipe with live drag-follow preview ───────────────────────────────────
   var swStartX = 0, swStartY = 0, swStartScroll = 0;

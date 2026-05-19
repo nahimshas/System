@@ -86,18 +86,18 @@ _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
     # 5. Injuries                          (roster health)
     # 6. Edge signals                      (why we differ from market)
     "MLB": [
-        re.compile(r"^Model projected score"),              # projected score
-        re.compile(r"^Model expected total"),               # expected total
-        re.compile(r"^(?:🔵|🔴)"),                         # pitcher matchup (home 🔵 / away 🔴)
-        re.compile(r"^Weather:"),                           # weather conditions
-        re.compile(r"^Venue:"),                             # venue / park factor
-        re.compile(r"\bbatting:"),                          # team batting stats
-        re.compile(r"\bbullpen:"),                          # team bullpen stats
-        re.compile(r"^👨‍⚖️"),                         # umpire (research version)
-        re.compile(r"(?i)schedule|back-to-back|\brest\b"), # schedule / rest
-        re.compile(r"(?i)injur"),                           # injuries
-        re.compile(r"⚠ ERA trap"),                        # ERA trap warnings
-        re.compile(r"⚠ K matchup"),                        # K matchup warning
+        re.compile(r"^Model projected score"),              # 0  projected score
+        re.compile(r"^Model expected total"),               # 1  expected total
+        re.compile(r"(?i)\boffense:|\bbatting:"),           # 2  team batting / records
+        re.compile(r"(?i)\bBullpen"),                       # 3  team bullpen stats
+        re.compile(r"^(?:🔵|🔴)"),                         # 4  pitcher matchup
+        re.compile(r"^Venue:"),                             # 5  venue / park factor
+        re.compile(r"^(?:🌤|Weather)"),                    # 6  weather (emoji prefix)
+        re.compile(r"^👨‍⚖️"),                         # 7  umpire
+        re.compile(r"(?i)schedule|back-to-back|\brest\b"), # 8  schedule / rest
+        re.compile(r"(?i)injur|⚕"),                        # 9  injuries (% impact + roster)
+        re.compile(r"⚠ ERA trap"),                         # 10 ERA trap warnings
+        re.compile(r"⚠ K matchup"),                        # 11 K matchup warning
     ],
     "NBA": [
         re.compile(r"^Model projected score"),              # projected score
