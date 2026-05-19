@@ -3153,7 +3153,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 04:20 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 04:36 PM PDT</div>
         </div>
         
       </div>
@@ -4290,9 +4290,144 @@ function toggleCtx(el) {
     });
   }
 
+  // ── Apply live state to a parlay alloc card (SPA Today tab) ────────────
+  // Parlay alloc cards store legs as JSON in data-legs; they have no
+  // embedded .parlay-leg elements.  We parse the JSON, look each leg up in
+  // ESPN, and update .live-status.alloc-live with per-leg scores + combined prob.
+  function applyParlayAllocCard(card, allEvents) {
+    var liveDiv = card.querySelector(".live-status");
+    if (!liveDiv) return;
+
+    var legsJson = card.getAttribute("data-legs") || "[]";
+    var legs;
+    try { legs = JSON.parse(legsJson); } catch(e) { return; }
+    if (!legs.length) return;
+
+    var allFinal   = true;
+    var anyLost    = false;
+    var anyStarted = false;
+    var combined   = 1;
+
+    for (var li = 0; li < legs.length; li++) {
+      var leg      = legs[li];
+      var legHT    = leg.home_team || "";
+      var legAT    = leg.away_team || "";
+      var legBT    = leg.bet_type  || "";
+      var legPick  = leg.pick      || "";
+      var legSport = leg.sport     || "";
+      var legModel = (leg.model_prob_pct || 50) / 100;
+      var legEv    = (legHT || legAT) ? findEvent(allEvents, legHT, legAT) : null;
+
+      if (!legEv || legEv.stateId === "1") {
+        combined *= legModel;
+        allFinal  = false;
+      } else if (legEv.stateId === "3") {
+        anyStarted = true;
+        var legOurTeam = (legBT === "Moneyline" || legBT === "Spread") ? legPick : legHT;
+        var legEvHome  = teamMatch(legEv.home, legHT) ? legEv.home : legEv.away;
+        var legHS      = teamMatch(legEv.home, legHT) ? legEv.homeScore : legEv.awayScore;
+        var legAS      = teamMatch(legEv.away, legAT) ? legEv.awayScore : legEv.homeScore;
+        var legResult  = outcome(legBT, legPick, legOurTeam, legEvHome, legHS, legAS, legSport);
+        if (legResult === "LOST") { anyLost = true; break; }
+        if (legResult !== "WON") { allFinal = false; combined *= legModel; }
+        // WON leg: prob stays 1 (already hit)
+      } else {
+        // In-progress
+        anyStarted = true;
+        var legOurTeam2 = (legBT === "Moneyline" || legBT === "Spread") ? legPick : legHT;
+        var legEvHome2  = teamMatch(legEv.home, legHT) ? legEv.home : legEv.away;
+        var legHS2      = teamMatch(legEv.home, legHT) ? legEv.homeScore : legEv.awayScore;
+        var legAS2      = teamMatch(legEv.away, legAT) ? legEv.awayScore : legEv.homeScore;
+        var legProb     = winProb(legBT, legPick, legOurTeam2, legEvHome2, legEv.away,
+                                  legHS2, legAS2, legSport, legEv.period, legEv.clockSec, legEv.isBottom, 0.5);
+        combined *= legProb;
+        allFinal  = false;
+      }
+    }
+
+    // Show lock badge + clear time once any leg has started
+    if (anyStarted) {
+      showLockBadge(card);
+      clearCardTime(card);
+    }
+
+    // Build per-leg score summary for each unique game
+    var legSummaryParts = [];
+    var _seenGames = {};
+    for (var ls = 0; ls < legs.length; ls++) {
+      var lgl      = legs[ls];
+      var _gameKey = (lgl.away_team || "") + "|" + (lgl.home_team || "");
+      if (_seenGames[_gameKey]) continue;
+      _seenGames[_gameKey] = true;
+      var lev = (lgl.home_team || lgl.away_team)
+                ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
+                : null;
+      if (!lev || lev.stateId === "1") {
+        // Pre-game: show local start time
+        var legIso = lgl.commence_time || "";
+        if (legIso) {
+          try {
+            var legT = new Date(legIso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+            legSummaryParts.push(
+              '<span style="color:var(--teal);">' +
+              (lgl.away_team ? lgl.away_team.split(" ").pop() : "?") +
+              ' vs ' + (lgl.home_team ? lgl.home_team.split(" ").pop() : "?") +
+              ' @ ' + legT + '</span>'
+            );
+          } catch(e) {}
+        }
+      } else if (lev.stateId === "3") {
+        var lHS = teamMatch(lev.home, lgl.home_team) ? lev.homeScore : lev.awayScore;
+        var lAS = teamMatch(lev.away, lgl.away_team) ? lev.awayScore : lev.homeScore;
+        legSummaryParts.push(
+          '<span style="color:var(--muted);">Final: ' + lev.awayAbbr + ' ' + lAS +
+          ' – ' + lev.homeAbbr + ' ' + lHS + '</span>'
+        );
+      } else {
+        var lHS2 = teamMatch(lev.home, lgl.home_team) ? lev.homeScore : lev.awayScore;
+        var lAS2 = teamMatch(lev.away, lgl.away_team) ? lev.awayScore : lev.homeScore;
+        legSummaryParts.push(
+          '<span style="color:var(--red);font-weight:700;">● LIVE</span> ' +
+          lev.awayAbbr + ' ' + lAS2 + ' – ' + lev.homeAbbr + ' ' + lHS2 +
+          ' <span style="color:var(--muted);">' + (lev.detail || "") + '</span>'
+        );
+      }
+    }
+
+    var legSummary = legSummaryParts.length
+      ? '<div style="margin-top:3px;font-size:0.72rem;line-height:1.7;">' +
+        legSummaryParts.join('<br>') + '</div>'
+      : '';
+
+    if (!anyStarted) { liveDiv.innerHTML = legSummary; return; }
+
+    if (anyLost) {
+      card.setAttribute("data-live-result", "LOST");
+      liveDiv.innerHTML = outcomeHtml("LOST") + legSummary;
+      return;
+    }
+    if (allFinal) {
+      card.setAttribute("data-live-result", "WON");
+      liveDiv.innerHTML = outcomeHtml("WON") + legSummary;
+      return;
+    }
+
+    card.removeAttribute("data-live-result");
+    var pct = Math.min(99, Math.max(1, Math.round(combined * 100)));
+    var col = pct >= 60 ? "var(--green)" : pct >= 40 ? "var(--yellow)" : "var(--red)";
+    liveDiv.innerHTML =
+      '<span style="color:' + col + ';font-weight:700;">' + pct + '% parlay hits</span>' +
+      legSummary;
+  }
+
   // ── Apply live state to a card element ──────────────────────────────────
   function applyCard(card, allEvents) {
-    // Parlay cards have their own handler
+    // Parlay alloc cards (SPA Today tab) — have data-legs JSON, no .parlay-leg children
+    if (card.getAttribute("data-legs")) {
+      applyParlayAllocCard(card, allEvents);
+      return;
+    }
+    // Full parlay cards (classic report) have their own handler
     if (card.getAttribute("data-parlay") === "true") {
       applyParlayCard(card, allEvents);
       return;
@@ -5925,7 +6060,7 @@ function toggleCtx(el) {
       if (done < 4) return;
 
       // Update all bet cards (singles, parlays, NHL watchlist, and SPA alloc cards)
-      document.querySelectorAll(".card[data-home-team], .card[data-parlay='true'], .alloc-card[data-home-team]").forEach(function (card) {
+      document.querySelectorAll(".card[data-home-team], .card[data-parlay='true'], .alloc-card[data-home-team], .alloc-card[data-legs]").forEach(function (card) {
         applyCard(card, allEvents);
       });
 
