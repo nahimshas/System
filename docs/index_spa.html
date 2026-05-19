@@ -134,7 +134,7 @@
       overscroll-behavior-y: contain;
       display: none;
       /* bottom padding clears the floating nav so last card isn't hidden */
-      padding: 0 16px calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + 16px);
+      padding: 0 16px calc(var(--tab-h) + 16px);
     }
     .spa-tab.active { display: block; }
 
@@ -155,22 +155,19 @@
       -webkit-overflow-scrolling: touch;
       background: var(--card);
       border-top: 1px solid var(--border);
-      /* NO padding-bottom here — moved onto each button so icons sit high,
-         home indicator zone is part of the button background, not dead space */
       scrollbar-width: none;
     }
     #spa-nav::-webkit-scrollbar { display: none; }
     .spa-tab-btn {
       flex: 0 0 auto;
       min-width: 62px;
-      /* button extends into the home indicator zone; padding-bottom reserves it */
-      height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
+      height: var(--tab-h);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 2px;
-      padding: 6px 10px env(safe-area-inset-bottom, 0px);
+      padding: 4px 10px;
       background: none;
       border: none;
       color: var(--muted);
