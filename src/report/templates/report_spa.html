@@ -169,7 +169,7 @@
       --header-h: 52px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.5; }
+    html, body { height: 100%; overflow: hidden; background: var(--card); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.5; }
 
     /* ── App header (stats bar) ──────────────────────────────────────────── */
     .app-header {
@@ -249,9 +249,14 @@
     }
 
     /* ── SPA layout ──────────────────────────────────────────────────────── */
-    /* position:fixed + inset:0 is the most reliable way to fill the exact
-       screen on iOS standalone mode — 100% / 100vh can fall short.        */
-    #spa-wrap { position: fixed; inset: 0; display: flex; flex-direction: column; }
+    /* position:fixed with explicit trbl edges + JS height-set covers every
+       iOS standalone/PWA quirk where 100%/100vh/inset fall short.         */
+    #spa-wrap {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+    }
     #spa-content { flex: 1; overflow: hidden; position: relative; }
     .spa-tab {
       position: absolute; inset: 0;
@@ -1359,6 +1364,21 @@
 </div><!-- /spa-wrap -->
 
 <script>
+// ── Viewport height fix for iOS standalone / Android PWA ─────────────────
+// window.innerHeight is always the true visible area; 100vh / position:fixed
+// can still fall short on some devices. We set it once and on resize.
+(function () {
+  function applyHeight() {
+    var wrap = document.getElementById('spa-wrap');
+    if (wrap) wrap.style.height = window.innerHeight + 'px';
+  }
+  applyHeight();
+  window.addEventListener('resize', applyHeight);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', applyHeight);
+  }
+})();
+
 // ── Tab switching ─────────────────────────────────────────────────────────
 (function () {
   "use strict";
