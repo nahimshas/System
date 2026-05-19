@@ -2113,7 +2113,17 @@
           };
         });
 
-        var winnerTeam = teams.find(function (t) { return t.winner; });
+        // For cricket, ESPN can flip state→"post" at the end of the first innings
+        // (innings break) before the second team has batted.  Only trust c.winner
+        // when the status summary also confirms the MATCH is done — the phrase
+        // "won by" (e.g. "Chennai Super Kings won by 4 wkts") only appears in the
+        // final result, never during an innings break.
+        var summaryHasFinalResult = summary.toLowerCase().indexOf("won by") !== -1 ||
+                                    summary.toLowerCase().indexOf("no result") !== -1 ||
+                                    summary.toLowerCase().indexOf("tied") !== -1;
+        var winnerTeam = summaryHasFinalResult
+          ? teams.find(function (t) { return t.winner; })
+          : null;
 
         // Fallback: parse winner from summary string "Team won by …"
         if (isPost && !winnerTeam && summary) {

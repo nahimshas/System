@@ -1908,7 +1908,7 @@
      data-model-prob-pct="48.7"
      data-market-prob-pct="44.4"
      data-commence-time="2026-05-18T14:00:00Z"
-     >
+     data-live-result="LOST" data-in-history="1">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Chennai Super Kings</div>
@@ -2174,13 +2174,13 @@
           
           <div id="wl-tile-IPL"
                data-hist-won="5"
-               data-hist-lost="3"
+               data-hist-lost="4"
                style="flex:1;min-width:130px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
             <div style="font-size:0.68rem;margin-bottom:6px;"><span class="badge badge-ipl">🏏 IPL</span></div>
             <div class="wl-record" style="font-size:0.9rem;font-weight:700;color:var(--green);">
-              5W–3L<span style="font-size:0.78rem;font-weight:400;"> (62.5%)</span>
+              5W–4L<span style="font-size:0.78rem;font-weight:400;"> (55.6%)</span>
             </div>
-            <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">8 picks tracked</div>
+            <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">9 picks tracked</div>
           </div>
           
           
@@ -5274,7 +5274,17 @@ function toggleCtx(el) {
           };
         });
 
-        var winnerTeam = teams.find(function (t) { return t.winner; });
+        // For cricket, ESPN can flip state→"post" at the end of the first innings
+        // (innings break) before the second team has batted.  Only trust c.winner
+        // when the status summary also confirms the MATCH is done — the phrase
+        // "won by" (e.g. "Chennai Super Kings won by 4 wkts") only appears in the
+        // final result, never during an innings break.
+        var summaryHasFinalResult = summary.toLowerCase().indexOf("won by") !== -1 ||
+                                    summary.toLowerCase().indexOf("no result") !== -1 ||
+                                    summary.toLowerCase().indexOf("tied") !== -1;
+        var winnerTeam = summaryHasFinalResult
+          ? teams.find(function (t) { return t.winner; })
+          : null;
 
         // Fallback: parse winner from summary string "Team won by …"
         if (isPost && !winnerTeam && summary) {
