@@ -274,7 +274,7 @@
       from { opacity: 0; transform: translateX(20px); }
       to   { opacity: 1; transform: translateX(0); }
     }
-    .spa-tab.active { animation: slideIn 0.18s ease; }
+    .spa-tab.active.spa-tab-animate { animation: slideIn 0.18s ease; }
 
     /* ── Bottom nav — fixed to physical screen bottom in all contexts ──────── */
     #spa-nav {
@@ -1416,7 +1416,13 @@
     document.querySelectorAll(".spa-tab-btn").forEach(function (b) { b.classList.remove("active"); });
     var panel = document.getElementById("tab-" + id);
     var btn   = document.querySelector(".spa-tab-btn[data-tab='" + id + "']");
-    if (panel) panel.classList.add("active");
+    if (panel) {
+      panel.classList.add("active", "spa-tab-animate");
+      panel.addEventListener("animationend", function rm() {
+        panel.classList.remove("spa-tab-animate");
+        panel.removeEventListener("animationend", rm);
+      });
+    }
     if (btn) { btn.classList.add("active"); btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }); }
     try { localStorage.setItem("spa-tab", id); } catch(e) {}
     // Update the LIVE badge for the newly active tab.
@@ -1510,10 +1516,8 @@
       setTimeout(function() {
         _c.classList.remove("active");
         clearSwipeStyles(_c);
-        _n.style.animation = "none";   // suppress slideIn — tab already in place from swipe
         _n.classList.add("active");
         clearSwipeStyles(_n);
-        requestAnimationFrame(function() { _n.style.animation = ""; });  // re-enable for future clicks
         curIdx = nxtIdx;
         document.querySelectorAll(".spa-tab-btn").forEach(function(b) { b.classList.remove("active"); });
         var newBtn = document.querySelector(".spa-tab-btn[data-tab='" + TABS[nxtIdx] + "']");

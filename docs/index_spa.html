@@ -142,7 +142,7 @@
       from { opacity: 0; transform: translateX(20px); }
       to   { opacity: 1; transform: translateX(0); }
     }
-    .spa-tab.active { animation: slideIn 0.18s ease; }
+    .spa-tab.active.spa-tab-animate { animation: slideIn 0.18s ease; }
 
     /* ── Bottom nav — fixed to physical screen bottom in all contexts ──────── */
     #spa-nav {
@@ -2922,7 +2922,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 12:31 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 12:38 PM PDT</div>
         </div>
         
       </div>
@@ -2996,7 +2996,13 @@
     document.querySelectorAll(".spa-tab-btn").forEach(function (b) { b.classList.remove("active"); });
     var panel = document.getElementById("tab-" + id);
     var btn   = document.querySelector(".spa-tab-btn[data-tab='" + id + "']");
-    if (panel) panel.classList.add("active");
+    if (panel) {
+      panel.classList.add("active", "spa-tab-animate");
+      panel.addEventListener("animationend", function rm() {
+        panel.classList.remove("spa-tab-animate");
+        panel.removeEventListener("animationend", rm);
+      });
+    }
     if (btn) { btn.classList.add("active"); btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }); }
     try { localStorage.setItem("spa-tab", id); } catch(e) {}
     // Update the LIVE badge for the newly active tab.
@@ -3090,10 +3096,8 @@
       setTimeout(function() {
         _c.classList.remove("active");
         clearSwipeStyles(_c);
-        _n.style.animation = "none";   // suppress slideIn — tab already in place from swipe
         _n.classList.add("active");
         clearSwipeStyles(_n);
-        requestAnimationFrame(function() { _n.style.animation = ""; });  // re-enable for future clicks
         curIdx = nxtIdx;
         document.querySelectorAll(".spa-tab-btn").forEach(function(b) { b.classList.remove("active"); });
         var newBtn = document.querySelector(".spa-tab-btn[data-tab='" + TABS[nxtIdx] + "']");
