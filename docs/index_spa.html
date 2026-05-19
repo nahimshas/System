@@ -96,6 +96,19 @@
       border: 1px solid rgba(100,116,139,0.25);
       transition: background 0.3s, color 0.3s, border-color 0.3s;
     }
+    #hdr-refresh:active { color: var(--teal); transform: rotate(45deg); }
+    /* ── Pull-to-refresh indicator ───────────────────────────────────────── */
+    #ptr-indicator {
+      position: absolute; top: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center;
+      height: 0; overflow: hidden;
+      font-size: 1.4rem; color: var(--teal);
+      transition: height 0.15s ease;
+      z-index: 10; pointer-events: none;
+    }
+    #ptr-indicator.ptr-visible { height: 52px; }
+    #ptr-indicator.ptr-spin { animation: spin 0.5s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .header-live-badge.is-live {
       background: rgba(239,68,68,0.15);
       color: #ef4444;
@@ -489,13 +502,18 @@
   </div>
   <div class="header-right">
     <span class="header-live-badge" id="hdr-live">● LIVE</span>
-    <div class="header-date-block"><div class="header-date-day">Tuesday</div>
-        <div class="header-date-date">May 19</div></div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="header-date-block"><div class="header-date-day">Tuesday</div>
+          <div class="header-date-date">May 19</div></div>
+      <button id="hdr-refresh" onclick="window.location.reload()" title="Refresh"
+              style="background:none;border:none;padding:4px;cursor:pointer;color:var(--muted);font-size:1.1rem;line-height:1;border-radius:6px;display:flex;align-items:center;justify-content:center;">↻</button>
+    </div>
   </div>
 </div>
 
 <!-- Tab content -->
 <div id="spa-content">
+<div id="ptr-indicator">↻</div>
 
   <!-- ═══════════════ TODAY TAB ══════════════════════════════════════════ -->
   <div id="tab-today" class="spa-tab active">
@@ -3012,6 +3030,48 @@
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.75 || scrolled > 20) return;
     if (dx < 0 && curIdx < TABS.length - 1) showTab(TABS[curIdx + 1]);
     if (dx > 0 && curIdx > 0)               showTab(TABS[curIdx - 1]);
+  }, { passive: true });
+
+  // ── Pull-to-refresh ────────────────────────────────────────────────────────
+  // Swipe down from the very top of any tab to reload. The indicator appears
+  // after 60 px of pull and triggers on release.
+  var ptrIndicator = document.getElementById("ptr-indicator");
+  var ptrStartY = 0;
+  var ptrActive = false;
+  var PTR_THRESHOLD = 60; // px of pull needed to trigger reload
+
+  content.addEventListener("touchstart", function (e) {
+    var active = content.querySelector(".spa-tab.active");
+    if (active && active.scrollTop === 0) {
+      ptrStartY = e.touches[0].clientY;
+      ptrActive = true;
+    } else {
+      ptrActive = false;
+    }
+  }, { passive: true });
+
+  content.addEventListener("touchmove", function (e) {
+    if (!ptrActive || !ptrIndicator) return;
+    var dy = e.touches[0].clientY - ptrStartY;
+    if (dy > 0) {
+      var pull = Math.min(dy, PTR_THRESHOLD * 1.5);
+      ptrIndicator.style.height = Math.min(pull * 0.6, 52) + "px";
+      ptrIndicator.classList.toggle("ptr-visible", pull >= PTR_THRESHOLD);
+    }
+  }, { passive: true });
+
+  content.addEventListener("touchend", function (e) {
+    if (!ptrActive || !ptrIndicator) return;
+    ptrActive = false;
+    var dy = e.changedTouches[0].clientY - ptrStartY;
+    if (dy >= PTR_THRESHOLD) {
+      ptrIndicator.classList.add("ptr-spin");
+      ptrIndicator.style.height = "52px";
+      setTimeout(function () { window.location.reload(); }, 300);
+    } else {
+      ptrIndicator.style.height = "0";
+      ptrIndicator.classList.remove("ptr-visible");
+    }
   }, { passive: true });
 
   var activeBtn = document.querySelector(".spa-tab-btn.active");
