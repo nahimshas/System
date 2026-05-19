@@ -18,16 +18,15 @@
     <div style="flex:1;min-width:0;">
       <div class="card-pick">{{ bet.pick }}</div>
       <div class="card-game short-game">{{ bet.game }}{% if bet.bet_type == "Moneyline" %} · ML{% elif bet.bet_type == "Total" %} · Total{% elif bet.bet_type == "Spread" %} · Spread{% endif %}</div>
-      <div class="card-time live-status"></div>
+      <div class="card-time"></div>
+      <div class="live-status" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
       {% if bet.locked %}<span class="lock-badge">🔒</span>{% endif %}
       <span class="badge badge-conf-{{ bet.confidence }}">{{ bet.confidence }}</span>
     </div>
   </div>
-  {% if bet.proj_score %}
-  <div class="proj-score">Model projected score: {{ bet.proj_score }}</div>
-  {% endif %}
+  <div class="proj-score">Model: {{ bet.model_prob_pct }}% win probability · Market: {{ bet.market_prob_pct }}%</div>
   <div class="edge-row">
     <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:{{ [bet.edge_pct * 6, 95] | min | int }}%;{% if bet.edge_pct < 7 %}background:var(--yellow);{% endif %}"></div></div>
@@ -119,7 +118,8 @@
     <div style="flex:1;min-width:0;">
       <div class="card-pick">{{ bet.pick }}</div>
       <div class="card-game">{{ bet.game }}{% if bet.bet_type == "Moneyline" %} · ML{% elif bet.bet_type == "Draw" %} · Draw{% elif bet.bet_type == "Total" %} · Total{% elif bet.bet_type == "Spread" %} · Spread{% endif %}</div>
-      <div class="card-time live-status"></div>
+      <div class="card-time"></div>
+      <div class="live-status" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
       {% if bet.locked or bet.status in ('in_progress', 'settled') %}<span class="lock-badge">🔒</span>{% endif %}
@@ -693,8 +693,7 @@
           <div class="alloc-pick">{{ row.label }}</div>
           {% if row.game and row.bet_type != "Parlay" %}<div class="alloc-game short-game">{{ row.game }}</div>{% endif %}
           <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
-          {% if not row.locked %}<div class="row-time-local alloc-time"></div>
-          {% elif row.game_time %}<div class="alloc-time">{{ row.game_time }}</div>{% endif %}
+          {% if row.game_time %}<div class="alloc-time">{{ row.game_time }}</div>{% endif %}
         </div>
       </div>
       <!-- Action chips: full card width -->
