@@ -229,7 +229,6 @@
       border: 1px solid rgba(100,116,139,0.25);
       transition: background 0.3s, color 0.3s, border-color 0.3s;
     }
-    #hdr-refresh:active { color: var(--teal); transform: rotate(45deg); }
     /* ── Pull-to-refresh indicator ───────────────────────────────────────── */
     #ptr-indicator {
       position: absolute; top: 0; left: 0; right: 0;
@@ -318,6 +317,8 @@
       background: var(--teal);
       border-radius: 0 0 2px 2px;
     }
+    details[open] > summary .det-arrow { transform: rotate(90deg); }
+    .det-arrow { display:inline-block; transition: transform 0.18s; font-size:0.65rem; color:var(--teal); margin-right:2px; }
     .spa-tab-icon  { font-size: 1.45rem; line-height: 1; position: relative; }
     .spa-tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
     .tab-dot {
@@ -653,18 +654,14 @@
   </div>
   <div class="header-right">
     <span class="header-live-badge" id="hdr-live">● LIVE</span>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <div class="header-date-block">
-        {%- set rd = report.run_date -%}
-        {%- if ',' in rd -%}
-          <div class="header-date-day">{{ rd.split(',')[0] }}</div>
-          <div class="header-date-date">{{ rd.split(',')[1].strip() }}</div>
-        {%- else -%}
-          <div class="header-date-day">{{ rd }}</div>
-        {%- endif -%}
-      </div>
-      <button id="hdr-refresh" onclick="window.location.reload()" title="Refresh"
-              style="background:none;border:none;padding:4px;cursor:pointer;color:var(--muted);font-size:1.1rem;line-height:1;border-radius:6px;display:flex;align-items:center;justify-content:center;">↻</button>
+    <div class="header-date-block">
+      {%- set rd = report.run_date -%}
+      {%- if ',' in rd -%}
+        <div class="header-date-day">{{ rd.split(',')[0] }}</div>
+        <div class="header-date-date">{{ rd.split(',')[1].strip() }}</div>
+      {%- else -%}
+        <div class="header-date-day">{{ rd }}</div>
+      {%- endif -%}
     </div>
   </div>
 </div>
@@ -812,16 +809,20 @@
     <div class="empty-state"><div class="icon">😕</div>No picks with edge &gt; 3% today.</div>
     {% else %}
     {% if report.nba_top_singles %}
-    <div class="sec-label">Singles</div>
+    <details id="sect-nba-singles" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Singles</summary>
     {% for bet in report.nba_top_singles %}
     {{ bet_card(bet, "badge-nba", "NBA", 'bet-' + bet.alloc_rank|string if bet.alloc_rank else 'nba-' + loop.index|string, "NBA") }}
     {% endfor %}
+    </details>
     {% endif %}
     {% if report.nba_props %}
-    <div class="sec-label">Props</div>
+    <details id="sect-nba-props" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Props</summary>
     {% for prop in report.nba_props %}
     {{ prop_card(prop, "badge-nba", "NBA") }}
     {% endfor %}
+    </details>
     {% endif %}
     {% endif %}
     <div style="height:16px;"></div>
@@ -843,16 +844,20 @@
     <div class="empty-state"><div class="icon">😕</div>No picks with edge &gt; 3% today.</div>
     {% else %}
     {% if report.mlb_top_singles %}
-    <div class="sec-label">Singles</div>
+    <details id="sect-mlb-singles" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Singles</summary>
     {% for bet in report.mlb_top_singles %}
     {{ bet_card(bet, "badge-mlb", "MLB", 'bet-' + bet.alloc_rank|string if bet.alloc_rank else 'mlb-' + loop.index|string, "MLB") }}
     {% endfor %}
+    </details>
     {% endif %}
     {% if report.mlb_props %}
-    <div class="sec-label">Props</div>
+    <details id="sect-mlb-props" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Props</summary>
     {% for prop in report.mlb_props %}
     {{ prop_card(prop, "badge-mlb", "MLB") }}
     {% endfor %}
+    </details>
     {% endif %}
     {% endif %}
     <div style="height:16px;"></div>
@@ -942,10 +947,12 @@
     {% elif not report.nfl_top_singles %}
     <div class="empty-state"><div class="icon">😕</div>No picks with edge &gt; 3% today.</div>
     {% else %}
-    <div class="sec-label">Singles</div>
+    <details id="sect-nfl-singles" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Singles</summary>
     {% for bet in report.nfl_top_singles %}
     {{ bet_card(bet, "badge-nfl", "NFL", "nfl-" + loop.index|string, "NFL") }}
     {% endfor %}
+    </details>
     {% endif %}
     <div style="height:16px;"></div>
   </div><!-- /tab-nfl -->
@@ -982,7 +989,8 @@
 
     {% if report.has_performance %}
     {% set p = report.performance %}
-    <div class="sec-label" style="margin-top:14px;">Model Performance</div>
+    <details id="sect-model-perf" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:14px;"><span class="det-arrow">▶</span>Model Performance</summary>
     <div class="card"
          id="perf-card"
          data-hist-won="{{ p.won }}"
@@ -1139,14 +1147,15 @@
       </details>
       {% endif %}
     </div>
+    </details>
     {% endif %}
 
     {% if report.has_prop_accuracy %}
     {% set pa = report.prop_accuracy %}
-    <div class="sec-label" style="margin-top:16px;">
-      Props Model Accuracy
+    <details id="sect-props-accuracy" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Props Model Accuracy
       <span id="prop-acc-live-badge" style="display:{{ 'inline-block' if pa.today_total > 0 else 'none' }};font-size:0.65rem;font-weight:600;padding:2px 7px;border-radius:99px;background:rgba(20,184,166,0.15);color:var(--teal);text-transform:none;letter-spacing:0;margin-left:8px;">● includes today</span>
-    </div>
+    </summary>
     <div class="card" id="prop-accuracy-card"
          data-hist-total="{{ pa.hist_total }}"
          data-hist-hits="{{ pa.hist_all.hits }}"
@@ -1229,14 +1238,15 @@
       </details>
       {% endif %}
     </div>
+    </details>
     {% endif %}
 
     {% if report.calibration %}
     {% set cal = report.calibration %}
-    <div class="sec-label" style="margin-top:16px;">
-      Model Calibration
+    <details id="sect-calibration" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Model Calibration
       {% if cal.computed_at %}<span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · {{ cal.computed_at[:19].replace('T', ' ') }} UTC</span>{% endif %}
-    </div>
+    </summary>
     <div class="card">
       {% if not cal.has_data %}
       <div style="font-size:0.85rem;color:var(--muted);">No calibration data yet. Collecting shadow picks — will activate at ≥ {{ cal.thresholds.phase_a_min or 100 }} settled picks per market.</div>
@@ -1275,14 +1285,15 @@
       </div>
       {% endif %}
     </div>
+    </details>
     {% endif %}
 
     {% if report.cap_state and report.cap_state.caps %}
     {% set caps = report.cap_state %}
-    <div class="sec-label" style="margin-top:16px;">
-      Credibility Cap Auto-Adjustment
+    <details id="sect-cap" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Credibility Cap Auto-Adjustment
       {% if caps.computed_at %}<span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · {{ caps.computed_at[:19].replace('T', ' ') }} UTC</span>{% endif %}
-    </div>
+    </summary>
     <div class="card">
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
@@ -1311,12 +1322,36 @@
         </table>
       </div>
     </div>
+    </details>
     {% endif %}
 
-    <div style="text-align:center;padding:24px 0 16px;border-top:1px solid var(--border);margin-top:16px;">
-      <a href="/" style="color:var(--teal);font-size:0.85rem;text-decoration:none;font-weight:600;">← Classic view</a>
-      <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;">Sports Betting Analysis System &middot; Robinhood Contracts</div>
-      <div style="font-size:0.68rem;color:var(--muted);margin-top:4px;line-height:1.5;">For informational purposes only. Verify all contract prices on Robinhood before placing bets.</div>
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:14px;">
+      {% if report.odds_api_credits %}
+      {% set cr = report.odds_api_credits %}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">API Used</div>
+          <div style="font-size:1.05rem;font-weight:700;color:var(--text);">{{ cr.used or 0 }}</div>
+          <div style="font-size:0.68rem;color:var(--muted);">requests today</div>
+        </div>
+        <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">API Remaining</div>
+          <div style="font-size:1.05rem;font-weight:700;color:{% if cr.remaining is not none and cr.remaining < 100 %}var(--red){% elif cr.remaining is not none and cr.remaining < 300 %}var(--yellow){% else %}var(--green){% endif %};">{{ cr.remaining if cr.remaining is not none else '—' }}</div>
+          <div style="font-size:0.68rem;color:var(--muted);">requests left</div>
+        </div>
+        {% if report.generated_at %}
+        <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">{{ report.generated_at }}</div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+      <div style="text-align:center;padding:10px 0 8px;">
+        <a href="/" style="color:var(--teal);font-size:0.85rem;text-decoration:none;font-weight:600;">← Classic view</a>
+        <div style="font-size:0.68rem;color:var(--muted);margin-top:6px;">Sports Betting Analysis System &middot; Robinhood Contracts</div>
+        <div style="font-size:0.68rem;color:var(--muted);margin-top:4px;line-height:1.5;">For informational purposes only. Verify all contract prices on Robinhood before placing bets.</div>
+      </div>
     </div>
     <div style="height:16px;"></div>
   </div><!-- /tab-analytics -->
@@ -1402,27 +1437,98 @@
     if (saved && TABS.indexOf(saved) >= 0) showTab(saved);
   } catch(e) {}
 
-  // ── Swipe support ─────────────────────────────────────────────────────
-  var touchStartX = 0;
-  var touchStartY = 0;
-  var touchStartScrollY = 0;
+  // ── Swipe with live drag-follow preview ───────────────────────────────────
+  var swStartX = 0, swStartY = 0, swStartScroll = 0;
+  var swActive = false, swW = 0;
+  var swCur = null, swNxt = null;
+  var SW_THRESH = 0.28;
+  var SW_TRANS  = "transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94)";
   var content = document.getElementById("spa-content");
 
-  content.addEventListener("touchstart", function (e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    var active = content.querySelector(".spa-tab.active");
-    touchStartScrollY = active ? active.scrollTop : 0;
+  function clearSwipeStyles(el) {
+    if (!el) return;
+    el.style.transform    = "";
+    el.style.transition   = "";
+    el.style.pointerEvents = "";
+    el.style.overflow     = "";
+  }
+
+  content.addEventListener("touchstart", function(e) {
+    swStartX = e.touches[0].clientX;
+    swStartY = e.touches[0].clientY;
+    var act = content.querySelector(".spa-tab.active");
+    swStartScroll = act ? act.scrollTop : 0;
+    swActive = false; swCur = null; swNxt = null;
   }, { passive: true });
 
-  content.addEventListener("touchend", function (e) {
-    var dx = e.changedTouches[0].clientX - touchStartX;
-    var dy = e.changedTouches[0].clientY - touchStartY;
-    var active = content.querySelector(".spa-tab.active");
-    var scrolled = active ? Math.abs(active.scrollTop - touchStartScrollY) : 0;
-    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.75 || scrolled > 20) return;
-    if (dx < 0 && curIdx < TABS.length - 1) showTab(TABS[curIdx + 1]);
-    if (dx > 0 && curIdx > 0)               showTab(TABS[curIdx - 1]);
+  content.addEventListener("touchmove", function(e) {
+    if (ptrActive) return;
+    var dx = e.touches[0].clientX - swStartX;
+    var dy = e.touches[0].clientY - swStartY;
+
+    if (!swActive) {
+      if (Math.abs(dx) < 10) return;
+      if (Math.abs(dy) > Math.abs(dx) * 0.9) return;
+      var act = content.querySelector(".spa-tab.active");
+      var scrolled = act ? Math.abs(act.scrollTop - swStartScroll) : 0;
+      if (scrolled > 12) return;
+      var nxtIdx = curIdx + (dx < 0 ? 1 : -1);
+      if (nxtIdx < 0 || nxtIdx >= TABS.length) return;
+      swActive = true;
+      swW   = content.offsetWidth;
+      swCur = act;
+      swNxt = document.getElementById("tab-" + TABS[nxtIdx]);
+      if (swNxt) {
+        swNxt.style.display       = "block";
+        swNxt.style.transform     = "translateX(" + (dx < 0 ? swW : -swW) + "px)";
+        swNxt.style.pointerEvents = "none";
+        swNxt.style.overflow      = "hidden";
+      }
+      if (swCur) swCur.style.overflow = "hidden";
+    }
+
+    if (swActive && swCur && swNxt) {
+      var clamp = Math.max(-swW, Math.min(swW, dx));
+      swCur.style.transform = "translateX(" + clamp + "px)";
+      swNxt.style.transform = "translateX(" + ((dx < 0 ? swW : -swW) + clamp) + "px)";
+    }
+  }, { passive: true });
+
+  content.addEventListener("touchend", function(e) {
+    if (!swActive || !swCur || !swNxt) { swActive = false; return; }
+    var dx  = e.changedTouches[0].clientX - swStartX;
+    var _c  = swCur, _n = swNxt;
+    swActive = false; swCur = null; swNxt = null;
+
+    if (Math.abs(dx) >= swW * SW_THRESH) {
+      var nxtIdx = curIdx + (dx < 0 ? 1 : -1);
+      _c.style.transition = SW_TRANS;
+      _c.style.transform  = "translateX(" + (dx < 0 ? -swW : swW) + "px)";
+      _n.style.transition = SW_TRANS;
+      _n.style.transform  = "translateX(0)";
+      setTimeout(function() {
+        clearSwipeStyles(_c);
+        _c.classList.remove("active");
+        clearSwipeStyles(_n);
+        _n.classList.add("active");
+        curIdx = nxtIdx;
+        document.querySelectorAll(".spa-tab-btn").forEach(function(b) { b.classList.remove("active"); });
+        var newBtn = document.querySelector(".spa-tab-btn[data-tab='" + TABS[nxtIdx] + "']");
+        if (newBtn) { newBtn.classList.add("active"); newBtn.scrollIntoView({ behavior:"smooth", block:"nearest", inline:"center" }); }
+        try { localStorage.setItem("spa-tab", TABS[nxtIdx]); } catch(e2) {}
+        if (typeof window.checkLiveBadge === "function") window.checkLiveBadge();
+      }, 220);
+    } else {
+      _c.style.transition = SW_TRANS;
+      _c.style.transform  = "";
+      _n.style.transition = SW_TRANS;
+      _n.style.transform  = "translateX(" + (dx < 0 ? swW : -swW) + "px)";
+      setTimeout(function() {
+        clearSwipeStyles(_c);
+        _n.style.display = "";
+        clearSwipeStyles(_n);
+      }, 220);
+    }
   }, { passive: true });
 
   // ── Pull-to-refresh ────────────────────────────────────────────────────────
@@ -1470,6 +1576,20 @@
   var activeBtn = document.querySelector(".spa-tab-btn.active");
   if (activeBtn) activeBtn.scrollIntoView({ block: "nearest", inline: "center" });
 })();
+
+  // ── Persist <details> collapse state across reloads ─────────────────────────
+  (function() {
+    function saveDetails(el) {
+      try { localStorage.setItem("spa-det-" + el.id, el.open ? "1" : "0"); } catch(e) {}
+    }
+    document.querySelectorAll("details[id]").forEach(function(d) {
+      try {
+        var v = localStorage.getItem("spa-det-" + d.id);
+        if (v !== null) d.open = (v === "1");
+      } catch(e) {}
+      d.addEventListener("toggle", function() { saveDetails(d); });
+    });
+  })();
 </script>
 
 <script>
