@@ -491,23 +491,28 @@
           {% elif item.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
           {% elif item.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
           {% elif item.sport == 'Parlay' %}<span class="badge badge-parlay">PARLAY</span>
-          {% else %}<span class="badge" style="background:var(--border);color:var(--text);">{{ item.sport }}</span>
+          {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ item.sport }}</span>
           {% endif %}
-          <span style="font-size:0.82rem;color:var(--muted);margin-left:6px;">{{ item.game }}</span>
+          <span style="font-weight:700;font-size:0.92rem;margin-left:6px;">{{ item.pick }}</span>
+          {% if item.bet_type == "Moneyline" %}<span style="color:var(--muted);font-size:0.75rem;margin-left:6px;">ML</span>{% endif %}
+          {% if item.edge_pct %}<span style="color:var(--muted);font-size:0.75rem;">&middot; +{{ item.edge_pct }}% edge</span>{% endif %}
         </div>
-        <span style="font-weight:700;font-size:0.85rem;color:{% if item.result == 'WON' %}var(--green){% elif item.result == 'LOST' %}var(--red){% else %}var(--muted){% endif %};">
-          {% if item.result == 'WON' %}✓ WON{% elif item.result == 'LOST' %}✗ LOST{% else %}— PUSH{% endif %}
-        </span>
+        <div style="flex-shrink:0;text-align:right;">
+          <span style="font-weight:700;font-size:0.88rem;color:{% if item.result=='WON' %}var(--green){% elif item.result=='LOST' %}var(--red){% else %}var(--yellow){% endif %};">
+            {% if item.result == 'WON' %}✅ WON{% elif item.result == 'LOST' %}❌ LOST{% else %}➡ PUSH{% endif %}
+          </span>
+          <div style="font-weight:700;font-size:0.82rem;color:{% if item.actual_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};margin-top:2px;">
+            {% if item.actual_pnl >= 0 %}+{% endif %}${{ "%.2f"|format(item.actual_pnl|abs) }}
+          </div>
+        </div>
       </div>
-      <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;">{{ item.pick }}</div>
-      <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted);">
-        <span>{{ item.bet_type }}</span>
-        {% if item.pnl is not none %}
-        <span style="font-weight:600;color:{% if item.pnl > 0 %}var(--green){% elif item.pnl < 0 %}var(--red){% else %}var(--muted){% endif %};">
-          {% if item.pnl > 0 %}+{% endif %}${{ "%.2f"|format(item.pnl) }}
-        </span>
-        {% endif %}
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:5px;">{{ item.game }}</div>
+      {% if item.narrative %}<div style="font-size:0.82rem;color:var(--text);line-height:1.5;margin-bottom:6px;">{{ item.narrative }}</div>{% endif %}
+      {% if item.key_signals %}
+      <div style="border-top:1px solid var(--border);padding-top:5px;margin-top:2px;">
+        {% for sig in item.key_signals %}<div style="font-size:0.75rem;color:var(--muted);margin-top:3px;">✦ {{ sig }}</div>{% endfor %}
       </div>
+      {% endif %}
     </div>
     {% endfor %}
     {% endif %}
