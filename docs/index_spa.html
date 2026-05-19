@@ -802,7 +802,7 @@
 
     
     
-    <details style="margin-top:18px;" open>
+    <details id="sect-today-yesterday" style="margin-top:18px;" open>
       <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:0;">
         <span style="flex:1;">Yesterday — Monday, May 18
           <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">4W–3L</span>
@@ -2213,7 +2213,7 @@
 
       
       
-      <details style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+      <details id="sect-trend-charts" style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
         <summary style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);cursor:pointer;list-style:none;padding:4px 0;">
           ▶ Trend Charts &amp; Calibration (<span id="chart-summary-count">163</span> settled bets)
         </summary>
@@ -2483,7 +2483,7 @@
       
       
       
-      <details style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
+      <details id="sect-prop-hr-chart" style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
         <summary style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);cursor:pointer;list-style:none;padding:4px 0;">
           ▶ Hit Rate Trend (<span id="prop-chart-count">253</span> settled props)
         </summary>
@@ -2922,7 +2922,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 12:04 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 12:18 PM PDT</div>
         </div>
         
       </div>
@@ -3042,9 +3042,9 @@
   }, { passive: true });
 
   content.addEventListener("touchmove", function(e) {
-    if (ptrActive) return;
     var dx = e.touches[0].clientX - swStartX;
     var dy = e.touches[0].clientY - swStartY;
+    if (ptrActive && dy > Math.abs(dx)) return;
 
     if (!swActive) {
       if (Math.abs(dx) < 10) return;
@@ -3087,10 +3087,10 @@
       _n.style.transition = SW_TRANS;
       _n.style.transform  = "translateX(0)";
       setTimeout(function() {
-        clearSwipeStyles(_c);
         _c.classList.remove("active");
-        clearSwipeStyles(_n);
+        clearSwipeStyles(_c);
         _n.classList.add("active");
+        clearSwipeStyles(_n);
         curIdx = nxtIdx;
         document.querySelectorAll(".spa-tab-btn").forEach(function(b) { b.classList.remove("active"); });
         var newBtn = document.querySelector(".spa-tab-btn[data-tab='" + TABS[nxtIdx] + "']");
