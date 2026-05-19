@@ -14,61 +14,35 @@
      data-market-prob-pct="{{ bet.market_prob_pct }}"
      data-commence-time="{{ bet.commence_time }}"
      {% if bet.alloc_rank %}data-in-budget="true"{% endif %}>
-  <div class="card-toggle-header">
-    <div class="card-header">
-      <div>
-        <div class="card-title">{{ bet.pick }}</div>
-        <div class="card-subtitle">
-          <span class="badge {{ badge_class }}">{{ badge_label }}</span>
-          {% if bet.bet_type == "Moneyline" %}&nbsp;ML &nbsp;&middot;&nbsp; {% endif %}{{ bet.game }}
-        </div>
-        <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-        {% if bet.locked %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
-        <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
-      </div>
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">{{ bet.pick }}</div>
+      <div class="card-game">{{ bet.game }}{% if bet.bet_type == "Moneyline" %} · ML{% elif bet.bet_type == "Total" %} · Total{% elif bet.bet_type == "Spread" %} · Spread{% endif %}</div>
+      <div class="card-time live-status"></div>
     </div>
-    <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
-    <div class="card-compact">
-      <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
-      <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
-      <span class="card-chevron">▾</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      {% if bet.locked %}<span class="lock-badge">🔒</span>{% endif %}
+      <span class="badge badge-conf-{{ bet.confidence }}">{{ bet.confidence }}</span>
     </div>
   </div>
-  <div class="card-details">
-    <div class="stats-grid">
-      <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
-      <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
-      <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
-    </div>
-    {% if bet.narrative or bet.context %}
-    <div class="card-insight">
-      <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
-        <span class="card-insight-label">Why this pick</span>
-        <span class="card-insight-chevron">▾</span>
-      </div>
-      <div class="card-insight-body">
-        {% if bet.narrative %}<div class="card-narrative">{{ bet.narrative }}</div>{% endif %}
-        {% if bet.context %}
-        <div class="context-section">
-          <div class="context-title">Context &amp; Stats</div>
-          {% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
+  {% if bet.proj_score %}<div class="proj-score">{{ bet.proj_score }}</div>{% endif %}
+  <div class="edge-row">
+    <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:{{ [bet.edge_pct * 6, 95] | min | int }}%;{% if bet.edge_pct < 7 %}background:var(--yellow);{% endif %}"></div></div>
+    <span class="edge-pct{% if bet.edge_pct < 7 %} yellow{% endif %}">+{{ bet.edge_pct }}%</span>
+  </div>
+  {% if bet.narrative or bet.context %}
+  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
+  <div class="context-body">
+    {% if bet.narrative %}<div class="context-item" style="color:var(--text);border-left-color:var(--blue);">{{ bet.narrative }}</div>{% endif %}
+    {% if bet.context %}{% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}{% endif %}
     {% if bet.alloc_rank %}
-    <div style="margin-top:10px;font-size:0.75rem;">
-      <span style="color:#14b8a6;">📋 Slot #{{ bet.alloc_rank }} in Today's Card</span>
-    </div>
+    <div style="margin-top:8px;font-size:0.72rem;color:var(--teal);">📋 Slot #{{ bet.alloc_rank }} in Today's Card</div>
     {% else %}
-    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
-      📊 Not in today's top 5 budget allocation
-    </div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">📊 Not in today's top budget allocation</div>
     {% endif %}
   </div>
+  {% endif %}
 </div>
 {% endmacro %}
 
@@ -86,62 +60,41 @@
      data-commence-time="{{ prop.commence_time }}"
      data-market-line="{{ prop.market_line }}"
      data-edge-pct="{{ prop.edge_pct }}">
-  <div class="card-toggle-header">
-    <div class="card-header">
-      <div>
-        <div class="card-title">{{ prop.player }}</div>
-        <div class="card-subtitle">
-          <span class="badge {{ badge_class }}">{{ badge_label }}</span>
-          &nbsp;{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} &middot; {{ prop.prop_type }}
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-        {% if prop.locked %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
-        <span class="confidence-badge {{ prop.confidence }}">{{ prop.confidence }}</span>
-        <div class="prop-live-badge"></div>
-      </div>
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">{{ prop.player }}</div>
+      <div class="card-game">{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} · {{ prop.prop_type }}</div>
+      <div class="card-time live-status prop-live-badge"></div>
     </div>
-    <div class="card-compact">
-      <span class="mkt-mdl">Over <b>{{ prop.market_line }}</b> <span style="color:#94a3b8;font-size:0.8em;">{{ prop.odds_display }}</span> &middot; Model <b style="color:var(--blue)">{{ prop.model_line }}</b> &middot; <b style="color:var(--green)">+{{ prop.edge_pct }}%</b></span>
-      <span class="card-chevron">▾</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      {% if prop.locked %}<span class="lock-badge">🔒</span>{% endif %}
+      <span class="badge badge-conf-{{ prop.confidence }}">{{ prop.confidence }}</span>
     </div>
   </div>
-  <div class="card-details">
-    <div class="stats-grid">
-      <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over {{ prop.market_line }}</div></div>
-      <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">{{ prop.odds_display }}</div></div>
-      <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">{{ prop.model_line }}</div></div>
-      <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if prop.confidence == 'HIGH' %}green{% else %}yellow{% endif %}">+{{ prop.edge_pct }}%</div></div>
-    </div>
-    <div class="prop-note" style="margin-top:6px;">{{ prop.note }}</div>
-    {% if last %}
-    <div style="margin-top:8px;font-size:0.78rem;padding:6px 10px;border-radius:6px;background:{% if last.result == 'HIT' %}var(--green-dim){% else %}#1a0a0a{% endif %};color:{% if last.result == 'HIT' %}var(--green){% else %}var(--red){% endif %};">
-      Last: {{ last.result }} (actual {{ last.actual }}, proj {{ last.projected }}) — {{ last.date }}
-    </div>
-    {% endif %}
-    {% if prop.narrative or prop.context %}
-    <div class="card-insight">
-      <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
-        <span class="card-insight-label">Why this pick</span>
-        <span class="card-insight-chevron">▾</span>
-      </div>
-      <div class="card-insight-body">
-        {% if prop.narrative %}<div class="card-narrative">{{ prop.narrative }}</div>{% endif %}
-        {% if prop.context %}
-        <div class="context-section">
-          <div class="context-title">Context &amp; Stats</div>
-          {% for item in prop.context %}<div class="context-item">{{ item }}</div>{% endfor %}
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
+  <div class="proj-score">Over {{ prop.market_line }} <span style="color:var(--muted);font-size:0.85em;">{{ prop.odds_display }}</span> · Model proj: <b>{{ prop.model_line }}</b></div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Line {{ prop.market_line }} → Model <b style="color:var(--blue)">{{ prop.model_line }}</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:{{ [prop.edge_pct * 6, 95] | min | int }}%;{% if prop.edge_pct < 7 %}background:var(--yellow);{% endif %}"></div></div>
+    <span class="edge-pct{% if prop.edge_pct < 7 %} yellow{% endif %}">+{{ prop.edge_pct }}%</span>
   </div>
+  {% if last %}
+  <div style="margin-top:8px;font-size:0.78rem;padding:6px 10px;border-radius:6px;background:{% if last.result == 'HIT' %}rgba(34,197,94,0.1){% else %}rgba(239,68,68,0.1){% endif %};color:{% if last.result == 'HIT' %}var(--green){% else %}var(--red){% endif %};">
+    Last: {{ last.result }} (actual {{ last.actual }}, proj {{ last.projected }}) — {{ last.date }}
+  </div>
+  {% endif %}
+  {% if prop.note or prop.narrative or prop.context %}
+  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
+  <div class="context-body">
+    {% if prop.note %}<div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">{{ prop.note }}</div>{% endif %}
+    {% if prop.narrative %}<div class="context-item" style="color:var(--text);border-left-color:var(--blue);">{{ prop.narrative }}</div>{% endif %}
+    {% if prop.context %}{% for item in prop.context %}<div class="context-item">{{ item }}</div>{% endfor %}{% endif %}
+  </div>
+  {% endif %}
 </div>
 {% endmacro %}
 
 {% macro watchlist_card(bet, badge_class, badge_label, card_id, sport_key, wl_note, extra_card_class) %}
-<div class="card {{ extra_card_class }}"
+<div class="wl-card {{ extra_card_class }}"
      id="{{ card_id }}"
      data-home-team="{{ bet.home_team }}"
      data-away-team="{{ bet.away_team }}"
@@ -153,55 +106,37 @@
      data-market-prob-pct="{{ bet.market_prob_pct }}"
      data-commence-time="{{ bet.commence_time }}"
      {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-in-history="1"{% endif %}>
-  <div class="card-toggle-header">
-    <div class="card-header">
-      <div>
-        <div class="card-title">{{ bet.pick }}</div>
-        <div class="card-subtitle">
-          <span class="badge {{ badge_class }}">{{ badge_label }}</span>
-          {% if bet.bet_type == "Moneyline" %}&nbsp;ML &nbsp;&middot;&nbsp; {% elif bet.bet_type == "Draw" %}&nbsp;Draw &nbsp;&middot;&nbsp; {% elif bet.bet_type == "Total" %}&nbsp;Total &nbsp;&middot;&nbsp; {% elif bet.bet_type == "Spread" %}&nbsp;Spread &nbsp;&middot;&nbsp; {% endif %}{{ bet.game }}
-        </div>
-        <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-        {% if bet.locked or bet.status in ('in_progress', 'settled') %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
-        <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
-      </div>
+  {% if bet.status == 'in_progress' %}
+  <div class="wl-status wl-inprogress">⚡ In Progress</div>
+  {% elif bet.status == 'settled' %}
+  <div class="wl-status" style="background:rgba(239,68,68,0.15);color:var(--red);">🏁 Settled</div>
+  {% else %}
+  <div class="wl-status wl-upcoming">🔵 Upcoming</div>
+  {% endif %}
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">{{ bet.pick }}</div>
+      <div class="card-game">{{ bet.game }}{% if bet.bet_type == "Moneyline" %} · ML{% elif bet.bet_type == "Draw" %} · Draw{% elif bet.bet_type == "Total" %} · Total{% elif bet.bet_type == "Spread" %} · Spread{% endif %}</div>
+      <div class="card-time live-status"></div>
     </div>
-    <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
-    <div class="card-compact">
-      <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
-      <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
-      <span class="card-chevron">▾</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      {% if bet.locked or bet.status in ('in_progress', 'settled') %}<span class="lock-badge">🔒</span>{% endif %}
+      <span class="badge badge-conf-{{ bet.confidence }}">{{ bet.confidence }}</span>
     </div>
   </div>
-  <div class="card-details">
-    <div class="stats-grid">
-      <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
-      <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
-      <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
-    </div>
-    {% if bet.narrative or bet.context %}
-    <div class="card-insight">
-      <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
-        <span class="card-insight-label">Why this pick</span>
-        <span class="card-insight-chevron">▾</span>
-      </div>
-      <div class="card-insight-body">
-        {% if bet.narrative %}<div class="card-narrative">{{ bet.narrative }}</div>{% endif %}
-        {% if bet.context %}
-        <div class="context-section">
-          <div class="context-title">Context &amp; Stats</div>
-          {% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}
-        </div>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
-      🔭 {{ wl_note }}
-    </div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Edge <b style="color:{% if bet.edge_pct >= 7 %}var(--green){% else %}var(--yellow){% endif %}">+{{ bet.edge_pct }}%</b> &middot; Mkt {{ bet.market_prob_pct }}% → Model {{ bet.model_prob_pct }}%</span>
   </div>
+  {% if bet.narrative or bet.context %}
+  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
+  <div class="context-body">
+    {% if bet.narrative %}<div class="context-item" style="color:var(--text);border-left-color:var(--blue);">{{ bet.narrative }}</div>{% endif %}
+    {% if bet.context %}{% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}{% endif %}
+    <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 {{ wl_note }}</div>
+  </div>
+  {% else %}
+  <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">🔭 {{ wl_note }}</div>
+  {% endif %}
 </div>
 {% endmacro %}
 
@@ -219,44 +154,60 @@
     :root {
       --bg: #0f1117;
       --card: #1a1d27;
+      --card2: #1e2130;
       --border: #2d3148;
       --text: #e2e8f0;
-      --muted: #94a3b8;
+      --muted: #64748b;
       --green: #22c55e;
       --green-dim: #166534;
       --yellow: #eab308;
       --yellow-dim: #713f12;
       --red: #ef4444;
-      --blue: #3b82f6;
-      --blue-dim: #1e3a5f;
+      --blue: #6366f1;
+      --blue-dim: #1e1e3f;
       --purple: #a855f7;
       --purple-dim: #3b0764;
       --teal: #14b8a6;
       --teal-dim: #134e4a;
-      --nav-h: 58px;
+      --tab-h: 64px;
+      --header-h: 44px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.5; }
 
+    /* ── App header ──────────────────────────────────────────────────────── */
+    .app-header {
+      height: var(--header-h);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+    .app-header-title { font-weight: 700; font-size: 1rem; }
+    .app-header-date  { font-size: 0.72rem; color: var(--muted); }
+
     /* ── SPA layout ──────────────────────────────────────────────────────── */
     #spa-wrap { display: flex; flex-direction: column; height: 100%; }
-
-    #spa-content {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-
+    #spa-content { flex: 1; overflow: hidden; position: relative; }
     .spa-tab {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
       display: none;
-      padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 4px);
+      padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 8px);
     }
     .spa-tab.active { display: block; }
+
+    /* ── Slide animation ─────────────────────────────────────────────────── */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .spa-tab.active { animation: slideIn 0.18s ease; }
 
     /* ── Bottom nav ──────────────────────────────────────────────────────── */
     #spa-nav {
@@ -268,16 +219,17 @@
       border-top: 1px solid var(--border);
       padding-bottom: env(safe-area-inset-bottom, 0px);
       scrollbar-width: none;
+      height: var(--tab-h);
     }
     #spa-nav::-webkit-scrollbar { display: none; }
-
     .spa-tab-btn {
       flex: 0 0 auto;
       min-width: 62px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
+      justify-content: center;
+      gap: 3px;
       padding: 8px 10px 10px;
       background: none;
       border: none;
@@ -286,116 +238,236 @@
       -webkit-tap-highlight-color: transparent;
       transition: color 0.15s;
       position: relative;
+      user-select: none;
     }
-    .spa-tab-btn.active { color: var(--blue); }
+    .spa-tab-btn.active { color: var(--teal); }
     .spa-tab-btn.active::after {
       content: '';
       position: absolute;
       top: 0; left: 20%; right: 20%;
       height: 2px;
-      background: var(--blue);
+      background: var(--teal);
       border-radius: 0 0 2px 2px;
     }
-    .spa-tab-icon { font-size: 1.15rem; line-height: 1; }
+    .spa-tab-icon  { font-size: 1.15rem; line-height: 1; position: relative; }
     .spa-tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
-    .spa-tab-count {
+    .tab-dot {
       position: absolute;
-      top: 4px; right: 6px;
-      background: var(--blue);
-      color: #fff;
-      font-size: 0.55rem;
-      font-weight: 700;
-      min-width: 14px;
-      height: 14px;
-      border-radius: 7px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 3px;
+      top: -1px; right: -5px;
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      border: 1.5px solid var(--card);
     }
 
-    /* ── Tab mini-header ─────────────────────────────────────────────────── */
+    /* ── Tab sticky header ───────────────────────────────────────────────── */
     .tab-header {
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       padding: 10px 0 8px;
       z-index: 10;
       margin: 0 -16px;
-      padding-left: 16px;
-      padding-right: 16px;
+      padding-left: 16px; padding-right: 16px;
     }
     .tab-header-title { font-size: 1.05rem; font-weight: 700; }
-    .tab-header-sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .tab-header-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 
-    /* ── Section label ───────────────────────────────────────────────────── */
-    .sec-label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
+    /* ── Section / divider label ─────────────────────────────────────────── */
+    .sec-label, .divider-label {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
       color: var(--muted);
       margin: 16px 0 8px;
-      padding-bottom: 5px;
+      padding-bottom: 6px;
       border-bottom: 1px solid var(--border);
     }
 
-    /* ── Card styles (same as report.html) ─────────────────────────────── */
-    .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; font-weight: 600; vertical-align: middle; }
-    .badge-nba { background: #1d4ed8; color: #fff; }
-    .badge-mlb { background: #991b1b; color: #fff; }
-    .badge-nfl { background: #7c3aed; color: #fff; }
-    .badge-nhl { background: #0d9488; color: #fff; }
-    .badge-ipl { background: #d97706; color: #fff; }
-    .badge-wnba { background: #f97316; color: #fff; }
-    .badge-mls { background:#14532d; color:#bbf7d0; }
+    /* ── Home stat strip ─────────────────────────────────────────────────── */
+    .stat-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+    .stat-tile {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-tile .val { font-size: 1.3rem; font-weight: 800; }
+    .stat-tile .lbl { font-size: 0.62rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Home sport grid ─────────────────────────────────────────────────── */
+    .section-title {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .sport-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .sport-tile {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+    .sport-tile:active { background: var(--card2); }
+    .sport-tile::after {
+      content: '›';
+      position: absolute;
+      right: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted); font-size: 1.2rem;
+    }
+    .sport-tile .sport-icon { font-size: 1.4rem; margin-bottom: 4px; }
+    .sport-tile .sport-name { font-weight: 700; font-size: 0.88rem; }
+    .sport-tile .sport-meta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .sport-pill {
+      display: inline-block;
+      margin-top: 6px;
+      background: rgba(99,102,241,0.15);
+      color: var(--blue);
+      font-size: 0.66rem; font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .sport-pill.green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .sport-pill.teal  { background: rgba(20,184,166,0.15); color: var(--teal); }
+    .sport-tile.wl-tile { border-color: rgba(20,184,166,0.35); }
+
+    /* ── Bet cards ───────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .card-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .card-pick { font-weight: 700; font-size: 0.95rem; line-height: 1.3; }
+    .card-game { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+    .card-time { font-size: 0.72rem; color: var(--teal); margin-top: 3px; font-weight: 600; min-height: 1em; }
+
+    /* ── Confidence badges ───────────────────────────────────────────────── */
+    .badge { font-size: 0.62rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; vertical-align: middle; }
+    .badge-conf-HIGH   { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .badge-conf-MEDIUM { background: rgba(234,179,8,0.15);  color: var(--yellow); }
+    .badge-conf-LOW    { background: rgba(239,68,68,0.15);  color: var(--red); }
+    /* Legacy confidence classes used in analytics section */
+    .HIGH   { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .MEDIUM { background: rgba(234,179,8,0.15);  color: var(--yellow); }
+    .LOW    { background: rgba(239,68,68,0.15);  color: var(--red); }
+    /* Sport badges */
+    .badge-nba   { background: #1d4ed8; color: #fff; }
+    .badge-mlb   { background: #991b1b; color: #fff; }
+    .badge-nfl   { background: #7c3aed; color: #fff; }
+    .badge-nhl   { background: #0d9488; color: #fff; }
+    .badge-ipl   { background: #d97706; color: #fff; }
+    .badge-wnba  { background: #f97316; color: #fff; }
+    .badge-mls   { background: #14532d; color: #bbf7d0; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
-    .card-title { font-weight: 700; font-size: 1rem; line-height: 1.3; }
-    .card-subtitle { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
-    .card-time { color: var(--teal); font-size: 0.78rem; font-weight: 600; margin-top: 3px; }
-    .confidence-badge { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
-    .HIGH { background: var(--green-dim); color: var(--green); }
-    .MEDIUM { background: var(--yellow-dim); color: var(--yellow); }
+    .lock-badge { font-size: 0.62rem; color: var(--muted); }
 
+    /* ── Projected score ─────────────────────────────────────────────────── */
+    .proj-score { margin-top: 8px; font-size: 0.8rem; color: var(--teal); font-weight: 600; }
+
+    /* ── Edge row ────────────────────────────────────────────────────────── */
+    .edge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .edge-bar-wrap { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .edge-bar { height: 4px; border-radius: 2px; background: var(--green); }
+    .edge-pct { font-size: 0.8rem; font-weight: 700; color: var(--green); flex-shrink: 0; }
+    .edge-pct.yellow { color: var(--yellow); }
+    .mkt-mdl { font-size: 0.7rem; color: var(--muted); }
+
+    /* ── Context toggle ──────────────────────────────────────────────────── */
+    .context-toggle {
+      margin-top: 10px;
+      font-size: 0.72rem; color: var(--muted);
+      cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .context-body { display: none; margin-top: 8px; }
+    .context-body.open { display: block; }
+    .context-item {
+      font-size: 0.77rem;
+      padding: 3px 0 3px 10px;
+      border-left: 2px solid var(--teal);
+      margin-bottom: 4px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* ── Prop card ───────────────────────────────────────────────────────── */
+    .prop-card { border-left: 3px solid var(--yellow); }
+
+    /* ── Watchlist card ──────────────────────────────────────────────────── */
+    .wl-card {
+      background: var(--card);
+      border: 1px solid var(--teal);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .wl-status {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.65rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 99px;
+      margin-bottom: 8px;
+    }
+    .wl-upcoming   { background: rgba(99,102,241,0.15); color: var(--blue); }
+    .wl-inprogress { background: rgba(234,179,8,0.15);  color: var(--yellow); }
+
+    /* ── Result cards (recap) ────────────────────────────────────────────── */
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .result-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .result-pick { font-weight: 700; font-size: 0.9rem; }
+    .result-game { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .result-body { flex: 1; min-width: 0; }
+    .result-pnl  { margin-left: auto; text-align: right; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+
+    /* ── Analytics ───────────────────────────────────────────────────────── */
     .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-    .stat-box { background: var(--bg); border-radius: 8px; padding: 8px 10px; text-align: center; }
+    .stat-box { background: var(--card2); border-radius: 8px; padding: 8px 10px; text-align: center; }
     .stat-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
     .stat-value { font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
-    .stat-value.green { color: var(--green); }
-    .stat-value.yellow { color: var(--yellow); }
-    .stat-value.red { color: var(--red); }
-    .stat-value.blue { color: var(--blue); }
-    .stat-value.teal { color: var(--teal); }
-
-    .card-insight { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
-    .card-insight-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; padding: 2px 0 4px; }
-    .card-insight-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; }
-    .card-insight-chevron { font-size: 0.6rem; opacity: 0.5; transition: transform 0.18s; }
-    .card-insight.ins-collapsed .card-insight-chevron { transform: rotate(-90deg); }
-    .card-insight.ins-collapsed .card-insight-body { display: none; }
-    .card-narrative { font-size: 0.85rem; line-height: 1.6; color: var(--text); font-style: italic; padding: 8px 12px; background: rgba(99,102,241,0.06); border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; margin-bottom: 8px; }
-    .context-section { margin-top: 6px; }
-    .context-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.05em; }
-    .context-item { font-size: 0.82rem; padding: 3px 0 3px 12px; border-left: 2px solid var(--teal-dim); margin-bottom: 4px; line-height: 1.4; color: var(--muted); }
-
-    .prop-card { border-left: 3px solid var(--yellow); }
-    .prop-note { background: var(--yellow-dim); border-radius: 6px; padding: 8px 10px; font-size: 0.82rem; margin-top: 8px; color: var(--yellow); }
-    .prop-live-badge { }
-
-    .card-toggle-header { cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; }
-    .card-compact { display: flex; align-items: center; gap: 8px; padding: 4px 0 6px; font-size: 0.8rem; }
-    .card-compact .mkt-mdl { flex: 1; color: var(--muted); }
-    .card-compact .edge-chip { font-weight: 700; font-size: 0.82rem; }
-    .card-compact .edge-chip.green { color: var(--green); }
-    .card-compact .edge-chip.yellow { color: var(--yellow); }
-    .card-compact .card-chevron { font-size: 0.65rem; opacity: 0.4; flex-shrink: 0; transition: transform 0.2s; }
-    .card.c-collapsed .card-details { display: none; }
-    .card.c-collapsed .card-compact .card-chevron { transform: rotate(-90deg); }
-    .lock-badge { white-space: nowrap; display: inline-block; }
+    .stat-value.green, .green { color: var(--green); }
+    .stat-value.yellow, .yellow { color: var(--yellow); }
+    .stat-value.red, .red { color: var(--red); }
+    .stat-value.blue, .blue { color: var(--blue); }
+    .stat-value.teal, .teal { color: var(--teal); }
+    .stat-value.purple, .purple { color: var(--purple); }
+    .signals-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
+    .confidence-badge { flex-shrink: 0; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
 
     /* ── Budget table ────────────────────────────────────────────────────── */
     .budget-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -407,27 +479,22 @@
     .alloc-detail-row.adr-open { display: table-row; }
     .alloc-expand-btn { background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 1px 5px; line-height: 1.4; flex-shrink: 0; transition: transform 0.15s; }
     .alloc-main-row.adr-open .alloc-expand-btn { transform: rotate(90deg); }
-    .row-time-local { color: #14b8a6; font-size: 0.7rem; }
+    .row-time-local { color: var(--teal); font-size: 0.7rem; }
     .score-cell { font-size: 0.7rem; color: var(--muted); margin-top: 3px; white-space: nowrap; }
-    .action-box { background: var(--blue-dim); border: 1px solid var(--blue); border-radius: 8px; padding: 12px; margin-top: 0; }
+    .action-box { background: var(--blue-dim); border: 1px solid var(--blue); border-radius: 8px; padding: 12px; }
     .action-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
     .action-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 3px; }
     .action-row .label { color: var(--muted); }
     .action-row .value { font-weight: 600; }
 
-    /* ── Recap card ─────────────────────────────────────────────────────── */
-    .error-card { background: #1a0a0a; border: 1px solid #7f1d1d; border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 0.82rem; color: #fca5a5; }
-
-    /* ── Empty state ─────────────────────────────────────────────────────── */
+    /* ── Misc ────────────────────────────────────────────────────────────── */
     .empty-state { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 0.9rem; }
     .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
+    .error-card { background: rgba(127,29,29,0.3); border: 1px solid #7f1d1d; border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 0.82rem; color: #fca5a5; }
 
-    /* ── Analytics sections ──────────────────────────────────────────────── */
-    .signals-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
-
-    /* ── Nav flash (anchor) ──────────────────────────────────────────────── */
+    /* ── Nav highlight flash ─────────────────────────────────────────────── */
     @keyframes nav-flash {
-      0%   { box-shadow: 0 0 0 3px #3b82f6; }
+      0%   { box-shadow: 0 0 0 3px var(--blue); }
       100% { box-shadow: 0 0 0 3px transparent; }
     }
     .nav-highlight { animation: nav-flash 0.9s ease-out; border-radius: 12px; }
@@ -436,53 +503,140 @@
 <body>
 <div id="spa-wrap">
 
-<!-- ─────────────── TAB CONTENT ─────────────────────────────────────────── -->
+<!-- Header -->
+<div class="app-header">
+  <span class="app-header-title">Picks</span>
+  <span class="app-header-date">{{ report.run_date }}</span>
+</div>
+
+<!-- Tab content -->
 <div id="spa-content">
 
   <!-- ═══════════════ TODAY TAB ══════════════════════════════════════════ -->
   <div id="tab-today" class="spa-tab active">
-    <div class="tab-header">
-      <div class="tab-header-title">📋 Today &mdash; {{ report.run_date }}</div>
-      <div class="tab-header-sub">
-        Generated {{ report.generated_at }} &nbsp;&middot;&nbsp;
-        Budget: ${{ "%.0f"|format(report.daily_budget) }}
-        {% set cr = report.odds_api_credits %}
-        {% if cr and cr.remaining is defined and cr.remaining is not none %}
-        &nbsp;&middot;&nbsp;
-        <span style="color:{% if cr.remaining < 500 %}var(--red){% elif cr.remaining < 2000 %}var(--yellow){% else %}var(--green){% endif %};">
-          🔑 {{ "{:,}".format(cr.remaining) }} API credits
-        </span>
-        {% endif %}
+
+    {# Compute totals for stat strip #}
+    {% set nba_n  = (report.nba_top_singles|length) + (report.nba_props|length) %}
+    {% set mlb_n  = (report.mlb_top_singles|length) + (report.mlb_props|length) %}
+    {% set nfl_n  = report.nfl_top_singles|length %}
+    {% set ipl_n  = report.ipl_watchlist|length %}
+    {% set nhl_n  = report.nhl_watchlist|length %}
+    {% set wnba_n = report.wnba_watchlist|length %}
+    {% set mls_n  = report.mls_watchlist|length %}
+    {% set total_picks = nba_n + mlb_n + nfl_n + ipl_n + nhl_n + wnba_n + mls_n %}
+
+    {# Stat strip #}
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <div class="val {% if total_picks > 0 %}green{% else %}{% endif %}">{{ total_picks }}</div>
+        <div class="lbl">Today's Picks</div>
+      </div>
+      <div class="stat-tile">
+        {% if report.has_performance %}{% set p = report.performance %}
+        <div class="val">{{ p.won }}W–{{ p.lost }}L</div>
+        {% else %}<div class="val" style="color:var(--muted);">—</div>{% endif %}
+        <div class="lbl">All-time</div>
+      </div>
+      <div class="stat-tile">
+        {% if report.has_performance %}{% set p = report.performance %}
+        <div class="val {% if p.total_pnl > 0 %}green{% elif p.total_pnl < 0 %}red{% endif %}">${{ "%+.2f"|format(p.total_pnl) }}</div>
+        {% else %}<div class="val" style="color:var(--muted);">—</div>{% endif %}
+        <div class="lbl">Total P&amp;L</div>
       </div>
     </div>
 
     {# Errors #}
     {% if report.errors %}
-    <div style="margin-top:12px;">
-      {% for err in report.errors %}<div class="error-card">⚠ {{ err }}</div>{% endfor %}
-    </div>
+    {% for err in report.errors %}<div class="error-card">⚠ {{ err }}</div>{% endfor %}
     {% endif %}
 
     {# Pick changes #}
     {% if report.change_warnings %}
-    <div style="margin-top:12px;">
-      {% for w in report.change_warnings %}
-      <div style="background:#1a1300;border:1px solid #713f12;border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:0.82rem;color:#fbbf24;">⚡ {{ w }}</div>
-      {% endfor %}
+    {% for w in report.change_warnings %}
+    <div style="background:#1a1300;border:1px solid #713f12;border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:0.82rem;color:#fbbf24;">⚡ {{ w }}</div>
+    {% endfor %}
+    {% endif %}
+
+    {# Sport grid #}
+    {% if total_picks > 0 %}
+    <div class="section-title">Today's Picks by Sport</div>
+    <div class="sport-grid">
+      {% if nba_n > 0 %}
+      <div class="sport-tile" onclick="window.showTab('nba')">
+        <div class="sport-icon">🏀</div>
+        <div class="sport-name">NBA</div>
+        <div class="sport-meta">{{ nba_n }} pick{{ 's' if nba_n != 1 else '' }}</div>
+        <div class="sport-pill green">{{ nba_n }} picks</div>
+      </div>
+      {% endif %}
+      {% if mlb_n > 0 %}
+      <div class="sport-tile" onclick="window.showTab('mlb')">
+        <div class="sport-icon">⚾</div>
+        <div class="sport-name">MLB</div>
+        <div class="sport-meta">{{ mlb_n }} pick{{ 's' if mlb_n != 1 else '' }}</div>
+        <div class="sport-pill">{{ mlb_n }} picks</div>
+      </div>
+      {% endif %}
+      {% if ipl_n > 0 %}
+      <div class="sport-tile wl-tile" onclick="window.showTab('ipl')">
+        <div class="sport-icon">🏏</div>
+        <div class="sport-name">IPL</div>
+        <div class="sport-meta">{{ ipl_n }} watchlist</div>
+        <div class="sport-pill teal">{{ ipl_n }} item{{ 's' if ipl_n != 1 else '' }}</div>
+      </div>
+      {% endif %}
+      {% if nhl_n > 0 %}
+      <div class="sport-tile wl-tile" onclick="window.showTab('nhl')">
+        <div class="sport-icon">🏒</div>
+        <div class="sport-name">NHL</div>
+        <div class="sport-meta">{{ nhl_n }} watchlist</div>
+        <div class="sport-pill teal">{{ nhl_n }} item{{ 's' if nhl_n != 1 else '' }}</div>
+      </div>
+      {% endif %}
+      {% if wnba_n > 0 %}
+      <div class="sport-tile wl-tile" onclick="window.showTab('wnba')">
+        <div class="sport-icon">🏀</div>
+        <div class="sport-name">WNBA</div>
+        <div class="sport-meta">{{ wnba_n }} watchlist</div>
+        <div class="sport-pill teal">{{ wnba_n }} item{{ 's' if wnba_n != 1 else '' }}</div>
+      </div>
+      {% endif %}
+      {% if nfl_n > 0 %}
+      <div class="sport-tile" onclick="window.showTab('nfl')">
+        <div class="sport-icon">🏈</div>
+        <div class="sport-name">NFL</div>
+        <div class="sport-meta">{{ nfl_n }} pick{{ 's' if nfl_n != 1 else '' }}</div>
+        <div class="sport-pill">{{ nfl_n }} picks</div>
+      </div>
+      {% endif %}
+      {% if mls_n > 0 %}
+      <div class="sport-tile wl-tile" onclick="window.showTab('mls')">
+        <div class="sport-icon">⚽</div>
+        <div class="sport-name">MLS</div>
+        <div class="sport-meta">{{ mls_n }} watchlist</div>
+        <div class="sport-pill teal">{{ mls_n }} item{{ 's' if mls_n != 1 else '' }}</div>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="margin-top:12px;">
+      <div class="icon">😕</div>
+      No qualifying picks found today — edge threshold not met across all sports.
     </div>
     {% endif %}
 
     {# Yesterday's recap #}
     {% if report.recap and report.recap.has_recap %}
     <div class="sec-label" style="margin-top:14px;">
-      📊 Yesterday's Results — {{ report.recap.date }}
+      📊 Yesterday — {{ report.recap.date }}
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">{{ report.recap.record_str }}</span>
       <span style="font-weight:700;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;color:{% if report.recap.total_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};">{{ report.recap.pnl_sign }}${{ "%.2f"|format(report.recap.total_pnl|abs) }}</span>
     </div>
     {% for item in report.recap.results %}
-    <div class="card" style="margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px;">
-        <div style="flex:1;min-width:0;">
+    <div class="result-card">
+      <div class="result-icon">{% if item.result == 'WON' %}✅{% elif item.result == 'LOST' %}❌{% else %}➡{% endif %}</div>
+      <div class="result-body">
+        <div class="result-pick">
           {% if item.sport == 'NBA' %}<span class="badge badge-nba">NBA</span>
           {% elif item.sport == 'MLB' %}<span class="badge badge-mlb">MLB</span>
           {% elif item.sport == 'NFL' %}<span class="badge badge-nfl">NFL</span>
@@ -490,42 +644,22 @@
           {% elif item.sport == 'IPL' %}<span class="badge badge-ipl">IPL</span>
           {% elif item.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
           {% elif item.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
-          {% elif item.sport == 'Parlay' %}<span class="badge badge-parlay">PARLAY</span>
           {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ item.sport }}</span>
           {% endif %}
-          <span style="font-weight:700;font-size:0.92rem;margin-left:6px;">{{ item.pick }}</span>
-          {% if item.bet_type == "Moneyline" %}<span style="color:var(--muted);font-size:0.75rem;margin-left:6px;">ML</span>{% endif %}
-          {% if item.edge_pct %}<span style="color:var(--muted);font-size:0.75rem;">&middot; +{{ item.edge_pct }}% edge</span>{% endif %}
+          &nbsp;{{ item.pick }}
         </div>
-        <div style="flex-shrink:0;text-align:right;">
-          <span style="font-weight:700;font-size:0.88rem;color:{% if item.result=='WON' %}var(--green){% elif item.result=='LOST' %}var(--red){% else %}var(--yellow){% endif %};">
-            {% if item.result == 'WON' %}✅ WON{% elif item.result == 'LOST' %}❌ LOST{% else %}➡ PUSH{% endif %}
-          </span>
-          <div style="font-weight:700;font-size:0.82rem;color:{% if item.actual_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};margin-top:2px;">
-            {% if item.actual_pnl >= 0 %}+{% endif %}${{ "%.2f"|format(item.actual_pnl|abs) }}
-          </div>
-        </div>
+        <div class="result-game">{{ item.game }}{% if item.edge_pct %} &middot; +{{ item.edge_pct }}% edge{% endif %}</div>
+        {% if item.narrative %}<div style="font-size:0.75rem;color:var(--muted);margin-top:4px;line-height:1.4;">{{ item.narrative }}</div>{% endif %}
       </div>
-      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:5px;">{{ item.game }}</div>
-      {% if item.narrative %}<div style="font-size:0.82rem;color:var(--text);line-height:1.5;margin-bottom:6px;">{{ item.narrative }}</div>{% endif %}
-      {% if item.key_signals %}
-      <div style="border-top:1px solid var(--border);padding-top:5px;margin-top:2px;">
-        {% for sig in item.key_signals %}<div style="font-size:0.75rem;color:var(--muted);margin-top:3px;">✦ {{ sig }}</div>{% endfor %}
+      <div class="result-pnl {% if item.actual_pnl >= 0 %}green{% else %}red{% endif %}">
+        {% if item.actual_pnl >= 0 %}+{% endif %}${{ "%.2f"|format(item.actual_pnl|abs) }}
       </div>
-      {% endif %}
     </div>
     {% endfor %}
     {% endif %}
 
-    {# No bets message #}
-    {% if not report.has_bets %}
-    <div class="empty-state" style="margin-top:20px;">
-      <div class="icon">😕</div>
-      No qualifying picks found today — edge threshold not met across all sports.
-    </div>
-    {% else %}
-
     {# Today's Card (allocation) #}
+    {% if report.has_bets %}
     <div class="sec-label" style="margin-top:14px;">
       Today's Card
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">top {{ report.all_singles|length }} picks &middot; {{ report.parlays|length }} parlay{% if report.parlays|length != 1 %}s{% endif %}</span>
@@ -561,7 +695,7 @@
               {% if not row.locked %}<div class="row-time-local"></div>{% endif %}
             </td>
             <td style="vertical-align:top;text-align:center;">
-              <div style="color:{% if row.edge_pct >= 7 %}#16a34a{% else %}#eab308{% endif %};font-weight:700;font-size:0.8rem;">+{{ row.edge_pct }}%</div>
+              <div style="color:{% if row.edge_pct >= 7 %}var(--green){% else %}var(--yellow){% endif %};font-weight:700;font-size:0.8rem;">+{{ row.edge_pct }}%</div>
               <div class="score-cell">—</div>
             </td>
             <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
@@ -571,9 +705,9 @@
             <td style="vertical-align:top;text-align:right;">
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
                 <div style="font-size:0.8rem;">${{ "%.2f"|format(row.cost) }}</div>
-                <div style="color:#16a34a;font-size:0.75rem;">+${{ "%.2f"|format(row.profit_if_win) }}</div>
+                <div style="color:var(--green);font-size:0.75rem;">+${{ "%.2f"|format(row.profit_if_win) }}</div>
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:{% if row.locked %}inline{% else %}none{% endif %};">🔒</span>
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:var(--muted);display:{% if row.locked %}inline{% else %}none{% endif %};">🔒</span>
                   <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
                 </div>
               </div>
@@ -590,11 +724,11 @@
                 {% endif %}
                 <div class="action-row"><span class="label">Buy contracts</span><span class="value">{{ row.contracts }}</span></div>
                 <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">${{ "%.2f"|format(row.cost) }}</span></div>
-                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+${{ "%.2f"|format(row.profit_if_win) }}</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+${{ "%.2f"|format(row.profit_if_win) }}</span></div>
                 {% if row.bet_type != "Parlay" %}
                 <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-${{ "%.2f"|format(row.loss_if_lose) }}</span></div>
                 <div class="action-row"><span class="label">Expected value</span>
-                  <span class="value" style="color:{% if row.expected_value > 0 %}#16a34a{% else %}var(--red){% endif %}">
+                  <span class="value" style="color:{% if row.expected_value > 0 %}var(--green){% else %}var(--red){% endif %}">
                     {% if row.expected_value > 0 %}+{% endif %}${{ "%.2f"|format(row.expected_value) }}
                   </span>
                 </div>
@@ -615,7 +749,7 @@
       </div>
       <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
         <span style="color:var(--muted);">Reserve</span>
-        <span style="color:#16a34a;">${{ "%.2f"|format(report.reserve) }}</span>
+        <span style="color:var(--green);">${{ "%.2f"|format(report.reserve) }}</span>
       </div>
     </div>
     {% endif %}
@@ -630,8 +764,7 @@
       <div class="tab-header-sub">
         {% if not report.has_nba %}No games today
         {% elif report.nba_top_singles or report.nba_props %}{{ report.nba_top_singles|length }} pick{% if report.nba_top_singles|length != 1 %}s{% endif %}{% if report.nba_props %} &middot; {{ report.nba_props|length }} prop{% if report.nba_props|length != 1 %}s{% endif %}{% endif %}
-        {% else %}No qualifying picks
-        {% endif %}
+        {% else %}No qualifying picks{% endif %}
       </div>
     </div>
     {% if not report.has_nba %}
@@ -662,8 +795,7 @@
       <div class="tab-header-sub">
         {% if not report.has_mlb %}No games today
         {% elif report.mlb_top_singles or report.mlb_props %}{{ report.mlb_top_singles|length }} pick{% if report.mlb_top_singles|length != 1 %}s{% endif %}{% if report.mlb_props %} &middot; {{ report.mlb_props|length }} prop{% if report.mlb_props|length != 1 %}s{% endif %}{% endif %}
-        {% else %}No qualifying picks
-        {% endif %}
+        {% else %}No qualifying picks{% endif %}
       </div>
     </div>
     {% if not report.has_mlb %}
@@ -694,8 +826,7 @@
       <div class="tab-header-sub">
         {% if not report.has_ipl %}No matches today
         {% elif report.ipl_watchlist %}{{ report.ipl_watchlist|length }} pick{% if report.ipl_watchlist|length != 1 %}s{% endif %} &middot; watchlist
-        {% else %}No qualifying picks
-        {% endif %}
+        {% else %}No qualifying picks{% endif %}
       </div>
     </div>
     {% if not report.has_ipl %}
@@ -705,60 +836,7 @@
     {% else %}
     <div class="sec-label">Watchlist</div>
     {% for bet in report.ipl_watchlist %}
-    <div class="card ipl-watchlist-card"
-         id="ipl-{{ loop.index }}"
-         data-home-team="{{ bet.home_team }}"
-         data-away-team="{{ bet.away_team }}"
-         data-bet-type="{{ bet.bet_type }}"
-         data-pick="{{ bet.pick }}"
-         data-sport="IPL"
-         data-edge-pct="{{ bet.edge_pct }}"
-         data-model-prob-pct="{{ bet.model_prob_pct }}"
-         data-market-prob-pct="{{ bet.market_prob_pct }}"
-         data-commence-time="{{ bet.commence_time }}"
-         {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-in-history="1"{% endif %}>
-      <div class="card-toggle-header">
-        <div class="card-header">
-          <div>
-            <div class="card-title">{{ bet.pick }}</div>
-            <div class="card-subtitle"><span class="badge badge-ipl">IPL</span>&nbsp;Match Winner &middot; {{ bet.game }}</div>
-            <div class="card-time" style="color:#d97706;font-size:0.78rem;font-weight:600;margin-top:3px;"
-                 {% if bet.commence_time and bet.status != 'settled' %}data-ipl-commence="{{ bet.commence_time }}"{% endif %}>
-              {% if bet.commence_time and bet.status != 'settled' %}📅 loading…{% endif %}
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            {% if bet.locked or bet.status in ('in_progress', 'settled') %}<span class="lock-badge" style="font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;">🔒 Locked</span>{% endif %}
-            <span class="confidence-badge {{ bet.confidence }}">{{ bet.confidence }}</span>
-          </div>
-        </div>
-        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
-        <div class="card-compact">
-          <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
-          <span class="edge-chip {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}% edge</span>
-          <span class="card-chevron">▾</span>
-        </div>
-      </div>
-      <div class="card-details">
-        <div class="stats-grid">
-          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">{{ bet.market_prob_pct }}%</div></div>
-          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">{{ bet.model_prob_pct }}%</div></div>
-          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value {% if bet.edge_pct >= 7 %}green{% else %}yellow{% endif %}">+{{ bet.edge_pct }}%</div></div>
-        </div>
-        {% if bet.narrative or bet.context %}
-        <div class="card-insight">
-          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
-            <span class="card-insight-label">Why this pick</span><span class="card-insight-chevron">▾</span>
-          </div>
-          <div class="card-insight-body">
-            {% if bet.narrative %}<div class="card-narrative">{{ bet.narrative }}</div>{% endif %}
-            {% if bet.context %}<div class="context-section"><div class="context-title">Context &amp; Stats</div>{% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}</div>{% endif %}
-          </div>
-        </div>
-        {% endif %}
-        <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">🔭 Watchlist only — not tracked in performance tables. Moneyline (match winner) only.</div>
-      </div>
-    </div>
+    {{ watchlist_card(bet, "badge-ipl", "IPL", "ipl-" + loop.index|string, "IPL", "Watchlist only — not tracked in performance tables. Moneyline (match winner) only.", "ipl-watchlist-card") }}
     {% endfor %}
     {% endif %}
     <div style="height:16px;"></div>
@@ -771,8 +849,7 @@
       <div class="tab-header-sub">
         {% if not report.has_nhl %}No games today
         {% elif report.nhl_watchlist %}{{ report.nhl_watchlist|length }} pick{% if report.nhl_watchlist|length != 1 %}s{% endif %} &middot; watchlist
-        {% else %}No qualifying picks
-        {% endif %}
+        {% else %}No qualifying picks{% endif %}
       </div>
     </div>
     {% if not report.has_nhl %}
@@ -795,8 +872,7 @@
       <div class="tab-header-sub">
         {% if not report.has_wnba %}No games today
         {% elif report.wnba_watchlist %}{{ report.wnba_watchlist|length }} pick{% if report.wnba_watchlist|length != 1 %}s{% endif %} &middot; watchlist
-        {% else %}No qualifying picks
-        {% endif %}
+        {% else %}No qualifying picks{% endif %}
       </div>
     </div>
     {% if not report.has_wnba %}
@@ -819,8 +895,7 @@
       <div class="tab-header-sub">
         {% if not report.has_nfl %}No games today
         {% elif report.nfl_top_singles %}{{ report.nfl_top_singles|length }} pick{% if report.nfl_top_singles|length != 1 %}s{% endif %} &middot; monitoring
-        {% else %}No qualifying picks
-        {% endif %}
+        {% else %}No qualifying picks{% endif %}
       </div>
     </div>
     {% if not report.has_nfl %}
@@ -843,8 +918,7 @@
       <div class="tab-header-sub">
         {% if not report.has_mls %}No games today
         {% elif report.mls_watchlist %}{{ report.mls_watchlist|length }} pick{% if report.mls_watchlist|length != 1 %}s{% endif %} &middot; watchlist
-        {% else %}No qualifying picks
-        {% endif %}
+        {% else %}No qualifying picks{% endif %}
       </div>
     </div>
     {% if not report.has_mls %}
@@ -852,7 +926,7 @@
     {% elif not report.mls_watchlist %}
     <div class="empty-state"><div class="icon">😕</div>No picks with edge &gt; 3% today.</div>
     {% else %}
-    <div class="sec-label">Singles</div>
+    <div class="sec-label">Watchlist</div>
     {% for bet in report.mls_watchlist %}
     {{ watchlist_card(bet, "badge-mls", "⚽ MLS", "mls-" + loop.index|string, "MLS", "Watchlist only — not tracked in performance tables until MLS testing is complete.", "mls-watchlist-card") }}
     {% endfor %}
@@ -867,7 +941,6 @@
       <div class="tab-header-sub">Performance · Props · Calibration · Cap</div>
     </div>
 
-    {# Model Performance #}
     {% if report.has_performance %}
     {% set p = report.performance %}
     <div class="sec-label" style="margin-top:14px;">Model Performance</div>
@@ -902,11 +975,11 @@
       <div style="margin-top:12px;">
         <div class="signals-title" style="display:flex;justify-content:space-between;">
           <span>By Confidence &amp; Sport</span>
-          <span id="perf-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;">● includes today</span>
+          <span id="perf-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(20,184,166,0.15);color:var(--teal);text-transform:none;letter-spacing:0;">● includes today</span>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" id="perf-breakdown">
           {% for conf, cs in p.by_confidence.items() %}
-          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;"
+          <div style="flex:1;min-width:120px;background:var(--card2);border-radius:8px;padding:8px 10px;"
                id="perf-conf-{{ conf }}"
                data-hist-won="{{ cs.won }}"
                data-hist-lost="{{ cs.lost }}"
@@ -920,7 +993,7 @@
           {% endfor %}
           {% if p.by_sport %}
           {% for sport, ss in p.by_sport.items() %}
-          <div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px;"
+          <div style="flex:1;min-width:120px;background:var(--card2);border-radius:8px;padding:8px 10px;"
                id="perf-sport-{{ sport }}"
                data-hist-won="{{ ss.won }}"
                data-hist-lost="{{ ss.lost }}"
@@ -942,7 +1015,6 @@
       </div>
       {% endif %}
 
-      {# Watchlist tiles #}
       {% set wl = report.watchlist_performance %}
       {% if wl %}
       <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
@@ -953,9 +1025,9 @@
           <div id="wl-tile-{{ sport_key }}"
                data-hist-won="{{ ws.won }}"
                data-hist-lost="{{ ws.lost }}"
-               style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+               style="flex:1;min-width:130px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
             <div style="font-size:0.68rem;margin-bottom:6px;"><span class="badge {{ badge_class }}">{{ label }}</span></div>
-            <div class="wl-record" style="font-size:0.9rem;font-weight:700;color:{% if ws.win_rate_pct is not none and ws.win_rate_pct >= 55 %}#4ade80{% elif ws.win_rate_pct is not none and ws.win_rate_pct >= 45 %}#facc15{% elif ws.win_rate_pct is not none %}#f87171{% else %}var(--muted){% endif %};">
+            <div class="wl-record" style="font-size:0.9rem;font-weight:700;color:{% if ws.win_rate_pct is not none and ws.win_rate_pct >= 55 %}var(--green){% elif ws.win_rate_pct is not none and ws.win_rate_pct >= 45 %}var(--yellow){% elif ws.win_rate_pct is not none %}var(--red){% else %}var(--muted){% endif %};">
               {{ ws.won }}W–{{ ws.lost }}L{% if ws.win_rate_pct is not none %}<span style="font-size:0.78rem;font-weight:400;"> ({{ ws.win_rate_pct }}%)</span>{% endif %}
             </div>
             {% if ws.total == 0 %}<div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">No picks settled yet</div>
@@ -970,7 +1042,6 @@
       <div style="margin-top:10px;font-size:0.78rem;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;">⚠ Only {{ p.total }} settled bet(s) — need 30+ for statistically meaningful calibration.</div>
       {% endif %}
 
-      {# Trend charts #}
       {% set cd = report.chart_data %}
       {% if cd and cd.has_data %}
       <details style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
@@ -996,7 +1067,7 @@
           {% if cd.has_wr %}
             <line x1="{{ cd.pad_l }}" y1="{{ cd.ref50_y }}" x2="{{ cd.svg_w - 12 }}" y2="{{ cd.ref50_y }}" stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>
             <text x="{{ cd.svg_w - 10 }}" y="{{ cd.ref50_y + 4 }}" text-anchor="start" font-size="9" fill="#2d3148">50%</text>
-            <polyline points="{{ cd.wr_points }}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <polyline points="{{ cd.wr_points }}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
             {% for lbl in cd.wr_y_labels %}<text x="{{ cd.pad_l - 4 }}" y="{{ lbl.y + 4 }}" text-anchor="end" font-size="9" fill="#94a3b8">{{ lbl.val }}</text>{% endfor %}
             {% for lbl in cd.x_labels %}<text x="{{ lbl.x }}" y="{{ cd.svg_h - 4 }}" text-anchor="middle" font-size="9" fill="#94a3b8">{{ lbl.val }}</text>{% endfor %}
           {% endif %}
@@ -1031,12 +1102,11 @@
     </div>
     {% endif %}
 
-    {# Props Accuracy #}
     {% if report.has_prop_accuracy %}
     {% set pa = report.prop_accuracy %}
     <div class="sec-label" style="margin-top:16px;">
       Props Model Accuracy
-      <span id="prop-acc-live-badge" style="display:{{ 'inline-block' if pa.today_total > 0 else 'none' }};font-size:0.65rem;font-weight:600;padding:2px 7px;border-radius:99px;background:#134e4a;color:#14b8a6;text-transform:none;letter-spacing:0;margin-left:8px;">● includes today</span>
+      <span id="prop-acc-live-badge" style="display:{{ 'inline-block' if pa.today_total > 0 else 'none' }};font-size:0.65rem;font-weight:600;padding:2px 7px;border-radius:99px;background:rgba(20,184,166,0.15);color:var(--teal);text-transform:none;letter-spacing:0;margin-left:8px;">● includes today</span>
     </div>
     <div class="card" id="prop-accuracy-card"
          data-hist-total="{{ pa.hist_total }}"
@@ -1067,10 +1137,10 @@
           <tr style="border-top:1px solid var(--border);" data-prop-type="{{ pt }}" data-type-total="{{ hst.get('total', 0) }}" data-type-hits="{{ hst.get('hits', 0) }}">
             <td style="padding:5px 0;">{{ pt.replace(" Over (1+)", "").replace(" Over", "") }}</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.total }}</td>
-            <td style="text-align:right;padding:5px 6px;font-weight:600;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}#4ade80{% elif stats.hit_rate and stats.hit_rate >= 45 %}#facc15{% else %}#f87171{% endif %};">{{ stats.hit_rate }}%</td>
+            <td style="text-align:right;padding:5px 6px;font-weight:600;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}var(--green){% elif stats.hit_rate and stats.hit_rate >= 45 %}var(--yellow){% else %}var(--red){% endif %};">{{ stats.hit_rate }}%</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.avg_proj }}</td>
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.avg_actual }}</td>
-            <td style="text-align:right;padding:5px 6px;font-weight:600;color:{% if stats.avg_err and stats.avg_err > 0 %}#4ade80{% elif stats.avg_err and stats.avg_err < -1 %}#f87171{% else %}#94a3b8{% endif %};">{% if stats.avg_err is not none %}{{ "%+.1f"|format(stats.avg_err) }}{% else %}—{% endif %}</td>
+            <td style="text-align:right;padding:5px 6px;font-weight:600;color:{% if stats.avg_err and stats.avg_err > 0 %}var(--green){% elif stats.avg_err and stats.avg_err < -1 %}var(--red){% else %}var(--muted){% endif %};">{% if stats.avg_err is not none %}{{ "%+.1f"|format(stats.avg_err) }}{% else %}—{% endif %}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -1080,9 +1150,9 @@
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         {% for conf, stats in pa.by_conf.items() %}
         {% set hsc = pa.hist_by_conf.get(conf, {}) %}
-        <div style="flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;" data-conf="{{ conf }}" data-conf-total="{{ hsc.get('total', 0) }}" data-conf-hits="{{ hsc.get('hits', 0) }}" data-conf-misses="{{ hsc.get('misses', 0) }}">
+        <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;" data-conf="{{ conf }}" data-conf-total="{{ hsc.get('total', 0) }}" data-conf-hits="{{ hsc.get('hits', 0) }}" data-conf-misses="{{ hsc.get('misses', 0) }}">
           <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">{{ conf }} confidence</div>
-          <div class="conf-hit-rate" style="font-size:1.1rem;font-weight:700;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}#4ade80{% elif stats.hit_rate and stats.hit_rate >= 45 %}#facc15{% else %}#f87171{% endif %};">{{ stats.hit_rate }}%</div>
+          <div class="conf-hit-rate" style="font-size:1.1rem;font-weight:700;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}var(--green){% elif stats.hit_rate and stats.hit_rate >= 45 %}var(--yellow){% else %}var(--red){% endif %};">{{ stats.hit_rate }}%</div>
           <div class="conf-count" style="font-size:0.72rem;color:var(--muted);">{{ stats.hits }}H / {{ stats.misses }}M ({{ stats.total }} settled)</div>
         </div>
         {% endfor %}
@@ -1094,17 +1164,16 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           {% for sp, stats in report.prop_accuracy_by_sport.items() %}
           {% set hsp = pa.hist_by_sport.get(sp, {}) %}
-          <div id="pa-sport-{{ sp }}" style="flex:1;min-width:130px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
+          <div id="pa-sport-{{ sp }}" style="flex:1;min-width:130px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
                data-sport="{{ sp }}" data-sport-total="{{ hsp.get('total', 0) }}" data-sport-hits="{{ hsp.get('hits', 0) }}">
             <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">{{ sp }}</div>
-            <div style="font-size:1.05rem;font-weight:700;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}#4ade80{% elif stats.hit_rate and stats.hit_rate >= 45 %}#facc15{% else %}#f87171{% endif %};">{{ stats.hit_rate }}%</div>
+            <div style="font-size:1.05rem;font-weight:700;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}var(--green){% elif stats.hit_rate and stats.hit_rate >= 45 %}var(--yellow){% else %}var(--red){% endif %};">{{ stats.hit_rate }}%</div>
             <div style="font-size:0.72rem;color:var(--muted);">{{ stats.total }} settled</div>
           </div>
           {% endfor %}
         </div>
       </div>
       {% endif %}
-      {# Prop chart #}
       {% set pcd = report.prop_chart_data %}
       {% if pcd and pcd.has_data %}
       <details style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
@@ -1113,7 +1182,7 @@
         </summary>
         <svg id="svg-prop-hr" viewBox="0 0 {{ pcd.svg_w }} {{ pcd.svg_h }}" style="width:100%;display:block;overflow:visible;margin-top:10px;" xmlns="http://www.w3.org/2000/svg">
           {% if pcd.ref50_y is defined %}<line x1="{{ pcd.pad_l }}" y1="{{ pcd.ref50_y }}" x2="{{ pcd.svg_w - 12 }}" y2="{{ pcd.ref50_y }}" stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>{% endif %}
-          {% if pcd.hr_points %}<polyline points="{{ pcd.hr_points }}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>{% endif %}
+          {% if pcd.hr_points %}<polyline points="{{ pcd.hr_points }}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>{% endif %}
           {% for lbl in pcd.y_labels %}<text x="{{ pcd.pad_l - 4 }}" y="{{ lbl.y + 4 }}" text-anchor="end" font-size="9" fill="#94a3b8">{{ lbl.val }}</text>{% endfor %}
           {% for lbl in pcd.x_labels %}<text x="{{ lbl.x }}" y="{{ pcd.svg_h - 4 }}" text-anchor="middle" font-size="9" fill="#94a3b8">{{ lbl.val }}</text>{% endfor %}
         </svg>
@@ -1123,7 +1192,6 @@
     </div>
     {% endif %}
 
-    {# Model Calibration #}
     {% if report.calibration %}
     {% set cal = report.calibration %}
     <div class="sec-label" style="margin-top:16px;">
@@ -1157,7 +1225,7 @@
               <td style="padding:7px 6px;"><strong>{{ m.sport }}</strong> · <span style="color:var(--muted);">{{ m.market_type }}</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">{{ m.n_settled }} / {{ m.n_total }}</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:{% if m.phase == '0' %}#3b3a52{% elif m.phase == 'A' %}#0e7490{% elif m.phase == 'B' %}#0f766e{% else %}#14532d{% endif %};color:#fff;">{{ m.phase }}</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:{% if m.phase == '0' %}var(--muted){% elif m.ratio_drift_pct < -3 %}#ef4444{% elif m.ratio_drift_pct > 3 %}#22c55e{% else %}var(--text){% endif %};">{{ m.ratio_display }}</td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:{% if m.phase == '0' %}var(--muted){% elif m.ratio_drift_pct < -3 %}var(--red){% elif m.ratio_drift_pct > 3 %}var(--green){% else %}var(--text){% endif %};">{{ m.ratio_display }}</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">{% if m.predicted_rate_pct is not none %}{{ m.predicted_rate_pct }}%{% else %}—{% endif %}</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">{% if m.realized_rate_pct is not none %}{{ m.realized_rate_pct }}%{% else %}—{% endif %}</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">{{ m.next_milestone }}</td>
@@ -1170,7 +1238,6 @@
     </div>
     {% endif %}
 
-    {# Credibility Cap #}
     {% if report.cap_state and report.cap_state.caps %}
     {% set caps = report.cap_state %}
     <div class="sec-label" style="margin-top:16px;">
@@ -1196,7 +1263,7 @@
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:{% if c.current_mode == 0 %}#3b3a52{% elif c.current_mode == 1 %}#0e7490{% else %}#14532d{% endif %};color:#fff;">{{ c.current_mode }} — {{ c.current_mode_label }}</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;{{ (c.current * 100) | round(1) }}%</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;{{ (c.default * 100) | round(1) }}%</td>
-              <td style="text-align:right;padding:7px 6px;color:{% if c.delta_from_default > 0.0005 %}#22c55e{% elif c.delta_from_default < -0.0005 %}#f59e0b{% else %}var(--muted){% endif %};">{{ c.delta_display }}</td>
+              <td style="text-align:right;padding:7px 6px;color:{% if c.delta_from_default > 0.0005 %}var(--green){% elif c.delta_from_default < -0.0005 %}var(--yellow){% else %}var(--muted){% endif %};">{{ c.delta_display }}</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">{{ c.counterfactual.trigger_count if c.counterfactual.trigger_count else '—' }}</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">{{ c.status_label }}</td>
             </tr>
@@ -1207,7 +1274,6 @@
     </div>
     {% endif %}
 
-    {# Classic view link #}
     <div style="text-align:center;padding:24px 0 16px;border-top:1px solid var(--border);margin-top:16px;">
       <a href="/" style="color:var(--teal);font-size:0.85rem;text-decoration:none;font-weight:600;">← Classic view</a>
       <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;">Sports Betting Analysis System &middot; Robinhood Contracts</div>
@@ -1225,41 +1291,32 @@
     <span class="spa-tab-label">Today</span>
   </button>
   <button class="spa-tab-btn" data-tab="nba">
-    <span class="spa-tab-icon">🏀</span>
+    <span class="spa-tab-icon">🏀{% set n = (report.nba_top_singles|length) + (report.nba_props|length) %}{% if n > 0 %}<span class="tab-dot"></span>{% endif %}</span>
     <span class="spa-tab-label">NBA</span>
-    {% set n = (report.nba_top_singles|length) + (report.nba_props|length) %}
-    {% if n > 0 %}<span class="spa-tab-count">{{ n }}</span>{% endif %}
   </button>
   <button class="spa-tab-btn" data-tab="mlb">
-    <span class="spa-tab-icon">⚾</span>
+    <span class="spa-tab-icon">⚾{% set n = (report.mlb_top_singles|length) + (report.mlb_props|length) %}{% if n > 0 %}<span class="tab-dot"></span>{% endif %}</span>
     <span class="spa-tab-label">MLB</span>
-    {% set n = (report.mlb_top_singles|length) + (report.mlb_props|length) %}
-    {% if n > 0 %}<span class="spa-tab-count">{{ n }}</span>{% endif %}
   </button>
   <button class="spa-tab-btn" data-tab="ipl">
-    <span class="spa-tab-icon">🏏</span>
+    <span class="spa-tab-icon">🏏{% if report.ipl_watchlist %}<span class="tab-dot"></span>{% endif %}</span>
     <span class="spa-tab-label">IPL</span>
-    {% if report.ipl_watchlist %}<span class="spa-tab-count">{{ report.ipl_watchlist|length }}</span>{% endif %}
   </button>
   <button class="spa-tab-btn" data-tab="nhl">
-    <span class="spa-tab-icon">🏒</span>
+    <span class="spa-tab-icon">🏒{% if report.nhl_watchlist %}<span class="tab-dot"></span>{% endif %}</span>
     <span class="spa-tab-label">NHL</span>
-    {% if report.nhl_watchlist %}<span class="spa-tab-count">{{ report.nhl_watchlist|length }}</span>{% endif %}
   </button>
   <button class="spa-tab-btn" data-tab="wnba">
-    <span class="spa-tab-icon">🏀</span>
+    <span class="spa-tab-icon">🏀{% if report.wnba_watchlist %}<span class="tab-dot"></span>{% endif %}</span>
     <span class="spa-tab-label">WNBA</span>
-    {% if report.wnba_watchlist %}<span class="spa-tab-count">{{ report.wnba_watchlist|length }}</span>{% endif %}
   </button>
   <button class="spa-tab-btn" data-tab="nfl">
-    <span class="spa-tab-icon">🏈</span>
+    <span class="spa-tab-icon">🏈{% if report.nfl_top_singles %}<span class="tab-dot"></span>{% endif %}</span>
     <span class="spa-tab-label">NFL</span>
-    {% if report.nfl_top_singles %}<span class="spa-tab-count">{{ report.nfl_top_singles|length }}</span>{% endif %}
   </button>
   <button class="spa-tab-btn" data-tab="mls">
-    <span class="spa-tab-icon">⚽</span>
+    <span class="spa-tab-icon">⚽{% if report.mls_watchlist %}<span class="tab-dot"></span>{% endif %}</span>
     <span class="spa-tab-label">MLS</span>
-    {% if report.mls_watchlist %}<span class="spa-tab-count">{{ report.mls_watchlist|length }}</span>{% endif %}
   </button>
   <button class="spa-tab-btn" data-tab="analytics">
     <span class="spa-tab-icon">📊</span>
@@ -1290,6 +1347,9 @@
     try { localStorage.setItem("spa-tab", id); } catch(e) {}
   }
 
+  // Expose globally for sport-grid tile clicks
+  window.showTab = showTab;
+
   document.querySelectorAll(".spa-tab-btn").forEach(function (btn) {
     btn.addEventListener("click", function () { showTab(btn.getAttribute("data-tab")); });
   });
@@ -1318,18 +1378,25 @@
     var dy = e.changedTouches[0].clientY - touchStartY;
     var active = content.querySelector(".spa-tab.active");
     var scrolled = active ? Math.abs(active.scrollTop - touchStartScrollY) : 0;
-
-    // Only trigger if horizontal swipe dominates and panel hasn't scrolled much
     if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.75 || scrolled > 20) return;
-
-    if (dx < 0 && curIdx < TABS.length - 1) showTab(TABS[curIdx + 1]);  // swipe left = next
-    if (dx > 0 && curIdx > 0)               showTab(TABS[curIdx - 1]);  // swipe right = prev
+    if (dx < 0 && curIdx < TABS.length - 1) showTab(TABS[curIdx + 1]);
+    if (dx > 0 && curIdx > 0)               showTab(TABS[curIdx - 1]);
   }, { passive: true });
 
-  // Scroll active nav button into view on load
   var activeBtn = document.querySelector(".spa-tab-btn.active");
   if (activeBtn) activeBtn.scrollIntoView({ block: "nearest", inline: "center" });
 })();
+</script>
+
+<script>
+// ── Context toggle ────────────────────────────────────────────────────────
+function toggleCtx(el) {
+  var body = el.nextElementSibling;
+  var arrow = el.querySelector('.ctx-arrow');
+  if (!body) return;
+  body.classList.toggle('open');
+  if (arrow) arrow.textContent = body.classList.contains('open') ? '▾' : '›';
+}
 </script>
 
 <script>
