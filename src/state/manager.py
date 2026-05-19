@@ -136,7 +136,31 @@ def parlay_to_dict(par) -> Dict:
     }
 
 
+def _prop_stat_avg(signals: list, prop_type: str) -> str:
+    """Extract a concise 'avg X K/9' style label from prop signals for card display."""
+    import re as _re
+    sig_str = " ".join(signals)
+    if prop_type == "Strikeouts Over":
+        m = _re.search(r"K/9\s+([\d.]+)", sig_str)
+        return f"avg {m.group(1)} K/9" if m else ""
+    if prop_type in ("Hits Over", "Hits Over (1+)"):
+        m = _re.search(r"AVG\s+([\d.]+)", sig_str, _re.IGNORECASE)
+        return f"avg {m.group(1)} BA" if m else ""
+    if prop_type == "Total Bases Over":
+        m = _re.search(r"SLG\s+([\d.]+)", sig_str, _re.IGNORECASE)
+        return f"avg {m.group(1)} SLG" if m else ""
+    if prop_type in ("Points Over", "Points Over (1+)"):
+        m = _re.search(r"([\d.]+)\s+PPG", sig_str)
+        return f"avg {m.group(1)} PPG" if m else ""
+    if prop_type in ("Rebounds Over", "Assists Over"):
+        stat = "RPG" if "Rebounds" in prop_type else "APG"
+        m = _re.search(r"([\d.]+)\s+" + stat, sig_str)
+        return f"avg {m.group(1)} {stat}" if m else ""
+    return ""
+
+
 def prop_to_dict(prop) -> Dict:
+    _mkt_line = getattr(prop, "market_line", prop.model_line)
     return {
         "sport": prop.sport,
         "player": prop.player,
@@ -149,18 +173,18 @@ def prop_to_dict(prop) -> Dict:
         "note": prop.note,
         "signals": prop.signals,
         "research": prop.research,
+        "prop_stat_avg": _prop_stat_avg(prop.signals, prop.prop_type),
         **dict(zip(
             ("narrative", "context"),
             build_prop_context(
                 prop.sport, prop.prop_type, prop.player, prop.team, prop.opponent,
                 prop.signals, prop.research,
-                prop.model_line,
-                getattr(prop, "market_line", prop.model_line),
+                prop.model_line, _mkt_line,
                 getattr(prop, "edge", 0.0),
             ),
         )),
         # Odds API market fields
-        "market_line":  getattr(prop, "market_line", prop.model_line),
+        "market_line":  _mkt_line,
         "market_prob":  getattr(prop, "market_prob", 0.0),
         "model_prob":   getattr(prop, "model_prob", 0.0),
         "edge":         getattr(prop, "edge", 0.0),

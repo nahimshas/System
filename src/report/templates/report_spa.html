@@ -26,7 +26,13 @@
       <span class="badge badge-conf-{{ bet.confidence }}">{{ bet.confidence }}</span>
     </div>
   </div>
-  <div class="proj-score">Model: {{ bet.model_prob_pct }}% win probability · Market: {{ bet.market_prob_pct }}%</div>
+  {%- set ns = namespace(proj_line='') -%}
+  {%- for item in bet.context -%}{%- if 'Model projected score' in item -%}{%- set ns.proj_line = item | replace('Model projected score: ', '') -%}{%- endif -%}{%- endfor -%}
+  {%- if ns.proj_line %}
+  <div class="proj-score-hl">{{ ns.proj_line }}</div>
+  {%- else %}
+  <div class="proj-score">Model {{ bet.model_prob_pct }}% · Mkt {{ bet.market_prob_pct }}%</div>
+  {%- endif %}
   <div class="edge-row">
     <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:{{ [bet.edge_pct * 6, 95] | min | int }}%;{% if bet.edge_pct < 7 %}background:var(--yellow);{% endif %}"></div></div>
@@ -73,7 +79,23 @@
       <span class="badge badge-conf-{{ prop.confidence }}">{{ prop.confidence }}</span>
     </div>
   </div>
-  <div class="proj-score">Model projects {{ prop.model_line }} {{ prop.prop_type.replace(' Over', '').replace('(1+)', '').strip() }} · Line: {{ prop.market_line }} <span style="color:var(--muted);font-size:0.85em;">{{ prop.odds_display }}</span></div>
+  {%- set prop_label = prop.prop_type.replace(' Over (1+)','').replace(' Over','').lower() %}
+  <div class="proj-score-hl">Model projects {{ prop.model_line }} {{ prop_label }}{% if prop.prop_stat_avg %} · {{ prop.prop_stat_avg }}{% endif %}</div>
+  {%- set bar_max = [(prop.market_line * 2)|round(0,'ceil')|int, 8]|max %}
+  {%- set line_pct = ((prop.market_line / bar_max) * 100)|round(1) %}
+  <div class="prop-bar-wrap"
+       data-bar-max="{{ bar_max }}"
+       data-market-line="{{ prop.market_line }}">
+    <div class="prop-bar-header">
+      <span class="prop-bar-current">—</span>
+      <span class="prop-bar-line-label">Line: {{ prop.market_line }} <span style="color:var(--muted);font-size:0.85em;">{{ prop.odds_display }}</span></span>
+    </div>
+    <div class="prop-bar-track">
+      <div class="prop-bar-fill"></div>
+      <div class="prop-bar-marker" style="left:{{ line_pct }}%"></div>
+    </div>
+    <div class="prop-bar-scale"><span>0</span><span>{{ bar_max }}</span></div>
+  </div>
   <div class="edge-row">
     <span class="mkt-mdl">Line {{ prop.market_line }} → Model <b style="color:var(--blue)">{{ prop.model_line }}</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:{{ [prop.edge_pct * 6, 95] | min | int }}%;{% if prop.edge_pct < 7 %}background:var(--yellow);{% endif %}"></div></div>
@@ -469,6 +491,45 @@
 
     /* ── Projected score ─────────────────────────────────────────────────── */
     .proj-score { margin-top: 8px; font-size: 0.8rem; color: var(--teal); font-weight: 600; }
+    .proj-score-hl {
+      margin-top: 8px; margin-bottom: 2px;
+      font-size: 0.78rem; font-weight: 700; color: var(--teal);
+      line-height: 1.3;
+    }
+
+    /* ── Prop progress bar ───────────────────────────────────────────────── */
+    .prop-bar-wrap { margin: 10px 0 2px; }
+    .prop-bar-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 0.72rem; margin-bottom: 5px;
+    }
+    .prop-bar-current { font-weight: 700; color: var(--text); }
+    .prop-bar-line-label { color: var(--muted); }
+    .prop-bar-track {
+      position: relative; height: 7px;
+      background: rgba(255,255,255,0.08); border-radius: 4px;
+    }
+    .prop-bar-fill {
+      height: 100%; border-radius: 4px;
+      background: var(--yellow);
+      width: 0%; transition: width 0.4s ease;
+    }
+    .prop-bar-marker {
+      position: absolute; top: -4px;
+      width: 2px; height: 15px;
+      background: rgba(255,255,255,0.25);
+      transform: translateX(-50%);
+    }
+    .prop-bar-marker::after {
+      content: '▲';
+      position: absolute; bottom: -11px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.45rem; color: rgba(255,255,255,0.35);
+    }
+    .prop-bar-scale {
+      display: flex; justify-content: space-between;
+      font-size: 0.58rem; color: var(--muted); margin-top: 3px;
+    }
 
     /* ── Edge row ────────────────────────────────────────────────────────── */
     .edge-row {

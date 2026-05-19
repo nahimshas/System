@@ -106,17 +106,21 @@ def _hydrate_bet(d: dict) -> dict:
 
 
 def _hydrate_prop(d: dict) -> dict:
-    if "narrative" in d:
-        return d
-    narrative, context = build_prop_context(
-        d.get("sport", ""), d.get("prop_type", ""), d.get("player", ""),
-        d.get("team", ""), d.get("opponent", ""),
-        d.get("signals", []), d.get("research", []),
-        d.get("model_line", d.get("market_line", 0)),
-        d.get("market_line", 0),
-        d.get("edge_pct", 0) / 100,
-    )
-    return {**d, "narrative": narrative, "context": context}
+    from src.state.manager import _prop_stat_avg
+    out = d
+    if "narrative" not in d:
+        narrative, context = build_prop_context(
+            d.get("sport", ""), d.get("prop_type", ""), d.get("player", ""),
+            d.get("team", ""), d.get("opponent", ""),
+            d.get("signals", []), d.get("research", []),
+            d.get("model_line", d.get("market_line", 0)),
+            d.get("market_line", 0),
+            d.get("edge_pct", 0) / 100,
+        )
+        out = {**out, "narrative": narrative, "context": context}
+    if "prop_stat_avg" not in d:
+        out = {**out, "prop_stat_avg": _prop_stat_avg(d.get("signals", []), d.get("prop_type", ""))}
+    return out
 
 
 def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,

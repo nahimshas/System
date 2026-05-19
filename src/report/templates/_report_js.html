@@ -1862,6 +1862,25 @@
     // Math.ceil handles .5 lines correctly; add tiny epsilon for whole-number lines.
     var mktLine  = (marketLine && marketLine > 0) ? marketLine : modelLine;
     var needLine = Math.ceil(mktLine + 0.0001);  // minimum integer to win the Over
+    var statDisplayLabel = statLabel || propType.replace(" Over (1+)", "").replace(" Over", "");
+
+    // ── Update progress bar ──────────────────────────────────────────────────
+    var barWrap = liveDiv.closest(".prop-card") && liveDiv.closest(".prop-card").querySelector(".prop-bar-wrap");
+    if (barWrap) {
+      var barMax  = parseFloat(barWrap.getAttribute("data-bar-max") || "0");
+      var barFill = barWrap.querySelector(".prop-bar-fill");
+      var barCurr = barWrap.querySelector(".prop-bar-current");
+      if (barFill && barMax > 0) {
+        var fillPct = Math.min(100, (stat / barMax) * 100);
+        var fillCol = stat >= needLine ? "#4ade80"
+                    : stat / needLine >= 0.75 ? "#fb923c"
+                    : "#eab308";
+        barFill.style.width      = fillPct + "%";
+        barFill.style.background = fillCol;
+      }
+      if (barCurr) barCurr.textContent = stat + " " + statDisplayLabel + " current";
+    }
+
     if (isFinal) {
       var hit = stat >= needLine;
       liveDiv.innerHTML = hit
@@ -1880,11 +1899,9 @@
               : pct >= 0.75     ? "#fb923c"
               : pct >= 0.5      ? "#facc15"
               : "#94a3b8";
-      // Use explicit statLabel if available (composite stats), otherwise derive from prop type
-      var label = statLabel || propType.replace(" Over (1+)", "").replace(" Over", "");
       liveDiv.innerHTML =
         '<span style="' + BADGE + 'border:1px solid #2d3148;background:#1a1d27;color:' + col + ';">' +
-        '▶ ' + stat + ' ' + label + ' / ' + needLine + '</span>';
+        '▶ ' + stat + ' ' + statDisplayLabel + ' / ' + needLine + '</span>';
     }
   }
 
