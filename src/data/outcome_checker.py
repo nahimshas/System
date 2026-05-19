@@ -1327,11 +1327,13 @@ def save_watchlist_pending(records: List[Dict]) -> None:
 
 def _settle_ipl_pick(pick: Dict, game_date: date) -> Optional[tuple]:
     """
-    Determine WON/LOST for an IPL pending pick via Cricbuzz completed match data.
-    Returns (result, match_summary) where result is "WON"/"LOST" and match_summary
-    is the raw Cricbuzz status string (e.g. "DC won by 3 wickets").
-    Returns None if the match is not yet in the completed list.
-    ESPN cricket/ipl always returns 404, so this replaces that path for IPL.
+    Determine WON/LOST for an IPL pending pick.
+
+    Primary source: Cricbuzz completed match list (accurate, has full status strings).
+    Fallback:       ESPN cricket/8048 scoreboard (updates faster — often has results
+                    before Cricbuzz adds the match to its completed list).
+
+    Returns (result, match_summary) or None if the match is not yet final.
     """
     try:
         from src.data.ipl_stats import get_ipl_completed_matches, normalize
@@ -1343,20 +1345,19 @@ def _settle_ipl_pick(pick: Dict, game_date: date) -> Optional[tuple]:
     away_team = pick.get("away_team", "")
     our_pick  = pick.get("pick", "")
 
-    try:
-        completed = get_ipl_completed_matches(game_date)
-    except Exception as e:
-        logger.error(f"IPL settlement: Cricbuzz fetch failed: {e}")
-        return None
-
     norm_home = normalize(home_team)
     norm_away = normalize(away_team)
     norm_pick = normalize(our_pick)
 
+    # ── Primary: Cricbuzz ────────────────────────────────────────────────────
+    try:
+        completed = get_ipl_completed_matches(game_date)
+    except Exception as e:
+        logger.error(f"IPL settlement: Cricbuzz fetch failed: {e}")
+        completed = []
+
     for m in completed:
-        # Guard: teams in this season can meet more than once.
-        # Only consider matches whose UTC date matches game_date so we never
-        # accidentally settle today's pick using a previous encounter.
+        # Guard: only consider matches whose UTC date matches game_date
         try:
             m_date = datetime.fromtimestamp(
                 m.get("start_ms", 0) / 1000, tz=timezone.utc
@@ -1372,11 +1373,71 @@ def _settle_ipl_pick(pick: Dict, game_date: date) -> Optional[tuple]:
         if (t1 == norm_home and t2 == norm_away) or (t1 == norm_away and t2 == norm_home):
             winner = m.get("winner")
             if winner is None:
-                return None  # match complete but no clean winner (tie/no result)
+                return None  # tie / no result
             result = "WON" if normalize(winner) == norm_pick else "LOST"
             return (result, m.get("match_summary", ""))
 
-    return None  # match not yet in completed list
+    # ── Fallback: ESPN cricket/8048 scoreboard ───────────────────────────────
+    # ESPN updates faster than Cricbuzz for same-day matches.  The JS client
+    # already uses this endpoint; the Python path was previously blocked because
+    # cricket/ipl returns 404, but cricket/8048 (IPL series ID) works fine.
+    logger.debug(f"IPL settlement: Cricbuzz had no match for {game_date} — trying ESPN cricket/8048")
+    try:
+        date_str = game_date.strftime("%Y%m%d")
+        url = f"{ESPN_BASE}/cricket/8048/scoreboard"
+        r = requests.get(url, params={"dates": date_str}, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        logger.error(f"IPL settlement: ESPN cricket/8048 fetch failed: {e}")
+        return None
+
+    def _tok(s: str) -> set:
+        """Lowercase word tokens for fuzzy team matching."""
+        return set(s.lower().split())
+
+    for event in data.get("events", []):
+        comp0 = (event.get("competitions") or [{}])[0]
+        status = event.get("status", {})
+        state  = status.get("type", {}).get("state", "")
+        summary = status.get("summary", "") or status.get("type", {}).get("detail", "")
+
+        if state != "post":
+            continue
+        # Only trust a final result — "won by" only appears in the match result,
+        # not during an innings break.
+        if "won by" not in summary.lower() and "no result" not in summary.lower():
+            continue
+
+        competitors = comp0.get("competitors", [])
+        if len(competitors) < 2:
+            continue
+
+        espn_teams = [
+            {
+                "name":   (c.get("team") or {}).get("displayName", ""),
+                "winner": bool(c.get("winner")),
+            }
+            for c in competitors
+        ]
+
+        # Match this event to our pick by team name overlap
+        names = [t["name"] for t in espn_teams]
+        home_match = any(norm_home.lower() in n.lower() or n.lower() in norm_home.lower() for n in names)
+        away_match = any(norm_away.lower() in n.lower() or n.lower() in norm_away.lower() for n in names)
+        if not (home_match and away_match):
+            continue
+
+        winner_team = next((t for t in espn_teams if t["winner"]), None)
+        if winner_team is None:
+            return None
+
+        wn = winner_team["name"]
+        result = "WON" if (norm_pick.lower() in wn.lower() or wn.lower() in norm_pick.lower()) else "LOST"
+        logger.info(f"IPL settlement via ESPN fallback: {pick.get('pick')} → {result} ({summary})")
+        return (result, summary)
+
+    return None  # match not yet final in either source
 
 
 def load_watchlist_today_settled(sport: str, today: date) -> List[Dict]:
