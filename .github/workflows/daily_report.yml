@@ -118,14 +118,16 @@ jobs:
       - name: Commit updated report and state to repo
         run: |
           cp docs/index.html /tmp/report.html
+          cp docs/index_spa.html /tmp/report_spa.html
           cp -r state /tmp/state 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git reset --hard origin/main
           cp /tmp/report.html docs/index.html
+          cp /tmp/report_spa.html docs/index_spa.html
           mkdir -p state
           cp -r /tmp/state/. state/ 2>/dev/null || true
-          git add docs/index.html state/
+          git add docs/index.html docs/index_spa.html state/
           git diff --cached --quiet || git commit -m "Report: $(date +'%Y-%m-%d %H:%M UTC')"
           git push
