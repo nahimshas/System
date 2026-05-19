@@ -1373,8 +1373,9 @@
     if (panel) panel.classList.add("active");
     if (btn) { btn.classList.add("active"); btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }); }
     try { localStorage.setItem("spa-tab", id); } catch(e) {}
-    // Update the LIVE badge for the newly active tab
-    if (typeof checkLive === "function") checkLive();
+    // Update the LIVE badge for the newly active tab.
+    // checkLive lives in a separate IIFE — reach it via the window alias.
+    if (typeof window.checkLiveBadge === "function") window.checkLiveBadge();
   }
 
   // Expose globally for sport-grid tile clicks
