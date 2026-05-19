@@ -2989,21 +2989,6 @@
 </div><!-- /spa-wrap -->
 
 <script>
-// ── Viewport height fix for iOS standalone / Android PWA ─────────────────
-// window.innerHeight is always the true visible area; 100vh / position:fixed
-// can still fall short on some devices. We set it once and on resize.
-(function () {
-  function applyHeight() {
-    var wrap = document.getElementById('spa-wrap');
-    if (wrap) wrap.style.height = window.innerHeight + 'px';
-  }
-  applyHeight();
-  window.addEventListener('resize', applyHeight);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', applyHeight);
-  }
-})();
-
 // ── Tab switching ─────────────────────────────────────────────────────────
 (function () {
   "use strict";
