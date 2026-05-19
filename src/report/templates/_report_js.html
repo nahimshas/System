@@ -36,7 +36,20 @@
     document.querySelectorAll(".card[data-commence-time]:not(.ipl-watchlist-card)").forEach(function (card) {
       var iso = card.getAttribute("data-commence-time") || "";
       var el  = card.querySelector(".card-time");
-      if (el && iso) el.textContent = formatLocalTime(iso);
+      if (!el || !iso) return;
+      try {
+        if (new Date(iso).getTime() <= Date.now()) { el.style.display = "none"; return; }
+      } catch(e) {}
+      el.textContent = formatLocalTime(iso);
+    });
+    // Alloc cards: hide .alloc-time if game has already started.
+    document.querySelectorAll(".alloc-card[data-commence-time]").forEach(function (card) {
+      var iso = card.getAttribute("data-commence-time") || "";
+      var el  = card.querySelector(".alloc-time");
+      if (!el || !iso) return;
+      try {
+        if (new Date(iso).getTime() <= Date.now()) { el.style.display = "none"; }
+      } catch(e) {}
     });
     // Parlay legs: data-commence-time lives on .parlay-leg itself
     document.querySelectorAll(".parlay-leg[data-commence-time]").forEach(function (leg) {
@@ -617,16 +630,27 @@
 
   // ── Dynamic lock badge ───────────────────────────────────────────────────
   // Called whenever ESPN confirms a game has started or finished.
-  // Inserts 🔒 Locked before the confidence badge if not already present.
+  // Inserts 🔒 before the confidence badge (or at end of badge row for alloc cards).
   function showLockBadge(card) {
     if (card.querySelector(".lock-badge")) return;  // already shown (server-side or prior call)
-    var confBadge = card.querySelector(".confidence-badge");
-    if (!confBadge) return;
     var span = document.createElement("span");
     span.className = "lock-badge";
-    span.style.cssText = "font-size:0.65rem;color:#94a3b8;background:#1a1d27;border:1px solid #2d3148;border-radius:99px;padding:2px 7px;";
-    span.textContent = "🔒 Locked";
-    confBadge.parentNode.insertBefore(span, confBadge);
+    span.textContent = "🔒";
+    // Works with badge-conf-HIGH / badge-conf-MEDIUM / badge-conf-LOW (SPA + classic)
+    var confBadge = card.querySelector("[class*='badge-conf-']");
+    if (confBadge) {
+      confBadge.parentNode.insertBefore(span, confBadge);
+    } else {
+      // Alloc cards: append lock into the badge/edge row
+      var top = card.querySelector(".alloc-top");
+      if (top) top.appendChild(span);
+    }
+  }
+
+  // Hide a card's game-time element (called once a game is in progress or final).
+  function clearCardTime(card) {
+    var t = card.querySelector(".card-time, .alloc-time");
+    if (t) t.style.display = "none";
   }
 
   // Props and IPL cards have no ESPN matching — use commence_time directly.
@@ -637,7 +661,10 @@
       if (!ct) return;
       try {
         var t = new Date(ct).getTime();
-        if (!isNaN(t) && now >= t) showLockBadge(card);
+        if (!isNaN(t) && now >= t) {
+          showLockBadge(card);
+          clearCardTime(card);
+        }
       } catch(e) {}
     });
   }
@@ -675,6 +702,7 @@
 
     if (ev.stateId === "3") {
       showLockBadge(card);
+      clearCardTime(card);
       // Game over — show score line + WON/LOST
       var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore, sport);
       // Store result on the card so updatePerformance() can read it
@@ -688,6 +716,7 @@
         (result ? '&nbsp;&nbsp;' + outcomeHtml(result) : "");
     } else if (ev.stateId === "2") {
       showLockBadge(card);
+      clearCardTime(card);
       card.removeAttribute("data-live-result");
       // Rain delay / suspended / postponed — don't show win probability
       var detailLower = (ev.detail || "").toLowerCase();
@@ -2257,8 +2286,8 @@
       done++;
       if (done < 4) return;
 
-      // Update all bet cards (singles, parlays, and NHL watchlist)
-      document.querySelectorAll(".card[data-home-team], .card[data-parlay='true']").forEach(function (card) {
+      // Update all bet cards (singles, parlays, NHL watchlist, and SPA alloc cards)
+      document.querySelectorAll(".card[data-home-team], .card[data-parlay='true'], .alloc-card[data-home-team]").forEach(function (card) {
         applyCard(card, allEvents);
       });
 
