@@ -249,16 +249,15 @@
     }
 
     /* ── SPA layout ──────────────────────────────────────────────────────── */
-    /* 100dvh = dynamic viewport height: correct for iOS PWA standalone mode.
-       Falls back to 100svh → 100vh for older browsers.                      */
     #spa-wrap {
       display: flex;
       flex-direction: column;
-      height: 100vh;           /* legacy fallback */
-      height: 100svh;          /* small viewport height fallback */
-      height: 100dvh;          /* preferred: dynamic viewport height */
+      height: 100vh;
+      height: 100svh;
+      height: 100dvh;
       overflow: hidden;
     }
+    /* Content fills everything below the header; nav floats on top via fixed */
     #spa-content { flex: 1; overflow: hidden; position: relative; min-height: 0; }
     .spa-tab {
       position: absolute; inset: 0;
@@ -266,7 +265,8 @@
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
       display: none;
-      padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 8px);
+      /* bottom padding clears the floating nav so last card isn't hidden */
+      padding: 0 16px calc(var(--tab-h) + env(safe-area-inset-bottom, 0px) + 16px);
     }
     .spa-tab.active { display: block; }
 
@@ -277,15 +277,16 @@
     }
     .spa-tab.active { animation: slideIn 0.18s ease; }
 
-    /* ── Bottom nav ──────────────────────────────────────────────────────── */
+    /* ── Bottom nav — fixed to physical screen bottom in all contexts ──────── */
     #spa-nav {
-      flex-shrink: 0;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 200;
       display: flex;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       background: var(--card);
       border-top: 1px solid var(--border);
-      /* No explicit height — determined by button height + home-indicator padding */
       padding-bottom: env(safe-area-inset-bottom, 0px);
       scrollbar-width: none;
     }
@@ -318,8 +319,8 @@
       background: var(--teal);
       border-radius: 0 0 2px 2px;
     }
-    .spa-tab-icon  { font-size: 1.05rem; line-height: 1; position: relative; }
-    .spa-tab-label { font-size: 0.55rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+    .spa-tab-icon  { font-size: 1.25rem; line-height: 1; position: relative; }
+    .spa-tab-label { font-size: 0.58rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
     .tab-dot {
       position: absolute;
       top: -1px; right: -5px;
