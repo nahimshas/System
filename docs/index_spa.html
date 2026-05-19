@@ -46,7 +46,8 @@
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 6px 12px;
+      /* Top padding absorbs the status bar in standalone PWA mode */
+      padding: calc(env(safe-area-inset-top, 0px) + 6px) 12px 6px;
       gap: 8px;
       flex-shrink: 0;
       overflow: hidden;
@@ -143,9 +144,10 @@
       -webkit-overflow-scrolling: touch;
       background: var(--card);
       border-top: 1px solid var(--border);
+      /* height = nav buttons + home-indicator clearance */
+      height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
       padding-bottom: env(safe-area-inset-bottom, 0px);
       scrollbar-width: none;
-      height: var(--tab-h);
     }
     #spa-nav::-webkit-scrollbar { display: none; }
     .spa-tab-btn {
