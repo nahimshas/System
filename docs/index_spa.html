@@ -34,24 +34,57 @@
       --teal: #14b8a6;
       --teal-dim: #134e4a;
       --tab-h: 64px;
-      --header-h: 44px;
+      --header-h: 52px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.5; }
 
-    /* ── App header ──────────────────────────────────────────────────────── */
+    /* ── App header (stats bar) ──────────────────────────────────────────── */
     .app-header {
       height: var(--header-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
+      padding: 0 12px;
+      gap: 8px;
       flex-shrink: 0;
+      overflow: hidden;
     }
-    .app-header-title { font-weight: 700; font-size: 1rem; }
-    .app-header-date  { font-size: 0.72rem; color: var(--muted); }
+    .header-stats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .header-stats::-webkit-scrollbar { display: none; }
+    .stat-chip {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px 9px;
+      min-width: 48px;
+    }
+    .stat-chip .sc-val { font-size: 0.82rem; font-weight: 800; line-height: 1.2; }
+    .stat-chip .sc-lbl { font-size: 0.52rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }
+    .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .header-date  { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+    .header-live-badge {
+      background: var(--green);
+      color: #000;
+      font-size: 0.6rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 99px;
+      letter-spacing: 0.05em;
+    }
 
     /* ── SPA layout ──────────────────────────────────────────────────────── */
     #spa-wrap { display: flex; flex-direction: column; height: 100%; }
@@ -351,6 +384,54 @@
     .action-row .label { color: var(--muted); }
     .action-row .value { font-weight: 600; }
 
+    /* ── Allocation cards (Today's Card) ────────────────────────────────── */
+    .alloc-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .alloc-rank {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 800;
+      margin-top: 2px;
+    }
+    .alloc-body { flex: 1; min-width: 0; }
+    .alloc-top  { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .alloc-edge { font-size: 0.75rem; font-weight: 700; margin-left: auto; flex-shrink: 0; }
+    .alloc-pick { font-weight: 700; font-size: 0.97rem; line-height: 1.3; }
+    .alloc-game { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
+    .alloc-live { font-size: 0.75rem; min-height: 1em; margin-top: 3px; }
+    .alloc-time { font-size: 0.72rem; color: var(--teal); font-weight: 600; margin-top: 2px; }
+    .alloc-action {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .alloc-chip {
+      font-size: 0.72rem; font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 99px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .alloc-chip.win { background: rgba(34,197,94,0.1); color: var(--green); border-color: rgba(34,197,94,0.25); }
+    .alloc-expand-btn { background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 1px 5px; line-height: 1.4; flex-shrink: 0; transition: transform 0.15s; }
+    .alloc-main-row.adr-open .alloc-expand-btn { transform: rotate(90deg); }
+    .alloc-detail-row { display: none; }
+    .alloc-detail-row.adr-open { display: block; }
+    .alloc-detail-box { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 0; font-size: 0.82rem; }
+
     /* ── Misc ────────────────────────────────────────────────────────────── */
     .empty-state { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 0.9rem; }
     .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
@@ -367,10 +448,32 @@
 <body>
 <div id="spa-wrap">
 
-<!-- Header -->
+<!-- Header (stats bar) -->
 <div class="app-header">
-  <span class="app-header-title">Picks</span>
-  <span class="app-header-date">Tuesday, May 19, 2026</span>
+  <div class="header-stats">
+    
+    <div class="stat-chip">
+      <span class="sc-val">86W-76L</span>
+      <span class="sc-lbl">Record</span>
+    </div>
+    <div class="stat-chip">
+      <span class="sc-val yellow" id="hdr-wr">53.1%</span>
+      <span class="sc-lbl">Win%</span>
+    </div>
+    <div class="stat-chip">
+      <span class="sc-val green" id="hdr-pnl">$+132.25</span>
+      <span class="sc-lbl">P&amp;L</span>
+    </div>
+    <div class="stat-chip">
+      <span class="sc-val green" id="hdr-roi">9.8%</span>
+      <span class="sc-lbl">ROI</span>
+    </div>
+    
+  </div>
+  <div class="header-right">
+    <span class="header-date">Tuesday, May 19, 2026</span>
+    <span class="header-live-badge" id="hdr-live">LIVE</span>
+  </div>
 </div>
 
 <!-- Tab content -->
@@ -381,86 +484,330 @@
 
     
     
-    
-    
-    
-    
-    
-    
-    
 
     
-    <div class="stat-strip">
-      <div class="stat-tile">
-        <div class="val green">23</div>
-        <div class="lbl">Today's Picks</div>
-      </div>
-      <div class="stat-tile">
-        
-        <div class="val">86W–76L</div>
-        
-        <div class="lbl">All-time</div>
-      </div>
-      <div class="stat-tile">
-        
-        <div class="val green">$+132.25</div>
-        
-        <div class="lbl">Total P&amp;L</div>
-      </div>
-    </div>
-
-    
-    
-
-    
-    
-
-    
-    
-    <div class="section-title">Today's Picks by Sport</div>
-    <div class="sport-grid">
-      
-      <div class="sport-tile" onclick="window.showTab('nba')">
-        <div class="sport-icon">🏀</div>
-        <div class="sport-name">NBA</div>
-        <div class="sport-meta">8 picks</div>
-        <div class="sport-pill green">8 picks</div>
-      </div>
-      
-      
-      <div class="sport-tile" onclick="window.showTab('mlb')">
-        <div class="sport-icon">⚾</div>
-        <div class="sport-name">MLB</div>
-        <div class="sport-meta">11 picks</div>
-        <div class="sport-pill">11 picks</div>
-      </div>
-      
-      
-      <div class="sport-tile wl-tile" onclick="window.showTab('ipl')">
-        <div class="sport-icon">🏏</div>
-        <div class="sport-name">IPL</div>
-        <div class="sport-meta">3 watchlist</div>
-        <div class="sport-pill teal">3 items</div>
-      </div>
-      
-      
-      
-      <div class="sport-tile wl-tile" onclick="window.showTab('wnba')">
-        <div class="sport-icon">🏀</div>
-        <div class="sport-name">WNBA</div>
-        <div class="sport-meta">1 watchlist</div>
-        <div class="sport-pill teal">1 item</div>
-      </div>
-      
-      
-      
-    </div>
     
 
     
     
     <div class="sec-label" style="margin-top:14px;">
-      📊 Yesterday — Monday, May 18
+      Today's Card
+      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">$39.71 on 5 picks &middot; 2 parlays</span>
+    </div>
+
+    
+    <div class="alloc-card"
+         id="alloc-1"
+         data-home-team="Arizona Diamondbacks"
+         data-away-team="San Francisco Giants"
+         data-bet-type="Moneyline"
+         data-pick="San Francisco Giants"
+         data-sport="MLB"
+         data-market-prob-pct="46.8"
+         data-commence-time="2026-05-20T01:41:00Z"
+         >
+      <div class="alloc-rank">1</div>
+      <div class="alloc-body">
+        <div class="alloc-top">
+          <span class="badge badge-mlb">MLB</span>
+          
+          <span class="alloc-edge" style="color:var(--green);">+15.0%</span>
+          
+        </div>
+        <div class="alloc-pick">San Francisco Giants (ML)</div>
+        <div class="alloc-game">San Francisco Giants @ Arizona Diamondbacks</div>
+        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
+        <div class="row-time-local alloc-time"></div>
+        <div class="alloc-action">
+          <span class="alloc-chip">12 contracts</span>
+          <span class="alloc-chip">@ 46.8¢</span>
+          <span class="alloc-chip">Cost $5.86</span>
+          <span class="alloc-chip win">+$6.14 if win</span>
+        </div>
+        
+        <div class="alloc-detail-row" id="alloc-detail-1">
+          <div class="alloc-detail-box" style="margin-top:8px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
+            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$5.86</span></div>
+            <div class="action-row"><span class="label">Expected value</span>
+              <span class="value" style="color:var(--green)">
+                +$1.56
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="alloc-card"
+         id="alloc-2"
+         data-home-team="San Diego Padres"
+         data-away-team="Los Angeles Dodgers"
+         data-bet-type="Moneyline"
+         data-pick="Los Angeles Dodgers"
+         data-sport="MLB"
+         data-market-prob-pct="59.1"
+         data-commence-time="2026-05-20T01:41:00Z"
+         >
+      <div class="alloc-rank">2</div>
+      <div class="alloc-body">
+        <div class="alloc-top">
+          <span class="badge badge-mlb">MLB</span>
+          
+          <span class="alloc-edge" style="color:var(--green);">+15.0%</span>
+          
+        </div>
+        <div class="alloc-pick">Los Angeles Dodgers (ML)</div>
+        <div class="alloc-game">Los Angeles Dodgers @ San Diego Padres</div>
+        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
+        <div class="row-time-local alloc-time"></div>
+        <div class="alloc-action">
+          <span class="alloc-chip">13 contracts</span>
+          <span class="alloc-chip">@ 59.1¢</span>
+          <span class="alloc-chip">Cost $7.95</span>
+          <span class="alloc-chip win">+$5.05 if win</span>
+        </div>
+        
+        <div class="alloc-detail-row" id="alloc-detail-2">
+          <div class="alloc-detail-box" style="margin-top:8px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
+            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.95</span></div>
+            <div class="action-row"><span class="label">Expected value</span>
+              <span class="value" style="color:var(--green)">
+                +$1.69
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="alloc-card"
+         id="alloc-3"
+         data-home-team="Colorado Rockies"
+         data-away-team="Texas Rangers"
+         data-bet-type="Spread"
+         data-pick="Colorado Rockies +1.5"
+         data-sport="MLB"
+         data-market-prob-pct="56.7"
+         data-commence-time="2026-05-20T00:41:00Z"
+         >
+      <div class="alloc-rank">3</div>
+      <div class="alloc-body">
+        <div class="alloc-top">
+          <span class="badge badge-mlb">MLB</span>
+          
+          <span class="alloc-edge" style="color:var(--green);">+13.9%</span>
+          
+        </div>
+        <div class="alloc-pick">Colorado Rockies +1.5</div>
+        <div class="alloc-game">Texas Rangers @ Colorado Rockies</div>
+        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
+        <div class="row-time-local alloc-time"></div>
+        <div class="alloc-action">
+          <span class="alloc-chip">12 contracts</span>
+          <span class="alloc-chip">@ 56.7¢</span>
+          <span class="alloc-chip">Cost $7.04</span>
+          <span class="alloc-chip win">+$4.96 if win</span>
+        </div>
+        
+        <div class="alloc-detail-row" id="alloc-detail-3">
+          <div class="alloc-detail-box" style="margin-top:8px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
+            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.04</span></div>
+            <div class="action-row"><span class="label">Expected value</span>
+              <span class="value" style="color:var(--green)">
+                +$1.42
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="alloc-card"
+         id="alloc-4"
+         data-home-team="New York Knicks"
+         data-away-team="Cleveland Cavaliers"
+         data-bet-type="Moneyline"
+         data-pick="New York Knicks"
+         data-sport="NBA"
+         data-market-prob-pct="69.7"
+         data-commence-time="2026-05-20T00:10:00Z"
+         >
+      <div class="alloc-rank">4</div>
+      <div class="alloc-body">
+        <div class="alloc-top">
+          <span class="badge badge-nba">NBA</span>
+          
+          <span class="alloc-edge" style="color:var(--green);">+11.6%</span>
+          
+        </div>
+        <div class="alloc-pick">New York Knicks (ML)</div>
+        <div class="alloc-game">Cleveland Cavaliers @ New York Knicks</div>
+        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
+        <div class="row-time-local alloc-time"></div>
+        <div class="alloc-action">
+          <span class="alloc-chip">11 contracts</span>
+          <span class="alloc-chip">@ 69.7¢</span>
+          <span class="alloc-chip">Cost $7.88</span>
+          <span class="alloc-chip win">+$3.12 if win</span>
+        </div>
+        
+        <div class="alloc-detail-row" id="alloc-detail-4">
+          <div class="alloc-detail-box" style="margin-top:8px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
+            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.88</span></div>
+            <div class="action-row"><span class="label">Expected value</span>
+              <span class="value" style="color:var(--green)">
+                +$1.06
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="alloc-card"
+         id="alloc-5"
+         data-home-team="Philadelphia Phillies"
+         data-away-team="Cincinnati Reds"
+         data-bet-type="Moneyline"
+         data-pick="Philadelphia Phillies"
+         data-sport="MLB"
+         data-market-prob-pct="56.3"
+         data-commence-time="2026-05-19T22:41:00Z"
+         >
+      <div class="alloc-rank">5</div>
+      <div class="alloc-body">
+        <div class="alloc-top">
+          <span class="badge badge-mlb">MLB</span>
+          
+          <span class="alloc-edge" style="color:var(--green);">+10.8%</span>
+          
+        </div>
+        <div class="alloc-pick">Philadelphia Phillies (ML)</div>
+        <div class="alloc-game">Cincinnati Reds @ Philadelphia Phillies</div>
+        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
+        <div class="row-time-local alloc-time"></div>
+        <div class="alloc-action">
+          <span class="alloc-chip">9 contracts</span>
+          <span class="alloc-chip">@ 56.3¢</span>
+          <span class="alloc-chip">Cost $5.25</span>
+          <span class="alloc-chip win">+$3.75 if win</span>
+        </div>
+        
+        <div class="alloc-detail-row" id="alloc-detail-5">
+          <div class="alloc-detail-box" style="margin-top:8px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
+            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$5.25</span></div>
+            <div class="action-row"><span class="label">Expected value</span>
+              <span class="value" style="color:var(--green)">
+                +$0.79
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="alloc-card"
+         id="alloc-p1"
+         data-home-team=""
+         data-away-team=""
+         data-bet-type="Parlay"
+         data-pick="New York Knicks (ML) + Los Angeles Dodgers (ML)"
+         data-sport="Parlay"
+         data-market-prob-pct="50"
+         data-commence-time=""
+         data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Cleveland Cavaliers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 81.3, &#34;commence_time&#34;: &#34;2026-05-20T00:10:00Z&#34;}, {&#34;home_team&#34;: &#34;San Diego Padres&#34;, &#34;away_team&#34;: &#34;Los Angeles Dodgers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Los Angeles Dodgers&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 74.1, &#34;commence_time&#34;: &#34;2026-05-20T01:41:00Z&#34;}]" data-cost="3.46" data-profit="4.54" data-confidence="HIGH">
+      <div class="alloc-rank">P1</div>
+      <div class="alloc-body">
+        <div class="alloc-top">
+          <span class="badge badge-parlay">PARLAY</span>
+          
+          <span class="alloc-edge" style="color:var(--green);">+19.1%</span>
+          
+        </div>
+        <div class="alloc-pick">New York Knicks (ML) + Los Angeles Dodgers (ML)</div>
+        
+        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
+        <div class="row-time-local alloc-time"></div>
+        <div class="alloc-action">
+          <span class="alloc-chip">8 contracts</span>
+          <span class="alloc-chip">@ 41.2¢</span>
+          <span class="alloc-chip">Cost $3.46</span>
+          <span class="alloc-chip win">+$4.54 if win</span>
+        </div>
+        
+        <div class="alloc-detail-row" id="alloc-detail-p1">
+          <div class="alloc-detail-box" style="margin-top:8px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
+            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">—</span></div>
+            <div class="action-row"><span class="label">Expected value</span>
+              <span class="value" style="color:var(--green)">
+                —
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="alloc-card"
+         id="alloc-p2"
+         data-home-team=""
+         data-away-team=""
+         data-bet-type="Parlay"
+         data-pick="Philadelphia Phillies (ML) + San Francisco Giants (ML)"
+         data-sport="Parlay"
+         data-market-prob-pct="50"
+         data-commence-time=""
+         data-legs="[{&#34;home_team&#34;: &#34;Philadelphia Phillies&#34;, &#34;away_team&#34;: &#34;Cincinnati Reds&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Philadelphia Phillies&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 67.1, &#34;commence_time&#34;: &#34;2026-05-19T22:41:00Z&#34;}, {&#34;home_team&#34;: &#34;Arizona Diamondbacks&#34;, &#34;away_team&#34;: &#34;San Francisco Giants&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;San Francisco Giants&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 61.8, &#34;commence_time&#34;: &#34;2026-05-20T01:41:00Z&#34;}]" data-cost="2.27" data-profit="5.73" data-confidence="HIGH">
+      <div class="alloc-rank">P2</div>
+      <div class="alloc-body">
+        <div class="alloc-top">
+          <span class="badge badge-parlay">PARLAY</span>
+          
+          <span class="alloc-edge" style="color:var(--green);">+15.1%</span>
+          
+        </div>
+        <div class="alloc-pick">Philadelphia Phillies (ML) + San Francisco Giants (ML)</div>
+        
+        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
+        <div class="row-time-local alloc-time"></div>
+        <div class="alloc-action">
+          <span class="alloc-chip">8 contracts</span>
+          <span class="alloc-chip">@ 26.4¢</span>
+          <span class="alloc-chip">Cost $2.27</span>
+          <span class="alloc-chip win">+$5.73 if win</span>
+        </div>
+        
+        <div class="alloc-detail-row" id="alloc-detail-p2">
+          <div class="alloc-detail-box" style="margin-top:8px;">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
+            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">—</span></div>
+            <div class="action-row"><span class="label">Expected value</span>
+              <span class="value" style="color:var(--green)">
+                —
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0;font-size:0.82rem;color:var(--muted);">
+      <span>Reserve: <span style="color:var(--green);">$60.29</span></span>
+      <span>Today's P&amp;L: <span id="today-pnl">—</span></span>
+    </div>
+    
+
+    
+    
+    <div class="sec-label" style="margin-top:18px;">
+      Yesterday — Monday, May 18
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">4W–3L</span>
       <span style="font-weight:700;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;color:var(--green);">+$1.63</span>
     </div>
@@ -474,7 +821,7 @@
           &nbsp;Los Angeles Dodgers
         </div>
         <div class="result-game">Los Angeles Dodgers @ San Diego Padres &middot; +13.0% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;line-height:1.4;">Final: Los Angeles Dodgers 0 @ San Diego Padres 1. Model projected: San Diego Padres 2.9, Los Angeles Dodgers 4.0. Actual margin reversed model's projection.</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Los Angeles Dodgers 0 @ San Diego Padres 1. Model projected: San Diego Padres 2.9, Los Angeles Dodgers 4.0. Actual margin reversed model's projection.</div>
       </div>
       <div class="result-pnl red">
         $6.58
@@ -490,7 +837,7 @@
           &nbsp;New York Yankees
         </div>
         <div class="result-game">Toronto Blue Jays @ New York Yankees &middot; +12.8% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;line-height:1.4;">Final: Toronto Blue Jays 6 @ New York Yankees 7. Model projected: New York Yankees 5.0, Toronto Blue Jays 3.6. Model's directional call was correct.</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Toronto Blue Jays 6 @ New York Yankees 7. Model projected: New York Yankees 5.0, Toronto Blue Jays 3.6. Model's directional call was correct.</div>
       </div>
       <div class="result-pnl green">
         +$4.08
@@ -506,7 +853,7 @@
           &nbsp;San Antonio Spurs +6.5
         </div>
         <div class="result-game">San Antonio Spurs @ Oklahoma City Thunder &middot; +11.7% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;line-height:1.4;">Final: San Antonio Spurs 122 @ Oklahoma City Thunder 115. Model win probability: 61.6%. Actual margin -7 (needed +6.5).</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: San Antonio Spurs 122 @ Oklahoma City Thunder 115. Model win probability: 61.6%. Actual margin -7 (needed +6.5).</div>
       </div>
       <div class="result-pnl green">
         +$4.33
@@ -522,7 +869,7 @@
           &nbsp;Under 10.5
         </div>
         <div class="result-game">Cincinnati Reds @ Philadelphia Phillies &middot; +10.4% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;line-height:1.4;">Final: Cincinnati Reds 4 @ Philadelphia Phillies 5. Model projected: Philadelphia Phillies 4.8, Cincinnati Reds 4.2. Actual total 9 vs line 10.5 (under by 1.5). Model projected 9.0.</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Cincinnati Reds 4 @ Philadelphia Phillies 5. Model projected: Philadelphia Phillies 4.8, Cincinnati Reds 4.2. Actual total 9 vs line 10.5 (under by 1.5). Model projected 9.0.</div>
       </div>
       <div class="result-pnl green">
         +$3.78
@@ -538,7 +885,7 @@
           &nbsp;Under 10.5
         </div>
         <div class="result-game">New York Mets @ Washington Nationals &middot; +10.4% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;line-height:1.4;">Final: New York Mets 16 @ Washington Nationals 7. Model projected: Washington Nationals 4.0, New York Mets 3.6. Actual total 23 vs line 10.5 (over by 12.5). Model projected 7.6.</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: New York Mets 16 @ Washington Nationals 7. Model projected: Washington Nationals 4.0, New York Mets 3.6. Actual total 23 vs line 10.5 (over by 12.5). Model projected 7.6.</div>
       </div>
       <div class="result-pnl red">
         $4.30
@@ -554,7 +901,7 @@
           &nbsp;New York Yankees (ML) + Los Angeles Dodgers (ML)
         </div>
         <div class="result-game">New York Yankees (ML) + Los Angeles Dodgers (ML) &middot; +17.0% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;line-height:1.4;">✅ New York Yankees (Toronto Blue Jays @ New York Yankees) · ❌ Los Angeles Dodgers (Los Angeles Dodgers @ San Diego Padres)</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">✅ New York Yankees (Toronto Blue Jays @ New York Yankees) · ❌ Los Angeles Dodgers (Los Angeles Dodgers @ San Diego Padres)</div>
       </div>
       <div class="result-pnl red">
         $2.98
@@ -570,441 +917,13 @@
           &nbsp;Philadelphia Phillies +1.5 + Under 10.5
         </div>
         <div class="result-game">Philadelphia Phillies +1.5 + Under 10.5 &middot; +12.3% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;line-height:1.4;">✅ Philadelphia Phillies +1.5 (Cincinnati Reds @ Philadelphia Phillies) · ✅ Under 10.5 (Cincinnati Reds @ Philadelphia Phillies)</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">✅ Philadelphia Phillies +1.5 (Cincinnati Reds @ Philadelphia Phillies) · ✅ Under 10.5 (Cincinnati Reds @ Philadelphia Phillies)</div>
       </div>
       <div class="result-pnl green">
         +$3.30
       </div>
     </div>
     
-    
-
-    
-    
-    <div class="sec-label" style="margin-top:14px;">
-      Today's Card
-      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">top 5 picks &middot; 2 parlays</span>
-    </div>
-    <div class="card">
-      <table class="budget-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Bet &amp; Game</th>
-            <th style="text-align:center;">Edge<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Score</span></th>
-            <th style="text-align:center;">Qty</th>
-            <th style="text-align:right;">Cost<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Profit</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          
-          <tr id="alloc-1"
-              class="alloc-main-row"
-              data-home-team="Arizona Diamondbacks"
-              data-away-team="San Francisco Giants"
-              data-bet-type="Moneyline"
-              data-pick="San Francisco Giants"
-              data-sport="MLB"
-              data-market-prob-pct="46.8"
-              data-commence-time="2026-05-20T01:41:00Z"
-              >
-            <td style="color:var(--muted);font-size:0.78rem;">1</td>
-            <td>
-              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">San Francisco Giants (ML)</div>
-              <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
-              <div style="color:var(--muted);font-size:0.7rem;">San Francisco Giants @ Arizona Diamondbacks</div>
-              <div class="row-time-local"></div>
-            </td>
-            <td style="vertical-align:top;text-align:center;">
-              <div style="color:var(--green);font-weight:700;font-size:0.8rem;">+15.0%</div>
-              <div class="score-cell">—</div>
-            </td>
-            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
-              12<br>
-              <span style="color:var(--muted);font-size:0.7rem;">5.9%</span>
-            </td>
-            <td style="vertical-align:top;text-align:right;">
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div style="font-size:0.8rem;">$5.86</div>
-                <div style="color:var(--green);font-size:0.75rem;">+$6.14</div>
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:var(--muted);display:none;">🔒</span>
-                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr class="alloc-detail-row" id="alloc-detail-1">
-            <td colspan="5" style="padding:0 6px 10px 6px;">
-              <div class="action-box">
-                <div class="action-title">Robinhood Action — San Francisco Giants (ML)</div>
-                
-                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢46.8</span></div>
-                
-                <div class="action-row"><span class="label">Buy contracts</span><span class="value">12</span></div>
-                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$5.86</span></div>
-                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+$6.14</span></div>
-                
-                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$5.86</span></div>
-                <div class="action-row"><span class="label">Expected value</span>
-                  <span class="value" style="color:var(--green)">
-                    +$1.56
-                  </span>
-                </div>
-                
-              </div>
-            </td>
-          </tr>
-          
-          <tr id="alloc-2"
-              class="alloc-main-row"
-              data-home-team="San Diego Padres"
-              data-away-team="Los Angeles Dodgers"
-              data-bet-type="Moneyline"
-              data-pick="Los Angeles Dodgers"
-              data-sport="MLB"
-              data-market-prob-pct="59.1"
-              data-commence-time="2026-05-20T01:41:00Z"
-              >
-            <td style="color:var(--muted);font-size:0.78rem;">2</td>
-            <td>
-              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Los Angeles Dodgers (ML)</div>
-              <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
-              <div style="color:var(--muted);font-size:0.7rem;">Los Angeles Dodgers @ San Diego Padres</div>
-              <div class="row-time-local"></div>
-            </td>
-            <td style="vertical-align:top;text-align:center;">
-              <div style="color:var(--green);font-weight:700;font-size:0.8rem;">+15.0%</div>
-              <div class="score-cell">—</div>
-            </td>
-            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
-              13<br>
-              <span style="color:var(--muted);font-size:0.7rem;">8.0%</span>
-            </td>
-            <td style="vertical-align:top;text-align:right;">
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div style="font-size:0.8rem;">$7.95</div>
-                <div style="color:var(--green);font-size:0.75rem;">+$5.05</div>
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:var(--muted);display:none;">🔒</span>
-                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr class="alloc-detail-row" id="alloc-detail-2">
-            <td colspan="5" style="padding:0 6px 10px 6px;">
-              <div class="action-box">
-                <div class="action-title">Robinhood Action — Los Angeles Dodgers (ML)</div>
-                
-                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢59.1</span></div>
-                
-                <div class="action-row"><span class="label">Buy contracts</span><span class="value">13</span></div>
-                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$7.95</span></div>
-                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+$5.05</span></div>
-                
-                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.95</span></div>
-                <div class="action-row"><span class="label">Expected value</span>
-                  <span class="value" style="color:var(--green)">
-                    +$1.69
-                  </span>
-                </div>
-                
-              </div>
-            </td>
-          </tr>
-          
-          <tr id="alloc-3"
-              class="alloc-main-row"
-              data-home-team="Colorado Rockies"
-              data-away-team="Texas Rangers"
-              data-bet-type="Spread"
-              data-pick="Colorado Rockies +1.5"
-              data-sport="MLB"
-              data-market-prob-pct="56.7"
-              data-commence-time="2026-05-20T00:41:00Z"
-              >
-            <td style="color:var(--muted);font-size:0.78rem;">3</td>
-            <td>
-              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Colorado Rockies +1.5</div>
-              <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
-              <div style="color:var(--muted);font-size:0.7rem;">Texas Rangers @ Colorado Rockies</div>
-              <div class="row-time-local"></div>
-            </td>
-            <td style="vertical-align:top;text-align:center;">
-              <div style="color:var(--green);font-weight:700;font-size:0.8rem;">+13.9%</div>
-              <div class="score-cell">—</div>
-            </td>
-            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
-              12<br>
-              <span style="color:var(--muted);font-size:0.7rem;">7.0%</span>
-            </td>
-            <td style="vertical-align:top;text-align:right;">
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div style="font-size:0.8rem;">$7.04</div>
-                <div style="color:var(--green);font-size:0.75rem;">+$4.96</div>
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:var(--muted);display:none;">🔒</span>
-                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr class="alloc-detail-row" id="alloc-detail-3">
-            <td colspan="5" style="padding:0 6px 10px 6px;">
-              <div class="action-box">
-                <div class="action-title">Robinhood Action — Colorado Rockies +1.5</div>
-                
-                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢56.7</span></div>
-                
-                <div class="action-row"><span class="label">Buy contracts</span><span class="value">12</span></div>
-                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$7.04</span></div>
-                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+$4.96</span></div>
-                
-                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.04</span></div>
-                <div class="action-row"><span class="label">Expected value</span>
-                  <span class="value" style="color:var(--green)">
-                    +$1.42
-                  </span>
-                </div>
-                
-              </div>
-            </td>
-          </tr>
-          
-          <tr id="alloc-4"
-              class="alloc-main-row"
-              data-home-team="New York Knicks"
-              data-away-team="Cleveland Cavaliers"
-              data-bet-type="Moneyline"
-              data-pick="New York Knicks"
-              data-sport="NBA"
-              data-market-prob-pct="69.7"
-              data-commence-time="2026-05-20T00:10:00Z"
-              >
-            <td style="color:var(--muted);font-size:0.78rem;">4</td>
-            <td>
-              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">New York Knicks (ML)</div>
-              <div style="color:var(--muted);font-size:0.7rem;">NBA</div>
-              <div style="color:var(--muted);font-size:0.7rem;">Cleveland Cavaliers @ New York Knicks</div>
-              <div class="row-time-local"></div>
-            </td>
-            <td style="vertical-align:top;text-align:center;">
-              <div style="color:var(--green);font-weight:700;font-size:0.8rem;">+11.6%</div>
-              <div class="score-cell">—</div>
-            </td>
-            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
-              11<br>
-              <span style="color:var(--muted);font-size:0.7rem;">7.9%</span>
-            </td>
-            <td style="vertical-align:top;text-align:right;">
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div style="font-size:0.8rem;">$7.88</div>
-                <div style="color:var(--green);font-size:0.75rem;">+$3.12</div>
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:var(--muted);display:none;">🔒</span>
-                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr class="alloc-detail-row" id="alloc-detail-4">
-            <td colspan="5" style="padding:0 6px 10px 6px;">
-              <div class="action-box">
-                <div class="action-title">Robinhood Action — New York Knicks (ML)</div>
-                
-                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢69.7</span></div>
-                
-                <div class="action-row"><span class="label">Buy contracts</span><span class="value">11</span></div>
-                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$7.88</span></div>
-                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+$3.12</span></div>
-                
-                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.88</span></div>
-                <div class="action-row"><span class="label">Expected value</span>
-                  <span class="value" style="color:var(--green)">
-                    +$1.06
-                  </span>
-                </div>
-                
-              </div>
-            </td>
-          </tr>
-          
-          <tr id="alloc-5"
-              class="alloc-main-row"
-              data-home-team="Philadelphia Phillies"
-              data-away-team="Cincinnati Reds"
-              data-bet-type="Moneyline"
-              data-pick="Philadelphia Phillies"
-              data-sport="MLB"
-              data-market-prob-pct="56.3"
-              data-commence-time="2026-05-19T22:41:00Z"
-              >
-            <td style="color:var(--muted);font-size:0.78rem;">5</td>
-            <td>
-              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Philadelphia Phillies (ML)</div>
-              <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
-              <div style="color:var(--muted);font-size:0.7rem;">Cincinnati Reds @ Philadelphia Phillies</div>
-              <div class="row-time-local"></div>
-            </td>
-            <td style="vertical-align:top;text-align:center;">
-              <div style="color:var(--green);font-weight:700;font-size:0.8rem;">+10.8%</div>
-              <div class="score-cell">—</div>
-            </td>
-            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
-              9<br>
-              <span style="color:var(--muted);font-size:0.7rem;">5.2%</span>
-            </td>
-            <td style="vertical-align:top;text-align:right;">
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div style="font-size:0.8rem;">$5.25</div>
-                <div style="color:var(--green);font-size:0.75rem;">+$3.75</div>
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:var(--muted);display:none;">🔒</span>
-                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr class="alloc-detail-row" id="alloc-detail-5">
-            <td colspan="5" style="padding:0 6px 10px 6px;">
-              <div class="action-box">
-                <div class="action-title">Robinhood Action — Philadelphia Phillies (ML)</div>
-                
-                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢56.3</span></div>
-                
-                <div class="action-row"><span class="label">Buy contracts</span><span class="value">9</span></div>
-                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$5.25</span></div>
-                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+$3.75</span></div>
-                
-                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$5.25</span></div>
-                <div class="action-row"><span class="label">Expected value</span>
-                  <span class="value" style="color:var(--green)">
-                    +$0.79
-                  </span>
-                </div>
-                
-              </div>
-            </td>
-          </tr>
-          
-          <tr id="alloc-p1"
-              class="alloc-main-row"
-              data-home-team=""
-              data-away-team=""
-              data-bet-type="Parlay"
-              data-pick="New York Knicks (ML) + Los Angeles Dodgers (ML)"
-              data-sport="Parlay"
-              data-market-prob-pct="50"
-              data-commence-time=""
-              data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Cleveland Cavaliers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 81.3, &#34;commence_time&#34;: &#34;2026-05-20T00:10:00Z&#34;}, {&#34;home_team&#34;: &#34;San Diego Padres&#34;, &#34;away_team&#34;: &#34;Los Angeles Dodgers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Los Angeles Dodgers&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 74.1, &#34;commence_time&#34;: &#34;2026-05-20T01:41:00Z&#34;}]" data-cost="3.46" data-profit="4.54" data-confidence="HIGH">
-            <td style="color:var(--muted);font-size:0.78rem;">P1</td>
-            <td>
-              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">New York Knicks (ML) + Los Angeles Dodgers (ML)</div>
-              <div style="color:var(--muted);font-size:0.7rem;">Parlay</div>
-              
-              <div class="row-time-local"></div>
-            </td>
-            <td style="vertical-align:top;text-align:center;">
-              <div style="color:var(--green);font-weight:700;font-size:0.8rem;">+19.1%</div>
-              <div class="score-cell">—</div>
-            </td>
-            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
-              8<br>
-              <span style="color:var(--muted);font-size:0.7rem;">3.5%</span>
-            </td>
-            <td style="vertical-align:top;text-align:right;">
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div style="font-size:0.8rem;">$3.46</div>
-                <div style="color:var(--green);font-size:0.75rem;">+$4.54</div>
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:var(--muted);display:none;">🔒</span>
-                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr class="alloc-detail-row" id="alloc-detail-p1">
-            <td colspan="5" style="padding:0 6px 10px 6px;">
-              <div class="action-box">
-                <div class="action-title">Robinhood Action — New York Knicks (ML) + Los Angeles Dodgers (ML)</div>
-                
-                <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢41.2</span></div>
-                
-                <div class="action-row"><span class="label">Buy contracts</span><span class="value">8</span></div>
-                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$3.46</span></div>
-                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+$4.54</span></div>
-                
-              </div>
-            </td>
-          </tr>
-          
-          <tr id="alloc-p2"
-              class="alloc-main-row"
-              data-home-team=""
-              data-away-team=""
-              data-bet-type="Parlay"
-              data-pick="Philadelphia Phillies (ML) + San Francisco Giants (ML)"
-              data-sport="Parlay"
-              data-market-prob-pct="50"
-              data-commence-time=""
-              data-legs="[{&#34;home_team&#34;: &#34;Philadelphia Phillies&#34;, &#34;away_team&#34;: &#34;Cincinnati Reds&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Philadelphia Phillies&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 67.1, &#34;commence_time&#34;: &#34;2026-05-19T22:41:00Z&#34;}, {&#34;home_team&#34;: &#34;Arizona Diamondbacks&#34;, &#34;away_team&#34;: &#34;San Francisco Giants&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;San Francisco Giants&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 61.8, &#34;commence_time&#34;: &#34;2026-05-20T01:41:00Z&#34;}]" data-cost="2.27" data-profit="5.73" data-confidence="HIGH">
-            <td style="color:var(--muted);font-size:0.78rem;">P2</td>
-            <td>
-              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Philadelphia Phillies (ML) + San Francisco Giants (ML)</div>
-              <div style="color:var(--muted);font-size:0.7rem;">Parlay</div>
-              
-              <div class="row-time-local"></div>
-            </td>
-            <td style="vertical-align:top;text-align:center;">
-              <div style="color:var(--green);font-weight:700;font-size:0.8rem;">+15.1%</div>
-              <div class="score-cell">—</div>
-            </td>
-            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
-              8<br>
-              <span style="color:var(--muted);font-size:0.7rem;">2.3%</span>
-            </td>
-            <td style="vertical-align:top;text-align:right;">
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-                <div style="font-size:0.8rem;">$2.27</div>
-                <div style="color:var(--green);font-size:0.75rem;">+$5.73</div>
-                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
-                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:var(--muted);display:none;">🔒</span>
-                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr class="alloc-detail-row" id="alloc-detail-p2">
-            <td colspan="5" style="padding:0 6px 10px 6px;">
-              <div class="action-box">
-                <div class="action-title">Robinhood Action — Philadelphia Phillies (ML) + San Francisco Giants (ML)</div>
-                
-                <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢26.4</span></div>
-                
-                <div class="action-row"><span class="label">Buy contracts</span><span class="value">8</span></div>
-                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$2.27</span></div>
-                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:var(--green)">+$5.73</span></div>
-                
-              </div>
-            </td>
-          </tr>
-          
-        </tbody>
-      </table>
-      <div class="budget-total">
-        <span>Deployed</span>
-        <span>$39.71 / $100</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
-        <span style="color:var(--muted);">Today's Profit</span>
-        <span id="today-pnl" style="color:var(--muted);">—</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
-        <span style="color:var(--muted);">Reserve</span>
-        <span style="color:var(--green);">$60.29</span>
-      </div>
-    </div>
     
 
     <div style="height:16px;"></div>
