@@ -3426,5 +3426,161 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-05-18",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ San Diego Padres",
+    "bet_type": "Moneyline",
+    "pick": "Los Angeles Dodgers",
+    "home_team": "San Diego Padres",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 13.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 70.9,
+    "market_prob_pct": 57.8,
+    "cost": 6.58,
+    "profit_if_win": 4.42,
+    "result": "LOST",
+    "actual_pnl": -6.58,
+    "actual_home_score": 1.0,
+    "actual_away_score": 0.0
+  },
+  {
+    "date": "2026-05-18",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Toronto Blue Jays @ New York Yankees",
+    "bet_type": "Moneyline",
+    "pick": "New York Yankees",
+    "home_team": "New York Yankees",
+    "away_team": "Toronto Blue Jays",
+    "edge_pct": 12.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 73.8,
+    "market_prob_pct": 60.9,
+    "cost": 6.92,
+    "profit_if_win": 4.08,
+    "result": "WON",
+    "actual_pnl": 4.08,
+    "actual_home_score": 7.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-05-18",
+    "type": "single",
+    "sport": "NBA",
+    "game": "San Antonio Spurs @ Oklahoma City Thunder",
+    "bet_type": "Spread",
+    "pick": "San Antonio Spurs +6.5",
+    "home_team": "Oklahoma City Thunder",
+    "away_team": "San Antonio Spurs",
+    "edge_pct": 11.7,
+    "confidence": "HIGH",
+    "model_prob_pct": 61.6,
+    "market_prob_pct": 49.9,
+    "cost": 4.67,
+    "profit_if_win": 4.33,
+    "result": "WON",
+    "actual_pnl": 4.33,
+    "actual_home_score": 115.0,
+    "actual_away_score": 122.0
+  },
+  {
+    "date": "2026-05-18",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Cincinnati Reds @ Philadelphia Phillies",
+    "bet_type": "Total",
+    "pick": "Under 10.5",
+    "home_team": "Philadelphia Phillies",
+    "away_team": "Cincinnati Reds",
+    "edge_pct": 10.4,
+    "confidence": "HIGH",
+    "model_prob_pct": 61.1,
+    "market_prob_pct": 50.7,
+    "cost": 4.22,
+    "profit_if_win": 3.78,
+    "result": "WON",
+    "actual_pnl": 3.78,
+    "actual_home_score": 5.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-05-18",
+    "type": "single",
+    "sport": "MLB",
+    "game": "New York Mets @ Washington Nationals",
+    "bet_type": "Total",
+    "pick": "Under 10.5",
+    "home_team": "Washington Nationals",
+    "away_team": "New York Mets",
+    "edge_pct": 10.4,
+    "confidence": "HIGH",
+    "model_prob_pct": 62.1,
+    "market_prob_pct": 51.7,
+    "cost": 4.3,
+    "profit_if_win": 3.7,
+    "result": "LOST",
+    "actual_pnl": -4.3,
+    "actual_home_score": 7.0,
+    "actual_away_score": 16.0
+  },
+  {
+    "date": "2026-05-18",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Yankees (ML) + Los Angeles Dodgers (ML)",
+    "bet_type": "Parlay",
+    "pick": "New York Yankees (ML) + Los Angeles Dodgers (ML)",
+    "edge_pct": 17.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 52.3,
+    "market_prob_pct": 0,
+    "cost": 2.98,
+    "profit_if_win": 5.02,
+    "result": "LOST",
+    "actual_pnl": -2.98,
+    "legs": [
+      {
+        "game": "Toronto Blue Jays @ New York Yankees",
+        "pick": "New York Yankees",
+        "result": "WON"
+      },
+      {
+        "game": "Los Angeles Dodgers @ San Diego Padres",
+        "pick": "Los Angeles Dodgers",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-05-18",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Philadelphia Phillies +1.5 + Under 10.5",
+    "bet_type": "Parlay",
+    "pick": "Philadelphia Phillies +1.5 + Under 10.5",
+    "edge_pct": 12.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 44.3,
+    "market_prob_pct": 0,
+    "cost": 1.7,
+    "profit_if_win": 3.3,
+    "result": "WON",
+    "actual_pnl": 3.3,
+    "legs": [
+      {
+        "game": "Cincinnati Reds @ Philadelphia Phillies",
+        "pick": "Philadelphia Phillies +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Cincinnati Reds @ Philadelphia Phillies",
+        "pick": "Under 10.5",
+        "result": "WON"
+      }
+    ]
   }
 ]
