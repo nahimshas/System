@@ -328,6 +328,15 @@
       background: var(--green);
       border-radius: 50%;
       border: 1.5px solid var(--card);
+      transition: background 0.3s;
+    }
+    .tab-dot.live {
+      background: var(--red);
+      animation: dotPulse 1.4s ease-in-out infinite;
+    }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.45; }
     }
 
     /* ── Tab sticky header ───────────────────────────────────────────────── */
@@ -1702,6 +1711,20 @@ function toggleCtx(el) {
       if (hasLive) badge.classList.add('is-live');
       else badge.classList.remove('is-live');
     }
+
+    // Update each tab's dot: green = has picks, red+pulse = game is live now
+    document.querySelectorAll('.spa-tab-btn').forEach(function(btn) {
+      var tabId = btn.getAttribute('data-tab');
+      var panel = document.getElementById('tab-' + tabId);
+      var dot   = btn.querySelector('.tab-dot');
+      if (!dot || !panel) return;
+      var tabLive = false;
+      panel.querySelectorAll('.live-status').forEach(function(el) {
+        if (el.innerHTML.indexOf('● LIVE') !== -1) tabLive = true;
+      });
+      if (tabLive) dot.classList.add('live');
+      else dot.classList.remove('live');
+    });
   }
   window.checkLiveBadge = checkLive;
 
