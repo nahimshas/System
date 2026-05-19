@@ -1349,6 +1349,8 @@
     if (panel) panel.classList.add("active");
     if (btn) { btn.classList.add("active"); btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }); }
     try { localStorage.setItem("spa-tab", id); } catch(e) {}
+    // Update the LIVE badge for the newly active tab
+    if (typeof checkLive === "function") checkLive();
   }
 
   // Expose globally for sport-grid tile clicks
@@ -1476,17 +1478,20 @@ function toggleCtx(el) {
 
   // ── LIVE badge: show when any card has an active live-status ─────────
   // Called by ESPN polling JS (window.onLiveDetected) or via MutationObserver
-  // ── LIVE badge: only light up when a game is actually in progress ──
-  // The ESPN JS injects "● LIVE" (with the red #ef4444 colour) for in-progress
-  // games, and clears .live-status for pre-game / final states.
-  // We look for that LIVE marker rather than any non-empty textContent so that
-  // prop start-time strings and "Final:" lines don't trigger the badge.
+  // ── LIVE badge: per-tab, only when a game is genuinely in progress ──────
+  // The ESPN JS injects the literal string "● LIVE" for in-progress games.
+  // "Final:" results contain ef4444 too (via outcomeHtml "✗ LOST") — so we
+  // match on "● LIVE" specifically, not just any red colour.
+  // Only elements inside the currently active .spa-tab are checked so the
+  // badge reflects what is live in the tab you are looking at.
   function checkLive() {
+    var activeTab = document.querySelector('.spa-tab.active');
     var hasLive = false;
-    document.querySelectorAll('.live-status').forEach(function(el) {
-      var html = el.innerHTML;
-      if (html.indexOf('LIVE') !== -1 || html.indexOf('In Progress') !== -1 || html.indexOf('ef4444') !== -1) hasLive = true;
-    });
+    if (activeTab) {
+      activeTab.querySelectorAll('.live-status').forEach(function(el) {
+        if (el.innerHTML.indexOf('● LIVE') !== -1) hasLive = true;
+      });
+    }
     var badge = document.getElementById('hdr-live');
     if (badge) {
       if (hasLive) badge.classList.add('is-live');
@@ -1495,7 +1500,7 @@ function toggleCtx(el) {
   }
   window.checkLiveBadge = checkLive;
 
-  // Watch for live-status mutations
+  // Re-check whenever any live-status element changes content
   var obs = new MutationObserver(function() { checkLive(); });
   document.querySelectorAll('.live-status').forEach(function(el) {
     obs.observe(el, { childList: true, characterData: true, subtree: true });
