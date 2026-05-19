@@ -2162,7 +2162,10 @@
               ? existingResult
               : (iplNameMatch(pickName, winnerTeam.name) ? "WON" : "LOST");
             card.setAttribute("data-live-result", result);
-            card.setAttribute("data-espn-done", "1");
+            // Only freeze on WON — a premature LOST (e.g. ESPN mis-fires "post"
+            // state at the innings break with wrong winner) must stay re-pollable
+            // so the next tick can correct it once the actual final result arrives.
+            if (result === "WON") card.setAttribute("data-espn-done", "1");
             // Re-run tile updater so the W-L count reflects this just-settled pick.
             if (typeof updateWatchlistTiles === "function") updateWatchlistTiles();
             showLockBadge(card);
