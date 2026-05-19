@@ -249,7 +249,9 @@
     }
 
     /* ── SPA layout ──────────────────────────────────────────────────────── */
-    #spa-wrap { display: flex; flex-direction: column; height: 100%; }
+    /* position:fixed + inset:0 is the most reliable way to fill the exact
+       screen on iOS standalone mode — 100% / 100vh can fall short.        */
+    #spa-wrap { position: fixed; inset: 0; display: flex; flex-direction: column; }
     #spa-content { flex: 1; overflow: hidden; position: relative; }
     .spa-tab {
       position: absolute; inset: 0;
@@ -276,8 +278,7 @@
       -webkit-overflow-scrolling: touch;
       background: var(--card);
       border-top: 1px solid var(--border);
-      /* height = nav buttons + home-indicator clearance */
-      height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
+      /* No explicit height — determined by button height + home-indicator padding */
       padding-bottom: env(safe-area-inset-bottom, 0px);
       scrollbar-width: none;
     }
@@ -285,6 +286,7 @@
     .spa-tab-btn {
       flex: 0 0 auto;
       min-width: 62px;
+      height: var(--tab-h);   /* always exactly 64px, padding below is home indicator */
       display: flex;
       flex-direction: column;
       align-items: center;
