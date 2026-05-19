@@ -1221,8 +1221,8 @@
         </summary>
         <svg id="svg-prop-hr" viewBox="0 0 {{ pcd.svg_w }} {{ pcd.svg_h }}" style="width:100%;display:block;overflow:visible;margin-top:10px;" xmlns="http://www.w3.org/2000/svg">
           {% if pcd.ref50_y is defined %}<line x1="{{ pcd.pad_l }}" y1="{{ pcd.ref50_y }}" x2="{{ pcd.svg_w - 12 }}" y2="{{ pcd.ref50_y }}" stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>{% endif %}
-          {% if pcd.hr_points %}<polyline points="{{ pcd.hr_points }}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>{% endif %}
-          {% for lbl in pcd.y_labels %}<text x="{{ pcd.pad_l - 4 }}" y="{{ lbl.y + 4 }}" text-anchor="end" font-size="9" fill="#94a3b8">{{ lbl.val }}</text>{% endfor %}
+          {% if pcd.wr_points %}<polyline points="{{ pcd.wr_points }}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>{% endif %}
+          {% for lbl in pcd.wr_y_labels %}<text x="{{ pcd.pad_l - 4 }}" y="{{ lbl.y + 4 }}" text-anchor="end" font-size="9" fill="#94a3b8">{{ lbl.val }}</text>{% endfor %}
           {% for lbl in pcd.x_labels %}<text x="{{ lbl.x }}" y="{{ pcd.svg_h - 4 }}" text-anchor="middle" font-size="9" fill="#94a3b8">{{ lbl.val }}</text>{% endfor %}
         </svg>
         <script id="prop-hist-data" type="application/json">{{ pcd.hist_records_json | safe }}</script>
