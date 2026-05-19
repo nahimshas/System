@@ -1510,8 +1510,10 @@
       setTimeout(function() {
         _c.classList.remove("active");
         clearSwipeStyles(_c);
+        _n.style.animation = "none";   // suppress slideIn — tab already in place from swipe
         _n.classList.add("active");
         clearSwipeStyles(_n);
+        requestAnimationFrame(function() { _n.style.animation = ""; });  // re-enable for future clicks
         curIdx = nxtIdx;
         document.querySelectorAll(".spa-tab-btn").forEach(function(b) { b.classList.remove("active"); });
         var newBtn = document.querySelector(".spa-tab-btn[data-tab='" + TABS[nxtIdx] + "']");
