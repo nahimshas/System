@@ -68,24 +68,38 @@
       align-items: center;
       background: var(--card2);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 3px 9px;
-      min-width: 48px;
+      border-radius: 9px;
+      padding: 5px 12px;
+      min-width: 54px;
     }
-    .stat-chip .sc-val { font-size: 0.82rem; font-weight: 800; line-height: 1.2; }
-    .stat-chip .sc-lbl { font-size: 0.52rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }
-    .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .stat-chip .sc-val { font-size: 0.92rem; font-weight: 800; line-height: 1.2; }
+    .stat-chip .sc-lbl { font-size: 0.56rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      flex-shrink: 0;
+    }
     .header-date-block { text-align: right; line-height: 1.3; }
     .header-date-day  { font-size: 0.75rem; font-weight: 700; }
     .header-date-date { font-size: 0.62rem; color: var(--muted); }
+    /* LIVE badge — always visible; .is-live toggles it on */
     .header-live-badge {
-      background: var(--green);
-      color: #000;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 800;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 99px;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.07em;
+      background: rgba(100,116,139,0.18);
+      color: var(--muted);
+      border: 1px solid rgba(100,116,139,0.25);
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+    .header-live-badge.is-live {
+      background: rgba(239,68,68,0.15);
+      color: #ef4444;
+      border-color: rgba(239,68,68,0.35);
     }
 
     /* ── SPA layout ──────────────────────────────────────────────────────── */
@@ -474,9 +488,9 @@
     
   </div>
   <div class="header-right">
+    <span class="header-live-badge" id="hdr-live">● LIVE</span>
     <div class="header-date-block"><div class="header-date-day">Tuesday</div>
         <div class="header-date-date">May 19</div></div>
-    <span class="header-live-badge" id="hdr-live" style="display:none;">LIVE</span>
   </div>
 </div>
 
@@ -3099,7 +3113,10 @@ function toggleCtx(el) {
       if (html.indexOf('LIVE') !== -1 || html.indexOf('In Progress') !== -1 || html.indexOf('ef4444') !== -1) hasLive = true;
     });
     var badge = document.getElementById('hdr-live');
-    if (badge) badge.style.display = hasLive ? '' : 'none';
+    if (badge) {
+      if (hasLive) badge.classList.add('is-live');
+      else badge.classList.remove('is-live');
+    }
   }
   window.checkLiveBadge = checkLive;
 
