@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "Prototype Preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3131"],
+      "port": 3131
+    },
+    {
       "name": "Full Report (NBA + MLB)",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "src.main", "--no-email"],

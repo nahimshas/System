@@ -1366,38 +1366,6 @@
 </div><!-- /spa-wrap -->
 
 <script>
-// ── Debug overlay (temporary — remove after diagnosing bottom gap) ────────
-(function () {
-  var dbg = document.createElement('div');
-  dbg.id = 'dbg-overlay';
-  dbg.style.cssText = [
-    'position:fixed','bottom:0','left:0','right:0',
-    'background:rgba(0,0,0,0.85)','color:#0f0','font-size:11px',
-    'font-family:monospace','padding:4px 8px','z-index:99999',
-    'pointer-events:none','white-space:pre-wrap'
-  ].join(';');
-  function update() {
-    var wrap = document.getElementById('spa-wrap');
-    var nav  = document.getElementById('spa-nav');
-    var wRect = wrap ? wrap.getBoundingClientRect() : {};
-    var nRect = nav  ? nav.getBoundingClientRect()  : {};
-    dbg.textContent = [
-      'innerH=' + window.innerHeight,
-      'screenH=' + window.screen.height,
-      'wrap.bottom=' + Math.round(wRect.bottom || 0),
-      'nav.bottom=' + Math.round(nRect.bottom || 0),
-      'nav.height=' + Math.round(nRect.height || 0),
-    ].join('  ');
-  }
-  update();
-  window.addEventListener('resize', update);
-  document.addEventListener('DOMContentLoaded', function () {
-    document.body.appendChild(dbg);
-    update();
-  });
-  setTimeout(function () { document.body.appendChild(dbg); update(); }, 100);
-})();
-
 // ── Tab switching ─────────────────────────────────────────────────────────
 (function () {
   "use strict";
