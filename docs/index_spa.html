@@ -33,7 +33,7 @@
       --purple-dim: #3b0764;
       --teal: #14b8a6;
       --teal-dim: #134e4a;
-      --tab-h: 64px;
+      --tab-h: 50px;
       --header-h: 52px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -161,13 +161,13 @@
     .spa-tab-btn {
       flex: 0 0 auto;
       min-width: 62px;
-      height: var(--tab-h);   /* always exactly 64px, padding below is home indicator */
+      height: var(--tab-h);   /* 50px; home indicator padding is on the nav */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      padding: 8px 10px 10px;
+      gap: 2px;
+      padding: 4px 10px 6px;
       background: none;
       border: none;
       color: var(--muted);
@@ -186,8 +186,8 @@
       background: var(--teal);
       border-radius: 0 0 2px 2px;
     }
-    .spa-tab-icon  { font-size: 1.15rem; line-height: 1; position: relative; }
-    .spa-tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+    .spa-tab-icon  { font-size: 1.05rem; line-height: 1; position: relative; }
+    .spa-tab-label { font-size: 0.55rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
     .tab-dot {
       position: absolute;
       top: -1px; right: -5px;
