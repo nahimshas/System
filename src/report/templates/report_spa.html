@@ -65,7 +65,8 @@
     <div style="flex:1;min-width:0;">
       <div class="card-pick">{{ prop.player }}</div>
       <div class="card-game short-team">{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} · {{ prop.prop_type }}</div>
-      <div class="card-time live-status prop-live-badge"></div>
+      <div class="card-time"></div>
+      <div class="live-status prop-live-badge" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
       {% if prop.locked %}<span class="lock-badge">🔒</span>{% endif %}
@@ -107,18 +108,11 @@
      data-market-prob-pct="{{ bet.market_prob_pct }}"
      data-commence-time="{{ bet.commence_time }}"
      {% if bet.status == 'settled' and bet.result %}data-live-result="{{ bet.result }}" data-in-history="1"{% endif %}>
-  {% if bet.status == 'in_progress' %}
-  <div class="wl-status wl-inprogress">⚡ In Progress</div>
-  {% elif bet.status == 'settled' %}
-  <div class="wl-status" style="background:rgba(239,68,68,0.15);color:var(--red);">🏁 Settled</div>
-  {% else %}
-  <div class="wl-status wl-upcoming">🔵 Upcoming</div>
-  {% endif %}
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">{{ bet.pick }}</div>
-      <div class="card-game">{{ bet.game }}{% if bet.bet_type == "Moneyline" %} · ML{% elif bet.bet_type == "Draw" %} · Draw{% elif bet.bet_type == "Total" %} · Total{% elif bet.bet_type == "Spread" %} · Spread{% endif %}</div>
-      <div class="card-time"></div>
+      <div class="card-game short-game">{{ bet.game }}{% if bet.bet_type == "Moneyline" %} · ML{% elif bet.bet_type == "Draw" %} · Draw{% elif bet.bet_type == "Total" %} · Total{% elif bet.bet_type == "Spread" %} · Spread{% endif %}</div>
+      {% if bet.game_time %}<div class="card-time">{{ bet.game_time }}</div>{% endif %}
       <div class="live-status" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -693,7 +687,8 @@
           <div class="alloc-pick">{{ row.label }}</div>
           {% if row.game and row.bet_type != "Parlay" %}<div class="alloc-game short-game">{{ row.game }}</div>{% endif %}
           <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
-          {% if row.game_time %}<div class="alloc-time">{{ row.game_time }}</div>{% endif %}
+          {% if row.bet_type == "Parlay" %}<div class="alloc-time alloc-parlay-times"></div>
+          {% elif row.game_time %}<div class="alloc-time">{{ row.game_time }}</div>{% endif %}
         </div>
       </div>
       <!-- Action chips: full card width -->
@@ -1467,10 +1462,16 @@ function toggleCtx(el) {
 
   // ── LIVE badge: show when any card has an active live-status ─────────
   // Called by ESPN polling JS (window.onLiveDetected) or via MutationObserver
+  // ── LIVE badge: only light up when a game is actually in progress ──
+  // The ESPN JS injects "● LIVE" (with the red #ef4444 colour) for in-progress
+  // games, and clears .live-status for pre-game / final states.
+  // We look for that LIVE marker rather than any non-empty textContent so that
+  // prop start-time strings and "Final:" lines don't trigger the badge.
   function checkLive() {
     var hasLive = false;
     document.querySelectorAll('.live-status').forEach(function(el) {
-      if (el.textContent.trim().length > 0) hasLive = true;
+      var html = el.innerHTML;
+      if (html.indexOf('LIVE') !== -1 || html.indexOf('In Progress') !== -1 || html.indexOf('ef4444') !== -1) hasLive = true;
     });
     var badge = document.getElementById('hdr-live');
     if (badge) badge.style.display = hasLive ? '' : 'none';
@@ -1481,6 +1482,35 @@ function toggleCtx(el) {
   var obs = new MutationObserver(function() { checkLive(); });
   document.querySelectorAll('.live-status').forEach(function(el) {
     obs.observe(el, { childList: true, characterData: true, subtree: true });
+  });
+
+  // ── Parlay alloc-card start times ────────────────────────────────────────
+  // Parse each parlay card's data-legs JSON, deduplicate by commence_time,
+  // format each into the user's local timezone, and show them in .alloc-parlay-times.
+  function fmtTime(iso) {
+    if (!iso) return '';
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      return '🕐 ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+    } catch(e) { return ''; }
+  }
+  document.querySelectorAll('.alloc-card[data-bet-type="Parlay"][data-legs]').forEach(function(card) {
+    var timeEl = card.querySelector('.alloc-parlay-times');
+    if (!timeEl) return;
+    var legs;
+    try { legs = JSON.parse(card.getAttribute('data-legs') || '[]'); } catch(e) { return; }
+    var seen = {};
+    var times = [];
+    legs.forEach(function(leg) {
+      var ct = leg.commence_time || '';
+      if (ct && !seen[ct]) {
+        seen[ct] = true;
+        var t = fmtTime(ct);
+        if (t) times.push(t);
+      }
+    });
+    if (times.length) timeEl.textContent = times.join(' · ');
   });
 })();
 </script>
