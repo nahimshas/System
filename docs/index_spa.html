@@ -155,20 +155,22 @@
       -webkit-overflow-scrolling: touch;
       background: var(--card);
       border-top: 1px solid var(--border);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      /* NO padding-bottom here — moved onto each button so icons sit high,
+         home indicator zone is part of the button background, not dead space */
       scrollbar-width: none;
     }
     #spa-nav::-webkit-scrollbar { display: none; }
     .spa-tab-btn {
       flex: 0 0 auto;
       min-width: 62px;
-      height: var(--tab-h);   /* 50px; home indicator padding is on the nav */
+      /* button extends into the home indicator zone; padding-bottom reserves it */
+      height: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 2px;
-      padding: 4px 10px 6px;
+      padding: 6px 10px env(safe-area-inset-bottom, 0px);
       background: none;
       border: none;
       color: var(--muted);
