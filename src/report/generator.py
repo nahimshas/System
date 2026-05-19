@@ -471,10 +471,17 @@ def build_report(
 
     # Build a lookup so prop cards can show the most recent settled result
     # for the same player+prop_type: {(player, prop_type): record}
+    # Normalize field names: raw records use hit/actual_stat/model_line;
+    # the template expects result/actual/projected.
     prop_last_result: Dict = {}
     for rec in prop_accuracy.get("recent", []):
         key = (rec.get("player", ""), rec.get("prop_type", ""))
-        prop_last_result[key] = rec   # later records overwrite earlier → most recent wins
+        prop_last_result[key] = {
+            "result":    "HIT" if rec.get("hit") else "MISS",
+            "actual":    rec.get("actual_stat", ""),
+            "projected": rec.get("model_line", ""),
+            "date":      rec.get("date", ""),
+        }   # later records overwrite earlier → most recent wins
 
     # ── Prop accuracy split by sport ─────────────────────────────────────────
     # load_prop_accuracy() computes by_sport across ALL settled records.
