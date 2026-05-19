@@ -1366,6 +1366,33 @@
 </div><!-- /spa-wrap -->
 
 <script>
+// ── Debug: show measurements + bright line at fixed;bottom:0 ─────────────
+(function () {
+  // Red 2px line pinned to fixed;bottom:0 — shows exactly where that coord is
+  var line = document.createElement('div');
+  line.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:2px;background:red;z-index:99999;pointer-events:none;';
+  document.body.appendChild(line);
+
+  // Measure env(safe-area-inset-bottom) via a probe element
+  var probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none;';
+  document.body.appendChild(probe);
+
+  var dbg = document.createElement('div');
+  dbg.style.cssText = 'position:fixed;bottom:2px;left:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;font-size:10px;font-family:monospace;padding:3px 6px;z-index:99998;pointer-events:none;';
+  document.body.appendChild(dbg);
+
+  function update() {
+    var nav = document.getElementById('spa-nav');
+    var nr  = nav ? nav.getBoundingClientRect() : {};
+    var sab = probe.getBoundingClientRect().height;
+    dbg.textContent = 'innerH='+window.innerHeight+' screenH='+window.screen.height+' sab='+Math.round(sab)+'  nav.top='+Math.round(nr.top||0)+' nav.h='+Math.round(nr.height||0)+' nav.bot='+Math.round(nr.bottom||0);
+  }
+  update();
+  window.addEventListener('resize', update);
+  setTimeout(update, 300);
+})();
+
 // ── Tab switching ─────────────────────────────────────────────────────────
 (function () {
   "use strict";
