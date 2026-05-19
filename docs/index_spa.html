@@ -41,12 +41,12 @@
 
     /* ── App header (stats bar) ──────────────────────────────────────────── */
     .app-header {
-      height: var(--header-h);
+      min-height: var(--header-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 0 12px;
+      padding: 6px 12px;
       gap: 8px;
       flex-shrink: 0;
       overflow: hidden;
@@ -75,7 +75,9 @@
     .stat-chip .sc-val { font-size: 0.82rem; font-weight: 800; line-height: 1.2; }
     .stat-chip .sc-lbl { font-size: 0.52rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }
     .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .header-date  { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+    .header-date-block { text-align: right; line-height: 1.3; }
+    .header-date-day  { font-size: 0.75rem; font-weight: 700; }
+    .header-date-date { font-size: 0.62rem; color: var(--muted); }
     .header-live-badge {
       background: var(--green);
       color: #000;
@@ -391,30 +393,33 @@
       border-radius: 12px;
       padding: 12px 14px;
       margin-bottom: 10px;
+    }
+    .alloc-card-top {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: flex-start;
     }
     .alloc-rank {
       flex-shrink: 0;
-      width: 28px; height: 28px;
+      width: 26px; height: 26px;
       background: var(--blue);
       color: #fff;
-      border-radius: 8px;
+      border-radius: 7px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 800;
-      margin-top: 2px;
+      font-size: 0.82rem; font-weight: 800;
+      margin-top: 1px;
     }
-    .alloc-body { flex: 1; min-width: 0; }
-    .alloc-top  { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .alloc-main { flex: 1; min-width: 0; }
+    .alloc-top  { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
     .alloc-edge { font-size: 0.75rem; font-weight: 700; margin-left: auto; flex-shrink: 0; }
-    .alloc-pick { font-weight: 700; font-size: 0.97rem; line-height: 1.3; }
+    .alloc-pick { font-weight: 700; font-size: 0.95rem; line-height: 1.3; }
     .alloc-game { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
-    .alloc-live { font-size: 0.75rem; min-height: 1em; margin-top: 3px; }
+    .alloc-live { min-height: 1em; margin-top: 3px; }
     .alloc-time { font-size: 0.72rem; color: var(--teal); font-weight: 600; margin-top: 2px; }
+    /* Action chips span full card width below the flex row */
     .alloc-action {
       display: flex; flex-wrap: wrap; gap: 6px;
-      margin-top: 8px; padding-top: 8px;
+      margin-top: 10px; padding-top: 8px;
       border-top: 1px solid var(--border);
     }
     .alloc-chip {
@@ -426,11 +431,9 @@
       white-space: nowrap;
     }
     .alloc-chip.win { background: rgba(34,197,94,0.1); color: var(--green); border-color: rgba(34,197,94,0.25); }
-    .alloc-expand-btn { background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 1px 5px; line-height: 1.4; flex-shrink: 0; transition: transform 0.15s; }
-    .alloc-main-row.adr-open .alloc-expand-btn { transform: rotate(90deg); }
     .alloc-detail-row { display: none; }
-    .alloc-detail-row.adr-open { display: block; }
-    .alloc-detail-box { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 0; font-size: 0.82rem; }
+    .alloc-detail-row.open { display: block; }
+    .alloc-detail-box { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 8px; font-size: 0.82rem; }
 
     /* ── Misc ────────────────────────────────────────────────────────────── */
     .empty-state { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 0.9rem; }
@@ -471,8 +474,9 @@
     
   </div>
   <div class="header-right">
-    <span class="header-date">Tuesday, May 19, 2026</span>
-    <span class="header-live-badge" id="hdr-live">LIVE</span>
+    <div class="header-date-block"><div class="header-date-day">Tuesday</div>
+        <div class="header-date-date">May 19</div></div>
+    <span class="header-live-badge" id="hdr-live" style="display:none;">LIVE</span>
   </div>
 </div>
 
@@ -506,36 +510,29 @@
          data-market-prob-pct="46.8"
          data-commence-time="2026-05-20T01:41:00Z"
          >
-      <div class="alloc-rank">1</div>
-      <div class="alloc-body">
-        <div class="alloc-top">
-          <span class="badge badge-mlb">MLB</span>
-          
-          <span class="alloc-edge" style="color:var(--green);">+15.0%</span>
-          
-        </div>
-        <div class="alloc-pick">San Francisco Giants (ML)</div>
-        <div class="alloc-game">San Francisco Giants @ Arizona Diamondbacks</div>
-        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
-        <div class="row-time-local alloc-time"></div>
-        <div class="alloc-action">
-          <span class="alloc-chip">12 contracts</span>
-          <span class="alloc-chip">@ 46.8¢</span>
-          <span class="alloc-chip">Cost $5.86</span>
-          <span class="alloc-chip win">+$6.14 if win</span>
-        </div>
-        
-        <div class="alloc-detail-row" id="alloc-detail-1">
-          <div class="alloc-detail-box" style="margin-top:8px;">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
-            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$5.86</span></div>
-            <div class="action-row"><span class="label">Expected value</span>
-              <span class="value" style="color:var(--green)">
-                +$1.56
-              </span>
-            </div>
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">1</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-mlb">MLB</span>
+            
+            <span class="alloc-edge" style="color:var(--green);">+15.0%</span>
+            
           </div>
+          <div class="alloc-pick">San Francisco Giants (ML)</div>
+          <div class="alloc-game short-game">San Francisco Giants @ Arizona Diamondbacks</div>
+          <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+          <div class="row-time-local alloc-time"></div>
+          
         </div>
+      </div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">12 contracts</span>
+        <span class="alloc-chip">@ 46.8¢</span>
+        <span class="alloc-chip">Cost $5.86</span>
+        <span class="alloc-chip win">+$6.14 if win</span>
       </div>
     </div>
     
@@ -549,36 +546,29 @@
          data-market-prob-pct="59.1"
          data-commence-time="2026-05-20T01:41:00Z"
          >
-      <div class="alloc-rank">2</div>
-      <div class="alloc-body">
-        <div class="alloc-top">
-          <span class="badge badge-mlb">MLB</span>
-          
-          <span class="alloc-edge" style="color:var(--green);">+15.0%</span>
-          
-        </div>
-        <div class="alloc-pick">Los Angeles Dodgers (ML)</div>
-        <div class="alloc-game">Los Angeles Dodgers @ San Diego Padres</div>
-        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
-        <div class="row-time-local alloc-time"></div>
-        <div class="alloc-action">
-          <span class="alloc-chip">13 contracts</span>
-          <span class="alloc-chip">@ 59.1¢</span>
-          <span class="alloc-chip">Cost $7.95</span>
-          <span class="alloc-chip win">+$5.05 if win</span>
-        </div>
-        
-        <div class="alloc-detail-row" id="alloc-detail-2">
-          <div class="alloc-detail-box" style="margin-top:8px;">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
-            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.95</span></div>
-            <div class="action-row"><span class="label">Expected value</span>
-              <span class="value" style="color:var(--green)">
-                +$1.69
-              </span>
-            </div>
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">2</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-mlb">MLB</span>
+            
+            <span class="alloc-edge" style="color:var(--green);">+15.0%</span>
+            
           </div>
+          <div class="alloc-pick">Los Angeles Dodgers (ML)</div>
+          <div class="alloc-game short-game">Los Angeles Dodgers @ San Diego Padres</div>
+          <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+          <div class="row-time-local alloc-time"></div>
+          
         </div>
+      </div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">13 contracts</span>
+        <span class="alloc-chip">@ 59.1¢</span>
+        <span class="alloc-chip">Cost $7.95</span>
+        <span class="alloc-chip win">+$5.05 if win</span>
       </div>
     </div>
     
@@ -592,36 +582,29 @@
          data-market-prob-pct="56.7"
          data-commence-time="2026-05-20T00:41:00Z"
          >
-      <div class="alloc-rank">3</div>
-      <div class="alloc-body">
-        <div class="alloc-top">
-          <span class="badge badge-mlb">MLB</span>
-          
-          <span class="alloc-edge" style="color:var(--green);">+13.9%</span>
-          
-        </div>
-        <div class="alloc-pick">Colorado Rockies +1.5</div>
-        <div class="alloc-game">Texas Rangers @ Colorado Rockies</div>
-        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
-        <div class="row-time-local alloc-time"></div>
-        <div class="alloc-action">
-          <span class="alloc-chip">12 contracts</span>
-          <span class="alloc-chip">@ 56.7¢</span>
-          <span class="alloc-chip">Cost $7.04</span>
-          <span class="alloc-chip win">+$4.96 if win</span>
-        </div>
-        
-        <div class="alloc-detail-row" id="alloc-detail-3">
-          <div class="alloc-detail-box" style="margin-top:8px;">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
-            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.04</span></div>
-            <div class="action-row"><span class="label">Expected value</span>
-              <span class="value" style="color:var(--green)">
-                +$1.42
-              </span>
-            </div>
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">3</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-mlb">MLB</span>
+            
+            <span class="alloc-edge" style="color:var(--green);">+13.9%</span>
+            
           </div>
+          <div class="alloc-pick">Colorado Rockies +1.5</div>
+          <div class="alloc-game short-game">Texas Rangers @ Colorado Rockies</div>
+          <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+          <div class="row-time-local alloc-time"></div>
+          
         </div>
+      </div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">12 contracts</span>
+        <span class="alloc-chip">@ 56.7¢</span>
+        <span class="alloc-chip">Cost $7.04</span>
+        <span class="alloc-chip win">+$4.96 if win</span>
       </div>
     </div>
     
@@ -635,36 +618,29 @@
          data-market-prob-pct="69.7"
          data-commence-time="2026-05-20T00:10:00Z"
          >
-      <div class="alloc-rank">4</div>
-      <div class="alloc-body">
-        <div class="alloc-top">
-          <span class="badge badge-nba">NBA</span>
-          
-          <span class="alloc-edge" style="color:var(--green);">+11.6%</span>
-          
-        </div>
-        <div class="alloc-pick">New York Knicks (ML)</div>
-        <div class="alloc-game">Cleveland Cavaliers @ New York Knicks</div>
-        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
-        <div class="row-time-local alloc-time"></div>
-        <div class="alloc-action">
-          <span class="alloc-chip">11 contracts</span>
-          <span class="alloc-chip">@ 69.7¢</span>
-          <span class="alloc-chip">Cost $7.88</span>
-          <span class="alloc-chip win">+$3.12 if win</span>
-        </div>
-        
-        <div class="alloc-detail-row" id="alloc-detail-4">
-          <div class="alloc-detail-box" style="margin-top:8px;">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
-            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$7.88</span></div>
-            <div class="action-row"><span class="label">Expected value</span>
-              <span class="value" style="color:var(--green)">
-                +$1.06
-              </span>
-            </div>
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">4</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-nba">NBA</span>
+            
+            <span class="alloc-edge" style="color:var(--green);">+11.6%</span>
+            
           </div>
+          <div class="alloc-pick">New York Knicks (ML)</div>
+          <div class="alloc-game short-game">Cleveland Cavaliers @ New York Knicks</div>
+          <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+          <div class="row-time-local alloc-time"></div>
+          
         </div>
+      </div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">11 contracts</span>
+        <span class="alloc-chip">@ 69.7¢</span>
+        <span class="alloc-chip">Cost $7.88</span>
+        <span class="alloc-chip win">+$3.12 if win</span>
       </div>
     </div>
     
@@ -678,36 +654,29 @@
          data-market-prob-pct="56.3"
          data-commence-time="2026-05-19T22:41:00Z"
          >
-      <div class="alloc-rank">5</div>
-      <div class="alloc-body">
-        <div class="alloc-top">
-          <span class="badge badge-mlb">MLB</span>
-          
-          <span class="alloc-edge" style="color:var(--green);">+10.8%</span>
-          
-        </div>
-        <div class="alloc-pick">Philadelphia Phillies (ML)</div>
-        <div class="alloc-game">Cincinnati Reds @ Philadelphia Phillies</div>
-        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
-        <div class="row-time-local alloc-time"></div>
-        <div class="alloc-action">
-          <span class="alloc-chip">9 contracts</span>
-          <span class="alloc-chip">@ 56.3¢</span>
-          <span class="alloc-chip">Cost $5.25</span>
-          <span class="alloc-chip win">+$3.75 if win</span>
-        </div>
-        
-        <div class="alloc-detail-row" id="alloc-detail-5">
-          <div class="alloc-detail-box" style="margin-top:8px;">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
-            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$5.25</span></div>
-            <div class="action-row"><span class="label">Expected value</span>
-              <span class="value" style="color:var(--green)">
-                +$0.79
-              </span>
-            </div>
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">5</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-mlb">MLB</span>
+            
+            <span class="alloc-edge" style="color:var(--green);">+10.8%</span>
+            
           </div>
+          <div class="alloc-pick">Philadelphia Phillies (ML)</div>
+          <div class="alloc-game short-game">Cincinnati Reds @ Philadelphia Phillies</div>
+          <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+          <div class="row-time-local alloc-time"></div>
+          
         </div>
+      </div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">9 contracts</span>
+        <span class="alloc-chip">@ 56.3¢</span>
+        <span class="alloc-chip">Cost $5.25</span>
+        <span class="alloc-chip win">+$3.75 if win</span>
       </div>
     </div>
     
@@ -721,36 +690,29 @@
          data-market-prob-pct="50"
          data-commence-time=""
          data-legs="[{&#34;home_team&#34;: &#34;New York Knicks&#34;, &#34;away_team&#34;: &#34;Cleveland Cavaliers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;New York Knicks&#34;, &#34;sport&#34;: &#34;NBA&#34;, &#34;model_prob_pct&#34;: 81.3, &#34;commence_time&#34;: &#34;2026-05-20T00:10:00Z&#34;}, {&#34;home_team&#34;: &#34;San Diego Padres&#34;, &#34;away_team&#34;: &#34;Los Angeles Dodgers&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Los Angeles Dodgers&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 74.1, &#34;commence_time&#34;: &#34;2026-05-20T01:41:00Z&#34;}]" data-cost="3.46" data-profit="4.54" data-confidence="HIGH">
-      <div class="alloc-rank">P1</div>
-      <div class="alloc-body">
-        <div class="alloc-top">
-          <span class="badge badge-parlay">PARLAY</span>
-          
-          <span class="alloc-edge" style="color:var(--green);">+19.1%</span>
-          
-        </div>
-        <div class="alloc-pick">New York Knicks (ML) + Los Angeles Dodgers (ML)</div>
-        
-        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
-        <div class="row-time-local alloc-time"></div>
-        <div class="alloc-action">
-          <span class="alloc-chip">8 contracts</span>
-          <span class="alloc-chip">@ 41.2¢</span>
-          <span class="alloc-chip">Cost $3.46</span>
-          <span class="alloc-chip win">+$4.54 if win</span>
-        </div>
-        
-        <div class="alloc-detail-row" id="alloc-detail-p1">
-          <div class="alloc-detail-box" style="margin-top:8px;">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
-            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">—</span></div>
-            <div class="action-row"><span class="label">Expected value</span>
-              <span class="value" style="color:var(--green)">
-                —
-              </span>
-            </div>
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">P1</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-parlay">PARLAY</span>
+            
+            <span class="alloc-edge" style="color:var(--green);">+19.1%</span>
+            
           </div>
+          <div class="alloc-pick">New York Knicks (ML) + Los Angeles Dodgers (ML)</div>
+          
+          <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+          <div class="row-time-local alloc-time"></div>
+          
         </div>
+      </div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">8 contracts</span>
+        <span class="alloc-chip">@ 41.2¢</span>
+        <span class="alloc-chip">Cost $3.46</span>
+        <span class="alloc-chip win">+$4.54 if win</span>
       </div>
     </div>
     
@@ -764,36 +726,29 @@
          data-market-prob-pct="50"
          data-commence-time=""
          data-legs="[{&#34;home_team&#34;: &#34;Philadelphia Phillies&#34;, &#34;away_team&#34;: &#34;Cincinnati Reds&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Philadelphia Phillies&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 67.1, &#34;commence_time&#34;: &#34;2026-05-19T22:41:00Z&#34;}, {&#34;home_team&#34;: &#34;Arizona Diamondbacks&#34;, &#34;away_team&#34;: &#34;San Francisco Giants&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;San Francisco Giants&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 61.8, &#34;commence_time&#34;: &#34;2026-05-20T01:41:00Z&#34;}]" data-cost="2.27" data-profit="5.73" data-confidence="HIGH">
-      <div class="alloc-rank">P2</div>
-      <div class="alloc-body">
-        <div class="alloc-top">
-          <span class="badge badge-parlay">PARLAY</span>
-          
-          <span class="alloc-edge" style="color:var(--green);">+15.1%</span>
-          
-        </div>
-        <div class="alloc-pick">Philadelphia Phillies (ML) + San Francisco Giants (ML)</div>
-        
-        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
-        <div class="row-time-local alloc-time"></div>
-        <div class="alloc-action">
-          <span class="alloc-chip">8 contracts</span>
-          <span class="alloc-chip">@ 26.4¢</span>
-          <span class="alloc-chip">Cost $2.27</span>
-          <span class="alloc-chip win">+$5.73 if win</span>
-        </div>
-        
-        <div class="alloc-detail-row" id="alloc-detail-p2">
-          <div class="alloc-detail-box" style="margin-top:8px;">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
-            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">—</span></div>
-            <div class="action-row"><span class="label">Expected value</span>
-              <span class="value" style="color:var(--green)">
-                —
-              </span>
-            </div>
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">P2</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-parlay">PARLAY</span>
+            
+            <span class="alloc-edge" style="color:var(--green);">+15.1%</span>
+            
           </div>
+          <div class="alloc-pick">Philadelphia Phillies (ML) + San Francisco Giants (ML)</div>
+          
+          <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+          <div class="row-time-local alloc-time"></div>
+          
         </div>
+      </div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">8 contracts</span>
+        <span class="alloc-chip">@ 26.4¢</span>
+        <span class="alloc-chip">Cost $2.27</span>
+        <span class="alloc-chip win">+$5.73 if win</span>
       </div>
     </div>
     
@@ -806,124 +761,128 @@
 
     
     
-    <div class="sec-label" style="margin-top:18px;">
-      Yesterday — Monday, May 18
-      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">4W–3L</span>
-      <span style="font-weight:700;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;color:var(--green);">+$1.63</span>
-    </div>
-    
-    <div class="result-card">
-      <div class="result-icon">❌</div>
-      <div class="result-body">
-        <div class="result-pick">
-          <span class="badge badge-mlb">MLB</span>
-          
-          &nbsp;Los Angeles Dodgers
+    <details style="margin-top:18px;" open>
+      <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:0;">
+        <span style="flex:1;">Yesterday — Monday, May 18
+          <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">4W–3L</span>
+          <span style="font-weight:700;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;color:var(--green);">+$1.63</span>
+        </span>
+        <span style="font-size:0.7rem;color:var(--muted);margin-left:8px;" class="recap-chevron">▾</span>
+      </summary>
+      
+      <div class="result-card">
+        <div class="result-icon">❌</div>
+        <div class="result-body">
+          <div class="result-pick">
+            <span class="badge badge-mlb">MLB</span>
+            
+            &nbsp;Los Angeles Dodgers
+          </div>
+          <div class="result-game short-game">Los Angeles Dodgers @ San Diego Padres &middot; +13.0% edge</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Los Angeles Dodgers 0 @ San Diego Padres 1. Model projected: San Diego Padres 2.9, Los Angeles Dodgers 4.0. Actual margin reversed model's projection.</div>
         </div>
-        <div class="result-game">Los Angeles Dodgers @ San Diego Padres &middot; +13.0% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Los Angeles Dodgers 0 @ San Diego Padres 1. Model projected: San Diego Padres 2.9, Los Angeles Dodgers 4.0. Actual margin reversed model's projection.</div>
-      </div>
-      <div class="result-pnl red">
-        $6.58
-      </div>
-    </div>
-    
-    <div class="result-card">
-      <div class="result-icon">✅</div>
-      <div class="result-body">
-        <div class="result-pick">
-          <span class="badge badge-mlb">MLB</span>
-          
-          &nbsp;New York Yankees
+        <div class="result-pnl red">
+          $6.58
         </div>
-        <div class="result-game">Toronto Blue Jays @ New York Yankees &middot; +12.8% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Toronto Blue Jays 6 @ New York Yankees 7. Model projected: New York Yankees 5.0, Toronto Blue Jays 3.6. Model's directional call was correct.</div>
       </div>
-      <div class="result-pnl green">
-        +$4.08
-      </div>
-    </div>
-    
-    <div class="result-card">
-      <div class="result-icon">✅</div>
-      <div class="result-body">
-        <div class="result-pick">
-          <span class="badge badge-nba">NBA</span>
-          
-          &nbsp;San Antonio Spurs +6.5
+      
+      <div class="result-card">
+        <div class="result-icon">✅</div>
+        <div class="result-body">
+          <div class="result-pick">
+            <span class="badge badge-mlb">MLB</span>
+            
+            &nbsp;New York Yankees
+          </div>
+          <div class="result-game short-game">Toronto Blue Jays @ New York Yankees &middot; +12.8% edge</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Toronto Blue Jays 6 @ New York Yankees 7. Model projected: New York Yankees 5.0, Toronto Blue Jays 3.6. Model's directional call was correct.</div>
         </div>
-        <div class="result-game">San Antonio Spurs @ Oklahoma City Thunder &middot; +11.7% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: San Antonio Spurs 122 @ Oklahoma City Thunder 115. Model win probability: 61.6%. Actual margin -7 (needed +6.5).</div>
-      </div>
-      <div class="result-pnl green">
-        +$4.33
-      </div>
-    </div>
-    
-    <div class="result-card">
-      <div class="result-icon">✅</div>
-      <div class="result-body">
-        <div class="result-pick">
-          <span class="badge badge-mlb">MLB</span>
-          
-          &nbsp;Under 10.5
+        <div class="result-pnl green">
+          +$4.08
         </div>
-        <div class="result-game">Cincinnati Reds @ Philadelphia Phillies &middot; +10.4% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Cincinnati Reds 4 @ Philadelphia Phillies 5. Model projected: Philadelphia Phillies 4.8, Cincinnati Reds 4.2. Actual total 9 vs line 10.5 (under by 1.5). Model projected 9.0.</div>
       </div>
-      <div class="result-pnl green">
-        +$3.78
-      </div>
-    </div>
-    
-    <div class="result-card">
-      <div class="result-icon">❌</div>
-      <div class="result-body">
-        <div class="result-pick">
-          <span class="badge badge-mlb">MLB</span>
-          
-          &nbsp;Under 10.5
+      
+      <div class="result-card">
+        <div class="result-icon">✅</div>
+        <div class="result-body">
+          <div class="result-pick">
+            <span class="badge badge-nba">NBA</span>
+            
+            &nbsp;San Antonio Spurs +6.5
+          </div>
+          <div class="result-game short-game">San Antonio Spurs @ Oklahoma City Thunder &middot; +11.7% edge</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: San Antonio Spurs 122 @ Oklahoma City Thunder 115. Model win probability: 61.6%. Actual margin -7 (needed +6.5).</div>
         </div>
-        <div class="result-game">New York Mets @ Washington Nationals &middot; +10.4% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: New York Mets 16 @ Washington Nationals 7. Model projected: Washington Nationals 4.0, New York Mets 3.6. Actual total 23 vs line 10.5 (over by 12.5). Model projected 7.6.</div>
-      </div>
-      <div class="result-pnl red">
-        $4.30
-      </div>
-    </div>
-    
-    <div class="result-card">
-      <div class="result-icon">❌</div>
-      <div class="result-body">
-        <div class="result-pick">
-          <span class="badge" style="background:#374151;color:#d1d5db;">PARLAY</span>
-          
-          &nbsp;New York Yankees (ML) + Los Angeles Dodgers (ML)
+        <div class="result-pnl green">
+          +$4.33
         </div>
-        <div class="result-game">New York Yankees (ML) + Los Angeles Dodgers (ML) &middot; +17.0% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">✅ New York Yankees (Toronto Blue Jays @ New York Yankees) · ❌ Los Angeles Dodgers (Los Angeles Dodgers @ San Diego Padres)</div>
       </div>
-      <div class="result-pnl red">
-        $2.98
-      </div>
-    </div>
-    
-    <div class="result-card">
-      <div class="result-icon">✅</div>
-      <div class="result-body">
-        <div class="result-pick">
-          <span class="badge" style="background:#374151;color:#d1d5db;">PARLAY</span>
-          
-          &nbsp;Philadelphia Phillies +1.5 + Under 10.5
+      
+      <div class="result-card">
+        <div class="result-icon">✅</div>
+        <div class="result-body">
+          <div class="result-pick">
+            <span class="badge badge-mlb">MLB</span>
+            
+            &nbsp;Under 10.5
+          </div>
+          <div class="result-game short-game">Cincinnati Reds @ Philadelphia Phillies &middot; +10.4% edge</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: Cincinnati Reds 4 @ Philadelphia Phillies 5. Model projected: Philadelphia Phillies 4.8, Cincinnati Reds 4.2. Actual total 9 vs line 10.5 (under by 1.5). Model projected 9.0.</div>
         </div>
-        <div class="result-game">Philadelphia Phillies +1.5 + Under 10.5 &middot; +12.3% edge</div>
-        <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">✅ Philadelphia Phillies +1.5 (Cincinnati Reds @ Philadelphia Phillies) · ✅ Under 10.5 (Cincinnati Reds @ Philadelphia Phillies)</div>
+        <div class="result-pnl green">
+          +$3.78
+        </div>
       </div>
-      <div class="result-pnl green">
-        +$3.30
+      
+      <div class="result-card">
+        <div class="result-icon">❌</div>
+        <div class="result-body">
+          <div class="result-pick">
+            <span class="badge badge-mlb">MLB</span>
+            
+            &nbsp;Under 10.5
+          </div>
+          <div class="result-game short-game">New York Mets @ Washington Nationals &middot; +10.4% edge</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">Final: New York Mets 16 @ Washington Nationals 7. Model projected: Washington Nationals 4.0, New York Mets 3.6. Actual total 23 vs line 10.5 (over by 12.5). Model projected 7.6.</div>
+        </div>
+        <div class="result-pnl red">
+          $4.30
+        </div>
       </div>
-    </div>
-    
+      
+      <div class="result-card">
+        <div class="result-icon">❌</div>
+        <div class="result-body">
+          <div class="result-pick">
+            <span class="badge" style="background:#374151;color:#d1d5db;">PARLAY</span>
+            
+            &nbsp;New York Yankees (ML) + Los Angeles Dodgers (ML)
+          </div>
+          <div class="result-game short-game">New York Yankees (ML) + Los Angeles Dodgers (ML) &middot; +17.0% edge</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">✅ New York Yankees (Toronto Blue Jays @ New York Yankees) · ❌ Los Angeles Dodgers (Los Angeles Dodgers @ San Diego Padres)</div>
+        </div>
+        <div class="result-pnl red">
+          $2.98
+        </div>
+      </div>
+      
+      <div class="result-card">
+        <div class="result-icon">✅</div>
+        <div class="result-body">
+          <div class="result-pick">
+            <span class="badge" style="background:#374151;color:#d1d5db;">PARLAY</span>
+            
+            &nbsp;Philadelphia Phillies +1.5 + Under 10.5
+          </div>
+          <div class="result-game short-game">Philadelphia Phillies +1.5 + Under 10.5 &middot; +12.3% edge</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">✅ Philadelphia Phillies +1.5 (Cincinnati Reds @ Philadelphia Phillies) · ✅ Under 10.5 (Cincinnati Reds @ Philadelphia Phillies)</div>
+        </div>
+        <div class="result-pnl green">
+          +$3.30
+        </div>
+      </div>
+      
+    </details>
     
 
     <div style="height:16px;"></div>
@@ -961,7 +920,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">New York Knicks</div>
-      <div class="card-game">Cleveland Cavaliers @ New York Knicks · ML</div>
+      <div class="card-game short-game">Cleveland Cavaliers @ New York Knicks · ML</div>
       <div class="card-time live-status"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1007,7 +966,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Over 217.5</div>
-      <div class="card-game">Cleveland Cavaliers @ New York Knicks · Total</div>
+      <div class="card-game short-game">Cleveland Cavaliers @ New York Knicks · Total</div>
       <div class="card-time live-status"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1055,7 +1014,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">James Harden</div>
-      <div class="card-game">Cleveland Cavaliers vs New York Knicks · Points Over</div>
+      <div class="card-game short-team">Cleveland Cavaliers vs New York Knicks · Points Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1063,7 +1022,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 19.5 <span style="color:var(--muted);font-size:0.85em;">50.5%</span> · Model proj: <b>24.0</b></div>
+  <div class="proj-score">Model projects 24.0 Points · Line: 19.5 <span style="color:var(--muted);font-size:0.85em;">50.5%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 19.5 → Model <b style="color:var(--blue)">24.0</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1102,7 +1061,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Karl-Anthony Towns</div>
-      <div class="card-game">New York Knicks vs Cleveland Cavaliers · Assists Over</div>
+      <div class="card-game short-team">New York Knicks vs Cleveland Cavaliers · Assists Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1110,7 +1069,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 4.5 <span style="color:var(--muted);font-size:0.85em;">59.2%</span> · Model proj: <b>6.6</b></div>
+  <div class="proj-score">Model projects 6.6 Assists · Line: 4.5 <span style="color:var(--muted);font-size:0.85em;">59.2%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 4.5 → Model <b style="color:var(--blue)">6.6</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1145,7 +1104,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Karl-Anthony Towns</div>
-      <div class="card-game">New York Knicks vs Cleveland Cavaliers · Blocks Over</div>
+      <div class="card-game short-team">New York Knicks vs Cleveland Cavaliers · Blocks Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1153,7 +1112,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 0.5 <span style="color:var(--muted);font-size:0.85em;">65.4%</span> · Model proj: <b>1.57</b></div>
+  <div class="proj-score">Model projects 1.57 Blocks · Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">65.4%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.57</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1188,7 +1147,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">OG Anunoby</div>
-      <div class="card-game">New York Knicks vs Cleveland Cavaliers · Steals Over</div>
+      <div class="card-game short-team">New York Knicks vs Cleveland Cavaliers · Steals Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1196,7 +1155,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 1.5 <span style="color:var(--muted);font-size:0.85em;">44.1%</span> · Model proj: <b>1.97</b></div>
+  <div class="proj-score">Model projects 1.97 Steals · Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">44.1%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.97</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1231,7 +1190,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Jarrett Allen</div>
-      <div class="card-game">Cleveland Cavaliers vs New York Knicks · Blocks Over</div>
+      <div class="card-game short-team">Cleveland Cavaliers vs New York Knicks · Blocks Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1239,7 +1198,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 1.5 <span style="color:var(--muted);font-size:0.85em;">40.8%</span> · Model proj: <b>1.9</b></div>
+  <div class="proj-score">Model projects 1.9 Blocks · Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">40.8%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.9</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1274,7 +1233,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Dennis Schroder</div>
-      <div class="card-game">Cleveland Cavaliers vs New York Knicks · Assists Over</div>
+      <div class="card-game short-team">Cleveland Cavaliers vs New York Knicks · Assists Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1282,7 +1241,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 2.5 <span style="color:var(--muted);font-size:0.85em;">50.2%</span> · Model proj: <b>4.5</b></div>
+  <div class="proj-score">Model projects 4.5 Assists · Line: 2.5 <span style="color:var(--muted);font-size:0.85em;">50.2%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 2.5 → Model <b style="color:var(--blue)">4.5</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1337,7 +1296,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">San Francisco Giants</div>
-      <div class="card-game">San Francisco Giants @ Arizona Diamondbacks · ML</div>
+      <div class="card-game short-game">San Francisco Giants @ Arizona Diamondbacks · ML</div>
       <div class="card-time live-status"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1383,7 +1342,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Los Angeles Dodgers</div>
-      <div class="card-game">Los Angeles Dodgers @ San Diego Padres · ML</div>
+      <div class="card-game short-game">Los Angeles Dodgers @ San Diego Padres · ML</div>
       <div class="card-time live-status"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1429,7 +1388,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Colorado Rockies +1.5</div>
-      <div class="card-game">Texas Rangers @ Colorado Rockies · Spread</div>
+      <div class="card-game short-game">Texas Rangers @ Colorado Rockies · Spread</div>
       <div class="card-time live-status"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1475,7 +1434,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Philadelphia Phillies</div>
-      <div class="card-game">Cincinnati Reds @ Philadelphia Phillies · ML</div>
+      <div class="card-game short-game">Cincinnati Reds @ Philadelphia Phillies · ML</div>
       <div class="card-time live-status"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1521,7 +1480,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Under 9.5</div>
-      <div class="card-game">Toronto Blue Jays @ New York Yankees · Total</div>
+      <div class="card-game short-game">Toronto Blue Jays @ New York Yankees · Total</div>
       <div class="card-time live-status"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1569,7 +1528,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Drake Baldwin</div>
-      <div class="card-game">Atlanta Braves vs Miami Marlins · Total Bases Over</div>
+      <div class="card-game short-team">Atlanta Braves vs Miami Marlins · Total Bases Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1577,7 +1536,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 1.5 <span style="color:var(--muted);font-size:0.85em;">49.5%</span> · Model proj: <b>2.44</b></div>
+  <div class="proj-score">Model projects 2.44 Total Bases · Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">49.5%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">2.44</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1612,7 +1571,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Ozzie Albies</div>
-      <div class="card-game">Atlanta Braves vs Miami Marlins · Total Bases Over</div>
+      <div class="card-game short-team">Atlanta Braves vs Miami Marlins · Total Bases Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1620,7 +1579,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 1.5 <span style="color:var(--muted);font-size:0.85em;">48.8%</span> · Model proj: <b>1.99</b></div>
+  <div class="proj-score">Model projects 1.99 Total Bases · Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">48.8%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.99</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1655,7 +1614,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Michael Harris II</div>
-      <div class="card-game">Atlanta Braves vs Miami Marlins · Hits Over</div>
+      <div class="card-game short-team">Atlanta Braves vs Miami Marlins · Hits Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1663,7 +1622,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 0.5 <span style="color:var(--muted);font-size:0.85em;">70.0%</span> · Model proj: <b>1.12</b></div>
+  <div class="proj-score">Model projects 1.12 Hits · Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">70.0%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.12</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1698,7 +1657,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Michael Harris II</div>
-      <div class="card-game">Atlanta Braves vs Miami Marlins · Total Bases Over</div>
+      <div class="card-game short-team">Atlanta Braves vs Miami Marlins · Total Bases Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1706,7 +1665,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 1.5 <span style="color:var(--muted);font-size:0.85em;">44.4%</span> · Model proj: <b>1.86</b></div>
+  <div class="proj-score">Model projects 1.86 Total Bases · Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">44.4%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.86</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1741,7 +1700,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Matt Olson</div>
-      <div class="card-game">Atlanta Braves vs Miami Marlins · Hits Over</div>
+      <div class="card-game short-team">Atlanta Braves vs Miami Marlins · Hits Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1749,7 +1708,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 0.5 <span style="color:var(--muted);font-size:0.85em;">68.2%</span> · Model proj: <b>1.21</b></div>
+  <div class="proj-score">Model projects 1.21 Hits · Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">68.2%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.21</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -1784,7 +1743,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Matt Olson</div>
-      <div class="card-game">Atlanta Braves vs Miami Marlins · Total Bases Over</div>
+      <div class="card-game short-team">Atlanta Braves vs Miami Marlins · Total Bases Over</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -1792,7 +1751,7 @@
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score">Over 1.5 <span style="color:var(--muted);font-size:0.85em;">44.4%</span> · Model proj: <b>2.56</b></div>
+  <div class="proj-score">Model projects 2.56 Total Bases · Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">44.4%</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">2.56</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
@@ -3047,6 +3006,97 @@ function toggleCtx(el) {
   body.classList.toggle('open');
   if (arrow) arrow.textContent = body.classList.contains('open') ? '▾' : '›';
 }
+</script>
+
+<script>
+// ── Team name shortener ───────────────────────────────────────────────────
+(function () {
+  var SHORT = {
+    // NBA
+    'Atlanta Hawks':'Hawks','Boston Celtics':'Celtics','Brooklyn Nets':'Nets',
+    'Charlotte Hornets':'Hornets','Chicago Bulls':'Bulls','Cleveland Cavaliers':'Cavs',
+    'Dallas Mavericks':'Mavs','Denver Nuggets':'Nuggets','Detroit Pistons':'Pistons',
+    'Golden State Warriors':'Warriors','Houston Rockets':'Rockets','Indiana Pacers':'Pacers',
+    'Los Angeles Clippers':'Clippers','Los Angeles Lakers':'Lakers','Memphis Grizzlies':'Grizzlies',
+    'Miami Heat':'Heat','Milwaukee Bucks':'Bucks','Minnesota Timberwolves':'T-Wolves',
+    'New Orleans Pelicans':'Pelicans','New York Knicks':'Knicks','Oklahoma City Thunder':'Thunder',
+    'Orlando Magic':'Magic','Philadelphia 76ers':'76ers','Phoenix Suns':'Suns',
+    'Portland Trail Blazers':'Blazers','Sacramento Kings':'Kings','San Antonio Spurs':'Spurs',
+    'Toronto Raptors':'Raptors','Utah Jazz':'Jazz','Washington Wizards':'Wizards',
+    // MLB
+    'Arizona Diamondbacks':'D-Backs','Atlanta Braves':'Braves','Baltimore Orioles':'Orioles',
+    'Boston Red Sox':'Red Sox','Chicago Cubs':'Cubs','Chicago White Sox':'White Sox',
+    'Cincinnati Reds':'Reds','Cleveland Guardians':'Guardians','Colorado Rockies':'Rockies',
+    'Detroit Tigers':'Tigers','Houston Astros':'Astros','Kansas City Royals':'Royals',
+    'Los Angeles Angels':'Angels','Los Angeles Dodgers':'Dodgers','Miami Marlins':'Marlins',
+    'Milwaukee Brewers':'Brewers','Minnesota Twins':'Twins','New York Mets':'Mets',
+    'New York Yankees':'Yankees','Oakland Athletics':"A's",'Philadelphia Phillies':'Phillies',
+    'Pittsburgh Pirates':'Pirates','San Diego Padres':'Padres','San Francisco Giants':'Giants',
+    'Seattle Mariners':'Mariners','St. Louis Cardinals':'Cardinals','Tampa Bay Rays':'Rays',
+    'Texas Rangers':'Rangers','Toronto Blue Jays':'Blue Jays','Washington Nationals':'Nats',
+    // NHL
+    'Anaheim Ducks':'Ducks','Boston Bruins':'Bruins','Buffalo Sabres':'Sabres',
+    'Calgary Flames':'Flames','Carolina Hurricanes':'Canes','Chicago Blackhawks':'Blackhawks',
+    'Colorado Avalanche':'Avs','Columbus Blue Jackets':'Jackets','Dallas Stars':'Stars',
+    'Detroit Red Wings':'Wings','Edmonton Oilers':'Oilers','Florida Panthers':'Panthers',
+    'Los Angeles Kings':'Kings','Minnesota Wild':'Wild','Montreal Canadiens':'Canadiens',
+    'Nashville Predators':'Preds','New Jersey Devils':'Devils','New York Islanders':'Islanders',
+    'New York Rangers':'Rangers','Ottawa Senators':'Senators','Philadelphia Flyers':'Flyers',
+    'Pittsburgh Penguins':'Pens','San Jose Sharks':'Sharks','Seattle Kraken':'Kraken',
+    'St. Louis Blues':'Blues','Tampa Bay Lightning':'Lightning','Toronto Maple Leafs':'Leafs',
+    'Utah Hockey Club':'Utah HC','Vancouver Canucks':'Canucks','Vegas Golden Knights':'VGK',
+    'Washington Capitals':'Caps','Winnipeg Jets':'Jets',
+    // WNBA
+    'Atlanta Dream':'Dream','Chicago Sky':'Sky','Connecticut Sun':'Sun',
+    'Dallas Wings':'Wings','Indiana Fever':'Fever','Las Vegas Aces':'Aces',
+    'Los Angeles Sparks':'Sparks','Minnesota Lynx':'Lynx','New York Liberty':'Liberty',
+    'Phoenix Mercury':'Mercury','Seattle Storm':'Storm','Washington Mystics':'Mystics',
+  };
+
+  function shorten(name) {
+    return SHORT[name.trim()] || name.trim();
+  }
+
+  function shortenGame(text) {
+    // "Team A @ Team B · extra" or "Team A @ Team B"
+    return text.replace(/^([^@·]+?)\s*@\s*([^·]+?)((\s*·.*)?)$/, function(_, a, b, rest) {
+      return shorten(a) + ' @ ' + shorten(b) + rest;
+    });
+  }
+
+  function shortenTeam(text) {
+    // "Team A vs Team B · prop" — just shorten each token before " vs "
+    return text.replace(/^([^·]+?)\s+vs\s+([^·]+?)((\s*·.*)?)$/, function(_, a, b, rest) {
+      return shorten(a) + ' vs ' + shorten(b) + rest;
+    });
+  }
+
+  // Apply to all short-game elements
+  document.querySelectorAll('.short-game').forEach(function(el) {
+    el.textContent = shortenGame(el.textContent);
+  });
+  document.querySelectorAll('.short-team').forEach(function(el) {
+    el.textContent = shortenTeam(el.textContent);
+  });
+
+  // ── LIVE badge: show when any card has an active live-status ─────────
+  // Called by ESPN polling JS (window.onLiveDetected) or via MutationObserver
+  function checkLive() {
+    var hasLive = false;
+    document.querySelectorAll('.live-status').forEach(function(el) {
+      if (el.textContent.trim().length > 0) hasLive = true;
+    });
+    var badge = document.getElementById('hdr-live');
+    if (badge) badge.style.display = hasLive ? '' : 'none';
+  }
+  window.checkLiveBadge = checkLive;
+
+  // Watch for live-status mutations
+  var obs = new MutationObserver(function() { checkLive(); });
+  document.querySelectorAll('.live-status').forEach(function(el) {
+    obs.observe(el, { childList: true, characterData: true, subtree: true });
+  });
+})();
 </script>
 
 <script>

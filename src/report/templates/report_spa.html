@@ -17,7 +17,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">{{ bet.pick }}</div>
-      <div class="card-game">{{ bet.game }}{% if bet.bet_type == "Moneyline" %} · ML{% elif bet.bet_type == "Total" %} · Total{% elif bet.bet_type == "Spread" %} · Spread{% endif %}</div>
+      <div class="card-game short-game">{{ bet.game }}{% if bet.bet_type == "Moneyline" %} · ML{% elif bet.bet_type == "Total" %} · Total{% elif bet.bet_type == "Spread" %} · Spread{% endif %}</div>
       <div class="card-time live-status"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -25,7 +25,9 @@
       <span class="badge badge-conf-{{ bet.confidence }}">{{ bet.confidence }}</span>
     </div>
   </div>
-  {% if bet.proj_score %}<div class="proj-score">{{ bet.proj_score }}</div>{% endif %}
+  {% if bet.proj_score %}
+  <div class="proj-score">Model projected score: {{ bet.proj_score }}</div>
+  {% endif %}
   <div class="edge-row">
     <span class="mkt-mdl">Mkt {{ bet.market_prob_pct }}% → Model <b style="color:var(--blue)">{{ bet.model_prob_pct }}%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:{{ [bet.edge_pct * 6, 95] | min | int }}%;{% if bet.edge_pct < 7 %}background:var(--yellow);{% endif %}"></div></div>
@@ -63,7 +65,7 @@
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">{{ prop.player }}</div>
-      <div class="card-game">{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} · {{ prop.prop_type }}</div>
+      <div class="card-game short-team">{{ prop.team }}{% if prop.opponent %} vs {{ prop.opponent }}{% endif %} · {{ prop.prop_type }}</div>
       <div class="card-time live-status prop-live-badge"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
@@ -71,7 +73,7 @@
       <span class="badge badge-conf-{{ prop.confidence }}">{{ prop.confidence }}</span>
     </div>
   </div>
-  <div class="proj-score">Over {{ prop.market_line }} <span style="color:var(--muted);font-size:0.85em;">{{ prop.odds_display }}</span> · Model proj: <b>{{ prop.model_line }}</b></div>
+  <div class="proj-score">Model projects {{ prop.model_line }} {{ prop.prop_type.replace(' Over', '').replace('(1+)', '').strip() }} · Line: {{ prop.market_line }} <span style="color:var(--muted);font-size:0.85em;">{{ prop.odds_display }}</span></div>
   <div class="edge-row">
     <span class="mkt-mdl">Line {{ prop.market_line }} → Model <b style="color:var(--blue)">{{ prop.model_line }}</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:{{ [prop.edge_pct * 6, 95] | min | int }}%;{% if prop.edge_pct < 7 %}background:var(--yellow);{% endif %}"></div></div>
@@ -177,12 +179,12 @@
 
     /* ── App header (stats bar) ──────────────────────────────────────────── */
     .app-header {
-      height: var(--header-h);
+      min-height: var(--header-h);
       background: var(--card);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 0 12px;
+      padding: 6px 12px;
       gap: 8px;
       flex-shrink: 0;
       overflow: hidden;
@@ -211,7 +213,9 @@
     .stat-chip .sc-val { font-size: 0.82rem; font-weight: 800; line-height: 1.2; }
     .stat-chip .sc-lbl { font-size: 0.52rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }
     .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .header-date  { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+    .header-date-block { text-align: right; line-height: 1.3; }
+    .header-date-day  { font-size: 0.75rem; font-weight: 700; }
+    .header-date-date { font-size: 0.62rem; color: var(--muted); }
     .header-live-badge {
       background: var(--green);
       color: #000;
@@ -527,30 +531,33 @@
       border-radius: 12px;
       padding: 12px 14px;
       margin-bottom: 10px;
+    }
+    .alloc-card-top {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: flex-start;
     }
     .alloc-rank {
       flex-shrink: 0;
-      width: 28px; height: 28px;
+      width: 26px; height: 26px;
       background: var(--blue);
       color: #fff;
-      border-radius: 8px;
+      border-radius: 7px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.85rem; font-weight: 800;
-      margin-top: 2px;
+      font-size: 0.82rem; font-weight: 800;
+      margin-top: 1px;
     }
-    .alloc-body { flex: 1; min-width: 0; }
-    .alloc-top  { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .alloc-main { flex: 1; min-width: 0; }
+    .alloc-top  { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
     .alloc-edge { font-size: 0.75rem; font-weight: 700; margin-left: auto; flex-shrink: 0; }
-    .alloc-pick { font-weight: 700; font-size: 0.97rem; line-height: 1.3; }
+    .alloc-pick { font-weight: 700; font-size: 0.95rem; line-height: 1.3; }
     .alloc-game { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
-    .alloc-live { font-size: 0.75rem; min-height: 1em; margin-top: 3px; }
+    .alloc-live { min-height: 1em; margin-top: 3px; }
     .alloc-time { font-size: 0.72rem; color: var(--teal); font-weight: 600; margin-top: 2px; }
+    /* Action chips span full card width below the flex row */
     .alloc-action {
       display: flex; flex-wrap: wrap; gap: 6px;
-      margin-top: 8px; padding-top: 8px;
+      margin-top: 10px; padding-top: 8px;
       border-top: 1px solid var(--border);
     }
     .alloc-chip {
@@ -562,11 +569,9 @@
       white-space: nowrap;
     }
     .alloc-chip.win { background: rgba(34,197,94,0.1); color: var(--green); border-color: rgba(34,197,94,0.25); }
-    .alloc-expand-btn { background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); cursor: pointer; font-size: 0.7rem; padding: 1px 5px; line-height: 1.4; flex-shrink: 0; transition: transform 0.15s; }
-    .alloc-main-row.adr-open .alloc-expand-btn { transform: rotate(90deg); }
     .alloc-detail-row { display: none; }
-    .alloc-detail-row.adr-open { display: block; }
-    .alloc-detail-box { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 0; font-size: 0.82rem; }
+    .alloc-detail-row.open { display: block; }
+    .alloc-detail-box { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 8px; font-size: 0.82rem; }
 
     /* ── Misc ────────────────────────────────────────────────────────────── */
     .empty-state { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 0.9rem; }
@@ -609,8 +614,16 @@
     {% endif %}
   </div>
   <div class="header-right">
-    <span class="header-date">{{ report.run_date }}</span>
-    <span class="header-live-badge" id="hdr-live">LIVE</span>
+    <div class="header-date-block">
+      {%- set rd = report.run_date -%}
+      {%- if ',' in rd -%}
+        <div class="header-date-day">{{ rd.split(',')[0] }}</div>
+        <div class="header-date-date">{{ rd.split(',')[1].strip() }}</div>
+      {%- else -%}
+        <div class="header-date-day">{{ rd }}</div>
+      {%- endif -%}
+    </div>
+    <span class="header-live-badge" id="hdr-live" style="display:none;">LIVE</span>
   </div>
 </div>
 
@@ -659,44 +672,37 @@
          data-market-prob-pct="{{ row.market_prob_pct | default(50) }}"
          data-commence-time="{{ row.commence_time }}"
          {% if row.bet_type == "Parlay" %}data-legs="{{ row.legs_json | e }}" data-cost="{{ row.cost }}" data-profit="{{ row.profit_if_win }}" data-confidence="{{ row.conf_label }}"{% endif %}>
-      <div class="alloc-rank">{{ row.rank }}</div>
-      <div class="alloc-body">
-        <div class="alloc-top">
-          {% if row.sport == 'NBA' %}<span class="badge badge-nba">NBA</span>
-          {% elif row.sport == 'MLB' %}<span class="badge badge-mlb">MLB</span>
-          {% elif row.sport == 'NFL' %}<span class="badge badge-nfl">NFL</span>
-          {% elif row.sport == 'NHL' %}<span class="badge badge-nhl">NHL</span>
-          {% elif row.sport == 'IPL' %}<span class="badge badge-ipl">IPL</span>
-          {% elif row.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
-          {% elif row.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
-          {% elif row.bet_type == 'Parlay' %}<span class="badge badge-parlay">PARLAY</span>
-          {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ row.sport }}</span>
-          {% endif %}
-          <span class="alloc-edge" style="color:{% if row.edge_pct >= 7 %}var(--green){% else %}var(--yellow){% endif %};">+{{ row.edge_pct }}%</span>
-          {% if row.locked %}<span style="font-size:0.65rem;color:var(--muted);">🔒</span>{% endif %}
-        </div>
-        <div class="alloc-pick">{{ row.label }}</div>
-        {% if row.game and row.bet_type != "Parlay" %}<div class="alloc-game">{{ row.game }}</div>{% endif %}
-        <div class="live-status alloc-live" style="font-size:0.75rem;min-height:1em;margin-top:3px;"></div>
-        {% if not row.locked %}<div class="row-time-local alloc-time"></div>{% endif %}
-        <div class="alloc-action">
-          <span class="alloc-chip">{{ row.contracts }} contract{{ 's' if row.contracts != 1 else '' }}</span>
-          <span class="alloc-chip">@ {{ row.contract_price_cents }}¢</span>
-          <span class="alloc-chip">Cost ${{ "%.2f"|format(row.cost) }}</span>
-          <span class="alloc-chip win">+${{ "%.2f"|format(row.profit_if_win) }} if win</span>
-        </div>
-        {# Expandable Robinhood detail #}
-        <div class="alloc-detail-row" id="alloc-detail-{{ row.rank | string | lower }}">
-          <div class="alloc-detail-box" style="margin-top:8px;">
-            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:6px;">Robinhood Action</div>
-            <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">{% if row.bet_type != "Parlay" %}-${{ "%.2f"|format(row.loss_if_lose) }}{% else %}—{% endif %}</span></div>
-            <div class="action-row"><span class="label">Expected value</span>
-              <span class="value" style="color:{% if row.expected_value > 0 %}var(--green){% else %}var(--red){% endif %}">
-                {% if row.bet_type != "Parlay" %}{% if row.expected_value > 0 %}+{% endif %}${{ "%.2f"|format(row.expected_value) }}{% else %}—{% endif %}
-              </span>
-            </div>
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">{{ row.rank }}</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            {% if row.sport == 'NBA' %}<span class="badge badge-nba">NBA</span>
+            {% elif row.sport == 'MLB' %}<span class="badge badge-mlb">MLB</span>
+            {% elif row.sport == 'NFL' %}<span class="badge badge-nfl">NFL</span>
+            {% elif row.sport == 'NHL' %}<span class="badge badge-nhl">NHL</span>
+            {% elif row.sport == 'IPL' %}<span class="badge badge-ipl">IPL</span>
+            {% elif row.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
+            {% elif row.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
+            {% elif row.bet_type == 'Parlay' %}<span class="badge badge-parlay">PARLAY</span>
+            {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ row.sport }}</span>
+            {% endif %}
+            <span class="alloc-edge" style="color:{% if row.edge_pct >= 7 %}var(--green){% else %}var(--yellow){% endif %};">+{{ row.edge_pct }}%</span>
+            {% if row.locked %}<span style="font-size:0.65rem;color:var(--muted);">🔒</span>{% endif %}
           </div>
+          <div class="alloc-pick">{{ row.label }}</div>
+          {% if row.game and row.bet_type != "Parlay" %}<div class="alloc-game short-game">{{ row.game }}</div>{% endif %}
+          <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+          {% if not row.locked %}<div class="row-time-local alloc-time"></div>
+          {% elif row.game_time %}<div class="alloc-time">{{ row.game_time }}</div>{% endif %}
         </div>
+      </div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">{{ row.contracts }} contract{{ 's' if row.contracts != 1 else '' }}</span>
+        <span class="alloc-chip">@ {{ row.contract_price_cents }}¢</span>
+        <span class="alloc-chip">Cost ${{ "%.2f"|format(row.cost) }}</span>
+        <span class="alloc-chip win">+${{ "%.2f"|format(row.profit_if_win) }} if win</span>
       </div>
     </div>
     {% endfor %}
@@ -707,37 +713,41 @@
     </div>
     {% endif %}
 
-    {# ── YESTERDAY'S RESULTS (SECOND) ── #}
+    {# ── YESTERDAY'S RESULTS (SECOND, COLLAPSIBLE) ── #}
     {% if report.recap and report.recap.has_recap %}
-    <div class="sec-label" style="margin-top:18px;">
-      Yesterday — {{ report.recap.date }}
-      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">{{ report.recap.record_str }}</span>
-      <span style="font-weight:700;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;color:{% if report.recap.total_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};">{{ report.recap.pnl_sign }}${{ "%.2f"|format(report.recap.total_pnl|abs) }}</span>
-    </div>
-    {% for item in report.recap.results %}
-    <div class="result-card">
-      <div class="result-icon">{% if item.result == 'WON' %}✅{% elif item.result == 'LOST' %}❌{% else %}➡{% endif %}</div>
-      <div class="result-body">
-        <div class="result-pick">
-          {% if item.sport == 'NBA' %}<span class="badge badge-nba">NBA</span>
-          {% elif item.sport == 'MLB' %}<span class="badge badge-mlb">MLB</span>
-          {% elif item.sport == 'NFL' %}<span class="badge badge-nfl">NFL</span>
-          {% elif item.sport == 'NHL' %}<span class="badge badge-nhl">NHL</span>
-          {% elif item.sport == 'IPL' %}<span class="badge badge-ipl">IPL</span>
-          {% elif item.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
-          {% elif item.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
-          {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ item.sport }}</span>
-          {% endif %}
-          &nbsp;{{ item.pick }}
+    <details style="margin-top:18px;" open>
+      <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:0;">
+        <span style="flex:1;">Yesterday — {{ report.recap.date }}
+          <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">{{ report.recap.record_str }}</span>
+          <span style="font-weight:700;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;color:{% if report.recap.total_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};">{{ report.recap.pnl_sign }}${{ "%.2f"|format(report.recap.total_pnl|abs) }}</span>
+        </span>
+        <span style="font-size:0.7rem;color:var(--muted);margin-left:8px;" class="recap-chevron">▾</span>
+      </summary>
+      {% for item in report.recap.results %}
+      <div class="result-card">
+        <div class="result-icon">{% if item.result == 'WON' %}✅{% elif item.result == 'LOST' %}❌{% else %}➡{% endif %}</div>
+        <div class="result-body">
+          <div class="result-pick">
+            {% if item.sport == 'NBA' %}<span class="badge badge-nba">NBA</span>
+            {% elif item.sport == 'MLB' %}<span class="badge badge-mlb">MLB</span>
+            {% elif item.sport == 'NFL' %}<span class="badge badge-nfl">NFL</span>
+            {% elif item.sport == 'NHL' %}<span class="badge badge-nhl">NHL</span>
+            {% elif item.sport == 'IPL' %}<span class="badge badge-ipl">IPL</span>
+            {% elif item.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
+            {% elif item.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
+            {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ item.sport }}</span>
+            {% endif %}
+            &nbsp;{{ item.pick }}
+          </div>
+          <div class="result-game short-game">{{ item.game }}{% if item.edge_pct %} &middot; +{{ item.edge_pct }}% edge{% endif %}</div>
+          {% if item.narrative %}<div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">{{ item.narrative }}</div>{% endif %}
         </div>
-        <div class="result-game">{{ item.game }}{% if item.edge_pct %} &middot; +{{ item.edge_pct }}% edge{% endif %}</div>
-        {% if item.narrative %}<div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">{{ item.narrative }}</div>{% endif %}
+        <div class="result-pnl {% if item.actual_pnl >= 0 %}green{% else %}red{% endif %}">
+          {% if item.actual_pnl >= 0 %}+{% endif %}${{ "%.2f"|format(item.actual_pnl|abs) }}
+        </div>
       </div>
-      <div class="result-pnl {% if item.actual_pnl >= 0 %}green{% else %}red{% endif %}">
-        {% if item.actual_pnl >= 0 %}+{% endif %}${{ "%.2f"|format(item.actual_pnl|abs) }}
-      </div>
-    </div>
-    {% endfor %}
+      {% endfor %}
+    </details>
     {% endif %}
 
     <div style="height:16px;"></div>
@@ -1383,6 +1393,97 @@ function toggleCtx(el) {
   body.classList.toggle('open');
   if (arrow) arrow.textContent = body.classList.contains('open') ? '▾' : '›';
 }
+</script>
+
+<script>
+// ── Team name shortener ───────────────────────────────────────────────────
+(function () {
+  var SHORT = {
+    // NBA
+    'Atlanta Hawks':'Hawks','Boston Celtics':'Celtics','Brooklyn Nets':'Nets',
+    'Charlotte Hornets':'Hornets','Chicago Bulls':'Bulls','Cleveland Cavaliers':'Cavs',
+    'Dallas Mavericks':'Mavs','Denver Nuggets':'Nuggets','Detroit Pistons':'Pistons',
+    'Golden State Warriors':'Warriors','Houston Rockets':'Rockets','Indiana Pacers':'Pacers',
+    'Los Angeles Clippers':'Clippers','Los Angeles Lakers':'Lakers','Memphis Grizzlies':'Grizzlies',
+    'Miami Heat':'Heat','Milwaukee Bucks':'Bucks','Minnesota Timberwolves':'T-Wolves',
+    'New Orleans Pelicans':'Pelicans','New York Knicks':'Knicks','Oklahoma City Thunder':'Thunder',
+    'Orlando Magic':'Magic','Philadelphia 76ers':'76ers','Phoenix Suns':'Suns',
+    'Portland Trail Blazers':'Blazers','Sacramento Kings':'Kings','San Antonio Spurs':'Spurs',
+    'Toronto Raptors':'Raptors','Utah Jazz':'Jazz','Washington Wizards':'Wizards',
+    // MLB
+    'Arizona Diamondbacks':'D-Backs','Atlanta Braves':'Braves','Baltimore Orioles':'Orioles',
+    'Boston Red Sox':'Red Sox','Chicago Cubs':'Cubs','Chicago White Sox':'White Sox',
+    'Cincinnati Reds':'Reds','Cleveland Guardians':'Guardians','Colorado Rockies':'Rockies',
+    'Detroit Tigers':'Tigers','Houston Astros':'Astros','Kansas City Royals':'Royals',
+    'Los Angeles Angels':'Angels','Los Angeles Dodgers':'Dodgers','Miami Marlins':'Marlins',
+    'Milwaukee Brewers':'Brewers','Minnesota Twins':'Twins','New York Mets':'Mets',
+    'New York Yankees':'Yankees','Oakland Athletics':"A's",'Philadelphia Phillies':'Phillies',
+    'Pittsburgh Pirates':'Pirates','San Diego Padres':'Padres','San Francisco Giants':'Giants',
+    'Seattle Mariners':'Mariners','St. Louis Cardinals':'Cardinals','Tampa Bay Rays':'Rays',
+    'Texas Rangers':'Rangers','Toronto Blue Jays':'Blue Jays','Washington Nationals':'Nats',
+    // NHL
+    'Anaheim Ducks':'Ducks','Boston Bruins':'Bruins','Buffalo Sabres':'Sabres',
+    'Calgary Flames':'Flames','Carolina Hurricanes':'Canes','Chicago Blackhawks':'Blackhawks',
+    'Colorado Avalanche':'Avs','Columbus Blue Jackets':'Jackets','Dallas Stars':'Stars',
+    'Detroit Red Wings':'Wings','Edmonton Oilers':'Oilers','Florida Panthers':'Panthers',
+    'Los Angeles Kings':'Kings','Minnesota Wild':'Wild','Montreal Canadiens':'Canadiens',
+    'Nashville Predators':'Preds','New Jersey Devils':'Devils','New York Islanders':'Islanders',
+    'New York Rangers':'Rangers','Ottawa Senators':'Senators','Philadelphia Flyers':'Flyers',
+    'Pittsburgh Penguins':'Pens','San Jose Sharks':'Sharks','Seattle Kraken':'Kraken',
+    'St. Louis Blues':'Blues','Tampa Bay Lightning':'Lightning','Toronto Maple Leafs':'Leafs',
+    'Utah Hockey Club':'Utah HC','Vancouver Canucks':'Canucks','Vegas Golden Knights':'VGK',
+    'Washington Capitals':'Caps','Winnipeg Jets':'Jets',
+    // WNBA
+    'Atlanta Dream':'Dream','Chicago Sky':'Sky','Connecticut Sun':'Sun',
+    'Dallas Wings':'Wings','Indiana Fever':'Fever','Las Vegas Aces':'Aces',
+    'Los Angeles Sparks':'Sparks','Minnesota Lynx':'Lynx','New York Liberty':'Liberty',
+    'Phoenix Mercury':'Mercury','Seattle Storm':'Storm','Washington Mystics':'Mystics',
+  };
+
+  function shorten(name) {
+    return SHORT[name.trim()] || name.trim();
+  }
+
+  function shortenGame(text) {
+    // "Team A @ Team B · extra" or "Team A @ Team B"
+    return text.replace(/^([^@·]+?)\s*@\s*([^·]+?)((\s*·.*)?)$/, function(_, a, b, rest) {
+      return shorten(a) + ' @ ' + shorten(b) + rest;
+    });
+  }
+
+  function shortenTeam(text) {
+    // "Team A vs Team B · prop" — just shorten each token before " vs "
+    return text.replace(/^([^·]+?)\s+vs\s+([^·]+?)((\s*·.*)?)$/, function(_, a, b, rest) {
+      return shorten(a) + ' vs ' + shorten(b) + rest;
+    });
+  }
+
+  // Apply to all short-game elements
+  document.querySelectorAll('.short-game').forEach(function(el) {
+    el.textContent = shortenGame(el.textContent);
+  });
+  document.querySelectorAll('.short-team').forEach(function(el) {
+    el.textContent = shortenTeam(el.textContent);
+  });
+
+  // ── LIVE badge: show when any card has an active live-status ─────────
+  // Called by ESPN polling JS (window.onLiveDetected) or via MutationObserver
+  function checkLive() {
+    var hasLive = false;
+    document.querySelectorAll('.live-status').forEach(function(el) {
+      if (el.textContent.trim().length > 0) hasLive = true;
+    });
+    var badge = document.getElementById('hdr-live');
+    if (badge) badge.style.display = hasLive ? '' : 'none';
+  }
+  window.checkLiveBadge = checkLive;
+
+  // Watch for live-status mutations
+  var obs = new MutationObserver(function() { checkLive(); });
+  document.querySelectorAll('.live-status').forEach(function(el) {
+    obs.observe(el, { childList: true, characterData: true, subtree: true });
+  });
+})();
 </script>
 
 <script>
