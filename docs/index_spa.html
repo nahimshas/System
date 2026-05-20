@@ -3129,7 +3129,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 08:45 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 09:05 PM PDT</div>
         </div>
         
       </div>
@@ -3685,65 +3685,90 @@ function toggleCtx(el) {
       return '<span style="display:inline-flex;flex-direction:column;align-items:center;margin-left:4px;">' + svgS + bsoS + '</span>';
     }
 
-    // ── Full widget (bet cards + alloc cards) ──────────────────────────────
+    // ── Full widget: ESPN-scoreboard style ────────────────────────────────
     var balls   = Math.min(3, situation.balls   || 0);
     var strikes = Math.min(2, situation.strikes || 0);
     var outs    = Math.min(2, situation.outs    || 0);
 
-    // Bigger SVG: 56×40, base half-size 9
-    var svgL =
-      '<svg width="56" height="40" viewBox="0 0 56 40" style="display:block;">' +
-      '<line x1="28" y1="10" x2="46" y2="28" stroke="#4b5563" stroke-width="1.2"/>' +
-      '<line x1="10" y1="28" x2="28" y2="10" stroke="#4b5563" stroke-width="1.2"/>' +
-      mkBase(28, 10, c2, 9) +  // 2nd
-      mkBase(46, 28, c1, 9) +  // 1st
-      mkBase(10, 28, c3, 9) +  // 3rd
+    // Small base-runner SVG for the centre column
+    var sc1 = situation.onFirst  ? "#eab308" : "#374151";
+    var sc2 = situation.onSecond ? "#eab308" : "#374151";
+    var sc3 = situation.onThird  ? "#eab308" : "#374151";
+    var smallSvg =
+      '<svg width="32" height="24" viewBox="0 0 32 24" style="display:block;margin:0 auto;">' +
+      '<line x1="16" y1="7"  x2="26" y2="17" stroke="#4b5563" stroke-width="0.9"/>' +
+      '<line x1="6"  y1="17" x2="16" y2="7"  stroke="#4b5563" stroke-width="0.9"/>' +
+      mkBase(16, 7,  sc2, 6) +
+      mkBase(26, 17, sc1, 6) +
+      mkBase(6,  17, sc3, 6) +
       '</svg>';
 
-    var bsoL =
-      '<div style="font-size:0.7rem;color:#94a3b8;margin-top:5px;white-space:nowrap;">' +
-      'B&nbsp;' + mkDots(balls, 3, "#22c55e", 8) +
+    // B/S/O dots
+    var bso =
+      '<div style="font-size:0.68rem;color:#94a3b8;margin-top:4px;white-space:nowrap;">' +
+      'B&nbsp;' + mkDots(balls,   3, "#22c55e", 8) +
       '&nbsp;S&nbsp;' + mkDots(strikes, 2, "#eab308", 8) +
-      '&nbsp;O&nbsp;' + mkDots(outs, 2, "#ef4444", 8) +
+      '&nbsp;O&nbsp;' + mkDots(outs,    2, "#ef4444", 8) +
       '</div>';
 
-    // Mini scoreboard to the right
-    var scoreboard = '';
-    if (ev) {
-      scoreboard =
-        '<div style="display:flex;flex-direction:column;justify-content:center;margin-left:14px;gap:5px;">' +
-          '<div style="white-space:nowrap;line-height:1;">' +
-            '<span style="color:#94a3b8;font-size:0.68rem;display:inline-block;min-width:30px;">' + (ev.awayAbbr || '') + '</span>' +
-            '<span style="font-weight:800;font-size:1.05rem;color:#e2e8f0;">' + (ev.awayScore !== undefined ? ev.awayScore : '–') + '</span>' +
-          '</div>' +
-          '<div style="white-space:nowrap;line-height:1;">' +
-            '<span style="color:#94a3b8;font-size:0.68rem;display:inline-block;min-width:30px;">' + (ev.homeAbbr || '') + '</span>' +
-            '<span style="font-weight:800;font-size:1.05rem;color:#e2e8f0;">' + (ev.homeScore !== undefined ? ev.homeScore : '–') + '</span>' +
-          '</div>' +
-        '</div>';
-    }
-
-    // Pitcher info (ESPN situation.pitcher + situation.pitchCount)
+    // Pitcher info
     var pitcherLine = '';
     var pitcher = situation.pitcher || null;
     if (pitcher && (pitcher.shortName || pitcher.displayName)) {
-      var pName = pitcher.shortName || pitcher.displayName;
-      // Use last name only for compactness
+      var pName    = pitcher.shortName || pitcher.displayName;
       var lastName = pName.split(' ').pop();
-      var pitches = (situation.pitchCount || {}).pitches;
-      pitcherLine =
-        '<div style="font-size:0.68rem;color:#94a3b8;margin-top:5px;">' +
+      var pitches  = (situation.pitchCount || {}).pitches;
+      pitcherLine  =
+        '<div style="font-size:0.65rem;color:#94a3b8;margin-top:3px;">' +
         '⚾ ' + lastName + (pitches ? ' &middot; ' + pitches + 'p' : '') +
         '</div>';
     }
 
-    return '<div style="margin-top:6px;">' +
-      '<div style="display:flex;align-items:center;">' +
-        '<div style="display:flex;flex-direction:column;align-items:center;">' + svgL + bsoL + '</div>' +
-        scoreboard +
-      '</div>' +
-      pitcherLine +
-    '</div>';
+    // Team logo helper — circle container so broken images still look clean
+    function teamIcon(logo, abbr) {
+      return (
+        '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;' +
+             'background:#1e2130;display:flex;align-items:center;justify-content:center;">' +
+          (logo
+            ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;">'
+            : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + abbr + '</span>') +
+        '</div>'
+      );
+    }
+
+    var aLogo  = ev ? (ev.awayLogo  || '') : '';
+    var hLogo  = ev ? (ev.homeLogo  || '') : '';
+    var aAbbr  = ev ? (ev.awayAbbr  || '') : '';
+    var hAbbr  = ev ? (ev.homeAbbr  || '') : '';
+    var aScore = ev ? ev.awayScore  : '–';
+    var hScore = ev ? ev.homeScore  : '–';
+    var detail = ev ? (ev.detail    || '') : '';
+
+    return (
+      '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
+        // Away team
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
+          teamIcon(aLogo, aAbbr) +
+          '<span style="font-size:0.6rem;color:#94a3b8;">' + aAbbr + '</span>' +
+        '</div>' +
+        // Away score
+        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + aScore + '</span>' +
+        // Centre: inning + bases + B/S/O + pitcher
+        '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
+          '<span style="font-size:0.7rem;color:#14b8a6;font-weight:700;margin-bottom:2px;">' + detail + '</span>' +
+          smallSvg +
+          bso +
+          pitcherLine +
+        '</div>' +
+        // Home score
+        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + hScore + '</span>' +
+        // Home team
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
+          teamIcon(hLogo, hAbbr) +
+          '<span style="font-size:0.6rem;color:#94a3b8;">' + hAbbr + '</span>' +
+        '</div>' +
+      '</div>'
+    );
   }
 
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
@@ -4083,6 +4108,8 @@ function toggleCtx(el) {
     var awayAbbr  = (awayComp.team || {}).abbreviation || "";
     var homeName  = (homeComp.team || {}).displayName  || "";
     var awayName  = (awayComp.team || {}).displayName  || "";
+    var homeLogo  = (homeComp.team || {}).logo || "";
+    var awayLogo  = (awayComp.team || {}).logo || "";
     var homeScore = parseInt(homeComp.score || "0", 10);
     var awayScore = parseInt(awayComp.score || "0", 10);
 
@@ -4118,6 +4145,7 @@ function toggleCtx(el) {
       id: event.id || "",
       home: homeName, away: awayName,
       homeAbbr: homeAbbr, awayAbbr: awayAbbr,
+      homeLogo: homeLogo, awayLogo: awayLogo,
       homeScore: homeScore, awayScore: awayScore,
       stateId: stateId, detail: detail,
       period: period, clockSec: clockSec,
@@ -4493,13 +4521,16 @@ function toggleCtx(el) {
         var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
         var prob = winProb(betType, pick, ourTeam, evHome, evAway,
                            evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom, marketProb);
-        liveDiv.innerHTML =
-          '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
-          ' <span style="color:#94a3b8;font-size:0.72rem;">' + ev.detail + '</span>' +
-          ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
-            ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
-          '</span>&nbsp;&nbsp;' + probHtml(prob) +
-          (sport === "MLB" ? renderDiamond(ev.situation, ev) : '');
+        // For MLB the scoreboard widget carries score + inning; keep the status line minimal
+        liveDiv.innerHTML = sport === "MLB"
+          ? '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
+            '&nbsp;&nbsp;' + probHtml(prob) +
+            renderDiamond(ev.situation, ev)
+          : '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
+            ' <span style="color:#94a3b8;font-size:0.72rem;">' + ev.detail + '</span>' +
+            ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
+              ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
+            '</span>&nbsp;&nbsp;' + probHtml(prob);
       }
     } else {
       card.removeAttribute("data-live-result");
