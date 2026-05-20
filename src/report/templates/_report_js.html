@@ -86,17 +86,20 @@
     );
   }
   // Wraps away/home logos + scores around a centre-column HTML block.
-  // Uses ev.awayScore/homeScore directly (ESPN-native, visually consistent with logos).
+  // Pre-game (stateId "1"): scores show as "—" instead of 0.
   function _renderScoreboard(ev, centerHtml) {
+    var isPre = ev.stateId === "1";
+    var aScore = isPre ? '—' : ev.awayScore;
+    var hScore = isPre ? '—' : ev.homeScore;
     return (
       '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
         '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
           _teamIcon(ev.awayLogo || '', ev.awayAbbr || '') +
           '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.awayAbbr || '') + '</span>' +
         '</div>' +
-        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + ev.awayScore + '</span>' +
+        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + aScore + '</span>' +
         centerHtml +
-        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + ev.homeScore + '</span>' +
+        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + hScore + '</span>' +
         '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
           _teamIcon(ev.homeLogo || '', ev.homeAbbr || '') +
           '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.homeAbbr || '') + '</span>' +
@@ -969,8 +972,18 @@
         liveDiv.innerHTML = centerLive;
       }
     } else {
+      // Pre-game — scoreboard with logos and start time in centre (replaces plain time text)
       card.removeAttribute("data-live-result");
-      liveDiv.innerHTML = "";  // pre-game — nothing to show
+      var iso = card.getAttribute("data-commence-time") || "";
+      var timeStr = formatLocalTime(iso);
+      clearCardTime(card);
+      liveDiv.innerHTML = _renderScoreboard(ev,
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
+          (timeStr
+            ? '<span style="color:#94a3b8;font-size:0.72rem;font-weight:500;">' + timeStr + '</span>'
+            : '<span style="color:#94a3b8;font-size:0.72rem;font-weight:500;">Upcoming</span>') +
+        '</div>'
+      );
     }
   }
 
@@ -2500,7 +2513,35 @@
               liveDiv.innerHTML = iplScoreboard(teams[0], teams[1], liveCenter);
             }
           }
-          // state === "pre": renderIplCommenceTimes already shows the scheduled time
+          } else {
+            // Pre-game: scoreboard with logos + date/time in centre (replaces plain time text)
+            var iplIso = card.getAttribute("data-commence-time") || "";
+            var iplDtStr = "";
+            if (iplIso) {
+              try {
+                var d2 = new Date(iplIso);
+                if (!isNaN(d2.getTime())) {
+                  iplDtStr = d2.toLocaleDateString([], { month: "short", day: "numeric" }) +
+                             " · " + d2.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+                }
+              } catch(e) {}
+            }
+            if (liveDiv) {
+              var iplPreCenter =
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
+                  '<span style="font-size:0.9rem;line-height:1;">🏏</span>' +
+                  (iplDtStr
+                    ? '<span style="color:#94a3b8;font-size:0.65rem;text-align:center;line-height:1.3;">' + iplDtStr + '</span>'
+                    : '<span style="color:#94a3b8;font-size:0.68rem;">Upcoming</span>') +
+                '</div>';
+              liveDiv.innerHTML = iplScoreboard(teams[0], teams[1], iplPreCenter);
+            }
+            // Clear the standalone time div — time is now shown inside the scoreboard
+            if (timeDiv) {
+              timeDiv.removeAttribute("data-ipl-commence");
+              timeDiv.textContent = "";
+            }
+          }
         });
 
         // Stop polling once every IPL card has been ESPN-finalized
