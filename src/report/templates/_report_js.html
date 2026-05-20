@@ -2448,18 +2448,41 @@
           };
         });
 
-        // Helper: render an IPL scoreboard row with logos + scores + center content
-        // Cricket scores can be strings like "185/4 (18.2)" — use smaller font than other sports
+        // Parse ESPN cricket score string e.g. "57/4 (8.2/20 ov)" into
+        // { main: "57/4", overs: "(8.2)" } — drops the "/20 ov" part.
+        function _parseIplScore(raw) {
+          if (!raw) return { main: '—', overs: '' };
+          var s = raw.trim();
+          var pi = s.indexOf('(');
+          if (pi === -1) return { main: s || '—', overs: '' };
+          var main = s.slice(0, pi).trim() || '—';
+          var inner = s.slice(pi + 1);                    // "8.2/20 ov)"
+          var si = inner.indexOf('/');
+          var ov = si !== -1 ? inner.slice(0, si).trim() // "8.2"
+                             : inner.replace(/[^0-9.]/g, '');
+          return { main: main, overs: ov ? '(' + ov + ')' : '' };
+        }
+
+        // Helper: render an IPL scoreboard row with logos + two-line scores + center content
         function iplScoreboard(t0, t1, centerHtml) {
+          function scoreCol(team, align) {
+            var p = _parseIplScore(team.score);
+            return (
+              '<div style="display:flex;flex-direction:column;align-items:' + align + ';line-height:1.2;">' +
+                '<span style="font-size:1.05rem;font-weight:800;color:#e2e8f0;">' + p.main + '</span>' +
+                (p.overs ? '<span style="font-size:0.62rem;color:#94a3b8;font-weight:400;">' + p.overs + '</span>' : '') +
+              '</div>'
+            );
+          }
           return (
             '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
               '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
                 _teamIcon(t0.logo, t0.abbr) +
                 '<span style="font-size:0.6rem;color:#94a3b8;">' + t0.abbr + '</span>' +
               '</div>' +
-              '<span style="font-size:1.05rem;font-weight:800;color:#e2e8f0;line-height:1.1;text-align:right;max-width:60px;">' + (t0.score || '—') + '</span>' +
+              scoreCol(t0, 'flex-end') +
               centerHtml +
-              '<span style="font-size:1.05rem;font-weight:800;color:#e2e8f0;line-height:1.1;text-align:left;max-width:60px;">' + (t1.score || '—') + '</span>' +
+              scoreCol(t1, 'flex-start') +
               '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
                 _teamIcon(t1.logo, t1.abbr) +
                 '<span style="font-size:0.6rem;color:#94a3b8;">' + t1.abbr + '</span>' +
