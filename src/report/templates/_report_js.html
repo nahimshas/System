@@ -73,6 +73,38 @@
     });
   }
 
+  // ── Shared scoreboard helpers ─────────────────────────────────────────────
+  // Used by all sports for both live and final game displays.
+  function _teamIcon(logo, abbr) {
+    return (
+      '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;' +
+           'background:#1e2130;display:flex;align-items:center;justify-content:center;">' +
+        (logo
+          ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;">'
+          : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + abbr + '</span>') +
+      '</div>'
+    );
+  }
+  // Wraps away/home logos + scores around a centre-column HTML block.
+  // Uses ev.awayScore/homeScore directly (ESPN-native, visually consistent with logos).
+  function _renderScoreboard(ev, centerHtml) {
+    return (
+      '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
+          _teamIcon(ev.awayLogo || '', ev.awayAbbr || '') +
+          '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.awayAbbr || '') + '</span>' +
+        '</div>' +
+        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + ev.awayScore + '</span>' +
+        centerHtml +
+        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + ev.homeScore + '</span>' +
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
+          _teamIcon(ev.homeLogo || '', ev.homeAbbr || '') +
+          '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.homeAbbr || '') + '</span>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
   // ── MLB base diamond renderer ────────────────────────────────────────────
   // Returns an inline HTML string showing the base diamond + B/S/O counts.
   // Only called for MLB in-progress games; returns "" if situation is null.
@@ -154,51 +186,16 @@
         '</div>';
     }
 
-    // Team logo helper — circle container so broken images still look clean
-    function teamIcon(logo, abbr) {
-      return (
-        '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;' +
-             'background:#1e2130;display:flex;align-items:center;justify-content:center;">' +
-          (logo
-            ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;">'
-            : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + abbr + '</span>') +
-        '</div>'
-      );
-    }
+    var detail = ev ? (ev.detail || '') : '';
+    var centerMlb =
+      '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
+        '<span style="font-size:0.7rem;color:#14b8a6;font-weight:700;margin-bottom:2px;">' + detail + '</span>' +
+        smallSvg +
+        bso +
+        pitcherLine +
+      '</div>';
 
-    var aLogo  = ev ? (ev.awayLogo  || '') : '';
-    var hLogo  = ev ? (ev.homeLogo  || '') : '';
-    var aAbbr  = ev ? (ev.awayAbbr  || '') : '';
-    var hAbbr  = ev ? (ev.homeAbbr  || '') : '';
-    var aScore = ev ? ev.awayScore  : '–';
-    var hScore = ev ? ev.homeScore  : '–';
-    var detail = ev ? (ev.detail    || '') : '';
-
-    return (
-      '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
-        // Away team
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
-          teamIcon(aLogo, aAbbr) +
-          '<span style="font-size:0.6rem;color:#94a3b8;">' + aAbbr + '</span>' +
-        '</div>' +
-        // Away score
-        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + aScore + '</span>' +
-        // Centre: inning + bases + B/S/O + pitcher
-        '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
-          '<span style="font-size:0.7rem;color:#14b8a6;font-weight:700;margin-bottom:2px;">' + detail + '</span>' +
-          smallSvg +
-          bso +
-          pitcherLine +
-        '</div>' +
-        // Home score
-        '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + hScore + '</span>' +
-        // Home team
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
-          teamIcon(hLogo, hAbbr) +
-          '<span style="font-size:0.6rem;color:#94a3b8;">' + hAbbr + '</span>' +
-        '</div>' +
-      '</div>'
-    );
+    return ev ? _renderScoreboard(ev, centerMlb) : centerMlb;
   }
 
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
@@ -929,37 +926,13 @@
         card.setAttribute("data-live-result", result);
         cacheBetResult(card, result);
       }
-      // MLB final: ESPN-scoreboard style (logos + scores + "Final" centre)
-      if (sport === "MLB") {
-        function _ti(logo, abbr) {
-          return '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:#1e2130;display:flex;align-items:center;justify-content:center;">' +
-            (logo ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;">'
-                  : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + abbr + '</span>') +
-            '</div>';
-        }
-        liveDiv.innerHTML =
-          '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
-            '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
-              _ti(ev.awayLogo || '', ev.awayAbbr || '') +
-              '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.awayAbbr || '') + '</span>' +
-            '</div>' +
-            '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + evAScore + '</span>' +
-            '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">' +
-              '<span style="font-size:0.72rem;color:#94a3b8;font-weight:600;letter-spacing:0.03em;">Final</span>' +
-              (result ? outcomeHtml(result) : '') +
-            '</div>' +
-            '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + evHScore + '</span>' +
-            '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
-              _ti(ev.homeLogo || '', ev.homeAbbr || '') +
-              '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.homeAbbr || '') + '</span>' +
-            '</div>' +
-          '</div>';
-      } else {
-        liveDiv.innerHTML =
-          '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
-          ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore + '</span>' +
-          (result ? '&nbsp;&nbsp;' + outcomeHtml(result) : "");
-      }
+      // All sports: scoreboard style with logos + scores + "Final" centre
+      liveDiv.innerHTML = _renderScoreboard(ev,
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0;">' +
+          '<span style="font-size:0.72rem;color:#94a3b8;font-weight:600;letter-spacing:0.03em;">Final</span>' +
+          (result ? outcomeHtml(result) : '') +
+        '</div>'
+      );
     } else if (ev.stateId === "2") {
       showLockBadge(card);
       clearCardTime(card);
@@ -968,26 +941,32 @@
       var detailLower = (ev.detail || "").toLowerCase();
       var isDelayed = /delay|suspend|postpone|rain|weather/.test(detailLower);
       if (isDelayed) {
-        liveDiv.innerHTML =
-          '<span style="color:#eab308;font-weight:700;font-size:0.75rem;">⏸ ' + (ev.detail || "Delay") + '</span>' +
-          ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
-            ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
-          '</span>';
+        liveDiv.innerHTML = _renderScoreboard(ev,
+          '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
+            '<span style="color:#eab308;font-weight:700;font-size:0.72rem;">⏸ Delay</span>' +
+            '<span style="color:#94a3b8;font-size:0.68rem;">' + (ev.detail || '') + '</span>' +
+          '</div>'
+        );
       } else {
         // Normal in-progress game — compute live win probability
         var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
         var prob = winProb(betType, pick, ourTeam, evHome, evAway,
                            evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom, marketProb);
-        // For MLB the scoreboard widget carries score + inning; keep the status line minimal
-        liveDiv.innerHTML = sport === "MLB"
+        // All sports: scoreboard widget with logos + scores + centre info
+        // MLB centre: inning + base diamond + B/S/O + pitcher (via renderDiamond)
+        // Other sports centre: ● LIVE badge + game clock/period + win probability
+        var centerLive = sport === "MLB"
           ? '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
             '&nbsp;&nbsp;' + probHtml(prob) +
             renderDiamond(ev.situation, ev)
-          : '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
-            ' <span style="color:#94a3b8;font-size:0.72rem;">' + ev.detail + '</span>' +
-            ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
-              ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
-            '</span>&nbsp;&nbsp;' + probHtml(prob);
+          : _renderScoreboard(ev,
+              '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
+                '<span style="color:#ef4444;font-weight:700;font-size:0.72rem;">● LIVE</span>' +
+                '<span style="color:#14b8a6;font-size:0.7rem;font-weight:600;">' + (ev.detail || '') + '</span>' +
+                probHtml(prob) +
+              '</div>'
+            );
+        liveDiv.innerHTML = centerLive;
       }
     } else {
       card.removeAttribute("data-live-result");
