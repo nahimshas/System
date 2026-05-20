@@ -548,7 +548,7 @@
   </style>
 </head>
 <body>
-<div id="spa-wrap" data-report-date="2026-05-20" data-fresh-odds="true">
+<div id="spa-wrap" data-report-date="2026-05-20" data-fresh-odds="false">
 
 <!-- Header (stats bar) -->
 <div class="app-header">
@@ -3244,7 +3244,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 08:59 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 09:33 AM PDT</div>
         </div>
         
       </div>
@@ -3779,23 +3779,24 @@ function toggleCtx(el) {
 
   // ── Shared scoreboard helpers ─────────────────────────────────────────────
   // Used by all sports for both live and final game displays.
-  // Pick the best-contrast logo from ESPN's logos array.
-  // ESPN tags each logo with a "rel" array e.g. ["full","default"], ["dark"], ["scoreboard"].
-  // For dark-background cards we want "scoreboard" > any non-dark > "default" > fallback.
+  // Pick the best-contrast logo from ESPN's logos array for our dark-background cards.
+  // ESPN naming convention (counterintuitive):
+  //   "scoreboard" = explicit scoreboard variant, high-contrast on dark ✓
+  //   "dark"       = designed FOR dark backgrounds (white/light logos)  ✓
+  //   "default"    = designed for light/white backgrounds               ✗ (bad on dark)
+  // Priority: scoreboard > dark > default > first available
   function _bestLogo(teamObj) {
     var logos = teamObj.logos || [];
     if (!logos.length) return teamObj.logo || "";
-    // Priority: scoreboard first, then anything that isn't tagged "dark", then default, then first
-    var scoreboard = null, nonDark = null, def = null;
+    var scoreboard = null, dark = null, def = null;
     for (var i = 0; i < logos.length; i++) {
       var l = logos[i];
-      var rel = l.rel || [];
-      var relStr = rel.join(" ");
+      var relStr = (l.rel || []).join(" ");
       if (!scoreboard && relStr.indexOf("scoreboard") !== -1) scoreboard = l.href;
-      if (!def       && relStr.indexOf("default")    !== -1) def        = l.href;
-      if (!nonDark   && relStr.indexOf("dark")       === -1) nonDark    = l.href;
+      if (!dark       && relStr.indexOf("dark")       !== -1) dark       = l.href;
+      if (!def        && relStr.indexOf("default")    !== -1) def        = l.href;
     }
-    return scoreboard || nonDark || def || logos[0].href || teamObj.logo || "";
+    return scoreboard || dark || def || logos[0].href || teamObj.logo || "";
   }
 
   function _teamIcon(logo, abbr) {
