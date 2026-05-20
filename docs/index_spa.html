@@ -3129,7 +3129,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 05:46 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 08:18 PM PDT</div>
         </div>
         
       </div>
@@ -3603,7 +3603,7 @@ function toggleCtx(el) {
     // Single bet cards: read data-commence-time from the card, write into .card-time.
     // Exclude IPL watchlist cards — their time div is managed by renderIplCommenceTimes()
     // and may already show server-rendered state ("Match In Progress", etc.).
-    document.querySelectorAll(".card[data-commence-time]:not(.ipl-watchlist-card)").forEach(function (card) {
+    document.querySelectorAll(".card[data-commence-time]:not(.ipl-watchlist-card), .wl-card[data-commence-time]:not(.ipl-watchlist-card)").forEach(function (card) {
       var iso = card.getAttribute("data-commence-time") || "";
       var el  = card.querySelector(".card-time");
       if (!el || !iso) return;
@@ -6009,8 +6009,8 @@ function toggleCtx(el) {
       done++;
       if (done < 4) return;
 
-      // Update all bet cards (singles, parlays, NHL watchlist, and SPA alloc cards)
-      document.querySelectorAll(".card[data-home-team], .card[data-parlay='true'], .alloc-card[data-home-team], .alloc-card[data-legs]").forEach(function (card) {
+      // Update all bet cards (singles, parlays, watchlist cards, and SPA alloc cards)
+      document.querySelectorAll(".card[data-home-team], .card[data-parlay='true'], .wl-card[data-home-team], .alloc-card[data-home-team], .alloc-card[data-legs]").forEach(function (card) {
         applyCard(card, allEvents);
       });
 
