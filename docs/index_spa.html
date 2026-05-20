@@ -16,7 +16,7 @@
   <meta name="theme-color" content="#1a1d27" />
   <style>
     :root {
-      --bg: #0f1117;
+      --bg: #050507;
       --card: #1a1d27;
       --card2: #1e2130;
       --border: #2d3148;
@@ -114,6 +114,13 @@
       color: #ef4444;
       border-color: rgba(239,68,68,0.35);
       animation: dotPulse 1.4s ease-in-out infinite;
+    }
+    /* Pulsing ● LIVE pill used inside bet cards */
+    .live-pill {
+      color: #ef4444;
+      font-weight: 700;
+      animation: dotPulse 1.4s ease-in-out infinite;
+      display: inline-block;
     }
 
     /* ── SPA layout ──────────────────────────────────────────────────────── */
@@ -3245,7 +3252,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 12:59 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 01:14 PM PDT</div>
         </div>
         
       </div>
@@ -4537,7 +4544,7 @@ function toggleCtx(el) {
                          evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom, 0.5);
       if (scoreEl) {
         scoreEl.innerHTML =
-          '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
+          '<span class="live-pill">● LIVE</span>' +
           ' <span style="color:#94a3b8;">' + (ev.detail || "") + '</span>' +
           ' ' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
           (sport === "MLB" ? ' ' + renderDiamond(ev.situation, null, true) : "") +
@@ -4724,7 +4731,7 @@ function toggleCtx(el) {
         var lHS2 = teamMatch(lev.home, lgl.home_team) ? lev.homeScore : lev.awayScore;
         var lAS2 = teamMatch(lev.away, lgl.away_team) ? lev.awayScore : lev.homeScore;
         legSummaryParts.push(
-          '<span style="color:var(--red);font-weight:700;">● LIVE</span> ' +
+          '<span class="live-pill">● LIVE</span> ' +
           lev.awayAbbr + ' ' + lAS2 + ' – ' + lev.homeAbbr + ' ' + lHS2 +
           ' <span style="color:var(--muted);">' + (lev.detail || "") + '</span>'
         );
@@ -4847,12 +4854,12 @@ function toggleCtx(el) {
         // MLB centre: inning + base diamond + B/S/O + pitcher (via renderDiamond)
         // Other sports centre: ● LIVE badge + game clock/period + win probability
         var centerLive = sport === "MLB"
-          ? '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
+          ? '<span class="live-pill" style="font-size:0.75rem;">● LIVE</span>' +
             '&nbsp;&nbsp;' + probHtml(prob) +
             renderDiamond(ev.situation, ev)
           : _renderScoreboard(ev,
               '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
-                '<span style="color:#ef4444;font-weight:700;font-size:0.72rem;">● LIVE</span>' +
+                '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
                 '<span style="color:#14b8a6;font-size:0.7rem;font-weight:600;">' + (ev.detail || '') + '</span>' +
                 probHtml(prob) +
               '</div>'
@@ -5039,7 +5046,7 @@ function toggleCtx(el) {
           var pct2  = Math.min(99, Math.max(1, Math.round(prob2 * 100)));
           var col2  = pct2 >= 60 ? "#16a34a" : pct2 >= 40 ? "#eab308" : "#ef4444";
           cell.innerHTML =
-            '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
+            '<span class="live-pill">● LIVE</span>' +
             (ev.detail ? ' <span style="color:#94a3b8;font-size:0.68rem;">' + ev.detail + '</span>' : '') +
             '<br>' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
             (sport === "MLB" ? renderDiamond(ev.situation, ev) : '') +
@@ -6436,7 +6443,7 @@ function toggleCtx(el) {
             if (liveDiv) {
               var liveCenter =
                 '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
-                  '<span style="color:#ef4444;font-weight:700;font-size:0.72rem;">● LIVE</span>' +
+                  '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
                   (summary
                     ? '<span style="color:#94a3b8;font-size:0.65rem;text-align:center;line-height:1.2;">' + summary + '</span>'
                     : '') +
