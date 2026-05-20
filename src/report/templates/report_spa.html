@@ -29,7 +29,7 @@
   {%- set ns = namespace(proj_line='') -%}
   {%- for item in bet.context -%}{%- if 'Model projected score' in item -%}{%- set ns.proj_line = item | replace('Model projected score: ', '') -%}{%- endif -%}{%- endfor -%}
   {%- if ns.proj_line %}
-  <div class="proj-score-hl">{{ ns.proj_line }}</div>
+  <div class="proj-score-hl">Model projected score: {{ ns.proj_line }}</div>
   {%- else %}
   <div class="proj-score">Model {{ bet.model_prob_pct }}% · Mkt {{ bet.market_prob_pct }}%</div>
   {%- endif %}
