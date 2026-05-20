@@ -76,49 +76,104 @@
   // ── MLB base diamond renderer ────────────────────────────────────────────
   // Returns an inline HTML string showing the base diamond + B/S/O counts.
   // Only called for MLB in-progress games; returns "" if situation is null.
-  function renderDiamond(situation) {
+  // renderDiamond(situation, ev, compact)
+  // compact=true → small inline version used in parlay leg text
+  // compact=false (default) → full widget: bigger diamond + side scoreboard + pitcher line
+  function renderDiamond(situation, ev, compact) {
     if (!situation) return "";
     var c1 = situation.onFirst  ? "#eab308" : "#374151";
     var c2 = situation.onSecond ? "#eab308" : "#374151";
     var c3 = situation.onThird  ? "#eab308" : "#374151";
-    // Bases as diamond polygons: 2nd(top), 1st(right), home(bottom), 3rd(left)
-    // SVG 36×36, centre (18,18), base half-size 5 px
-    function base(cx, cy, fill) {
-      var pts = cx+","+(cy-5)+" "+(cx+5)+","+cy+" "+cx+","+(cy+5)+" "+(cx-5)+","+cy;
+
+    function mkBase(cx, cy, fill, sz) {
+      var pts = cx+","+(cy-sz)+" "+(cx+sz)+","+cy+" "+cx+","+(cy+sz)+" "+(cx-sz)+","+cy;
       return '<polygon points="'+pts+'" fill="'+fill+'"/>';
     }
-    var svg =
-      '<svg width="36" height="26" viewBox="0 0 36 26" style="display:block;margin:0 auto;">' +
-      // baselines (2nd↔1st and 3rd↔2nd only; home plate removed)
-      '<line x1="18" y1="11" x2="25" y2="18" stroke="#4b5563" stroke-width="0.8"/>' +
-      '<line x1="11" y1="18" x2="18" y2="11" stroke="#4b5563" stroke-width="0.8"/>' +
-      // bases
-      base(18, 6,  c2) +   // 2nd
-      base(30, 18, c1) +   // 1st
-      base(6,  18, c3) +   // 3rd
-      '</svg>';
-
-    var balls   = Math.min(3, situation.balls   || 0);
-    var strikes = Math.min(2, situation.strikes || 0);
-    var outs    = Math.min(2, situation.outs    || 0);
-
-    function dots(n, max, filledColor) {
+    function mkDots(n, max, fc, dotSz) {
       var s = "";
       for (var i = 0; i < max; i++) {
-        var col = i < n ? filledColor : "#374151";
-        s += '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+col+';margin-right:2px;vertical-align:middle;"></span>';
+        var col = i < n ? fc : "#374151";
+        s += '<span style="display:inline-block;width:'+dotSz+'px;height:'+dotSz+'px;border-radius:50%;background:'+col+';margin-right:2px;vertical-align:middle;"></span>';
       }
       return s;
     }
 
-    var bso =
-      '<span style="display:block;text-align:center;font-size:0.68rem;color:#94a3b8;margin-top:2px;">' +
-      'B&nbsp;' + dots(balls, 3, "#22c55e") +
-      '&nbsp;S&nbsp;' + dots(strikes, 2, "#eab308") +
-      '&nbsp;O&nbsp;' + dots(outs, 2, "#ef4444") +
-      '</span>';
+    if (compact) {
+      // ── Small inline version (parlay legs) ──────────────────────────────
+      var svgS =
+        '<svg width="36" height="26" viewBox="0 0 36 26" style="display:block;margin:0 auto;">' +
+        '<line x1="18" y1="11" x2="25" y2="18" stroke="#4b5563" stroke-width="0.8"/>' +
+        '<line x1="11" y1="18" x2="18" y2="11" stroke="#4b5563" stroke-width="0.8"/>' +
+        mkBase(18, 6,  c2, 5) + mkBase(30, 18, c1, 5) + mkBase(6, 18, c3, 5) +
+        '</svg>';
+      var bsoS =
+        '<span style="display:block;text-align:center;font-size:0.68rem;color:#94a3b8;margin-top:2px;">' +
+        'B&nbsp;' + mkDots(Math.min(3, situation.balls   || 0), 3, "#22c55e", 7) +
+        '&nbsp;S&nbsp;' + mkDots(Math.min(2, situation.strikes || 0), 2, "#eab308", 7) +
+        '&nbsp;O&nbsp;' + mkDots(Math.min(2, situation.outs    || 0), 2, "#ef4444", 7) +
+        '</span>';
+      return '<span style="display:inline-flex;flex-direction:column;align-items:center;margin-left:4px;">' + svgS + bsoS + '</span>';
+    }
 
-    return '<span style="display:inline-flex;flex-direction:column;align-items:center;margin-left:4px;">' + svg + bso + '</span>';
+    // ── Full widget (bet cards + alloc cards) ──────────────────────────────
+    var balls   = Math.min(3, situation.balls   || 0);
+    var strikes = Math.min(2, situation.strikes || 0);
+    var outs    = Math.min(2, situation.outs    || 0);
+
+    // Bigger SVG: 56×40, base half-size 9
+    var svgL =
+      '<svg width="56" height="40" viewBox="0 0 56 40" style="display:block;">' +
+      '<line x1="28" y1="10" x2="46" y2="28" stroke="#4b5563" stroke-width="1.2"/>' +
+      '<line x1="10" y1="28" x2="28" y2="10" stroke="#4b5563" stroke-width="1.2"/>' +
+      mkBase(28, 10, c2, 9) +  // 2nd
+      mkBase(46, 28, c1, 9) +  // 1st
+      mkBase(10, 28, c3, 9) +  // 3rd
+      '</svg>';
+
+    var bsoL =
+      '<div style="font-size:0.7rem;color:#94a3b8;margin-top:5px;white-space:nowrap;">' +
+      'B&nbsp;' + mkDots(balls, 3, "#22c55e", 8) +
+      '&nbsp;S&nbsp;' + mkDots(strikes, 2, "#eab308", 8) +
+      '&nbsp;O&nbsp;' + mkDots(outs, 2, "#ef4444", 8) +
+      '</div>';
+
+    // Mini scoreboard to the right
+    var scoreboard = '';
+    if (ev) {
+      scoreboard =
+        '<div style="display:flex;flex-direction:column;justify-content:center;margin-left:14px;gap:5px;">' +
+          '<div style="white-space:nowrap;line-height:1;">' +
+            '<span style="color:#94a3b8;font-size:0.68rem;display:inline-block;min-width:30px;">' + (ev.awayAbbr || '') + '</span>' +
+            '<span style="font-weight:800;font-size:1.05rem;color:#e2e8f0;">' + (ev.awayScore !== undefined ? ev.awayScore : '–') + '</span>' +
+          '</div>' +
+          '<div style="white-space:nowrap;line-height:1;">' +
+            '<span style="color:#94a3b8;font-size:0.68rem;display:inline-block;min-width:30px;">' + (ev.homeAbbr || '') + '</span>' +
+            '<span style="font-weight:800;font-size:1.05rem;color:#e2e8f0;">' + (ev.homeScore !== undefined ? ev.homeScore : '–') + '</span>' +
+          '</div>' +
+        '</div>';
+    }
+
+    // Pitcher info (ESPN situation.pitcher + situation.pitchCount)
+    var pitcherLine = '';
+    var pitcher = situation.pitcher || null;
+    if (pitcher && (pitcher.shortName || pitcher.displayName)) {
+      var pName = pitcher.shortName || pitcher.displayName;
+      // Use last name only for compactness
+      var lastName = pName.split(' ').pop();
+      var pitches = (situation.pitchCount || {}).pitches;
+      pitcherLine =
+        '<div style="font-size:0.68rem;color:#94a3b8;margin-top:5px;">' +
+        '⚾ ' + lastName + (pitches ? ' &middot; ' + pitches + 'p' : '') +
+        '</div>';
+    }
+
+    return '<div style="margin-top:6px;">' +
+      '<div style="display:flex;align-items:center;">' +
+        '<div style="display:flex;flex-direction:column;align-items:center;">' + svgL + bsoL + '</div>' +
+        scoreboard +
+      '</div>' +
+      pitcherLine +
+    '</div>';
   }
 
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
@@ -583,7 +638,7 @@
           '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
           ' <span style="color:#94a3b8;">' + (ev.detail || "") + '</span>' +
           ' ' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
-          (sport === "MLB" ? ' ' + renderDiamond(ev.situation) : "") +
+          (sport === "MLB" ? ' ' + renderDiamond(ev.situation, null, true) : "") +
           '&nbsp;' + probHtml(prob);
       }
       return { status: "live", prob: prob };
@@ -874,7 +929,7 @@
           ' <span style="color:#e2e8f0;font-size:0.75rem;">' +
             ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
           '</span>&nbsp;&nbsp;' + probHtml(prob) +
-          (sport === "MLB" ? '<br>' + renderDiamond(ev.situation) : '');
+          (sport === "MLB" ? renderDiamond(ev.situation, ev) : '');
       }
     } else {
       card.removeAttribute("data-live-result");
@@ -1049,7 +1104,7 @@
             '<span style="color:#ef4444;font-weight:700;">● LIVE</span>' +
             (ev.detail ? ' <span style="color:#94a3b8;font-size:0.68rem;">' + ev.detail + '</span>' : '') +
             '<br>' + ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore +
-            (sport === "MLB" ? '<br>' + renderDiamond(ev.situation) : '') +
+            (sport === "MLB" ? renderDiamond(ev.situation, ev) : '') +
             '<br><span style="color:' + col2 + ';font-weight:700;">' + pct2 + '% win</span>';
         }
       } else {
