@@ -2524,25 +2524,31 @@
         }
 
         // For cricket, ESPN can flip state→"post" at the end of the first innings
-        // (innings break) before the second team has batted.  Only trust c.winner
-        // when the status summary also confirms the MATCH is done — the phrase
-        // "won by" (e.g. "Chennai Super Kings won by 4 wkts") only appears in the
-        // final result, never during an innings break.
-        var summaryHasFinalResult = summary.toLowerCase().indexOf("won by") !== -1 ||
-                                    summary.toLowerCase().indexOf("no result") !== -1 ||
-                                    summary.toLowerCase().indexOf("tied") !== -1;
-        var winnerTeam = summaryHasFinalResult
-          ? teams.find(function (t) { return t.winner; })
-          : null;
+        // (innings break) before the second team has batted.  The phrase "won by"
+        // only appears in the actual final result — use it as the PRIMARY signal.
+        // c.winner flag is used only as a fallback because ESPN occasionally sets
+        // it on the wrong team (especially just after a match completes).
+        var summaryLower = summary.toLowerCase();
+        var summaryHasFinalResult = summaryLower.indexOf("won by") !== -1 ||
+                                    summaryLower.indexOf("no result") !== -1 ||
+                                    summaryLower.indexOf("tied") !== -1;
+        var winnerTeam = null;
 
-        // Fallback: parse winner from summary string "Team won by …"
-        if (isPost && !winnerTeam && summary) {
-          var wonIdx = summary.toLowerCase().indexOf(" won by");
+        // Primary: parse winner from "Team won by …" in the status summary.
+        // This is more reliable than c.winner, which ESPN sometimes mis-assigns.
+        if (summaryHasFinalResult && summaryLower.indexOf("won by") !== -1) {
+          var wonIdx = summaryLower.indexOf(" won by");
           if (wonIdx !== -1) {
             var parsedName = summary.slice(0, wonIdx).trim();
-            var matched = teams.find(function (t) { return iplNameMatch(t.name, parsedName); });
-            if (matched) winnerTeam = matched;
+            winnerTeam = teams.find(function (t) {
+              return iplNameMatch(t.name, parsedName) || iplNameMatch(t.abbr, parsedName);
+            });
           }
+        }
+
+        // Fallback: use c.winner flag when text parsing fails (e.g. "no result" / "tied")
+        if (!winnerTeam && summaryHasFinalResult) {
+          winnerTeam = teams.find(function (t) { return t.winner; });
         }
 
         cards.forEach(function (card) {

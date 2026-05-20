@@ -2078,7 +2078,7 @@
      data-model-prob-pct="61.3"
      data-market-prob-pct="48.4"
      data-commence-time="2026-05-20T14:00:00Z"
-     >
+     data-live-result="WON" data-in-history="1">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
       <div class="card-pick">Kolkata Knight Riders</div>
@@ -2501,14 +2501,14 @@
           
           
           <div id="wl-tile-IPL"
-               data-hist-won="6"
+               data-hist-won="7"
                data-hist-lost="4"
                style="flex:1;min-width:130px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
             <div style="font-size:0.68rem;margin-bottom:6px;"><span class="badge badge-ipl">🏏 IPL</span></div>
             <div class="wl-record" style="font-size:0.9rem;font-weight:700;color:var(--green);">
-              6W–4L<span style="font-size:0.78rem;font-weight:400;"> (60.0%)</span>
+              7W–4L<span style="font-size:0.78rem;font-weight:400;"> (63.6%)</span>
             </div>
-            <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">10 picks tracked</div>
+            <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">11 picks tracked</div>
           </div>
           
           
@@ -3252,7 +3252,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 01:26 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 02:03 PM PDT</div>
         </div>
         
       </div>
@@ -6364,25 +6364,31 @@ function toggleCtx(el) {
         }
 
         // For cricket, ESPN can flip state→"post" at the end of the first innings
-        // (innings break) before the second team has batted.  Only trust c.winner
-        // when the status summary also confirms the MATCH is done — the phrase
-        // "won by" (e.g. "Chennai Super Kings won by 4 wkts") only appears in the
-        // final result, never during an innings break.
-        var summaryHasFinalResult = summary.toLowerCase().indexOf("won by") !== -1 ||
-                                    summary.toLowerCase().indexOf("no result") !== -1 ||
-                                    summary.toLowerCase().indexOf("tied") !== -1;
-        var winnerTeam = summaryHasFinalResult
-          ? teams.find(function (t) { return t.winner; })
-          : null;
+        // (innings break) before the second team has batted.  The phrase "won by"
+        // only appears in the actual final result — use it as the PRIMARY signal.
+        // c.winner flag is used only as a fallback because ESPN occasionally sets
+        // it on the wrong team (especially just after a match completes).
+        var summaryLower = summary.toLowerCase();
+        var summaryHasFinalResult = summaryLower.indexOf("won by") !== -1 ||
+                                    summaryLower.indexOf("no result") !== -1 ||
+                                    summaryLower.indexOf("tied") !== -1;
+        var winnerTeam = null;
 
-        // Fallback: parse winner from summary string "Team won by …"
-        if (isPost && !winnerTeam && summary) {
-          var wonIdx = summary.toLowerCase().indexOf(" won by");
+        // Primary: parse winner from "Team won by …" in the status summary.
+        // This is more reliable than c.winner, which ESPN sometimes mis-assigns.
+        if (summaryHasFinalResult && summaryLower.indexOf("won by") !== -1) {
+          var wonIdx = summaryLower.indexOf(" won by");
           if (wonIdx !== -1) {
             var parsedName = summary.slice(0, wonIdx).trim();
-            var matched = teams.find(function (t) { return iplNameMatch(t.name, parsedName); });
-            if (matched) winnerTeam = matched;
+            winnerTeam = teams.find(function (t) {
+              return iplNameMatch(t.name, parsedName) || iplNameMatch(t.abbr, parsedName);
+            });
           }
+        }
+
+        // Fallback: use c.winner flag when text parsing fails (e.g. "no result" / "tied")
+        if (!winnerTeam && summaryHasFinalResult) {
+          winnerTeam = teams.find(function (t) { return t.winner; });
         }
 
         cards.forEach(function (card) {
