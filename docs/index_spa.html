@@ -190,9 +190,12 @@
     /* Inner slots ±1 */
     .spa-tab-btn[data-offset="-1"],
     .spa-tab-btn[data-offset="1"]  { opacity: 0.7;  transform: scale(0.82); }
-    /* Outer slots ±2 */
+    /* Inner-outer slots ±2 */
     .spa-tab-btn[data-offset="-2"],
     .spa-tab-btn[data-offset="2"]  { opacity: 0.38; transform: scale(0.65); }
+    /* Edge slots ±3 */
+    .spa-tab-btn[data-offset="-3"],
+    .spa-tab-btn[data-offset="3"]  { opacity: 0.18; transform: scale(0.50); }
     details[open] > summary .det-arrow { transform: rotate(90deg); }
     .det-arrow { display:inline-block; transition: transform 0.18s; font-size:0.65rem; color:var(--teal); margin-right:2px; }
     .spa-tab-icon  { font-size: 1.6rem; line-height: 1; position: relative; }
@@ -3252,7 +3255,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 02:03 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 04:50 PM PDT</div>
         </div>
         
       </div>
@@ -3277,6 +3280,8 @@
     <button class="spa-tab-btn" id="nav-s2"></button>
     <button class="spa-tab-btn" id="nav-s3"></button>
     <button class="spa-tab-btn" id="nav-s4"></button>
+    <button class="spa-tab-btn" id="nav-s5"></button>
+    <button class="spa-tab-btn" id="nav-s6"></button>
   </div>
 </nav>
 <!-- hasDot flags for carousel (rendered once by Jinja2) -->
@@ -3317,12 +3322,12 @@ window._tabDots = {
 
   function _mod(n, m) { return ((n % m) + m) % m; }
 
-  // Render 5 carousel slots centred on centerIdx (wraps circularly).
-  // Each slot gets a data-offset (-2..+2) and data-tab; CSS handles sizing/opacity.
+  // Render 7 carousel slots centred on centerIdx (wraps circularly).
+  // Each slot gets a data-offset (-3..+3) and data-tab; CSS handles sizing/opacity.
   function renderCarousel(centerIdx) {
     var dotMeta = window._tabDots || {};
-    for (var si = 0; si < 5; si++) {
-      var offset = si - 2;                            // -2, -1, 0, 1, 2
+    for (var si = 0; si < 7; si++) {
+      var offset = si - 3;                            // -3, -2, -1, 0, 1, 2, 3
       var tabIdx = _mod(centerIdx + offset, TABS.length);
       var meta   = TABS_META[tabIdx];
       var slot   = document.getElementById("nav-s" + si);
