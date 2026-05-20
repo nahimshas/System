@@ -110,19 +110,22 @@
     var isPre = ev.stateId === "1";
     var aScore = isPre ? '—' : ev.awayScore;
     var hScore = isPre ? '—' : ev.homeScore;
+    function teamCol(logo, abbr, record) {
+      return (
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+          _teamIcon(logo || '', abbr || '') +
+          '<span style="font-size:0.6rem;color:#94a3b8;">' + (abbr || '') + '</span>' +
+          (record ? '<span style="font-size:0.55rem;color:#64748b;font-weight:500;">' + record + '</span>' : '') +
+        '</div>'
+      );
+    }
     return (
       '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
-          _teamIcon(ev.awayLogo || '', ev.awayAbbr || '') +
-          '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.awayAbbr || '') + '</span>' +
-        '</div>' +
+        teamCol(ev.awayLogo, ev.awayAbbr, ev.awayRecord) +
         '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + aScore + '</span>' +
         centerHtml +
         '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + hScore + '</span>' +
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
-          _teamIcon(ev.homeLogo || '', ev.homeAbbr || '') +
-          '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.homeAbbr || '') + '</span>' +
-        '</div>' +
+        teamCol(ev.homeLogo, ev.homeAbbr, ev.homeRecord) +
       '</div>'
     );
   }
@@ -559,6 +562,16 @@
     var awayName  = (awayComp.team || {}).displayName  || "";
     var homeLogo  = _bestLogo(homeComp.team || {});
     var awayLogo  = _bestLogo(awayComp.team || {});
+    // Season record — look for type "total" (overall W-L), fall back to first entry
+    function _rec(comp) {
+      var recs = comp.records || [];
+      for (var i = 0; i < recs.length; i++) {
+        if (recs[i].type === "total" || (recs[i].name || "").toLowerCase() === "overall") return recs[i].summary || "";
+      }
+      return recs.length ? (recs[0].summary || "") : "";
+    }
+    var homeRecord = _rec(homeComp);
+    var awayRecord = _rec(awayComp);
     var homeScore = parseInt(homeComp.score || "0", 10);
     var awayScore = parseInt(awayComp.score || "0", 10);
 
@@ -595,6 +608,7 @@
       home: homeName, away: awayName,
       homeAbbr: homeAbbr, awayAbbr: awayAbbr,
       homeLogo: homeLogo, awayLogo: awayLogo,
+      homeRecord: homeRecord, awayRecord: awayRecord,
       homeScore: homeScore, awayScore: awayScore,
       stateId: stateId, detail: detail,
       period: period, clockSec: clockSec,
