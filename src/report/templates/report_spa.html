@@ -1921,12 +1921,10 @@ function toggleCtx(el) {
       el.textContent = 'Checking today’s schedule…';
     }
   });
+  // Replace every empty state in sport tabs — if the report is stale, all of
+  // them mean "we don't know yet" rather than "genuinely nothing scheduled".
   document.querySelectorAll('.spa-tab .empty-state').forEach(function (el) {
-    // Only replace generic "no games" / "no picks" messages, not custom ones
-    var t = el.textContent.trim();
-    if (/^No (NBA|MLB|IPL|NHL|WNBA|NFL|MLS)/.test(t) || /^No picks/.test(t)) {
-      el.innerHTML = WAIT_HTML;
-    }
+    el.innerHTML = WAIT_HTML;
   });
 }());
 </script>
