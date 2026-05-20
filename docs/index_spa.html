@@ -3129,7 +3129,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 09:05 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 09:17 PM PDT</div>
         </div>
         
       </div>
@@ -4499,10 +4499,37 @@ function toggleCtx(el) {
         card.setAttribute("data-live-result", result);
         cacheBetResult(card, result);
       }
-      liveDiv.innerHTML =
-        '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
-        ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore + '</span>' +
-        (result ? '&nbsp;&nbsp;' + outcomeHtml(result) : "");
+      // MLB final: ESPN-scoreboard style (logos + scores + "Final" centre)
+      if (sport === "MLB") {
+        function _ti(logo, abbr) {
+          return '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:#1e2130;display:flex;align-items:center;justify-content:center;">' +
+            (logo ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;">'
+                  : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + abbr + '</span>') +
+            '</div>';
+        }
+        liveDiv.innerHTML =
+          '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
+            '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
+              _ti(ev.awayLogo || '', ev.awayAbbr || '') +
+              '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.awayAbbr || '') + '</span>' +
+            '</div>' +
+            '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + evAScore + '</span>' +
+            '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">' +
+              '<span style="font-size:0.72rem;color:#94a3b8;font-weight:600;letter-spacing:0.03em;">Final</span>' +
+              (result ? outcomeHtml(result) : '') +
+            '</div>' +
+            '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + evHScore + '</span>' +
+            '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
+              _ti(ev.homeLogo || '', ev.homeAbbr || '') +
+              '<span style="font-size:0.6rem;color:#94a3b8;">' + (ev.homeAbbr || '') + '</span>' +
+            '</div>' +
+          '</div>';
+      } else {
+        liveDiv.innerHTML =
+          '<span style="color:#94a3b8;font-size:0.75rem;">Final: ' +
+          ev.awayAbbr + ' ' + evAScore + ' – ' + ev.homeAbbr + ' ' + evHScore + '</span>' +
+          (result ? '&nbsp;&nbsp;' + outcomeHtml(result) : "");
+      }
     } else if (ev.stateId === "2") {
       showLockBadge(card);
       clearCardTime(card);
