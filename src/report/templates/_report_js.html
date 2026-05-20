@@ -2380,12 +2380,36 @@
 
         // Build simple team info from competitor objects
         var teams = competitors.map(function (c) {
+          var tObj = c.team || {};
+          var dispName = tObj.displayName || "";
           return {
-            name:   (c.team || {}).displayName || "",
+            name:   dispName,
+            abbr:   tObj.abbreviation || dispName.split(" ").pop() || dispName,
+            logo:   tObj.logo || "",
             score:  c.score || "",
             winner: !!c.winner,
           };
         });
+
+        // Helper: render an IPL scoreboard row with logos + scores + center content
+        // Cricket scores can be strings like "185/4 (18.2)" — use smaller font than other sports
+        function iplScoreboard(t0, t1, centerHtml) {
+          return (
+            '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
+              '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
+                _teamIcon(t0.logo, t0.abbr) +
+                '<span style="font-size:0.6rem;color:#94a3b8;">' + t0.abbr + '</span>' +
+              '</div>' +
+              '<span style="font-size:1.05rem;font-weight:800;color:#e2e8f0;line-height:1.1;text-align:right;max-width:60px;">' + (t0.score || '—') + '</span>' +
+              centerHtml +
+              '<span style="font-size:1.05rem;font-weight:800;color:#e2e8f0;line-height:1.1;text-align:left;max-width:60px;">' + (t1.score || '—') + '</span>' +
+              '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">' +
+                _teamIcon(t1.logo, t1.abbr) +
+                '<span style="font-size:0.6rem;color:#94a3b8;">' + t1.abbr + '</span>' +
+              '</div>' +
+            '</div>'
+          );
+        }
 
         // For cricket, ESPN can flip state→"post" at the end of the first innings
         // (innings break) before the second team has batted.  Only trust c.winner
@@ -2448,16 +2472,12 @@
               timeDiv.textContent = "";
             }
             if (liveDiv) {
-              // Show final score as "Abbr Score · Abbr Score" — same format as live,
-              // no "won by X" narrative text (consistent with other sports).
-              var finalScoreStr = teams.map(function (t) {
-                var abbr = t.name.split(" ").pop() || t.name;
-                return abbr + (t.score ? " " + t.score : "");
-              }).join("  ·  ");
-              liveDiv.innerHTML =
-                '<span style="color:#94a3b8;font-size:0.75rem;">Final' +
-                (finalScoreStr ? ": " + finalScoreStr : "") + "</span>" +
-                "&nbsp;&nbsp;" + outcomeHtml(result);
+              var finalCenter =
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0;">' +
+                  '<span style="font-size:0.72rem;color:#94a3b8;font-weight:600;letter-spacing:0.03em;">Final</span>' +
+                  outcomeHtml(result) +
+                '</div>';
+              liveDiv.innerHTML = iplScoreboard(teams[0], teams[1], finalCenter);
             }
             updatePerformance();
           } else if (isLive) {
@@ -2467,22 +2487,17 @@
               timeDiv.removeAttribute("data-ipl-commence");
               timeDiv.textContent = "";
             }
-            // Build a compact live score string from embedded competitor scores
-            var scoreStr = teams.map(function (t) {
-              var abbr = t.name.split(" ").pop() || t.name;
-              return abbr + (t.score ? " " + t.score : "");
-            }).join("  ·  ");
             var winProb = calcIplWinProb(competitors, pickName, marketProb);
             if (liveDiv) {
-              liveDiv.innerHTML =
-                '<span style="color:#ef4444;font-weight:700;font-size:0.75rem;">● LIVE</span>' +
-                (scoreStr
-                  ? ' <span style="color:#94a3b8;font-size:0.72rem;">&nbsp;' + scoreStr + "</span>"
-                  : "") +
-                (summary
-                  ? ' <span style="color:#94a3b8;font-size:0.72rem;"> — ' + summary + "</span>"
-                  : "") +
-                "&nbsp;&nbsp;" + probHtml(winProb);
+              var liveCenter =
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
+                  '<span style="color:#ef4444;font-weight:700;font-size:0.72rem;">● LIVE</span>' +
+                  (summary
+                    ? '<span style="color:#94a3b8;font-size:0.65rem;text-align:center;line-height:1.2;">' + summary + '</span>'
+                    : '') +
+                  probHtml(winProb) +
+                '</div>';
+              liveDiv.innerHTML = iplScoreboard(teams[0], teams[1], liveCenter);
             }
           }
           // state === "pre": renderIplCommenceTimes already shows the scheduled time
