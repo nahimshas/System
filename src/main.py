@@ -811,6 +811,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         errors=errors,
         change_warnings=change_warnings,
         odds_api_credits=get_api_credits(),
+        fresh_odds=True,   # full run always fetches live odds
     )
 
     template_dir = Path(__file__).parent / "report" / "templates"

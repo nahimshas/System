@@ -137,6 +137,7 @@ def build_report(
     wnba_display: Optional[List[Dict]] = None,
     mls_display: Optional[List[Dict]] = None,
     mls_game_count: int = 0,
+    fresh_odds: bool = False,   # True only when a full odds-fetch run generated this report
 ) -> Dict:
     change_warnings = change_warnings or []
 
@@ -531,6 +532,7 @@ def build_report(
         "chart_data":         chart_data,
         "history_records":    performance.get("all_records", []),
         "run_date_iso":       run_date.isoformat(),
+        "fresh_odds":         fresh_odds,
         "prop_accuracy":      prop_accuracy,
         "has_prop_accuracy":  bool(prop_accuracy.get("total", 0)),
         "prop_chart_data":    prop_chart_data,
