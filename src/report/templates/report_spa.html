@@ -643,11 +643,6 @@
     }
     .alloc-card.tappable { cursor: pointer; }
     .alloc-card.tappable:active { background: rgba(255,255,255,0.04); }
-    .alloc-goto {
-      display: inline-flex; align-items: center; gap: 3px;
-      font-size: 0.68rem; color: var(--teal); margin-top: 6px;
-      opacity: 0.75;
-    }
     .alloc-card-top {
       display: flex;
       gap: 10px;
@@ -820,9 +815,6 @@
         <span class="alloc-chip">Cost ${{ "%.2f"|format(row.cost) }}</span>
         <span class="alloc-chip win">+${{ "%.2f"|format(row.profit_if_win) }} if win</span>
       </div>
-      {% if row.bet_type != "Parlay" %}
-      <div class="alloc-goto">View full card in {{ row.sport }} tab ›</div>
-      {% endif %}
     </div>
     {% endfor %}
 
