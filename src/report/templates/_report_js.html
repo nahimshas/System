@@ -742,11 +742,12 @@
                 ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
                 : null;
       if (!lev || lev.stateId === "1") {
-        // Pre-game: show local start time
+        // Pre-game: show local start time with timezone
         var legIso = lgl.commence_time || "";
         if (legIso) {
           try {
-            var legT = new Date(legIso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+            var legD = new Date(legIso);
+            var legT = legD.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
             legSummaryParts.push(
               '<span style="color:var(--teal);">' +
               (lgl.away_team ? lgl.away_team.split(" ").pop() : "?") +

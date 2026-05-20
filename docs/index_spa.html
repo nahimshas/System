@@ -814,7 +814,6 @@
           <div class="alloc-pick">New York Yankees (ML) + San Francisco Giants (ML)</div>
           
           <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
-          <div class="alloc-time alloc-parlay-times"></div>
           
         </div>
       </div>
@@ -851,7 +850,6 @@
           <div class="alloc-pick">New York Knicks (ML) + Los Angeles Dodgers (ML)</div>
           
           <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
-          <div class="alloc-time alloc-parlay-times"></div>
           
         </div>
       </div>
@@ -3153,7 +3151,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 04:36 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 05:08 PM PDT</div>
         </div>
         
       </div>
@@ -3569,34 +3567,7 @@ function toggleCtx(el) {
     obs.observe(el, { childList: true, characterData: true, subtree: true });
   });
 
-  // ── Parlay alloc-card start times ────────────────────────────────────────
-  // Parse each parlay card's data-legs JSON, deduplicate by commence_time,
-  // format each into the user's local timezone, and show them in .alloc-parlay-times.
-  function fmtTime(iso) {
-    if (!iso) return '';
-    try {
-      var d = new Date(iso);
-      if (isNaN(d.getTime())) return '';
-      return '🕐 ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
-    } catch(e) { return ''; }
-  }
-  document.querySelectorAll('.alloc-card[data-bet-type="Parlay"][data-legs]').forEach(function(card) {
-    var timeEl = card.querySelector('.alloc-parlay-times');
-    if (!timeEl) return;
-    var legs;
-    try { legs = JSON.parse(card.getAttribute('data-legs') || '[]'); } catch(e) { return; }
-    var seen = {};
-    var times = [];
-    legs.forEach(function(leg) {
-      var ct = leg.commence_time || '';
-      if (ct && !seen[ct]) {
-        seen[ct] = true;
-        var t = fmtTime(ct);
-        if (t) times.push(t);
-      }
-    });
-    if (times.length) timeEl.textContent = times.join(' · ');
-  });
+  // (Parlay leg start times are now shown inline in applyParlayAllocCard leg summary rows)
 
   // ── IPL card times: show date + time (matches are often the next calendar day) ──
   // Uses the browser's local timezone so the date is correct for the viewer.
@@ -4363,11 +4334,12 @@ function toggleCtx(el) {
                 ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
                 : null;
       if (!lev || lev.stateId === "1") {
-        // Pre-game: show local start time
+        // Pre-game: show local start time with timezone
         var legIso = lgl.commence_time || "";
         if (legIso) {
           try {
-            var legT = new Date(legIso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+            var legD = new Date(legIso);
+            var legT = legD.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
             legSummaryParts.push(
               '<span style="color:var(--teal);">' +
               (lgl.away_team ? lgl.away_team.split(" ").pop() : "?") +
