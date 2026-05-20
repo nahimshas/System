@@ -356,6 +356,10 @@
       background: var(--red);
       animation: dotPulse 1.4s ease-in-out infinite;
     }
+    .tab-dot.done {
+      background: #64748b;
+      animation: none;
+    }
     @keyframes dotPulse {
       0%, 100% { opacity: 1; }
       50%       { opacity: 0.45; }
@@ -1807,18 +1811,36 @@ function toggleCtx(el) {
       else badge.classList.remove('is-live');
     }
 
-    // Update each tab's dot: green = has picks, red+pulse = game is live now
+    // Update each tab's dot:
+    //   green       = has picks, not all started/ended
+    //   red + pulse = at least one game is live now
+    //   gray        = all games in tab have settled (done)
     document.querySelectorAll('.spa-tab-btn').forEach(function(btn) {
       var tabId = btn.getAttribute('data-tab');
       var panel = document.getElementById('tab-' + tabId);
       var dot   = btn.querySelector('.tab-dot');
       if (!dot || !panel) return;
+
       var tabLive = false;
       panel.querySelectorAll('.live-status').forEach(function(el) {
         if (el.innerHTML.indexOf('● LIVE') !== -1) tabLive = true;
       });
-      if (tabLive) dot.classList.add('live');
-      else dot.classList.remove('live');
+
+      if (tabLive) {
+        dot.classList.add('live');
+        dot.classList.remove('done');
+      } else {
+        dot.classList.remove('live');
+        // Gray if every game card in the tab has a settled result
+        var gameCards = panel.querySelectorAll('[data-home-team], .alloc-card[data-legs]');
+        var total = gameCards.length;
+        var settled = 0;
+        gameCards.forEach(function(c) {
+          if (c.getAttribute('data-live-result') || c.getAttribute('data-espn-done')) settled++;
+        });
+        if (total > 0 && settled === total) dot.classList.add('done');
+        else dot.classList.remove('done');
+      }
     });
   }
   window.checkLiveBadge = checkLive;
