@@ -75,24 +75,31 @@
 
   // ── Shared scoreboard helpers ─────────────────────────────────────────────
   // Used by all sports for both live and final game displays.
-  // Pick the best-contrast logo from ESPN's logos array for our dark-background cards.
-  // ESPN naming convention (counterintuitive):
-  //   "scoreboard" = explicit scoreboard variant, high-contrast on dark ✓
-  //   "dark"       = designed FOR dark backgrounds (white/light logos)  ✓
-  //   "default"    = designed for light/white backgrounds               ✗ (bad on dark)
-  // Priority: scoreboard > dark > default > first available
+  // Pick the best-contrast logo for our dark-background cards.
+  // ESPN scoreboard API often omits the logos[] array, so we fall back to
+  // deriving the dark-background URL from the default logo URL:
+  //   /i/teamlogos/{sport}/500/{abbr}.png  →  /i/teamlogos/{sport}/500-dark/{abbr}.png
+  // The dark variant shows white/light logos (e.g. Yankees white NY, Twins white TC).
+  // onerror in _teamIcon falls back to the original if the dark URL 404s.
   function _bestLogo(teamObj) {
     var logos = teamObj.logos || [];
-    if (!logos.length) return teamObj.logo || "";
-    var scoreboard = null, dark = null, def = null;
-    for (var i = 0; i < logos.length; i++) {
-      var l = logos[i];
-      var relStr = (l.rel || []).join(" ");
-      if (!scoreboard && relStr.indexOf("scoreboard") !== -1) scoreboard = l.href;
-      if (!dark       && relStr.indexOf("dark")       !== -1) dark       = l.href;
-      if (!def        && relStr.indexOf("default")    !== -1) def        = l.href;
+    // If ESPN provides a logos array, prefer scoreboard > dark tagged entries
+    if (logos.length) {
+      var scoreboard = null, dark = null;
+      for (var i = 0; i < logos.length; i++) {
+        var relStr = (logos[i].rel || []).join(" ");
+        if (!scoreboard && relStr.indexOf("scoreboard") !== -1) scoreboard = logos[i].href;
+        if (!dark       && relStr.indexOf("dark")       !== -1) dark       = logos[i].href;
+      }
+      if (scoreboard || dark) return scoreboard || dark;
     }
-    return scoreboard || dark || def || logos[0].href || teamObj.logo || "";
+    // No usable logos array — derive the dark variant from the base logo URL
+    var base = (logos.length ? logos[0].href : "") || teamObj.logo || "";
+    if (!base) return "";
+    // ESPN CDN: replace /500/ or /500/scoreboard/ with /500-dark/
+    var dark2 = base.replace(/\/500\/scoreboard\//, '/500-dark/')
+                    .replace(/\/500\//, '/500-dark/');
+    return dark2 || base;
   }
 
   function _teamIcon(logo, abbr) {
@@ -100,7 +107,7 @@
       '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;' +
            'background:#1e2130;display:flex;align-items:center;justify-content:center;">' +
         (logo
-          ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;">'
+          ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;" onerror="this.src=this.src.replace(\'/500-dark/\',\'/500/\');this.onerror=null;">'
           : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + abbr + '</span>') +
       '</div>'
     );
