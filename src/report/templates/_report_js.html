@@ -956,6 +956,16 @@
     var liveDiv = card.querySelector(".live-status");
     if (!liveDiv) return;
 
+    // Shorten full team names in proj-score-hl to abbreviations (runs once per card)
+    var projDiv = card.querySelector('.proj-score-hl');
+    if (projDiv && !projDiv.getAttribute('data-abbr') && ev.homeAbbr && ev.awayAbbr) {
+      var t = projDiv.textContent;
+      if (ev.home) t = t.split(ev.home).join(ev.homeAbbr);
+      if (ev.away) t = t.split(ev.away).join(ev.awayAbbr);
+      projDiv.textContent = t;
+      projDiv.setAttribute('data-abbr', '1');
+    }
+
     // The "ourTeam" is the pick itself for ML/Spread; for Totals we just need home/away
     var ourTeam = (betType === "Moneyline" || betType === "Spread") ? pick : homeTeam;
     // If ESPN has home/away flipped vs our data, normalise
