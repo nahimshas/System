@@ -702,7 +702,7 @@
   </style>
 </head>
 <body>
-<div id="spa-wrap">
+<div id="spa-wrap" data-report-date="{{ report.run_date_iso }}">
 
 <!-- Header (stats bar) -->
 <div class="app-header">
@@ -1881,5 +1881,49 @@ function toggleCtx(el) {
 {% if report.history_records %}
 <script id="hist-data" type="application/json">{{ report.history_records | tojson }}</script>
 {% endif %}
+
+<script>
+// ── Stale report detection ─────────────────────────────────────────────────
+// If the HTML was generated on a previous day (morning run hasn't fired yet),
+// replace "no picks / no games" messages with a "waiting" message instead.
+(function () {
+  var wrap = document.getElementById('spa-wrap');
+  if (!wrap) return;
+  var reportDate = wrap.getAttribute('data-report-date') || '';
+  if (!reportDate) return;
+
+  // Today's date in the user's local timezone as YYYY-MM-DD
+  var now = new Date();
+  var todayLocal = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0')
+  ].join('-');
+
+  if (reportDate >= todayLocal) return;  // report is current — nothing to do
+
+  // ── Report is from a previous day: morning run hasn't happened yet ──
+  var WAIT_HTML = '<div class="icon">⏳</div>Today\'s picks are on the way — morning run usually fires around 9 AM PDT.';
+
+  // Today tab empty state
+  var todayEmpty = document.querySelector('#tab-today .empty-state');
+  if (todayEmpty) todayEmpty.innerHTML = WAIT_HTML;
+
+  // Sport tabs: replace "No games today" in sub-headers and empty states
+  document.querySelectorAll('.tab-header-sub').forEach(function (el) {
+    var t = el.textContent.trim();
+    if (t === 'No games today' || t === 'No matches today' || t === 'No qualifying picks') {
+      el.textContent = 'Checking today’s schedule…';
+    }
+  });
+  document.querySelectorAll('.spa-tab .empty-state').forEach(function (el) {
+    // Only replace generic "no games" / "no picks" messages, not custom ones
+    var t = el.textContent.trim();
+    if (/^No (NBA|MLB|IPL|NHL|WNBA|NFL|MLS)/.test(t) || /^No picks/.test(t)) {
+      el.innerHTML = WAIT_HTML;
+    }
+  });
+}());
+</script>
 </body>
 </html>
