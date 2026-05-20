@@ -1631,6 +1631,9 @@ window._tabDots = {
       var clamp = Math.max(-swW, Math.min(swW, dx));
       swCur.style.transform = "translateX(" + clamp + "px)";
       swNxt.style.transform = "translateX(" + ((dx < 0 ? swW : -swW) + clamp) + "px)";
+      // Keep carousel track in sync with main content swipe
+      var _nt = document.getElementById("spa-nav-track");
+      if (_nt) { _nt.style.transition = "none"; _nt.style.transform = "translateX(" + (clamp / 5) + "px)"; }
     }
   }, { passive: true });
 
@@ -1640,19 +1643,22 @@ window._tabDots = {
     var _c  = swCur, _n = swNxt;
     swActive = false; swCur = null; swNxt = null;
 
+    var _nt2 = document.getElementById("spa-nav-track");
     if (Math.abs(dx) >= swW * SW_THRESH) {
       var nxtIdx = _mod(curIdx + (dx < 0 ? 1 : -1), TABS.length);
       _c.style.transition = SW_TRANS;
       _c.style.transform  = "translateX(" + (dx < 0 ? -swW : swW) + "px)";
       _n.style.transition = SW_TRANS;
       _n.style.transform  = "translateX(0)";
+      // Update carousel immediately so it animates with the content slide
+      curIdx = nxtIdx;
+      renderCarousel(curIdx);
+      if (_nt2) { _nt2.style.transition = SW_TRANS; _nt2.style.transform = ""; }
       setTimeout(function() {
         _c.classList.remove("active");
         clearSwipeStyles(_c);
         _n.classList.add("active");
         clearSwipeStyles(_n);
-        curIdx = nxtIdx;
-        renderCarousel(curIdx);
         try { localStorage.setItem("spa-tab", TABS[nxtIdx]); } catch(e2) {}
         if (typeof window.checkLiveBadge === "function") window.checkLiveBadge();
       }, 220);
@@ -1661,6 +1667,7 @@ window._tabDots = {
       _c.style.transform  = "";
       _n.style.transition = SW_TRANS;
       _n.style.transform  = "translateX(" + (dx < 0 ? swW : -swW) + "px)";
+      if (_nt2) { _nt2.style.transition = SW_TRANS; _nt2.style.transform = ""; }
       setTimeout(function() {
         clearSwipeStyles(_c);
         _n.style.display = "";
@@ -1774,19 +1781,20 @@ window._tabDots = {
       _c.style.transform  = "translateX(" + (dx < 0 ? -swW : swW) + "px)";
       _n.style.transition = SW_TRANS;
       _n.style.transform  = "translateX(0)";
+      // Update carousel immediately so new arrangement animates in together with content
+      curIdx = nxtIdx;
+      renderCarousel(curIdx);
       navTrackReset(true);
       setTimeout(function() {
         _c.classList.remove("active");
         clearSwipeStyles(_c);
         _n.classList.add("active");
         clearSwipeStyles(_n);
-        curIdx = nxtIdx;
-        renderCarousel(curIdx);
         try { localStorage.setItem("spa-tab", TABS[nxtIdx]); } catch(e2) {}
         if (typeof window.checkLiveBadge === "function") window.checkLiveBadge();
       }, 220);
     } else {
-      // Snap back
+      // Snap back — restore carousel and panels
       _c.style.transition = SW_TRANS;
       _c.style.transform  = "";
       _n.style.transition = SW_TRANS;
