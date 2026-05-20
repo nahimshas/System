@@ -3133,7 +3133,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 10:05 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 19, 2026 at 10:08 PM PDT</div>
         </div>
         
       </div>
@@ -3547,8 +3547,9 @@ function toggleCtx(el) {
         dot.classList.remove('done');
       } else {
         dot.classList.remove('live');
-        // Gray if every game card in the tab has a settled result
-        var gameCards = panel.querySelectorAll('[data-home-team], .alloc-card[data-legs]');
+        // Gray if every game card in the tab has a settled result.
+        // Exclude prop cards — they have data-home-team but never get data-live-result.
+        var gameCards = panel.querySelectorAll('[data-home-team]:not(.prop-card), .alloc-card[data-legs]');
         var total = gameCards.length;
         var settled = 0;
         gameCards.forEach(function(c) {

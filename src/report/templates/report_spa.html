@@ -1831,8 +1831,9 @@ function toggleCtx(el) {
         dot.classList.remove('done');
       } else {
         dot.classList.remove('live');
-        // Gray if every game card in the tab has a settled result
-        var gameCards = panel.querySelectorAll('[data-home-team], .alloc-card[data-legs]');
+        // Gray if every game card in the tab has a settled result.
+        // Exclude prop cards — they have data-home-team but never get data-live-result.
+        var gameCards = panel.querySelectorAll('[data-home-team]:not(.prop-card), .alloc-card[data-legs]');
         var total = gameCards.length;
         var settled = 0;
         gameCards.forEach(function(c) {
