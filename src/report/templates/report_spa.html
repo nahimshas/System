@@ -705,7 +705,7 @@
   <div class="header-stats">
     {% if report.has_performance %}{% set hp = report.performance %}
     <div class="stat-chip">
-      <span class="sc-val">{{ hp.won }}W-{{ hp.lost }}L</span>
+      <span class="sc-val" id="hdr-record">{{ hp.won }}W-{{ hp.lost }}L</span>
       <span class="sc-lbl">Record</span>
     </div>
     <div class="stat-chip">

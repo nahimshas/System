@@ -866,11 +866,15 @@
 
     if (anyLost) {
       card.setAttribute("data-live-result", "LOST");
+      cacheParlayResult(card, "LOST");
+      updatePerformance();
       liveDiv.innerHTML = outcomeHtml("LOST") + legSummary;
       return;
     }
     if (allFinal) {
       card.setAttribute("data-live-result", "WON");
+      cacheParlayResult(card, "WON");
+      updatePerformance();
       liveDiv.innerHTML = outcomeHtml("WON") + legSummary;
       return;
     }
@@ -1213,15 +1217,21 @@
       }
     });
 
-    // Parlays — read from allocation table <tr> rows (no standalone card exists).
-    // data-live-result is stamped by applyTable() once all legs are final.
-    document.querySelectorAll("tr.alloc-main-row[data-bet-type='Parlay']").forEach(function (row) {
-      var result = row.getAttribute("data-live-result");
+    // Parlays — check both classic report <tr> rows and SPA alloc-card divs.
+    // applyTable() stamps data-live-result on tr.alloc-main-row (classic report).
+    // applyParlayAllocCard() stamps data-live-result on .alloc-card[data-legs] (SPA).
+    var seenParlayIds = {};
+    function _accumParlay(el) {
+      var eid = el.getAttribute("id") || el.getAttribute("data-label") || el.getAttribute("data-pick") || "";
+      if (eid && seenParlayIds[eid]) return;   // avoid double-count if both views exist
+      if (eid) seenParlayIds[eid] = true;
+
+      var result = el.getAttribute("data-live-result");
       if (!result) return;
 
-      var cost   = parseFloat(row.getAttribute("data-cost")   || "0");
-      var profit = parseFloat(row.getAttribute("data-profit") || "0");
-      var conf   = row.getAttribute("data-confidence") || "HIGH";
+      var cost   = parseFloat(el.getAttribute("data-cost")   || "0");
+      var profit = parseFloat(el.getAttribute("data-profit") || "0");
+      var conf   = el.getAttribute("data-confidence") || "HIGH";
       var pnl    = result === "WON" ? profit : (result === "PUSH" ? 0 : -cost);
 
       if (result === "WON")       liveWon++;
@@ -1239,7 +1249,9 @@
       if (result === "WON")       sportLive["PARLAY"].won++;
       else if (result === "LOST") sportLive["PARLAY"].lost++;
       sportLive["PARLAY"].pnl += pnl;
-    });
+    }
+    document.querySelectorAll("tr.alloc-main-row[data-bet-type='Parlay']").forEach(_accumParlay);
+    document.querySelectorAll(".alloc-card[data-legs]").forEach(_accumParlay);
 
     // ── Watchlist W-L tiles (NHL + IPL — no budget, no PnL) ─────────────
     // Declared as a named function so it can be called again after the IPL
@@ -1346,6 +1358,19 @@
     if (roiEl) {
       roiEl.textContent = roi !== null ? roi + "%" : "—";
       if (roi !== null) roiEl.style.color = pctColor(parseFloat(roi), 0.01, -0.01);
+    }
+
+    // Mirror updates to the header stat bar (hdr-record / hdr-wr / hdr-pnl / hdr-roi)
+    var hdrRecEl = document.getElementById("hdr-record");
+    if (hdrRecEl) { hdrRecEl.textContent = won + "W–" + lost + "L"; hdrRecEl.style.color = winRateColor; }
+    var hdrWrEl = document.getElementById("hdr-wr");
+    if (hdrWrEl) { hdrWrEl.textContent = winRate !== null ? winRate + "%" : "—"; hdrWrEl.style.color = winRateColor; }
+    var hdrPnlEl = document.getElementById("hdr-pnl");
+    if (hdrPnlEl) { hdrPnlEl.textContent = fmt(pnl); hdrPnlEl.style.color = pnlColor(pnl); }
+    var hdrRoiEl = document.getElementById("hdr-roi");
+    if (hdrRoiEl) {
+      hdrRoiEl.textContent = roi !== null ? roi + "%" : "—";
+      if (roi !== null) hdrRoiEl.style.color = pctColor(parseFloat(roi), 0.01, -0.01);
     }
 
     // Update Today's Profit live row in the allocation table
@@ -2643,7 +2668,8 @@
     try { var k = _betKey(card); if (k) localStorage.setItem(k, result); } catch(e) {}
   }
   function _parlayKey(row) {
-    var p = row.getAttribute("data-pick") || row.getAttribute("data-label") || "";
+    // Try data-pick / data-label (classic report <tr>), then id (SPA alloc-card)
+    var p = row.getAttribute("data-pick") || row.getAttribute("data-label") || row.getAttribute("id") || "";
     return p ? _RK + "parlay|" + p : null;
   }
   function cacheParlayResult(row, result) {
@@ -2669,7 +2695,7 @@
         if (ld) ld.innerHTML = outcomeHtml(cached);
       });
 
-      // Restore parlay results
+      // Restore parlay results — classic report <tr> rows
       document.querySelectorAll("tr.alloc-main-row[data-bet-type='Parlay']").forEach(function(row) {
         if (row.getAttribute("data-live-result")) return;
         var cached = localStorage.getItem(_parlayKey(row));
@@ -2677,6 +2703,15 @@
         row.setAttribute("data-live-result", cached);
         var cell = row.querySelector(".alloc-score-cell");
         if (cell) cell.innerHTML = outcomeHtml(cached);
+      });
+      // Restore parlay results — SPA Today-tab alloc cards
+      document.querySelectorAll(".alloc-card[data-legs]").forEach(function(card) {
+        if (card.getAttribute("data-live-result")) return;
+        var cached = localStorage.getItem(_parlayKey(card));
+        if (!cached) return;
+        card.setAttribute("data-live-result", cached);
+        var ld = card.querySelector(".live-status");
+        if (ld) ld.innerHTML = outcomeHtml(cached);
       });
     } catch(e) {}
   }
