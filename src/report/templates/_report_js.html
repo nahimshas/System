@@ -75,6 +75,25 @@
 
   // ── Shared scoreboard helpers ─────────────────────────────────────────────
   // Used by all sports for both live and final game displays.
+  // Pick the best-contrast logo from ESPN's logos array.
+  // ESPN tags each logo with a "rel" array e.g. ["full","default"], ["dark"], ["scoreboard"].
+  // For dark-background cards we want "scoreboard" > any non-dark > "default" > fallback.
+  function _bestLogo(teamObj) {
+    var logos = teamObj.logos || [];
+    if (!logos.length) return teamObj.logo || "";
+    // Priority: scoreboard first, then anything that isn't tagged "dark", then default, then first
+    var scoreboard = null, nonDark = null, def = null;
+    for (var i = 0; i < logos.length; i++) {
+      var l = logos[i];
+      var rel = l.rel || [];
+      var relStr = rel.join(" ");
+      if (!scoreboard && relStr.indexOf("scoreboard") !== -1) scoreboard = l.href;
+      if (!def       && relStr.indexOf("default")    !== -1) def        = l.href;
+      if (!nonDark   && relStr.indexOf("dark")       === -1) nonDark    = l.href;
+    }
+    return scoreboard || nonDark || def || logos[0].href || teamObj.logo || "";
+  }
+
   function _teamIcon(logo, abbr) {
     return (
       '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;' +
@@ -538,8 +557,8 @@
     var awayAbbr  = (awayComp.team || {}).abbreviation || "";
     var homeName  = (homeComp.team || {}).displayName  || "";
     var awayName  = (awayComp.team || {}).displayName  || "";
-    var homeLogo  = (homeComp.team || {}).logo || "";
-    var awayLogo  = (awayComp.team || {}).logo || "";
+    var homeLogo  = _bestLogo(homeComp.team || {});
+    var awayLogo  = _bestLogo(awayComp.team || {});
     var homeScore = parseInt(homeComp.score || "0", 10);
     var awayScore = parseInt(awayComp.score || "0", 10);
 
@@ -2423,7 +2442,7 @@
           return {
             name:   dispName,
             abbr:   tObj.abbreviation || dispName.split(" ").pop() || dispName,
-            logo:   tObj.logo || "",
+            logo:   _bestLogo(tObj),
             score:  c.score || "",
             winner: !!c.winner,
           };
