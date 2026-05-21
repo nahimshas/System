@@ -357,6 +357,8 @@
     .spa-tab-btn[data-offset="3"]  { opacity: 0.18; transform: scale(0.50); }
     details[open] > summary .det-arrow { transform: rotate(90deg); }
     .det-arrow { display:inline-block; transition: transform 0.18s; font-size:0.65rem; color:var(--teal); margin-right:2px; }
+    /* Suppress arrow transition during localStorage restore so arrows don't animate on load */
+    html.spa-restoring .det-arrow { transition: none !important; }
     .spa-tab-icon  { font-size: 1.6rem; line-height: 1; position: relative; }
     .spa-tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
     .tab-dot {
@@ -1099,7 +1101,9 @@
     {% if report.has_performance %}
     {% set p = report.performance %}
     <details id="sect-model-perf" open>
-    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:14px;"><span class="det-arrow">▶</span>Model Performance</summary>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:14px;"><span class="det-arrow">▶</span>Model Performance
+      <span id="perf-live-badge" style="display:none;font-size:0.65rem;font-weight:600;padding:2px 7px;border-radius:99px;background:rgba(20,184,166,0.15);color:var(--teal);text-transform:none;letter-spacing:0;margin-left:8px;">● includes today</span>
+    </summary>
     <div class="card"
          id="perf-card"
          data-hist-won="{{ p.won }}"
@@ -1129,10 +1133,7 @@
 
       {% if p.by_confidence %}
       <div style="margin-top:12px;">
-        <div class="signals-title" style="display:flex;justify-content:space-between;">
-          <span>By Confidence &amp; Sport</span>
-          <span id="perf-live-badge" style="display:none;font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(20,184,166,0.15);color:var(--teal);text-transform:none;letter-spacing:0;">● includes today</span>
-        </div>
+        <div class="signals-title">By Confidence &amp; Sport</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" id="perf-breakdown">
           {% for conf, cs in p.by_confidence.items() %}
           <div style="flex:1;min-width:120px;background:var(--card2);border-radius:8px;padding:8px 10px;"
@@ -1875,12 +1876,20 @@ window._tabDots = {
     function saveDetails(el) {
       try { localStorage.setItem("spa-det-" + el.id, el.open ? "1" : "0"); } catch(e) {}
     }
+    // Suppress CSS arrow transitions during restore so they don't animate on load
+    document.documentElement.classList.add('spa-restoring');
     document.querySelectorAll("details[id]").forEach(function(d) {
       try {
         var v = localStorage.getItem("spa-det-" + d.id);
         if (v !== null) d.open = (v === "1");
       } catch(e) {}
       d.addEventListener("toggle", function() { saveDetails(d); });
+    });
+    // Re-enable transitions after two animation frames (ensures layout is committed first)
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        document.documentElement.classList.remove('spa-restoring');
+      });
     });
   })();
 </script>
