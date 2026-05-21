@@ -355,10 +355,8 @@
     /* Edge slots ±3 */
     .spa-tab-btn[data-offset="-3"],
     .spa-tab-btn[data-offset="3"]  { opacity: 0.18; transform: scale(0.50); }
-    details[open] > summary .det-arrow { transform: rotate(90deg); }
-    .det-arrow { display:inline-block; transition: transform 0.18s; font-size:0.65rem; color:var(--teal); margin-right:2px; }
-    /* Suppress arrow transition during localStorage restore so arrows don't animate on load */
-    html.spa-restoring .det-arrow { transition: none !important; }
+    /* Arrow direction is controlled entirely by JS (textContent ▶/▼) — no CSS transforms */
+    .det-arrow { display:inline-block; font-size:0.65rem; color:var(--teal); margin-right:2px; }
     .spa-tab-icon  { font-size: 1.6rem; line-height: 1; position: relative; }
     .spa-tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
     .tab-dot {
@@ -1871,24 +1869,30 @@ window._tabDots = {
   renderCarousel(curIdx);
 })();
 
-  // ── Persist <details> collapse state across reloads ─────────────────────────
+  // ── Persist <details> collapse state + arrow direction ──────────────────────
+  // Arrow direction is driven entirely by JS (▶ = collapsed, ▼ = open).
+  // CSS transforms were removed because the details[open] selector races with
+  // the JS d.open restore, leaving arrows stuck in wrong states after refresh.
   (function() {
+    function setArrow(d) {
+      var arrow = d.querySelector(':scope > summary .det-arrow');
+      if (arrow) arrow.textContent = d.open ? '▼' : '▶';
+    }
     function saveDetails(el) {
       try { localStorage.setItem("spa-det-" + el.id, el.open ? "1" : "0"); } catch(e) {}
     }
-    // Suppress CSS arrow transitions during restore so they don't animate on load
-    document.documentElement.classList.add('spa-restoring');
     document.querySelectorAll("details[id]").forEach(function(d) {
+      // Restore saved state
       try {
         var v = localStorage.getItem("spa-det-" + d.id);
         if (v !== null) d.open = (v === "1");
       } catch(e) {}
-      d.addEventListener("toggle", function() { saveDetails(d); });
-    });
-    // Re-enable transitions after two animation frames (ensures layout is committed first)
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        document.documentElement.classList.remove('spa-restoring');
+      // Set arrow immediately to match current state (no CSS transition involved)
+      setArrow(d);
+      // Keep arrow and localStorage in sync on every toggle
+      d.addEventListener("toggle", function() {
+        setArrow(d);
+        saveDetails(d);
       });
     });
   })();
