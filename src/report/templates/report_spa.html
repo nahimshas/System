@@ -1342,10 +1342,10 @@
           {% for sp, stats in report.prop_accuracy_by_sport.items() %}
           {% set hsp = pa.hist_by_sport.get(sp, {}) %}
           <div id="pa-sport-{{ sp }}" style="flex:1;min-width:130px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"
-               data-sport="{{ sp }}" data-sport-total="{{ hsp.get('total', 0) }}" data-sport-hits="{{ hsp.get('hits', 0) }}">
+               data-sport="{{ sp }}" data-hist-sport-total="{{ hsp.get('total', 0) }}" data-hist-sport-hits="{{ hsp.get('hits', 0) }}">
             <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">{{ sp }}</div>
-            <div style="font-size:1.05rem;font-weight:700;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}var(--green){% elif stats.hit_rate and stats.hit_rate >= 45 %}var(--yellow){% else %}var(--red){% endif %};">{{ stats.hit_rate }}%</div>
-            <div style="font-size:0.72rem;color:var(--muted);">{{ stats.total }} settled</div>
+            <div class="sport-hit-rate" style="font-size:1.05rem;font-weight:700;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}var(--green){% elif stats.hit_rate and stats.hit_rate >= 45 %}var(--yellow){% else %}var(--red){% endif %};">{{ stats.hit_rate }}%</div>
+            <div class="sport-count" style="font-size:0.72rem;color:var(--muted);">{{ stats.total }} settled</div>
           </div>
           {% endfor %}
         </div>
@@ -1977,6 +1977,7 @@ function toggleCtx(el) {
   // badge reflects what is live in the tab you are looking at.
   function checkLive() {
     var activeTab = document.querySelector('.spa-tab.active');
+    var activeTabId = activeTab ? activeTab.id : '';
     var hasLive = false;
     if (activeTab) {
       activeTab.querySelectorAll('.live-status').forEach(function(el) {
@@ -1985,8 +1986,14 @@ function toggleCtx(el) {
     }
     var badge = document.getElementById('hdr-live');
     if (badge) {
-      if (hasLive) badge.classList.add('is-live');
-      else badge.classList.remove('is-live');
+      // Analytics tab has no game cards — the badge is always off there, so hide it entirely
+      if (activeTabId === 'tab-analytics') {
+        badge.style.display = 'none';
+      } else {
+        badge.style.display = '';
+        if (hasLive) badge.classList.add('is-live');
+        else badge.classList.remove('is-live');
+      }
     }
 
     // Update each tab's dot:
