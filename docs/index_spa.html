@@ -565,10 +565,11 @@
     .hm-dow-row { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:3px; }
     .hm-dow { font-size:0.6rem; text-align:center; color:var(--muted); font-weight:600; padding:2px 0; }
     .hm-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-    .hm-cell { aspect-ratio:1/1; border-radius:5px; position:relative; padding:4px 3px 3px; box-sizing:border-box; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center; }
+    /* min-width:0 is essential — without it, cell content can expand beyond 1fr */
+    .hm-cell { aspect-ratio:1/1; border-radius:5px; position:relative; box-sizing:border-box; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center; min-width:0; overflow:hidden; }
     .hm-cell.hm-today { outline:2px solid rgba(255,255,255,0.85); outline-offset:-2px; }
-    .hm-day-num { position:absolute; top:3px; left:5px; font-size:0.6rem; color:rgba(255,255,255,0.75); font-weight:700; line-height:1; }
-    .hm-pnl { font-size:0.75rem; font-weight:800; line-height:1; text-align:center; }
+    .hm-day-num { position:absolute; top:3px; left:4px; font-size:0.58rem; color:rgba(255,255,255,0.75); font-weight:700; line-height:1; }
+    .hm-pnl { font-size:0.72rem; font-weight:600; line-height:1; text-align:center; white-space:nowrap; }
     #hm-popup-overlay { display:none; position:fixed; inset:0; z-index:600; background:rgba(0,0,0,0.65); align-items:flex-end; justify-content:center; }
     #hm-popup-box { background:var(--card); border-radius:16px 16px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); width:100%; max-width:520px; max-height:72vh; overflow-y:auto; }
     .hm-bet-row { padding:7px 0; border-bottom:1px solid var(--border); }
@@ -3299,7 +3300,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 06:03 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 06:11 PM PDT</div>
         </div>
         
       </div>
@@ -6863,7 +6864,12 @@ function toggleCtx(el) {
       }
     }
 
-    // ── 4. P&L display string: always shows sign, 2 decimals ─────────────
+    // ── 4. P&L display strings ────────────────────────────────────────────
+    // Cell: no $ sign (saves ~1 char width, colour already shows direction)
+    function cellPnlStr(v) {
+      return (v >= 0 ? "+" : "-") + Math.abs(v).toFixed(2);
+    }
+    // Popup / totals: full format with $ sign
     function pnlStr(v) {
       return (v >= 0 ? "+" : "-") + "$" + Math.abs(v).toFixed(2);
     }
@@ -6961,22 +6967,27 @@ function toggleCtx(el) {
         var cell = document.createElement("div");
         cell.className = "hm-cell" + (isToday ? " hm-today" : "");
 
-        var numEl = document.createElement("span");
-        numEl.className = "hm-day-num";
-        numEl.textContent = day;
-        cell.appendChild(numEl);
-
         if (!hasData) {
-          // No bets (or today with nothing settled yet)
+          // No bets — day number centered in the empty cell
           cell.style.background = isToday ? "#2e3150" : "#1a1d27";
-          numEl.style.color = isToday ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.25)";
+          var numEl2 = document.createElement("span");
+          numEl2.textContent = day;
+          numEl2.style.cssText = "font-size:0.65rem;font-weight:700;color:" +
+            (isToday ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.22)") + ";line-height:1;";
+          cell.appendChild(numEl2);
         } else {
+          // Has P&L data — day number top-left, amount centered
           cell.style.background = cellColor(effectivePnl);
           cell.style.cursor = "pointer";
 
+          var numEl = document.createElement("span");
+          numEl.className = "hm-day-num";
+          numEl.textContent = day;
+          cell.appendChild(numEl);
+
           var pnlEl = document.createElement("span");
           pnlEl.className = "hm-pnl";
-          pnlEl.textContent = pnlStr(effectivePnl);
+          pnlEl.textContent = cellPnlStr(effectivePnl);
           pnlEl.style.color = "rgba(255,255,255,0.95)";
           cell.appendChild(pnlEl);
 

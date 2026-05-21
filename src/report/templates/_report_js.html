@@ -2969,7 +2969,12 @@
       }
     }
 
-    // ── 4. P&L display string: always shows sign, 2 decimals ─────────────
+    // ── 4. P&L display strings ────────────────────────────────────────────
+    // Cell: no $ sign (saves ~1 char width, colour already shows direction)
+    function cellPnlStr(v) {
+      return (v >= 0 ? "+" : "-") + Math.abs(v).toFixed(2);
+    }
+    // Popup / totals: full format with $ sign
     function pnlStr(v) {
       return (v >= 0 ? "+" : "-") + "$" + Math.abs(v).toFixed(2);
     }
@@ -3067,22 +3072,27 @@
         var cell = document.createElement("div");
         cell.className = "hm-cell" + (isToday ? " hm-today" : "");
 
-        var numEl = document.createElement("span");
-        numEl.className = "hm-day-num";
-        numEl.textContent = day;
-        cell.appendChild(numEl);
-
         if (!hasData) {
-          // No bets (or today with nothing settled yet)
+          // No bets — day number centered in the empty cell
           cell.style.background = isToday ? "#2e3150" : "#1a1d27";
-          numEl.style.color = isToday ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.25)";
+          var numEl2 = document.createElement("span");
+          numEl2.textContent = day;
+          numEl2.style.cssText = "font-size:0.65rem;font-weight:700;color:" +
+            (isToday ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.22)") + ";line-height:1;";
+          cell.appendChild(numEl2);
         } else {
+          // Has P&L data — day number top-left, amount centered
           cell.style.background = cellColor(effectivePnl);
           cell.style.cursor = "pointer";
 
+          var numEl = document.createElement("span");
+          numEl.className = "hm-day-num";
+          numEl.textContent = day;
+          cell.appendChild(numEl);
+
           var pnlEl = document.createElement("span");
           pnlEl.className = "hm-pnl";
-          pnlEl.textContent = pnlStr(effectivePnl);
+          pnlEl.textContent = cellPnlStr(effectivePnl);
           pnlEl.style.color = "rgba(255,255,255,0.95)";
           cell.appendChild(pnlEl);
 
