@@ -2921,4 +2921,183 @@
       mainRow.classList.toggle("adr-open", open);
     });
   });
+
+  // ── Daily P&L Heatmap ────────────────────────────────────────────────────
+  (function () {
+    var dataEl = document.getElementById("all-records-data");
+    if (!dataEl) return;
+    var records;
+    try { records = JSON.parse(dataEl.textContent); } catch (e) { return; }
+    if (!records || !records.length) return;
+
+    // 1. Group by date, sum actual_pnl
+    var byDate = {};
+    records.forEach(function (r) {
+      if (!r.date) return;
+      var d = r.date.slice(0, 10);
+      if (!byDate[d]) byDate[d] = { pnl: 0, bets: [] };
+      var pnl = parseFloat(r.actual_pnl);
+      if (!isNaN(pnl)) byDate[d].pnl += pnl;
+      byDate[d].bets.push(r);
+    });
+
+    // 2. All-time scale
+    var maxProfit = 0, maxLoss = 0;
+    Object.keys(byDate).forEach(function (d) {
+      var v = byDate[d].pnl;
+      if (v > maxProfit) maxProfit = v;
+      if (v < maxLoss)   maxLoss = v;
+    });
+    if (maxProfit === 0) maxProfit = 1;
+    if (maxLoss === 0)   maxLoss = -1;
+
+    // 3. Colour
+    function cellColor(pnl) {
+      if (pnl === 0) return "#2a2d3e";
+      if (pnl > 0) {
+        var t = Math.min(pnl / maxProfit, 1);
+        var r = Math.round(13  + t * (34  - 13));
+        var g = Math.round(74  + t * (197 - 74));
+        var b = Math.round(58  + t * (94  - 58));
+        return "rgb(" + r + "," + g + "," + b + ")";
+      } else {
+        var t2 = Math.min(Math.abs(pnl) / Math.abs(maxLoss), 1);
+        var r2 = Math.round(74  + t2 * (239 - 74));
+        var g2 = Math.round(13  + t2 * (68  - 13));
+        var b2 = Math.round(13  + t2 * (68  - 13));
+        return "rgb(" + r2 + "," + g2 + "," + b2 + ")";
+      }
+    }
+
+    // 4. Month range
+    var allDates = Object.keys(byDate).sort();
+    var fp = allDates[0].split("-");
+    var minYear  = parseInt(fp[0], 10);
+    var minMonth = parseInt(fp[1], 10) - 1;
+    var today    = new Date();
+    var hmYear   = today.getFullYear();
+    var hmMonth  = today.getMonth();
+
+    var MONTHS = ["January","February","March","April","May","June",
+                  "July","August","September","October","November","December"];
+
+    var prevBtn  = document.getElementById("heatmap-prev");
+    var nextBtn  = document.getElementById("heatmap-next");
+    var lblEl    = document.getElementById("heatmap-month-label");
+    var gridEl   = document.getElementById("heatmap-calendar");
+    var overlay  = document.getElementById("hm-popup-overlay");
+    var popupBox = document.getElementById("hm-popup-box");
+    if (!prevBtn || !nextBtn || !lblEl || !gridEl || !overlay || !popupBox) return;
+
+    // 5. Render month
+    function renderMonth() {
+      lblEl.textContent = MONTHS[hmMonth] + " " + hmYear;
+      prevBtn.disabled = (hmYear < minYear) || (hmYear === minYear && hmMonth <= minMonth);
+      nextBtn.disabled = (hmYear > today.getFullYear()) || (hmYear === today.getFullYear() && hmMonth >= today.getMonth());
+      gridEl.innerHTML = "";
+
+      var firstDay    = new Date(hmYear, hmMonth, 1).getDay();
+      var offset      = (firstDay === 0) ? 6 : firstDay - 1;
+      var daysInMonth = new Date(hmYear, hmMonth + 1, 0).getDate();
+
+      for (var i = 0; i < offset; i++) {
+        var blank = document.createElement("div");
+        blank.className = "hm-cell";
+        blank.style.background = "transparent";
+        gridEl.appendChild(blank);
+      }
+
+      for (var day = 1; day <= daysInMonth; day++) {
+        var mm  = String(hmMonth + 1).padStart(2, "0");
+        var dd  = String(day).padStart(2, "0");
+        var key = hmYear + "-" + mm + "-" + dd;
+        var info = byDate[key];
+        var cell = document.createElement("div");
+        cell.className = "hm-cell";
+
+        var numEl = document.createElement("span");
+        numEl.className = "hm-day-num";
+        numEl.textContent = day;
+        cell.appendChild(numEl);
+
+        if (!info) {
+          cell.style.background = "#1a1d27";
+          numEl.style.color = "rgba(255,255,255,0.25)";
+        } else {
+          cell.style.background = cellColor(info.pnl);
+          cell.style.cursor = "pointer";
+
+          var pnlEl = document.createElement("span");
+          pnlEl.className = "hm-pnl";
+          pnlEl.textContent = (info.pnl >= 0 ? "+" : "") + "$" + Math.abs(info.pnl).toFixed(0);
+          pnlEl.style.color = "rgba(255,255,255,0.9)";
+          cell.appendChild(pnlEl);
+
+          (function (k, di) {
+            cell.addEventListener("click", function () { showPopup(k, di); });
+          })(key, info);
+        }
+        gridEl.appendChild(cell);
+      }
+    }
+
+    // 6. Popup
+    function showPopup(dateKey, dayInfo) {
+      var totalPnl = dayInfo.pnl;
+      var pnlColor = totalPnl >= 0 ? "var(--green)" : "var(--red)";
+      var pnlLabel = (totalPnl >= 0 ? "+" : "") + "$" + totalPnl.toFixed(2);
+
+      var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
+      html += '<span style="font-size:0.9rem;font-weight:700;color:var(--text);">' + dateKey + '</span>';
+      html += '<span style="font-size:0.9rem;font-weight:700;color:' + pnlColor + ';">' + pnlLabel + '</span>';
+      html += '</div>';
+
+      dayInfo.bets.forEach(function (b) {
+        var bPnl = parseFloat(b.actual_pnl);
+        var bColor = isNaN(bPnl) ? "var(--muted)" : (bPnl >= 0 ? "var(--green)" : "var(--red)");
+        var bStr  = isNaN(bPnl) ? "—" : ((bPnl >= 0 ? "+" : "") + "$" + bPnl.toFixed(2));
+        var rColor = (b.result === "WON") ? "var(--green)" : "var(--red)";
+
+        html += '<div class="hm-bet-row">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">';
+        html += '<span style="font-size:0.8rem;font-weight:600;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">';
+        html += (b.player || b.pick || b.game || "—") + '</span>';
+        html += '<span style="font-size:0.8rem;font-weight:700;color:' + bColor + ';white-space:nowrap;">' + bStr + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">';
+        var parts = [];
+        if (b.sport)    parts.push(b.sport);
+        if (b.bet_type) parts.push(b.bet_type);
+        if (b.result)   parts.push('<span style="color:' + rColor + ';">' + b.result + '</span>');
+        html += parts.join(" \xb7 ") + '</div>';
+        if (b.game && b.game !== (b.player || b.pick)) {
+          html += '<div style="font-size:0.68rem;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + b.game + '</div>';
+        }
+        html += '</div>';
+      });
+
+      html += '<button onclick="document.getElementById(\'hm-popup-overlay\').style.display=\'none\';"';
+      html += ' style="margin-top:14px;width:100%;padding:10px;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:0.85rem;cursor:pointer;">Close</button>';
+
+      popupBox.innerHTML = html;
+      overlay.style.display = "flex";
+    }
+
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) overlay.style.display = "none";
+    });
+
+    // 7. Navigation
+    prevBtn.addEventListener("click", function () {
+      if (hmMonth === 0) { hmMonth = 11; hmYear--; } else { hmMonth--; }
+      renderMonth();
+    });
+    nextBtn.addEventListener("click", function () {
+      if (hmMonth === 11) { hmMonth = 0; hmYear++; } else { hmMonth++; }
+      renderMonth();
+    });
+
+    renderMonth();
+  })();
+
 })();

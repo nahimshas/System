@@ -749,6 +749,8 @@ def build_chart_data() -> Dict:
         "has_wr":         bool(wr_series),
         # Calibration
         "calibration":    calibration,
+        # Raw settled records for client-side heatmap
+        "all_records":    settled,
     }
 
 
