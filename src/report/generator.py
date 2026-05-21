@@ -307,18 +307,32 @@ def build_report(
     # nhl_watchlist: never in budget, no alloc_rank needed
 
     # ── Per-league top-6 props for display ───────────────────────────────────
-    # Use props_display (no-threshold pool) if provided, else fall back to props.
+    # Locked props (from the curated `props` list) are always shown first so
+    # that settled/in-progress picks never disappear from the display after a
+    # subsequent run adds higher-ranked fresh picks to props_display.
     from src.config import MAX_PROPS_PER_SPORT
     _props_pool = props_display if props_display else props
-    nba_props_display = sorted(
-        [p for p in _props_pool if p.get("sport") == "NBA"],
-        key=lambda p: (0 if p.get("confidence") == "HIGH" else 1, -p.get("edge_pct", 0)),
-    )[:MAX_PROPS_PER_SPORT]
+    _locked_prop_keys = {
+        f"{p.get('player')}|{p.get('prop_type')}"
+        for p in props
+        if p.get("locked")
+    }
 
-    mlb_props_display = sorted(
-        [p for p in _props_pool if p.get("sport") == "MLB"],
-        key=lambda p: (0 if p.get("confidence") == "HIGH" else 1, -p.get("edge_pct", 0)),
-    )[:MAX_PROPS_PER_SPORT]
+    def _build_sport_props(sport: str) -> list:
+        locked = [p for p in props if p.get("sport") == sport and p.get("locked")]
+        remaining = MAX_PROPS_PER_SPORT - len(locked)
+        if remaining <= 0:
+            return locked[:MAX_PROPS_PER_SPORT]
+        fresh = sorted(
+            [p for p in _props_pool
+             if p.get("sport") == sport
+             and f"{p.get('player')}|{p.get('prop_type')}" not in _locked_prop_keys],
+            key=lambda p: (0 if p.get("confidence") == "HIGH" else 1, -p.get("edge_pct", 0)),
+        )[:remaining]
+        return locked + fresh
+
+    nba_props_display = _build_sport_props("NBA")
+    mlb_props_display = _build_sport_props("MLB")
 
     total_allocated  = sum(r["total_cost"] for r in all_singles)
     parlay_allocated = sum(p["total_cost"] for p in parlays)
