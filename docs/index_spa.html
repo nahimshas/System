@@ -6882,14 +6882,22 @@ function toggleCtx(el) {
     if (maxLoss === 0)   maxLoss = -1;
 
     // ── 3. Colour helper ──────────────────────────────────────────────────
+    // Interpolates from neutral card bg (#2a2d3e) toward vivid green/red,
+    // so near-$0 days look barely tinted and large wins/losses are fully vivid.
     function cellColor(pnl) {
       if (pnl === 0) return "#2a2d3e";
       if (pnl > 0) {
         var t = Math.min(pnl / maxProfit, 1);
-        return "rgba(34,197,94," + (0.1 + t * 0.9).toFixed(3) + ")";
+        var r = Math.round(42 + t * (34  - 42));
+        var g = Math.round(45 + t * (197 - 45));
+        var b = Math.round(62 + t * (94  - 62));
+        return "rgb(" + r + "," + g + "," + b + ")";
       } else {
         var t2 = Math.min(Math.abs(pnl) / Math.abs(maxLoss), 1);
-        return "rgba(239,68,68," + (0.1 + t2 * 0.9).toFixed(3) + ")";
+        var r2 = Math.round(42 + t2 * (239 - 42));
+        var g2 = Math.round(45 + t2 * (68  - 45));
+        var b2 = Math.round(62 + t2 * (68  - 62));
+        return "rgb(" + r2 + "," + g2 + "," + b2 + ")";
       }
     }
 
