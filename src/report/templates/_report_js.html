@@ -2956,16 +2956,10 @@
       if (pnl === 0) return "#2a2d3e";
       if (pnl > 0) {
         var t = Math.min(pnl / maxProfit, 1);
-        var r = Math.round(13  + t * (34  - 13));
-        var g = Math.round(74  + t * (197 - 74));
-        var b = Math.round(58  + t * (94  - 58));
-        return "rgb(" + r + "," + g + "," + b + ")";
+        return "rgba(34,197,94," + (0.1 + t * 0.9).toFixed(3) + ")";
       } else {
         var t2 = Math.min(Math.abs(pnl) / Math.abs(maxLoss), 1);
-        var r2 = Math.round(74  + t2 * (239 - 74));
-        var g2 = Math.round(13  + t2 * (68  - 13));
-        var b2 = Math.round(13  + t2 * (68  - 13));
-        return "rgb(" + r2 + "," + g2 + "," + b2 + ")";
+        return "rgba(239,68,68," + (0.1 + t2 * 0.9).toFixed(3) + ")";
       }
     }
 

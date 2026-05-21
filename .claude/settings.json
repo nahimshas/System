@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r '.tool_input.file_path // \"\"'); REPO=\"/Users/nahim/Documents/GitHub/System\"; git -C \"$REPO\" add -A && git -C \"$REPO\" diff --cached --quiet || (git -C \"$REPO\" commit -m \"auto: update ${FILE##*/}\" && git -C \"$REPO\" push) 2>/dev/null || true",
+            "statusMessage": "Committing and pushing..."
+          }
+        ]
+      }
+    ]
+  }
+}
