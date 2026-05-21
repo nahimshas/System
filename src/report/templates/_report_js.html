@@ -2930,7 +2930,7 @@
     try { records = JSON.parse(dataEl.textContent); } catch (e) { return; }
     if (!records || !records.length) return;
 
-    // 1. Group by date, sum actual_pnl
+    // ── 1. Group historical records by date ───────────────────────────────
     var byDate = {};
     records.forEach(function (r) {
       if (!r.date) return;
@@ -2941,7 +2941,7 @@
       byDate[d].bets.push(r);
     });
 
-    // 2. All-time scale
+    // ── 2. All-time scale (set once from history; live delta can push higher) ─
     var maxProfit = 0, maxLoss = 0;
     Object.keys(byDate).forEach(function (d) {
       var v = byDate[d].pnl;
@@ -2951,7 +2951,7 @@
     if (maxProfit === 0) maxProfit = 1;
     if (maxLoss === 0)   maxLoss = -1;
 
-    // 3. Colour
+    // ── 3. Colour helper ──────────────────────────────────────────────────
     function cellColor(pnl) {
       if (pnl === 0) return "#2a2d3e";
       if (pnl > 0) {
@@ -2969,14 +2969,53 @@
       }
     }
 
-    // 4. Month range
+    // ── 4. P&L display string: always shows sign, 2 decimals ─────────────
+    function pnlStr(v) {
+      return (v >= 0 ? "+" : "-") + "$" + Math.abs(v).toFixed(2);
+    }
+
+    // ── 5. Live today P&L: scan DOM for live-settled cards ────────────────
+    // Cards settled live (applyCard / applyIplEvent) have data-live-result
+    // but NOT data-in-history="1" (those are already in the JSON).
+    function getLiveTodayPnl() {
+      var livePnl = 0, hasAny = false;
+      // Singles
+      document.querySelectorAll(".card[data-home-team][data-in-budget='true']").forEach(function (c) {
+        var result = c.getAttribute("data-live-result");
+        if (!result || c.getAttribute("data-in-history") === "1") return;
+        var cost   = parseFloat(c.getAttribute("data-cost")   || "0");
+        var profit = parseFloat(c.getAttribute("data-profit") || "0");
+        livePnl += (result === "WON" ? profit : result === "PUSH" ? 0 : -cost);
+        hasAny = true;
+      });
+      // Parlays
+      document.querySelectorAll(".alloc-card[data-legs]").forEach(function (c) {
+        var result = c.getAttribute("data-live-result");
+        if (!result || c.getAttribute("data-in-history") === "1") return;
+        var cost   = parseFloat(c.getAttribute("data-cost")   || "0");
+        var profit = parseFloat(c.getAttribute("data-profit") || "0");
+        livePnl += (result === "WON" ? profit : result === "PUSH" ? 0 : -cost);
+        hasAny = true;
+      });
+      return hasAny ? livePnl : null;
+    }
+
+    // ── 6. Month range ────────────────────────────────────────────────────
     var allDates = Object.keys(byDate).sort();
-    var fp = allDates[0].split("-");
+    var fp       = allDates[0].split("-");
     var minYear  = parseInt(fp[0], 10);
-    var minMonth = parseInt(fp[1], 10) - 1;
+    var minMonth = parseInt(fp[1], 10) - 1; // 0-indexed
     var today    = new Date();
     var hmYear   = today.getFullYear();
     var hmMonth  = today.getMonth();
+
+    // Today's key
+    function todayKey() {
+      var y  = today.getFullYear();
+      var m  = String(today.getMonth() + 1).padStart(2, "0");
+      var d  = String(today.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + d;
+    }
 
     var MONTHS = ["January","February","March","April","May","June",
                   "July","August","September","October","November","December"];
@@ -2989,18 +3028,21 @@
     var popupBox = document.getElementById("hm-popup-box");
     if (!prevBtn || !nextBtn || !lblEl || !gridEl || !overlay || !popupBox) return;
 
-    // 5. Render month
+    // ── 7. Render month ───────────────────────────────────────────────────
     function renderMonth() {
       lblEl.textContent = MONTHS[hmMonth] + " " + hmYear;
       prevBtn.disabled = (hmYear < minYear) || (hmYear === minYear && hmMonth <= minMonth);
       nextBtn.disabled = (hmYear > today.getFullYear()) || (hmYear === today.getFullYear() && hmMonth >= today.getMonth());
       gridEl.innerHTML = "";
 
-      var firstDay    = new Date(hmYear, hmMonth, 1).getDay();
-      var offset      = (firstDay === 0) ? 6 : firstDay - 1;
+      // Sunday-start: getDay() returns 0=Sun, which is already column 0
+      var firstDay    = new Date(hmYear, hmMonth, 1).getDay(); // 0=Sun
       var daysInMonth = new Date(hmYear, hmMonth + 1, 0).getDate();
+      var tKey        = todayKey();
+      var livePnl     = getLiveTodayPnl();
 
-      for (var i = 0; i < offset; i++) {
+      // Blank lead cells
+      for (var i = 0; i < firstDay; i++) {
         var blank = document.createElement("div");
         blank.className = "hm-cell";
         blank.style.background = "transparent";
@@ -3008,54 +3050,74 @@
       }
 
       for (var day = 1; day <= daysInMonth; day++) {
-        var mm  = String(hmMonth + 1).padStart(2, "0");
-        var dd  = String(day).padStart(2, "0");
-        var key = hmYear + "-" + mm + "-" + dd;
-        var info = byDate[key];
+        var mm   = String(hmMonth + 1).padStart(2, "0");
+        var dd   = String(day).padStart(2, "0");
+        var key  = hmYear + "-" + mm + "-" + dd;
+        var hist = byDate[key];
+        var isToday = (key === tKey);
+
+        // Effective P&L: history base + live delta (today only)
+        var effectivePnl = hist ? hist.pnl : 0;
+        var hasData      = !!hist;
+        if (isToday && livePnl !== null) {
+          effectivePnl += livePnl;
+          hasData = true;
+        }
+
         var cell = document.createElement("div");
-        cell.className = "hm-cell";
+        cell.className = "hm-cell" + (isToday ? " hm-today" : "");
 
         var numEl = document.createElement("span");
         numEl.className = "hm-day-num";
         numEl.textContent = day;
         cell.appendChild(numEl);
 
-        if (!info) {
-          cell.style.background = "#1a1d27";
-          numEl.style.color = "rgba(255,255,255,0.25)";
+        if (!hasData) {
+          // No bets (or today with nothing settled yet)
+          cell.style.background = isToday ? "#2e3150" : "#1a1d27";
+          numEl.style.color = isToday ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.25)";
         } else {
-          cell.style.background = cellColor(info.pnl);
+          cell.style.background = cellColor(effectivePnl);
           cell.style.cursor = "pointer";
 
           var pnlEl = document.createElement("span");
           pnlEl.className = "hm-pnl";
-          pnlEl.textContent = (info.pnl >= 0 ? "+" : "") + "$" + Math.abs(info.pnl).toFixed(0);
-          pnlEl.style.color = "rgba(255,255,255,0.9)";
+          pnlEl.textContent = pnlStr(effectivePnl);
+          pnlEl.style.color = "rgba(255,255,255,0.95)";
           cell.appendChild(pnlEl);
+
+          // Build synthetic dayInfo for popup (merge hist bets + live label)
+          var popupInfo = hist ? { pnl: effectivePnl, bets: hist.bets.slice() } : { pnl: effectivePnl, bets: [] };
+          if (isToday && livePnl !== null) {
+            popupInfo.pnl = effectivePnl;
+            if (!hist) {
+              // No server bets, live only — add a synthetic row
+              popupInfo.bets.push({ pick: "Live results pending", actual_pnl: livePnl, sport: "", bet_type: "", result: livePnl >= 0 ? "WON" : "LOST" });
+            }
+          }
 
           (function (k, di) {
             cell.addEventListener("click", function () { showPopup(k, di); });
-          })(key, info);
+          })(key, popupInfo);
         }
         gridEl.appendChild(cell);
       }
     }
 
-    // 6. Popup
+    // ── 8. Popup ──────────────────────────────────────────────────────────
     function showPopup(dateKey, dayInfo) {
       var totalPnl = dayInfo.pnl;
-      var pnlColor = totalPnl >= 0 ? "var(--green)" : "var(--red)";
-      var pnlLabel = (totalPnl >= 0 ? "+" : "") + "$" + totalPnl.toFixed(2);
+      var pColor   = totalPnl >= 0 ? "var(--green)" : "var(--red)";
 
       var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
       html += '<span style="font-size:0.9rem;font-weight:700;color:var(--text);">' + dateKey + '</span>';
-      html += '<span style="font-size:0.9rem;font-weight:700;color:' + pnlColor + ';">' + pnlLabel + '</span>';
+      html += '<span style="font-size:0.9rem;font-weight:700;color:' + pColor + ';">' + pnlStr(totalPnl) + '</span>';
       html += '</div>';
 
       dayInfo.bets.forEach(function (b) {
-        var bPnl = parseFloat(b.actual_pnl);
+        var bPnl   = parseFloat(b.actual_pnl);
         var bColor = isNaN(bPnl) ? "var(--muted)" : (bPnl >= 0 ? "var(--green)" : "var(--red)");
-        var bStr  = isNaN(bPnl) ? "—" : ((bPnl >= 0 ? "+" : "") + "$" + bPnl.toFixed(2));
+        var bStr   = isNaN(bPnl) ? "—" : pnlStr(bPnl);
         var rColor = (b.result === "WON") ? "var(--green)" : "var(--red)";
 
         html += '<div class="hm-bet-row">';
@@ -3087,7 +3149,7 @@
       if (e.target === overlay) overlay.style.display = "none";
     });
 
-    // 7. Navigation
+    // ── 9. Navigation ─────────────────────────────────────────────────────
     prevBtn.addEventListener("click", function () {
       if (hmMonth === 0) { hmMonth = 11; hmYear--; } else { hmMonth--; }
       renderMonth();
@@ -3097,7 +3159,14 @@
       renderMonth();
     });
 
+    // ── 10. Initial render + live refresh every 30 s ─────────────────────
     renderMonth();
+    setInterval(function () {
+      // Only re-render if we're on the current month (today is visible)
+      if (hmYear === today.getFullYear() && hmMonth === today.getMonth()) {
+        renderMonth();
+      }
+    }, 30000);
   })();
 
 })();

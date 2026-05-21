@@ -724,9 +724,10 @@
     .hm-dow-row { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:3px; }
     .hm-dow { font-size:0.6rem; text-align:center; color:var(--muted); font-weight:600; padding:2px 0; }
     .hm-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-    .hm-cell { aspect-ratio:1/1; border-radius:5px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:2px; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    .hm-day-num { font-size:0.62rem; color:rgba(255,255,255,0.8); font-weight:700; line-height:1; }
-    .hm-pnl { font-size:0.46rem; font-weight:800; line-height:1.1; text-align:center; }
+    .hm-cell { aspect-ratio:1/1; border-radius:5px; position:relative; padding:4px 3px 3px; box-sizing:border-box; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center; }
+    .hm-cell.hm-today { outline:2px solid rgba(255,255,255,0.85); outline-offset:-2px; }
+    .hm-day-num { position:absolute; top:3px; left:5px; font-size:0.6rem; color:rgba(255,255,255,0.75); font-weight:700; line-height:1; }
+    .hm-pnl { font-size:0.75rem; font-weight:800; line-height:1; text-align:center; }
     #hm-popup-overlay { display:none; position:fixed; inset:0; z-index:600; background:rgba(0,0,0,0.65); align-items:flex-end; justify-content:center; }
     #hm-popup-box { background:var(--card); border-radius:16px 16px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); width:100%; max-width:520px; max-height:72vh; overflow-y:auto; }
     .hm-bet-row { padding:7px 0; border-bottom:1px solid var(--border); }
@@ -1198,24 +1199,6 @@
 
       {% set cd = report.chart_data %}
       {% if cd and cd.has_data %}
-      <script id="all-records-data" type="application/json">{{ cd.all_records | tojson | safe }}</script>
-      <details id="sect-daily-heatmap" style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
-        <summary style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);cursor:pointer;list-style:none;padding:4px 0;">
-          ▶ Daily P&amp;L Heatmap
-        </summary>
-        <div style="margin-top:10px;">
-          <div class="hm-nav">
-            <button class="hm-nav-btn" id="heatmap-prev">&#9664;</button>
-            <span class="hm-month-label" id="heatmap-month-label"></span>
-            <button class="hm-nav-btn" id="heatmap-next">&#9654;</button>
-          </div>
-          <div class="hm-dow-row">
-            <div class="hm-dow">M</div><div class="hm-dow">T</div><div class="hm-dow">W</div>
-            <div class="hm-dow">T</div><div class="hm-dow">F</div><div class="hm-dow">S</div><div class="hm-dow">S</div>
-          </div>
-          <div class="hm-grid" id="heatmap-calendar"></div>
-        </div>
-      </details>
       <details id="sect-trend-charts" style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
         <summary style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);cursor:pointer;list-style:none;padding:4px 0;">
           ▶ Trend Charts &amp; Calibration (<span id="chart-summary-count">{{ cd.total_bets }}</span> settled bets)
@@ -1271,6 +1254,26 @@
         </div>
       </details>
       {% endif %}
+    </div>
+    </details>
+    {% endif %}
+
+    {% set cd = report.chart_data %}
+    {% if cd and cd.has_data %}
+    <script id="all-records-data" type="application/json">{{ cd.all_records | tojson | safe }}</script>
+    <details id="sect-daily-heatmap" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Daily P&amp;L Heatmap</summary>
+    <div class="card">
+      <div class="hm-nav">
+        <button class="hm-nav-btn" id="heatmap-prev">&#9664;</button>
+        <span class="hm-month-label" id="heatmap-month-label"></span>
+        <button class="hm-nav-btn" id="heatmap-next">&#9654;</button>
+      </div>
+      <div class="hm-dow-row">
+        <div class="hm-dow">S</div><div class="hm-dow">M</div><div class="hm-dow">T</div>
+        <div class="hm-dow">W</div><div class="hm-dow">T</div><div class="hm-dow">F</div><div class="hm-dow">S</div>
+      </div>
+      <div class="hm-grid" id="heatmap-calendar"></div>
     </div>
     </details>
     {% endif %}
@@ -1479,12 +1482,14 @@
       </div>
     </div>
     <div style="height:16px;"></div>
-    <div id="hm-popup-overlay">
-      <div id="hm-popup-box"></div>
-    </div>
   </div><!-- /tab-analytics -->
 
 </div><!-- /spa-content -->
+
+<!-- Heatmap day-detail popup (position:fixed, lives outside tab panels) -->
+<div id="hm-popup-overlay">
+  <div id="hm-popup-box"></div>
+</div>
 
 <!-- ─────────────── BOTTOM NAV (carousel wheel) ──────────────────────── -->
 <nav id="spa-nav">
