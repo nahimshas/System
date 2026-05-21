@@ -1263,7 +1263,7 @@
     <script id="all-records-data" type="application/json">{{ cd.all_records | tojson | safe }}</script>
     <details id="sect-daily-heatmap" open>
     <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Daily P&amp;L Heatmap</summary>
-    <div class="card">
+    <div class="card" style="overflow:hidden;">
       <div class="hm-nav">
         <button class="hm-nav-btn" id="heatmap-prev">&#9664;</button>
         <span class="hm-month-label" id="heatmap-month-label"></span>

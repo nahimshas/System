@@ -3167,6 +3167,15 @@
         renderMonth();
       }
     }, 30000);
+
+    // ── 11. Re-render on resize/orientation-change ────────────────────────
+    // iOS WebKit does not reflow aspect-ratio grid cells after orientation
+    // change. Rebuilding the grid DOM forces a correct recalculation.
+    var _hmResizeTimer;
+    window.addEventListener("resize", function () {
+      clearTimeout(_hmResizeTimer);
+      _hmResizeTimer = setTimeout(renderMonth, 150);
+    });
   })();
 
 })();
