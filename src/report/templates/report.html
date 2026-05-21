@@ -146,6 +146,19 @@
   </style>
 </head>
 <body>
+<script>
+// PWA default-layout redirect: send standalone users to the SPA unless they
+// explicitly chose classic view by clicking "← Classic view" (which sets the
+// prefer-classic flag). Runs before any content renders to avoid flash.
+(function () {
+  var isPwa = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+              || window.navigator.standalone === true;
+  var preferClassic = localStorage.getItem('pwa-prefer-classic') === '1';
+  if (isPwa && !preferClassic) {
+    window.location.replace('/index_spa.html');
+  }
+}());
+</script>
 <div class="container">
 
   <div class="header">
@@ -1801,7 +1814,7 @@
       prices shown are estimates based on DraftKings market odds. Never bet more than you can afford to lose.
     </div>
     <div style="margin-top:12px;">
-      <a href="/index_spa" style="color:var(--teal);font-size:0.8rem;text-decoration:none;font-weight:600;">Try new layout ›</a>
+      <a href="/index_spa.html" onclick="localStorage.removeItem('pwa-prefer-classic')" style="color:var(--teal);font-size:0.8rem;text-decoration:none;font-weight:600;">Try new layout ›</a>
     </div>
   </div>
 
