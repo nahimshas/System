@@ -2055,6 +2055,7 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl">Model projected score: Gujarat Titans 165 — Chennai Super Kings 166</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+15.0%</b> &middot; Mkt 54.5% → Model 69.5%</span>
   </div>
@@ -2094,6 +2095,7 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl">Model projected score: Kolkata Knight Riders 164 — Mumbai Indians 164</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+12.9%</b> &middot; Mkt 48.4% → Model 61.3%</span>
   </div>
@@ -2149,6 +2151,7 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl">Model projected score: Colorado Avalanche 2.8 — Vegas Golden Knights 2.9</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+15.0%</b> &middot; Mkt 58.9% → Model 73.9%</span>
   </div>
@@ -2188,6 +2191,7 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl">Model projected score: Colorado Avalanche 2.8 — Vegas Golden Knights 2.9</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+10.5%</b> &middot; Mkt 52.4% → Model 62.9%</span>
   </div>
@@ -2243,6 +2247,7 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl">Model projected score: Chicago Sky 83 — Dallas Wings 86</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+15.0%</b> &middot; Mkt 57.8% → Model 72.8%</span>
   </div>
@@ -2282,6 +2287,7 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl">Model projected score: Seattle Storm 81 — Connecticut Sun 81</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+11.2%</b> &middot; Mkt 53.1% → Model 64.3%</span>
   </div>
@@ -2321,6 +2327,7 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl">Model projected score: Indiana Fever 89 — Portland Fire 84</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--yellow)">+3.7%</b> &middot; Mkt 86.3% → Model 90.0%</span>
   </div>
@@ -3255,7 +3262,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 04:50 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 20, 2026 at 05:13 PM PDT</div>
         </div>
         
       </div>
@@ -6412,6 +6419,17 @@ function toggleCtx(el) {
           var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
           var timeDiv    = card.querySelector(".card-time");
           var liveDiv    = card.querySelector(".live-status");
+
+          // Shorten full team names in proj-score-hl to abbreviations (runs once per card)
+          var iplProjDiv = card.querySelector('.proj-score-hl');
+          if (iplProjDiv && !iplProjDiv.getAttribute('data-abbr') && teams[0] && teams[1]) {
+            var pt = iplProjDiv.textContent;
+            [teams[0], teams[1]].forEach(function(tm) {
+              if (tm.name && tm.abbr) pt = pt.split(tm.name).join(tm.abbr);
+            });
+            iplProjDiv.textContent = pt;
+            iplProjDiv.setAttribute('data-abbr', '1');
+          }
 
           if (isPost && winnerTeam) {
             // For server-settled picks (data-in-history="1") Python already wrote the

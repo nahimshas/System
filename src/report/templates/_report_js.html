@@ -2568,6 +2568,17 @@
           var timeDiv    = card.querySelector(".card-time");
           var liveDiv    = card.querySelector(".live-status");
 
+          // Shorten full team names in proj-score-hl to abbreviations (runs once per card)
+          var iplProjDiv = card.querySelector('.proj-score-hl');
+          if (iplProjDiv && !iplProjDiv.getAttribute('data-abbr') && teams[0] && teams[1]) {
+            var pt = iplProjDiv.textContent;
+            [teams[0], teams[1]].forEach(function(tm) {
+              if (tm.name && tm.abbr) pt = pt.split(tm.name).join(tm.abbr);
+            });
+            iplProjDiv.textContent = pt;
+            iplProjDiv.setAttribute('data-abbr', '1');
+          }
+
           if (isPost && winnerTeam) {
             // For server-settled picks (data-in-history="1") Python already wrote the
             // correct WON/LOST into data-live-result. Trust it — don't recompute from

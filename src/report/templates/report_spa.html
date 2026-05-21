@@ -142,6 +142,11 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  {%- set ns2 = namespace(proj_line='') -%}
+  {%- for item in bet.context -%}{%- if 'Model projected score' in item -%}{%- set ns2.proj_line = item | replace('Model projected score: ', '') -%}{%- endif -%}{%- endfor -%}
+  {%- if ns2.proj_line %}
+  <div class="proj-score-hl">Model projected score: {{ ns2.proj_line }}</div>
+  {%- endif %}
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:{% if bet.edge_pct >= 7 %}var(--green){% else %}var(--yellow){% endif %}">+{{ bet.edge_pct }}%</b> &middot; Mkt {{ bet.market_prob_pct }}% → Model {{ bet.model_prob_pct }}%</span>
   </div>
