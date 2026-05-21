@@ -1876,7 +1876,7 @@ window._tabDots = {
   (function() {
     function setArrow(d) {
       var arrow = d.querySelector(':scope > summary .det-arrow');
-      if (arrow) arrow.textContent = d.open ? '▼' : '▶';
+      if (arrow) arrow.textContent = d.open ? '▶' : '▼';
     }
     function saveDetails(el) {
       try { localStorage.setItem("spa-det-" + el.id, el.open ? "1" : "0"); } catch(e) {}
