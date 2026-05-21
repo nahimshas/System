@@ -311,7 +311,7 @@
     }
     .spa-tab.active.spa-tab-animate { animation: slideIn 0.18s ease; }
 
-    /* ── Bottom nav — carousel wheel (5 fixed slots, active always centred) ─── */
+    /* ── Bottom nav — carousel wheel (9 fixed slots, active always centred) ─── */
     #spa-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -355,9 +355,12 @@
     /* Edge slots ±3 */
     .spa-tab-btn[data-offset="-3"],
     .spa-tab-btn[data-offset="3"]  { opacity: 0.18; transform: scale(0.50); }
+    /* Far-edge slots ±4 */
+    .spa-tab-btn[data-offset="-4"],
+    .spa-tab-btn[data-offset="4"]  { opacity: 0.10; transform: scale(0.42); }
     /* Arrow direction is controlled entirely by JS (textContent ▶/▼) — no CSS transforms */
     .det-arrow { display:inline-block; font-size:0.65rem; color:var(--teal); margin-right:2px; }
-    .spa-tab-icon  { font-size: 1.6rem; line-height: 1; position: relative; }
+    .spa-tab-icon  { font-size: 1.35rem; line-height: 1; position: relative; }
     .spa-tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
     .tab-dot {
       position: absolute;
@@ -1502,6 +1505,8 @@
     <button class="spa-tab-btn" id="nav-s4"></button>
     <button class="spa-tab-btn" id="nav-s5"></button>
     <button class="spa-tab-btn" id="nav-s6"></button>
+    <button class="spa-tab-btn" id="nav-s7"></button>
+    <button class="spa-tab-btn" id="nav-s8"></button>
   </div>
 </nav>
 <!-- hasDot flags for carousel (rendered once by Jinja2) -->
@@ -1542,12 +1547,12 @@ window._tabDots = {
 
   function _mod(n, m) { return ((n % m) + m) % m; }
 
-  // Render 7 carousel slots centred on centerIdx (wraps circularly).
-  // Each slot gets a data-offset (-3..+3) and data-tab; CSS handles sizing/opacity.
+  // Render 9 carousel slots centred on centerIdx (wraps circularly).
+  // Each slot gets a data-offset (-4..+4) and data-tab; CSS handles sizing/opacity.
   function renderCarousel(centerIdx) {
     var dotMeta = window._tabDots || {};
-    for (var si = 0; si < 7; si++) {
-      var offset = si - 3;                            // -3, -2, -1, 0, 1, 2, 3
+    for (var si = 0; si < 9; si++) {
+      var offset = si - 4;                            // -4, -3, -2, -1, 0, 1, 2, 3, 4
       var tabIdx = _mod(centerIdx + offset, TABS.length);
       var meta   = TABS_META[tabIdx];
       var slot   = document.getElementById("nav-s" + si);
