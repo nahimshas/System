@@ -40,7 +40,7 @@ SPORT_MODULES: dict = {
 from src.state.manager import (
     load_state, save_state, merge_picks,
     bet_to_dict, parlay_to_dict, prop_to_dict,
-    _game_started,
+    _game_started, _update_lock_flags,
 )
 from src.report.card_context import build_card_context, build_prop_context
 from src.data.outcome_checker import (
@@ -153,6 +153,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_ipl_display  = _own_displays_loaded.get("ipl",  [])
             final_wnba_display = _own_displays_loaded.get("wnba", [])
             final_mls_display  = _own_displays_loaded.get("mls",  [])
+
+            # Apply current lock flags — state was written before some games started,
+            # so re-computing here ensures the re-rendered HTML shows correct badges.
+            _update_lock_flags(final_singles)
+            _update_lock_flags(final_singles_display)
+            _update_lock_flags(final_props)
+            _update_lock_flags(final_props_display)
 
             # Hydrate narrative/context for picks saved before the card context feature
             final_singles_display = [_hydrate_bet(d) for d in final_singles_display]

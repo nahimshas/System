@@ -838,7 +838,7 @@
             {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ row.sport }}</span>
             {% endif %}
             <span class="alloc-edge" style="color:{% if row.edge_pct >= 7 %}var(--green){% else %}var(--yellow){% endif %};">+{{ row.edge_pct }}%</span>
-            {% if row.locked %}<span style="font-size:0.65rem;color:var(--muted);">🔒</span>{% endif %}
+            {% if row.locked %}<span class="lock-badge">🔒</span>{% endif %}
           </div>
           <div class="alloc-pick">{{ row.label }}</div>
           {% if row.game and row.bet_type != "Parlay" %}<div class="alloc-game short-game">{{ row.game }}</div>{% endif %}
