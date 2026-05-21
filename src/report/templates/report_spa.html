@@ -1345,7 +1345,7 @@
                data-sport="{{ sp }}" data-hist-sport-total="{{ hsp.get('total', 0) }}" data-hist-sport-hits="{{ hsp.get('hits', 0) }}">
             <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:4px;">{{ sp }}</div>
             <div class="sport-hit-rate" style="font-size:1.05rem;font-weight:700;color:{% if stats.hit_rate and stats.hit_rate >= 55 %}var(--green){% elif stats.hit_rate and stats.hit_rate >= 45 %}var(--yellow){% else %}var(--red){% endif %};">{{ stats.hit_rate }}%</div>
-            <div class="sport-count" style="font-size:0.72rem;color:var(--muted);">{{ stats.total }} settled</div>
+            <div class="sport-count" style="font-size:0.72rem;color:var(--muted);">{{ stats.hits }}H / {{ stats.misses }}M ({{ stats.total }} settled)</div>
           </div>
           {% endfor %}
         </div>
