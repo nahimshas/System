@@ -688,14 +688,15 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         final_singles_display = fresh_singles_display + _preserved_display + _morning_locked
 
-        # Preserve morning game counts for sports whose odds vanish once games start.
+        # Preserve morning game counts for sports whose odds vanish once games start,
+        # AND for sports not analyzed on this run (e.g. --league ipl only).
         # The odds API stops listing a game the moment it begins, so a subsequent run
         # sees 0 games even though picks exist — falling back to the morning count keeps
         # the header summary and has_* flags correct.
         # Skips uses_pending_file sports (IPL): their count is managed by the pending
         # section above and already reflected in game_counts["ipl"].
-        for _slug in list(game_counts):
-            if not REGISTRY[_slug].caps.uses_pending_file and not game_counts[_slug]:
+        for _slug in REGISTRY:
+            if not REGISTRY[_slug].caps.uses_pending_file and not game_counts.get(_slug, 0):
                 game_counts[_slug] = state.get(f"{_slug}_game_count", 0)
         # Sync named variables after the fallback pass.
         nba_game_count  = game_counts.get("nba",  nba_game_count)
