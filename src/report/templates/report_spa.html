@@ -2008,12 +2008,7 @@ function toggleCtx(el) {
   function checkLive() {
     var activeTab = document.querySelector('.spa-tab.active');
     var activeTabId = activeTab ? activeTab.id : '';
-    var hasLive = false;
-    if (activeTab) {
-      activeTab.querySelectorAll('.live-status').forEach(function(el) {
-        if (el.innerHTML.indexOf('● LIVE') !== -1) hasLive = true;
-      });
-    }
+    var hasLive = activeTab ? activeTab.querySelector('[data-game-live]') !== null : false;
     var badge = document.getElementById('hdr-live');
     if (badge) {
       // Analytics tab has no game cards — the badge is always off there, so hide it entirely
