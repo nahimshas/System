@@ -13,6 +13,7 @@
      data-model-prob-pct="{{ bet.model_prob_pct }}"
      data-market-prob-pct="{{ bet.market_prob_pct }}"
      data-commence-time="{{ bet.commence_time }}"
+     {% if bet.game_pk %}data-game-pk="{{ bet.game_pk }}"{% endif %}
      {% if bet.alloc_rank %}data-in-budget="true"{% endif %}>
   <div class="card-row">
     <div style="flex:1;min-width:0;">
@@ -26,6 +27,7 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
+  {% if bet.game_pk %}<div class="live-matchup" data-game-pk="{{ bet.game_pk }}"></div>{% endif %}
   {%- set ns = namespace(proj_line='') -%}
   {%- for item in bet.context -%}{%- if 'Model projected score' in item -%}{%- set ns.proj_line = item | replace('Model projected score: ', '') -%}{%- endif -%}{%- endfor -%}
   {%- if ns.proj_line %}
@@ -489,6 +491,10 @@
     .card-pick { font-weight: 700; font-size: 0.95rem; line-height: 1.3; }
     .card-game { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
     .card-time { font-size: 0.72rem; color: var(--teal); margin-top: 3px; font-weight: 600; min-height: 1em; }
+    .live-matchup { font-size: 0.72rem; color: var(--muted); margin: 3px 0 2px; min-height: 0; display: none; }
+    .live-matchup.active { display: block; }
+    .live-matchup .lm-pitcher { color: var(--text); font-weight: 600; }
+    .live-matchup .lm-batter  { color: var(--text); font-weight: 600; }
     .ipl-time  { color: #f59e0b !important; }
 
     /* ── Confidence badges ───────────────────────────────────────────────── */
@@ -2065,6 +2071,70 @@ function toggleCtx(el) {
   document.querySelectorAll('.live-status').forEach(function(el) {
     obs.observe(el, { childList: true, characterData: true, subtree: true });
   });
+
+  // ── MLB live pitcher/batter ──────────────────────────────────────────────
+  // Fetches current pitcher + batter from the free MLB Stats API for any
+  // in-progress game whose card has a data-game-pk attribute.
+  var _mlbLiveCache = {};   // gamePk → {pitcher, batter, fetchedAt}
+
+  function updateMLBLiveMatchup(el) {
+    var gpk = el.getAttribute('data-game-pk');
+    if (!gpk) return;
+    var now = Date.now();
+    var cached = _mlbLiveCache[gpk];
+    // Re-use cache if less than 25 seconds old
+    if (cached && (now - cached.fetchedAt) < 25000) {
+      _renderMatchup(el, cached);
+      return;
+    }
+    var url = 'https://statsapi.mlb.com/api/v1.1/game/' + gpk +
+              '/feed/live?fields=gameData,status,abstractGameState,' +
+              'liveData,plays,currentPlay,matchup,pitcher,batter,fullName';
+    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+      var state = (data.gameData && data.gameData.status && data.gameData.status.abstractGameState) || '';
+      if (state !== 'Live') return;
+      var matchup = data.liveData && data.liveData.plays &&
+                    data.liveData.plays.currentPlay &&
+                    data.liveData.plays.currentPlay.matchup;
+      if (!matchup) return;
+      var entry = {
+        pitcher:   (matchup.pitcher  && matchup.pitcher.fullName)  || '',
+        batter:    (matchup.batter   && matchup.batter.fullName)   || '',
+        fetchedAt: Date.now(),
+      };
+      _mlbLiveCache[gpk] = entry;
+      _renderMatchup(el, entry);
+    }).catch(function() {});
+  }
+
+  function _renderMatchup(el, entry) {
+    if (!entry.pitcher && !entry.batter) return;
+    el.innerHTML =
+      '⚾ P: <span class="lm-pitcher">' + (entry.pitcher || '—') + '</span>' +
+      ' &nbsp;·&nbsp; ' +
+      'AB: <span class="lm-batter">' + (entry.batter || '—') + '</span>';
+    el.classList.add('active');
+  }
+
+  function pollMLBMatchups() {
+    document.querySelectorAll('.live-matchup[data-game-pk]').forEach(function(el) {
+      var card = el.closest('.card');
+      if (!card) return;
+      var ct = card.getAttribute('data-commence-time');
+      if (!ct) return;
+      try {
+        var start = new Date(ct);
+        var now   = new Date();
+        // Only poll if game started but not more than 4 hours ago
+        if (now >= start && (now - start) < 4 * 3600 * 1000) {
+          updateMLBLiveMatchup(el);
+        }
+      } catch(e) {}
+    });
+  }
+
+  pollMLBMatchups();
+  setInterval(pollMLBMatchups, 30000);
 
   // (Parlay leg start times are now shown inline in applyParlayAllocCard leg summary rows)
 

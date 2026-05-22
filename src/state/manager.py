@@ -102,6 +102,7 @@ def bet_to_dict(rec) -> Dict:
         "commence_time": getattr(rec, "commence_time", ""),
         "edge": rec.edge,        # raw float for sorting / comparison
         "locked": False,
+        "game_pk": getattr(rec, "game_pk", ""),
     }
 
 

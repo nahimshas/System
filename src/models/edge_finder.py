@@ -285,6 +285,7 @@ class BetRecommendation:
     injury_cap_fired:      bool = False          # injury cap fired
     hardcap_fired:         bool = False          # [lo, hi] hard prob bound fired
     stats_available:       bool = True           # sport stats were available for this game
+    game_pk:               str  = ""            # MLB game primary key — for live pitcher/batter lookup
 
 
 def _confidence_label(edge: float, signal_count: int, stats_available: bool) -> str:
@@ -1560,6 +1561,10 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         away_injury_fired=_lv.get("away_injury_capped", False),
         stats_avail=stats_available,
     )
+    # Stamp game_pk so the template can do live pitcher/batter lookups.
+    _gpk = str(game.get("game_pk") or "")
+    for _r in recs:
+        _r.game_pk = _gpk
     return recs
 
 
