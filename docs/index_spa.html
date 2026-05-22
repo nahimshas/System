@@ -3259,7 +3259,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 01:33 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 01:45 PM PDT</div>
         </div>
         
       </div>
@@ -4090,20 +4090,16 @@ function toggleCtx(el) {
     // Pitcher + batter row — rendered below the scoreboard (below the team records)
     var matchupParts = [];
     var pitcher = situation.pitcher || null;
-    if (pitcher && (pitcher.shortName || pitcher.displayName)) {
-      var pName   = pitcher.shortName || pitcher.displayName;
-      var pLast   = pName.split(' ').pop();
-      var pitches = (situation.pitchCount || {}).pitches;
-      matchupParts.push(
-        '⚾&nbsp;<strong style="color:#e2e8f0;">' + pLast + '</strong>' +
-        (pitches ? '&nbsp;<span style="color:#64748b;font-weight:400;">' + pitches + 'p</span>' : '')
-      );
+    if (pitcher) {
+      var pA    = pitcher.athlete || pitcher;
+      var pName = pA.shortName || pA.displayName || pA.fullName || '';
+      if (pName) matchupParts.push('⚾&nbsp;<strong style="color:#e2e8f0;">' + pName.split(' ').pop() + '</strong>');
     }
     var batter = situation.batter || null;
-    if (batter && (batter.shortName || batter.displayName)) {
-      var bName = batter.shortName || batter.displayName;
-      var bLast = bName.split(' ').pop();
-      matchupParts.push('🏏&nbsp;<strong style="color:#e2e8f0;">' + bLast + '</strong>');
+    if (batter) {
+      var bA    = batter.athlete || batter;
+      var bName = bA.shortName || bA.displayName || bA.fullName || '';
+      if (bName) matchupParts.push('🏏&nbsp;<strong style="color:#e2e8f0;">' + bName.split(' ').pop() + '</strong>');
     }
     var matchupRow = matchupParts.length
       ? '<div style="font-size:0.65rem;color:#94a3b8;text-align:center;margin-top:5px;letter-spacing:0.01em;">' +
@@ -4160,17 +4156,14 @@ function toggleCtx(el) {
       var mParts = [];
       var mp = sit.pitcher;
       if (mp) {
-        var mpN = mp.shortName || mp.displayName || mp.fullName || '';
-        if (mpN) {
-          var mpL = mpN.split(' ').pop();
-          var mpP = (sit.pitchCount || {}).pitches;
-          mParts.push('⚾&nbsp;<strong style="color:#e2e8f0;">' + mpL + '</strong>' +
-            (mpP ? '&nbsp;<span style="color:#64748b;">' + mpP + 'p</span>' : ''));
-        }
+        var mpA = mp.athlete || mp;  // ESPN nests name fields under .athlete
+        var mpN = mpA.shortName || mpA.displayName || mpA.fullName || '';
+        if (mpN) mParts.push('⚾&nbsp;<strong style="color:#e2e8f0;">' + mpN.split(' ').pop() + '</strong>');
       }
       var mb = sit.batter;
       if (mb) {
-        var mbN = mb.shortName || mb.displayName || mb.fullName || '';
+        var mbA = mb.athlete || mb;
+        var mbN = mbA.shortName || mbA.displayName || mbA.fullName || '';
         if (mbN) mParts.push('🏏&nbsp;<strong style="color:#e2e8f0;">' + mbN.split(' ').pop() + '</strong>');
       }
       if (mParts.length)
