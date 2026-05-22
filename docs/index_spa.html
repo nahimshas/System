@@ -3274,7 +3274,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 12:24 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 12:29 PM PDT</div>
         </div>
         
       </div>
@@ -3868,20 +3868,65 @@ function toggleCtx(el) {
   });
 
   // ── MLB live pitcher/batter ──────────────────────────────────────────────
-  // Fetches current pitcher + batter from the free MLB Stats API for any
-  // in-progress game whose card has a data-game-pk attribute.
-  var _mlbLiveCache = {};   // gamePk → {pitcher, batter, fetchedAt}
+  // Resolves game_pk from the MLB schedule API by team name (works even when
+  // game_pk wasn't saved in state), then polls for current pitcher + batter.
+  var _mlbScheduleMap  = null;  // "HomeTeam|AwayTeam" → gamePk
+  var _mlbScheduleFetched = 0;
+  var _mlbLiveCache    = {};    // gamePk → {pitcher, batter, fetchedAt}
 
-  function updateMLBLiveMatchup(el) {
-    var gpk = el.getAttribute('data-game-pk');
-    if (!gpk) return;
+  function _teamMatch(apiName, cardName) {
+    // True if either string contains the other (handles "Athletics" ↔ "Oakland Athletics")
+    var a = apiName.toLowerCase(), b = cardName.toLowerCase();
+    return a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1;
+  }
+
+  function _fetchScheduleThen(callback) {
+    var now = Date.now();
+    if (_mlbScheduleMap && (now - _mlbScheduleFetched) < 300000) { callback(); return; }
+    var today = new Date();
+    var dateStr = today.getFullYear() + '-' +
+      String(today.getMonth()+1).padStart(2,'0') + '-' +
+      String(today.getDate()).padStart(2,'0');
+    fetch('https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=' + dateStr)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        _mlbScheduleMap = {};
+        var dates = data.dates || [];
+        dates.forEach(function(d) {
+          (d.games || []).forEach(function(g) {
+            var home = g.teams && g.teams.home && g.teams.home.team && g.teams.home.team.name || '';
+            var away = g.teams && g.teams.away && g.teams.away.team && g.teams.away.team.name || '';
+            _mlbScheduleMap[home + '|' + away] = g.gamePk;
+          });
+        });
+        _mlbScheduleFetched = Date.now();
+        callback();
+      }).catch(function() { _mlbScheduleMap = _mlbScheduleMap || {}; });
+  }
+
+  function _resolveGamePk(card) {
+    // Use stamped game_pk if available; otherwise look up via schedule map
+    var stored = card.getAttribute('data-game-pk');
+    if (stored) return stored;
+    if (!_mlbScheduleMap) return null;
+    var cardHome = card.getAttribute('data-home-team') || '';
+    var cardAway = card.getAttribute('data-away-team') || '';
+    var found = null;
+    Object.keys(_mlbScheduleMap).forEach(function(key) {
+      if (found) return;
+      var parts = key.split('|');
+      var apiHome = parts[0], apiAway = parts[1] || '';
+      if (_teamMatch(apiHome, cardHome) && _teamMatch(apiAway, cardAway)) {
+        found = String(_mlbScheduleMap[key]);
+      }
+    });
+    return found;
+  }
+
+  function _fetchAndRenderMatchup(el, gpk) {
     var now = Date.now();
     var cached = _mlbLiveCache[gpk];
-    // Re-use cache if less than 25 seconds old
-    if (cached && (now - cached.fetchedAt) < 25000) {
-      _renderMatchup(el, cached);
-      return;
-    }
+    if (cached && (now - cached.fetchedAt) < 25000) { _renderMatchup(el, cached); return; }
     var url = 'https://statsapi.mlb.com/api/v1.1/game/' + gpk +
               '/feed/live?fields=gameData,status,abstractGameState,' +
               'liveData,plays,currentPlay,matchup,pitcher,batter,fullName';
@@ -3893,8 +3938,8 @@ function toggleCtx(el) {
                     data.liveData.plays.currentPlay.matchup;
       if (!matchup) return;
       var entry = {
-        pitcher:   (matchup.pitcher  && matchup.pitcher.fullName)  || '',
-        batter:    (matchup.batter   && matchup.batter.fullName)   || '',
+        pitcher:   (matchup.pitcher && matchup.pitcher.fullName) || '',
+        batter:    (matchup.batter  && matchup.batter.fullName)  || '',
         fetchedAt: Date.now(),
       };
       _mlbLiveCache[gpk] = entry;
@@ -3912,19 +3957,24 @@ function toggleCtx(el) {
   }
 
   function pollMLBMatchups() {
-    document.querySelectorAll('.live-matchup[data-game-pk]').forEach(function(el) {
+    var cards = [];
+    document.querySelectorAll('.live-matchup').forEach(function(el) {
       var card = el.closest('.card');
-      if (!card) return;
+      if (!card || card.getAttribute('data-sport') !== 'MLB') return;
       var ct = card.getAttribute('data-commence-time');
       if (!ct) return;
       try {
-        var start = new Date(ct);
-        var now   = new Date();
-        // Only poll if game started but not more than 4 hours ago
-        if (now >= start && (now - start) < 4 * 3600 * 1000) {
-          updateMLBLiveMatchup(el);
-        }
+        var start = new Date(ct), now = new Date();
+        if (now >= start && (now - start) < 4 * 3600 * 1000) cards.push(el);
       } catch(e) {}
+    });
+    if (!cards.length) return;
+    _fetchScheduleThen(function() {
+      cards.forEach(function(el) {
+        var card = el.closest('.card');
+        var gpk  = _resolveGamePk(card);
+        if (gpk) _fetchAndRenderMatchup(el, gpk);
+      });
     });
   }
 
