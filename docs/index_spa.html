@@ -330,10 +330,6 @@
     .card-pick { font-weight: 700; font-size: 0.95rem; line-height: 1.3; }
     .card-game { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
     .card-time { font-size: 0.72rem; color: var(--teal); margin-top: 3px; font-weight: 600; min-height: 1em; }
-    .live-matchup { font-size: 0.72rem; color: var(--muted); margin: 3px 0 2px; min-height: 0; display: none; }
-    .live-matchup.active { display: block; }
-    .live-matchup .lm-pitcher { color: var(--text); font-weight: 600; }
-    .live-matchup .lm-batter  { color: var(--text); font-weight: 600; }
     .ipl-time  { color: #f59e0b !important; }
 
     /* ── Confidence badges ───────────────────────────────────────────────── */
@@ -422,6 +418,13 @@
       display: flex; align-items: center; gap: 4px;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
+    }
+    /* When proj-score lines double as the toggle, preserve their styling */
+    .proj-score-hl.context-toggle {
+      color: var(--teal); font-size: 0.78rem; font-weight: 700;
+    }
+    .proj-score.context-toggle {
+      color: var(--teal); font-size: 0.8rem; font-weight: 600;
     }
     .context-body { display: none; margin-top: 8px; }
     .context-body.open { display: block; }
@@ -1050,7 +1053,7 @@
      >
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Oklahoma City Thunder +1.5</div>
+      <div class="card-pick">Oklahoma City Thunder +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Oklahoma City Thunder @ San Antonio Spurs · Spread</div>
       <div class="card-time"></div>
     </div>
@@ -1060,16 +1063,14 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  
-  <div class="proj-score-hl">Model projected score: San Antonio Spurs 107 — Oklahoma City Thunder 109</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-nba-1"><span class="ctx-arrow">›</span> Model projected score: San Antonio Spurs 107 — Oklahoma City Thunder 109</div>
   <div class="edge-row">
     <span class="mkt-mdl">Mkt 49.8% → Model <b style="color:var(--blue)">53.0%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:19%;background:var(--yellow);"></div></div>
     <span class="edge-pct yellow">+3.2%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-nba-1">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">Injury drag on San Antonio Spurs (2.8%) further shifts the model's probability. Projected Oklahoma City Thunder by 2 points (San Antonio Spurs 107 — Oklahoma City Thunder 109).</div>
     <div class="context-item">Model projected score: San Antonio Spurs 107 — Oklahoma City Thunder 109</div><div class="context-item">San Antonio Spurs: 62W-20L | OffRtg 119.8 | DefRtg 111.5 | NetRtg 8.3</div><div class="context-item">Oklahoma City Thunder: 64W-18L | OffRtg 119.0 | DefRtg 107.9 | NetRtg 11.1</div><div class="context-item">San Antonio Spurs last 14 days: NetRtg 9.8 | Win% 67%</div><div class="context-item">Oklahoma City Thunder last 14 days: NetRtg 7.5 | Win% 75%</div><div class="context-item">🏆 Playoffs: defensive intensity higher, recent form weighted 55%</div><div class="context-item">Rest days — San Antonio Spurs: 1 | Oklahoma City Thunder: 1</div><div class="context-item">⚕ San Antonio Spurs — Dylan Harper (G): DAY-TO-DAY</div><div class="context-item">⚕ San Antonio Spurs — De'Aaron Fox (G): DAY-TO-DAY</div><div class="context-item">⚕ San Antonio Spurs — David Jones Garcia (F): OUT</div><div class="context-item">⚕ Oklahoma City Thunder — Jalen Williams (G): DAY-TO-DAY</div><div class="context-item">⚕ Oklahoma City Thunder — Thomas Sorber (C): OUT</div><div class="context-item">San Antonio Spurs injury impact (-2.8%)</div><div class="context-item">Home court advantage: San Antonio Spurs (+2%)</div><div class="context-item">Oklahoma City Thunder injuries benefit San Antonio Spurs (+2.2%)</div>
     
@@ -1471,7 +1472,7 @@
      data-in-budget="true">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Over 6.5</div>
+      <div class="card-pick">Over 6.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Houston Astros @ Chicago Cubs · Total</div>
       <div class="card-time"></div>
     </div>
@@ -1481,16 +1482,14 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  
-  <div class="proj-score-hl">Model projected score: Chicago Cubs 4.4 — Houston Astros 3.9</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bet-2"><span class="ctx-arrow">›</span> Model projected score: Chicago Cubs 4.4 — Houston Astros 3.9</div>
   <div class="edge-row">
     <span class="mkt-mdl">Mkt 53.1% → Model <b style="color:var(--blue)">65.2%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:72%;"></div></div>
     <span class="edge-pct">+12.1%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-bet-2">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects 8.1 combined runs vs the market line of 7.0, a 1.1-run lean toward the over. Projected: Chicago Cubs 4.4 — Houston Astros 3.9. Note: Spencer Arrighetti's 1.50 ERA vs 4.41 xFIP over 36 IP is an ERA trap signal that may affect run distribution.</div>
     <div class="context-item">Model projected score: Chicago Cubs 4.4 — Houston Astros 3.9</div><div class="context-item">Model expected total: 8.1 vs line 7.0</div><div class="context-item">Chicago Cubs offense: 29W-21L | OPS 0.735 | AVG 0.242 | R/G 4.92</div><div class="context-item">Houston Astros offense: 20W-31L | OPS 0.725 | AVG 0.246 | R/G 4.27</div><div class="context-item">Bullpen ERA — Chicago Cubs: 3.80 (WHIP 1.30) | Houston Astros: 5.72 (WHIP 1.69)</div><div class="context-item">🔵 Jameson Taillon (Chicago Cubs): ERA 4.97 | FIP 6.69 / xFIP 4.20 | K/9 7.5 | BB/9 3.0 | IP 50</div><div class="context-item">🔴 Spencer Arrighetti (Houston Astros): ERA 1.5 | FIP 3.37 / xFIP 4.41 | K/9 8.8 | BB/9 5.2 | IP 36</div><div class="context-item">Venue: Wrigley Field — park factor 1.03 (hitter-friendly)</div><div class="context-item">🌤 Weather (Chicago): 54°F | Wind 12 mph ENE (blowing in) | Precip 0%</div><div class="context-item">👨‍⚖️ Chad Fairchild: large strike zone (K factor 1.04x avg) — favors pitchers / strikeout props</div><div class="context-item">👨‍⚖️ HP Umpire: Chad Fairchild — run factor 0.96x | K factor 1.04x | Slightly below-avg scoring</div><div class="context-item">⚠ Chicago Cubs schedule load: 6 games in 7 days</div><div class="context-item">⚠ Houston Astros schedule load: 6 games in 7 days</div><div class="context-item">Chicago Cubs injury impact (-2.0%)</div><div class="context-item">⚕ Chicago Cubs — Edward Cabrera (SP): DAY-TO-DAY</div><div class="context-item">⚕ Chicago Cubs — Brandon Birdsell (RP): DAY-TO-DAY</div><div class="context-item">⚕ Chicago Cubs — Jeff Brigham (RP): DAY-TO-DAY</div><div class="context-item">⚕ Chicago Cubs — Jaxon Wiggins (SP): DAY-TO-DAY</div><div class="context-item">⚕ Houston Astros — Walker Janek (C): DAY-TO-DAY</div><div class="context-item">⚠ ERA trap [SEVERE] — Spencer Arrighetti: ERA 1.50 vs xFIP 4.41 over 36 IP (severity 2.91) — Houston Astros ML may be overpriced by market</div>
     
@@ -1520,7 +1519,7 @@
      data-in-budget="true">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Athletics</div>
+      <div class="card-pick">Athletics<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Athletics @ San Diego Padres · ML</div>
       <div class="card-time"></div>
     </div>
@@ -1530,16 +1529,14 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  
-  <div class="proj-score-hl">Model projected score: San Diego Padres 3.2 — Athletics 3.7</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bet-1"><span class="ctx-arrow">›</span> Model projected score: San Diego Padres 3.2 — Athletics 3.7</div>
   <div class="edge-row">
     <span class="mkt-mdl">Mkt 45.8% → Model <b style="color:var(--blue)">60.2%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:86%;"></div></div>
     <span class="edge-pct">+14.4%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-bet-1">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The primary driver is injury context — San Diego Padres (4.5% win probability impact), which the model believes is only partially reflected in current market pricing. Model projects Athletics by 0.5 runs (San Diego Padres 3.2 — Athletics 3.7).</div>
     <div class="context-item">Model projected score: San Diego Padres 3.2 — Athletics 3.7</div><div class="context-item">San Diego Padres offense: 29W-20L | OPS 0.658 | AVG 0.221 | R/G 4.08</div><div class="context-item">Athletics offense: 26W-24L | OPS 0.726 | AVG 0.249 | R/G 4.48</div><div class="context-item">Bullpen ERA — San Diego Padres: 3.40 (WHIP 1.25) | Athletics: 4.11 (WHIP 1.39)</div><div class="context-item">🔵 Walker Buehler (San Diego Padres): ERA 5.01 | FIP 3.69 / xFIP 3.75 | K/9 8.1 | BB/9 3.1 | IP 41</div><div class="context-item">🔴 Jeffrey Springs (Athletics): ERA 3.93 | FIP 4.25 / xFIP 4.04 | K/9 7.7 | BB/9 2.6 | IP 55</div><div class="context-item">Venue: Petco Park — park factor 0.93 (pitcher-friendly)</div><div class="context-item">🌤 Weather (San Diego): 64°F | Wind 2 mph W (blowing in) | Precip 0%</div><div class="context-item">⚠ San Diego Padres schedule load: 6 games in 7 days</div><div class="context-item">⚠ Athletics schedule load: 7 games in 7 days</div><div class="context-item">San Diego Padres injury impact (-4.5%)</div><div class="context-item">⚕ San Diego Padres — Jackson Merrill (CF): DAY-TO-DAY</div><div class="context-item">⚕ San Diego Padres — Yu Darvish (SP): OUT</div><div class="context-item">⚕ San Diego Padres — Blake Hunt (C): DAY-TO-DAY</div><div class="context-item">⚕ Athletics — Wei-En Lin (P): DAY-TO-DAY</div>
     
@@ -1569,7 +1566,7 @@
      data-in-budget="true">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Under 9.5</div>
+      <div class="card-pick">Under 9.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Colorado Rockies @ Arizona Diamondbacks · Total</div>
       <div class="card-time"></div>
     </div>
@@ -1579,16 +1576,14 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  
-  <div class="proj-score-hl">Model projected score: Arizona Diamondbacks 4.4 — Colorado Rockies 3.3</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bet-3"><span class="ctx-arrow">›</span> Model projected score: Arizona Diamondbacks 4.4 — Colorado Rockies 3.3</div>
   <div class="edge-row">
     <span class="mkt-mdl">Mkt 53.1% → Model <b style="color:var(--blue)">63.5%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:62%;"></div></div>
     <span class="edge-pct">+10.4%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-bet-3">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects 7.9 combined runs vs the market line of 9.0, a 1.1-run lean toward the under. Projected: Arizona Diamondbacks 4.4 — Colorado Rockies 3.3. Note: Tomoyuki Sugano's 4.02 ERA vs 4.52 xFIP over 47 IP is an ERA trap signal that may affect run distribution.</div>
     <div class="context-item">Model projected score: Arizona Diamondbacks 4.4 — Colorado Rockies 3.3</div><div class="context-item">Model expected total: 7.9 vs line 9.0</div><div class="context-item">Arizona Diamondbacks offense: 26W-23L | OPS 0.710 | AVG 0.244 | R/G 4.55</div><div class="context-item">Colorado Rockies offense: 19W-32L | OPS 0.694 | AVG 0.243 | R/G 4.14</div><div class="context-item">Bullpen ERA — Arizona Diamondbacks: 4.12 (WHIP 1.15) | Colorado Rockies: 4.56 (WHIP 1.45)</div><div class="context-item">🔵 Michael Soroka (Arizona Diamondbacks): ERA 3.49 | FIP 2.87 / xFIP 3.01 | K/9 10.1 | BB/9 2.6 | IP 49</div><div class="context-item">🔴 Tomoyuki Sugano (Colorado Rockies): ERA 4.02 | FIP 5.52 / xFIP 4.52 | K/9 4.8 | BB/9 2.7 | IP 47</div><div class="context-item">Venue: Chase Field — park factor 1.01 (pitcher-friendly)</div><div class="context-item">⚠ Arizona Diamondbacks schedule load: 7 games in 7 days</div><div class="context-item">⚠ Colorado Rockies schedule load: 7 games in 7 days</div><div class="context-item">Arizona Diamondbacks injury impact (-2.7%)</div><div class="context-item">Colorado Rockies injury impact (-1.3%)</div><div class="context-item">⚕ Arizona Diamondbacks — Derek Law (RP): DAY-TO-DAY</div><div class="context-item">⚕ Arizona Diamondbacks — Spencer Giesting (SP): DAY-TO-DAY</div><div class="context-item">⚕ Arizona Diamondbacks — A.J. Vukovich (CF): OUT</div><div class="context-item">⚕ Arizona Diamondbacks — Kyle Amendt (RP): DAY-TO-DAY</div><div class="context-item">⚕ Colorado Rockies — Brayan Castillo (RP): DAY-TO-DAY</div><div class="context-item">⚕ Colorado Rockies — Case Williams (SP): DAY-TO-DAY</div><div class="context-item">⚕ Colorado Rockies — Jared Thomas (CF): DAY-TO-DAY</div><div class="context-item">⚠ ERA trap [MODERATE] — Tomoyuki Sugano: ERA 4.02 vs xFIP 4.52 over 47 IP (severity 0.50) — Colorado Rockies ML may be overpriced by market</div>
     
@@ -1618,7 +1613,7 @@
      data-in-budget="true">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Under 8.5</div>
+      <div class="card-pick">Under 8.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Athletics @ San Diego Padres · Total</div>
       <div class="card-time"></div>
     </div>
@@ -1628,16 +1623,14 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  
-  <div class="proj-score-hl">Model projected score: San Diego Padres 3.2 — Athletics 3.7</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bet-4"><span class="ctx-arrow">›</span> Model projected score: San Diego Padres 3.2 — Athletics 3.7</div>
   <div class="edge-row">
     <span class="mkt-mdl">Mkt 52.4% → Model <b style="color:var(--blue)">62.3%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:59%;"></div></div>
     <span class="edge-pct">+9.9%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-bet-4">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects 7.2 combined runs vs the market line of 8.0, a 0.8-run lean toward the under. Projected: San Diego Padres 3.2 — Athletics 3.7.</div>
     <div class="context-item">Model projected score: San Diego Padres 3.2 — Athletics 3.7</div><div class="context-item">Model expected total: 7.2 vs line 8.0</div><div class="context-item">San Diego Padres offense: 29W-20L | OPS 0.658 | AVG 0.221 | R/G 4.08</div><div class="context-item">Athletics offense: 26W-24L | OPS 0.726 | AVG 0.249 | R/G 4.48</div><div class="context-item">Bullpen ERA — San Diego Padres: 3.40 (WHIP 1.25) | Athletics: 4.11 (WHIP 1.39)</div><div class="context-item">🔵 Walker Buehler (San Diego Padres): ERA 5.01 | FIP 3.69 / xFIP 3.75 | K/9 8.1 | BB/9 3.1 | IP 41</div><div class="context-item">🔴 Jeffrey Springs (Athletics): ERA 3.93 | FIP 4.25 / xFIP 4.04 | K/9 7.7 | BB/9 2.6 | IP 55</div><div class="context-item">Venue: Petco Park — park factor 0.93 (pitcher-friendly)</div><div class="context-item">🌤 Weather (San Diego): 64°F | Wind 2 mph W (blowing in) | Precip 0%</div><div class="context-item">⚠ San Diego Padres schedule load: 6 games in 7 days</div><div class="context-item">⚠ Athletics schedule load: 7 games in 7 days</div><div class="context-item">San Diego Padres injury impact (-4.5%)</div><div class="context-item">⚕ San Diego Padres — Jackson Merrill (CF): DAY-TO-DAY</div><div class="context-item">⚕ San Diego Padres — Yu Darvish (SP): OUT</div><div class="context-item">⚕ San Diego Padres — Blake Hunt (C): DAY-TO-DAY</div><div class="context-item">⚕ Athletics — Wei-En Lin (P): DAY-TO-DAY</div>
     
@@ -1667,7 +1660,7 @@
      data-in-budget="true">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Under 8.5</div>
+      <div class="card-pick">Under 8.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">New York Mets @ Miami Marlins · Total</div>
       <div class="card-time"></div>
     </div>
@@ -1677,16 +1670,14 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  
-  <div class="proj-score-hl">Model projected score: Miami Marlins 3.6 — New York Mets 3.3</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bet-5"><span class="ctx-arrow">›</span> Model projected score: Miami Marlins 3.6 — New York Mets 3.3</div>
   <div class="edge-row">
     <span class="mkt-mdl">Mkt 53.1% → Model <b style="color:var(--blue)">62.9%</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:58%;"></div></div>
     <span class="edge-pct">+9.8%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-bet-5">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects 7.1 combined runs vs the market line of 8.0, a 0.9-run lean toward the under. Projected: Miami Marlins 3.6 — New York Mets 3.3.</div>
     <div class="context-item">Model projected score: Miami Marlins 3.6 — New York Mets 3.3</div><div class="context-item">Model expected total: 7.1 vs line 8.0</div><div class="context-item">Miami Marlins offense: 22W-29L | OPS 0.696 | AVG 0.244 | R/G 4.33</div><div class="context-item">New York Mets offense: 22W-28L | OPS 0.655 | AVG 0.232 | R/G 4.08</div><div class="context-item">Bullpen ERA — Miami Marlins: 3.45 (WHIP 1.22) | New York Mets: 3.94 (WHIP 1.40)</div><div class="context-item">🔵 Eury Pérez (Miami Marlins): ERA 5.33 | FIP 5.08 / xFIP 4.01 | K/9 10.0 | BB/9 4.8 | IP 52</div><div class="context-item">🔴 Tobias Myers (New York Mets): ERA 3.41 | FIP 4.48 / xFIP 3.76 | K/9 7.1 | BB/9 1.9 | IP 29</div><div class="context-item">Venue: loanDepot park — park factor 0.94 (pitcher-friendly)</div><div class="context-item">🌤 Weather (Miami): 87°F | Wind 11 mph SE (cross wind) | Precip 0%</div><div class="context-item">⚠ Miami Marlins schedule load: 7 games in 7 days</div><div class="context-item">⚠ New York Mets schedule load: 7 games in 7 days</div><div class="context-item">Miami Marlins injury impact (-2.0%)</div><div class="context-item">New York Mets injury impact (-2.3%)</div><div class="context-item">⚕ Miami Marlins — Thomas White (SP): DAY-TO-DAY</div><div class="context-item">⚕ Miami Marlins — Kemp Alderman (RF): DAY-TO-DAY</div><div class="context-item">⚕ Miami Marlins — Jesus Tinoco (RP): OUT</div><div class="context-item">⚕ New York Mets — Mike Tauchman (RF): DAY-TO-DAY</div><div class="context-item">⚕ New York Mets — Grae Kessinger (3B): DAY-TO-DAY</div><div class="context-item">⚕ New York Mets — Joe Jacques (RP): DAY-TO-DAY</div><div class="context-item">⚕ New York Mets — Kevin Herget (RP): DAY-TO-DAY</div><div class="context-item">⚕ New York Mets — Nick Burdi (RP): DAY-TO-DAY</div><div class="context-item">⚕ New York Mets — Jose Rojas (3B): DAY-TO-DAY</div><div class="context-item">⚕ New York Mets — Robert Stock (RP): OUT</div><div class="context-item">⚠ ERA trap [MILD] — Tobias Myers: ERA 3.41 vs xFIP 3.76 over 29 IP (severity 0.33) — New York Mets ML may be overpriced by market</div>
     
@@ -2078,7 +2069,7 @@
      >
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Lucknow Super Giants</div>
+      <div class="card-pick">Lucknow Super Giants<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Punjab Kings @ Lucknow Super Giants · ML</div>
       <div class="card-time">7:00 AM PDT</div>
     </div>
@@ -2088,13 +2079,12 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  <div class="proj-score-hl">Model projected score: Lucknow Super Giants 164 — Punjab Kings 165</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-ipl-1"><span class="ctx-arrow">›</span> Model projected score: Lucknow Super Giants 164 — Punjab Kings 165</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+15.0%</b> &middot; Mkt 43.1% → Model 58.1%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-ipl-1">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">Lucknow Super Giants combines home venue advantage with a 32% form edge for a strong 15.0% model advantage.</div>
     <div class="context-item">Model projected score: Lucknow Super Giants 164 — Punjab Kings 165</div><div class="context-item">Lucknow Super Giants: 3W-8L (11 matches) | Win% 27% | Recent Win% 50% (last 2 games) | Avg run margin -10</div><div class="context-item">Punjab Kings: 6W-6L (12 matches) | Win% 50% | Recent Win% 0% (last 2 games) | Avg run margin -1</div><div class="context-item">Rest days — Lucknow Super Giants: 2 | Punjab Kings: 51</div><div class="context-item">Form edge: Lucknow Super Giants (blended win-rate gap 32%)</div><div class="context-item">Home venue advantage: Lucknow Super Giants (+2.5%)</div><div class="context-item">IPL playoff — recent form weighted more heavily</div><div class="context-item">Hot/cold streak: Lucknow Super Giants hot (50% last 7d) vs Punjab Kings cold (0%)</div>
     <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 Watchlist only — not tracked in performance tables. Moneyline (match winner) only.</div>
@@ -2134,7 +2124,7 @@
      >
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Vegas Golden Knights +1.5</div>
+      <div class="card-pick">Vegas Golden Knights +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Vegas Golden Knights @ Colorado Avalanche · Spread</div>
       <div class="card-time">5:00 PM PDT</div>
     </div>
@@ -2144,13 +2134,12 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  <div class="proj-score-hl">Model projected score: Colorado Avalanche 2.7 — Vegas Golden Knights 3.1</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-nhl-1"><span class="ctx-arrow">›</span> Model projected score: Colorado Avalanche 2.7 — Vegas Golden Knights 3.1</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+15.0%</b> &middot; Mkt 57.5% → Model 72.5%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-nhl-1">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model finds a strong edge driven by season net rating and recent form differential.</div>
     <div class="context-item">Model projected score: Colorado Avalanche 2.7 — Vegas Golden Knights 3.1</div><div class="context-item">Colorado Avalanche: 55W-16L-11OTL | 3.68 GPG | 2.48 GAPG | NetRtg 1.21</div><div class="context-item">Vegas Golden Knights: 39W-26L-17OTL | 3.23 GPG | 3.05 GAPG | NetRtg 0.18</div><div class="context-item">Colorado Avalanche last 14 days: NetRtg -0.50 | Win% 50%</div><div class="context-item">Vegas Golden Knights last 14 days: NetRtg 2.00 | Win% 80%</div><div class="context-item">🏆 Playoffs: recent form weighted 55%, tighter defence expected</div><div class="context-item">Rest days — Colorado Avalanche: 2 | Vegas Golden Knights: 2</div><div class="context-item">⚕ Colorado Avalanche — Cale Makar (D): DAY-TO-DAY</div><div class="context-item">⚕ Vegas Golden Knights — Mark Stone (RW): DAY-TO-DAY</div><div class="context-item">Home ice advantage: Colorado Avalanche (+2%)</div>
     <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 Watchlist only — not tracked in performance tables until NHL testing is complete.</div>
@@ -2174,7 +2163,7 @@
      >
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Under 6.5</div>
+      <div class="card-pick">Under 6.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Vegas Golden Knights @ Colorado Avalanche · Total</div>
       <div class="card-time">5:00 PM PDT</div>
     </div>
@@ -2184,13 +2173,12 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  <div class="proj-score-hl">Model projected score: Colorado Avalanche 2.7 — Vegas Golden Knights 3.1</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-nhl-2"><span class="ctx-arrow">›</span> Model projected score: Colorado Avalanche 2.7 — Vegas Golden Knights 3.1</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+10.4%</b> &middot; Mkt 52.2% → Model 62.6%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-nhl-2">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model finds a solid edge driven by season net rating and recent form differential.</div>
     <div class="context-item">Model projected score: Colorado Avalanche 2.7 — Vegas Golden Knights 3.1</div><div class="context-item">Colorado Avalanche GPG (blended): 3.31 vs Vegas Golden Knights GAPG (blended): 2.58</div><div class="context-item">Vegas Golden Knights GPG (blended): 3.76 vs Colorado Avalanche GAPG (blended): 3.04</div><div class="context-item">Model expected total: 6.0 vs market line 6.5</div>
     <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 Watchlist only — not tracked in performance tables until NHL testing is complete.</div>
@@ -2230,7 +2218,7 @@
      >
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Dallas Wings</div>
+      <div class="card-pick">Dallas Wings<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Dallas Wings @ Atlanta Dream · ML</div>
       <div class="card-time">4:30 PM PDT</div>
     </div>
@@ -2240,13 +2228,12 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  <div class="proj-score-hl">Model projected score: Atlanta Dream 83 — Dallas Wings 87</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-wnba-1"><span class="ctx-arrow">›</span> Model projected score: Atlanta Dream 83 — Dallas Wings 87</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+15.0%</b> &middot; Mkt 33.7% → Model 48.7%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-wnba-1">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model rates Dallas Wings at a strong 15.0% edge based on blended season and recent net ratings.</div>
     <div class="context-item">Model projected score: Atlanta Dream 83 — Dallas Wings 87</div><div class="context-item">Atlanta Dream: 2W-1L | 84.0 PPG | FG 39.1% | AST/TO 1.19 | NetRtg +20.5</div><div class="context-item">Dallas Wings: 3W-2L | 91.2 PPG | FG 48.0% | AST/TO 2.42 | NetRtg +23.3</div><div class="context-item">⚕ Atlanta Dream — Brionna Jones (10.5 PPG, 12% pts share): OUT</div><div class="context-item">Rest — Atlanta Dream: 4 day(s) | Dallas Wings: 0 day(s)</div><div class="context-item">Atlanta Dream lineup impact (-14.7%)</div><div class="context-item">Home court: Atlanta Dream (+2%)</div>
     <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 Watchlist only — not tracked in performance tables until WNBA testing is complete.</div>
@@ -2270,7 +2257,7 @@
      >
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Indiana Fever</div>
+      <div class="card-pick">Indiana Fever<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Golden State Valkyries @ Indiana Fever · ML</div>
       <div class="card-time">4:30 PM PDT</div>
     </div>
@@ -2280,13 +2267,12 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  <div class="proj-score-hl">Model projected score: Indiana Fever 88 — Golden State Valkyries 83</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-wnba-2"><span class="ctx-arrow">›</span> Model projected score: Indiana Fever 88 — Golden State Valkyries 83</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+15.0%</b> &middot; Mkt 67.2% → Model 82.2%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-wnba-2">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">Despite Indiana Fever's own lineup losses (5% pts-share), Golden State Valkyries's heavier absences (20%) give the model a net edge.</div>
     <div class="context-item">Model projected score: Indiana Fever 88 — Golden State Valkyries 83</div><div class="context-item">Indiana Fever: 3W-2L | 94.4 PPG | FG 46.0% | AST/TO 1.56 | NetRtg +28.9</div><div class="context-item">Golden State Valkyries: 3W-1L | 84.0 PPG | FG 39.7% | AST/TO 2.21 | NetRtg +18.5</div><div class="context-item">⚕ Golden State Valkyries — Cecilia Zandalasini (6.1 PPG, 7% pts share): OUT</div><div class="context-item">⚕ Golden State Valkyries — Iliana Rupert (5.1 PPG, 6% pts share): OUT</div><div class="context-item">⚕ Indiana Fever — Caitlin Clark (18.9 PPG, 20% pts share): DAY-TO-DAY</div><div class="context-item">Indiana Fever on back-to-back (-4%)</div><div class="context-item">Rest — Indiana Fever: 1 day(s) | Golden State Valkyries: 5 day(s)</div><div class="context-item">⚕ Golden State Valkyries — Juste Jocyte: OUT</div><div class="context-item">Indiana Fever lineup impact (-4.6%)</div><div class="context-item">Golden State Valkyries injuries benefit Indiana Fever (+19.6%)</div><div class="context-item">Home court: Indiana Fever (+2%)</div>
     <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 Watchlist only — not tracked in performance tables until WNBA testing is complete.</div>
@@ -2310,7 +2296,7 @@
      >
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Seattle Storm</div>
+      <div class="card-pick">Seattle Storm<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
       <div class="card-game short-game">Connecticut Sun @ Seattle Storm · ML</div>
       <div class="card-time">7:00 PM PDT</div>
     </div>
@@ -2320,13 +2306,12 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  <div class="proj-score-hl">Model projected score: Seattle Storm 81 — Connecticut Sun 81</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-wnba-3"><span class="ctx-arrow">›</span> Model projected score: Seattle Storm 81 — Connecticut Sun 81</div>
   <div class="edge-row">
     <span class="mkt-mdl">Edge <b style="color:var(--green)">+11.2%</b> &middot; Mkt 52.7% → Model 63.9%</span>
   </div>
   
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  <div class="context-body" id="ctx-wnba-3">
     <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">Despite Seattle Storm's own lineup losses (30% pts-share), Connecticut Sun's heavier absences (27%) give the model a net edge.</div>
     <div class="context-item">Model projected score: Seattle Storm 81 — Connecticut Sun 81</div><div class="context-item">Seattle Storm: 1W-4L | 79.6 PPG | FG 41.1% | AST/TO 1.16 | NetRtg +18.3</div><div class="context-item">Connecticut Sun: 1W-5L | 80.3 PPG | FG 41.6% | AST/TO 1.35 | NetRtg +15.1</div><div class="context-item">⚕ Connecticut Sun — Brittney Griner (16.8 PPG, 21% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Connecticut Sun — Olivia Nelson-Ododa (5.1 PPG, 6% pts share): OUT</div><div class="context-item">⚕ Connecticut Sun — Leila Lacan (10.4 PPG, 13% pts share): OUT</div><div class="context-item">⚕ Seattle Storm — Taylor Thierry (0.7 PPG, 1% pts share): OUT</div><div class="context-item">⚕ Seattle Storm — Dominique Malonga (8.2 PPG, 10% pts share): OUT</div><div class="context-item">⚕ Seattle Storm — Katie Lou Samuelson (5.9 PPG, 7% pts share): OUT</div><div class="context-item">⚕ Seattle Storm — Ezi Magbegor (9.7 PPG, 12% pts share): OUT</div><div class="context-item">Rest — Seattle Storm: 0 day(s) | Connecticut Sun: 0 day(s)</div><div class="context-item">⚕ Seattle Storm — Taina Mair: OUT</div><div class="context-item">Seattle Storm lineup impact (-30.0%)</div><div class="context-item">Connecticut Sun injuries benefit Seattle Storm (+27.1%)</div><div class="context-item">Home court: Seattle Storm (+2%)</div>
     <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 Watchlist only — not tracked in performance tables until WNBA testing is complete.</div>
@@ -3274,7 +3259,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 12:39 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 12:59 PM PDT</div>
         </div>
         
       </div>
@@ -3707,7 +3692,8 @@ window._tabDots = {
 <script>
 // ── Context toggle ────────────────────────────────────────────────────────
 function toggleCtx(el) {
-  var body = el.nextElementSibling;
+  var targetId = el.getAttribute('data-target');
+  var body = targetId ? document.getElementById(targetId) : el.nextElementSibling;
   var arrow = el.querySelector('.ctx-arrow');
   if (!body) return;
   body.classList.toggle('open');
@@ -3867,119 +3853,6 @@ function toggleCtx(el) {
     obs.observe(el, { childList: true, characterData: true, subtree: true });
   });
 
-  // ── MLB live pitcher/batter ──────────────────────────────────────────────
-  // Resolves game_pk from the MLB schedule API by team name (works even when
-  // game_pk wasn't saved in state), then polls for current pitcher + batter.
-  var _mlbScheduleMap  = null;  // "HomeTeam|AwayTeam" → gamePk
-  var _mlbScheduleFetched = 0;
-  var _mlbLiveCache    = {};    // gamePk → {pitcher, batter, fetchedAt}
-
-  function _teamMatch(apiName, cardName) {
-    // True if either string contains the other (handles "Athletics" ↔ "Oakland Athletics")
-    var a = apiName.toLowerCase(), b = cardName.toLowerCase();
-    return a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1;
-  }
-
-  function _fetchScheduleThen(callback) {
-    var now = Date.now();
-    if (_mlbScheduleMap && (now - _mlbScheduleFetched) < 300000) { callback(); return; }
-    var today = new Date();
-    var dateStr = today.getFullYear() + '-' +
-      String(today.getMonth()+1).padStart(2,'0') + '-' +
-      String(today.getDate()).padStart(2,'0');
-    fetch('https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=' + dateStr)
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        _mlbScheduleMap = {};
-        var dates = data.dates || [];
-        dates.forEach(function(d) {
-          (d.games || []).forEach(function(g) {
-            var home = g.teams && g.teams.home && g.teams.home.team && g.teams.home.team.name || '';
-            var away = g.teams && g.teams.away && g.teams.away.team && g.teams.away.team.name || '';
-            _mlbScheduleMap[home + '|' + away] = g.gamePk;
-          });
-        });
-        _mlbScheduleFetched = Date.now();
-        callback();
-      }).catch(function() { _mlbScheduleMap = _mlbScheduleMap || {}; });
-  }
-
-  function _resolveGamePk(card) {
-    // Use stamped game_pk if available; otherwise look up via schedule map
-    var stored = card.getAttribute('data-game-pk');
-    if (stored) return stored;
-    if (!_mlbScheduleMap) return null;
-    var cardHome = card.getAttribute('data-home-team') || '';
-    var cardAway = card.getAttribute('data-away-team') || '';
-    var found = null;
-    Object.keys(_mlbScheduleMap).forEach(function(key) {
-      if (found) return;
-      var parts = key.split('|');
-      var apiHome = parts[0], apiAway = parts[1] || '';
-      if (_teamMatch(apiHome, cardHome) && _teamMatch(apiAway, cardAway)) {
-        found = String(_mlbScheduleMap[key]);
-      }
-    });
-    return found;
-  }
-
-  function _fetchAndRenderMatchup(el, gpk) {
-    var now = Date.now();
-    var cached = _mlbLiveCache[gpk];
-    if (cached && (now - cached.fetchedAt) < 25000) { _renderMatchup(el, cached); return; }
-    var url = 'https://statsapi.mlb.com/api/v1.1/game/' + gpk +
-              '/feed/live?fields=gameData,status,abstractGameState,' +
-              'liveData,plays,currentPlay,matchup,pitcher,batter,fullName';
-    fetch(url).then(function(r) { return r.json(); }).then(function(data) {
-      var state = (data.gameData && data.gameData.status && data.gameData.status.abstractGameState) || '';
-      if (state !== 'Live') return;
-      var matchup = data.liveData && data.liveData.plays &&
-                    data.liveData.plays.currentPlay &&
-                    data.liveData.plays.currentPlay.matchup;
-      if (!matchup) return;
-      var entry = {
-        pitcher:   (matchup.pitcher && matchup.pitcher.fullName) || '',
-        batter:    (matchup.batter  && matchup.batter.fullName)  || '',
-        fetchedAt: Date.now(),
-      };
-      _mlbLiveCache[gpk] = entry;
-      _renderMatchup(el, entry);
-    }).catch(function() {});
-  }
-
-  function _renderMatchup(el, entry) {
-    if (!entry.pitcher && !entry.batter) return;
-    el.innerHTML =
-      '⚾ P: <span class="lm-pitcher">' + (entry.pitcher || '—') + '</span>' +
-      ' &nbsp;·&nbsp; ' +
-      'AB: <span class="lm-batter">' + (entry.batter || '—') + '</span>';
-    el.classList.add('active');
-  }
-
-  function pollMLBMatchups() {
-    var cards = [];
-    document.querySelectorAll('.live-matchup').forEach(function(el) {
-      var card = el.closest('.card');
-      if (!card || card.getAttribute('data-sport') !== 'MLB') return;
-      var ct = card.getAttribute('data-commence-time');
-      if (!ct) return;
-      try {
-        var start = new Date(ct), now = new Date();
-        if (now >= start && (now - start) < 4 * 3600 * 1000) cards.push(el);
-      } catch(e) {}
-    });
-    if (!cards.length) return;
-    _fetchScheduleThen(function() {
-      cards.forEach(function(el) {
-        var card = el.closest('.card');
-        var gpk  = _resolveGamePk(card);
-        if (gpk) _fetchAndRenderMatchup(el, gpk);
-      });
-    });
-  }
-
-  pollMLBMatchups();
-  setInterval(pollMLBMatchups, 30000);
 
   // (Parlay leg start times are now shown inline in applyParlayAllocCard leg summary rows)
 
@@ -4247,6 +4120,74 @@ function toggleCtx(el) {
       : '';
 
     return scoreboardHtml + matchupRow;
+  }
+
+  // ── MLB in-progress live section builder ─────────────────────────────────
+  // Always renders the full scoreboard even when ESPN has no situation data.
+  // Adds a pitcher + batter row below when ESPN provides those fields.
+  function _mlbLiveHtml(sit, ev, prob) {
+    var ctr;
+    if (sit) {
+      var balls   = Math.min(3, sit.balls   || 0);
+      var strikes = Math.min(2, sit.strikes || 0);
+      var outs    = Math.min(2, sit.outs    || 0);
+      var sc1 = sit.onFirst  ? "#eab308" : "#374151";
+      var sc2 = sit.onSecond ? "#eab308" : "#374151";
+      var sc3 = sit.onThird  ? "#eab308" : "#374151";
+      function _mkPoly(cx, cy, fill, sz) {
+        var pts = cx+","+(cy-sz)+" "+(cx+sz)+","+cy+" "+cx+","+(cy+sz)+" "+(cx-sz)+","+cy;
+        return '<polygon points="'+pts+'" fill="'+fill+'"/>';
+      }
+      function _mkDots(n, max, fc, ds) {
+        var s = "";
+        for (var i = 0; i < max; i++)
+          s += '<span style="display:inline-block;width:'+ds+'px;height:'+ds+'px;border-radius:50%;background:'+(i<n?fc:"#374151")+';margin-right:2px;vertical-align:middle;"></span>';
+        return s;
+      }
+      var svg =
+        '<svg width="32" height="24" viewBox="0 0 32 24" style="display:block;margin:0 auto;">' +
+        '<line x1="16" y1="7" x2="26" y2="17" stroke="#4b5563" stroke-width="0.9"/>' +
+        '<line x1="6" y1="17" x2="16" y2="7" stroke="#4b5563" stroke-width="0.9"/>' +
+        _mkPoly(16,7,sc2,6) + _mkPoly(26,17,sc1,6) + _mkPoly(6,17,sc3,6) + '</svg>';
+      var bso =
+        '<div style="font-size:0.68rem;color:#94a3b8;margin-top:4px;white-space:nowrap;">' +
+        'B&nbsp;' + _mkDots(balls,3,"#22c55e",8) +
+        '&nbsp;S&nbsp;' + _mkDots(strikes,2,"#eab308",8) +
+        '&nbsp;O&nbsp;' + _mkDots(outs,2,"#ef4444",8) + '</div>';
+      ctr = '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
+        '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
+        '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;margin-bottom:2px;">' + (ev.detail||'') + '</span>' +
+        probHtml(prob) + svg + bso + '</div>';
+    } else {
+      ctr = '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
+        '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
+        '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;">' + (ev.detail||'') + '</span>' +
+        probHtml(prob) + '</div>';
+    }
+    var html = _renderScoreboard(ev, ctr);
+    // Pitcher + batter below the scoreboard (ESPN situation fields)
+    if (sit) {
+      var mParts = [];
+      var mp = sit.pitcher;
+      if (mp) {
+        var mpN = mp.shortName || mp.displayName || mp.fullName || '';
+        if (mpN) {
+          var mpL = mpN.split(' ').pop();
+          var mpP = (sit.pitchCount || {}).pitches;
+          mParts.push('⚾&nbsp;<strong style="color:#e2e8f0;">' + mpL + '</strong>' +
+            (mpP ? '&nbsp;<span style="color:#64748b;">' + mpP + 'p</span>' : ''));
+        }
+      }
+      var mb = sit.batter;
+      if (mb) {
+        var mbN = mb.shortName || mb.displayName || mb.fullName || '';
+        if (mbN) mParts.push('🏏&nbsp;<strong style="color:#e2e8f0;">' + mbN.split(' ').pop() + '</strong>');
+      }
+      if (mParts.length)
+        html += '<div style="font-size:0.65rem;color:#94a3b8;text-align:center;margin-top:5px;letter-spacing:0.01em;">' +
+          mParts.join('&ensp;<span style="color:#374151;">·</span>&ensp;') + '</div>';
+    }
+    return html;
   }
 
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
@@ -4795,6 +4736,12 @@ function toggleCtx(el) {
     if (t) t.style.display = "none";
   }
 
+  // Show or hide the inline ● LIVE pill inside the card-pick line.
+  function setPickLive(card, on) {
+    var pill = card.querySelector('.pick-live-pill');
+    if (pill) pill.style.display = on ? 'inline' : 'none';
+  }
+
   // Props and IPL cards have no ESPN matching — use commence_time directly.
   function checkPropLocks() {
     var now = Date.now();
@@ -4995,6 +4942,7 @@ function toggleCtx(el) {
     if (ev.stateId === "3") {
       showLockBadge(card);
       clearCardTime(card);
+      setPickLive(card, false);
       // Game over — show score line + WON/LOST
       var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore, sport);
       // Store result on the card so updatePerformance() can read it
@@ -5012,6 +4960,7 @@ function toggleCtx(el) {
     } else if (ev.stateId === "2") {
       showLockBadge(card);
       clearCardTime(card);
+      setPickLive(card, true);
       card.removeAttribute("data-live-result");
       // Rain delay / suspended / postponed — don't show win probability
       var detailLower = (ev.detail || "").toLowerCase();
@@ -5028,13 +4977,10 @@ function toggleCtx(el) {
         var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
         var prob = winProb(betType, pick, ourTeam, evHome, evAway,
                            evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom, marketProb);
-        // All sports: scoreboard widget with logos + scores + centre info
-        // MLB centre: inning + base diamond + B/S/O + pitcher (via renderDiamond)
-        // Other sports centre: ● LIVE badge + game clock/period + win probability
+        // MLB: always render full scoreboard; add diamond+BSO when ESPN has situation data
+        // Other sports: scoreboard with ● LIVE badge + clock + win probability
         var centerLive = sport === "MLB"
-          ? '<span class="live-pill" style="font-size:0.75rem;">● LIVE</span>' +
-            '&nbsp;&nbsp;' + probHtml(prob) +
-            renderDiamond(ev.situation, ev)
+          ? _mlbLiveHtml(ev.situation, ev, prob)
           : _renderScoreboard(ev,
               '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
                 '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
@@ -5047,6 +4993,7 @@ function toggleCtx(el) {
     } else {
       // Pre-game — scoreboard with logos and start time in centre (replaces plain time text)
       card.removeAttribute("data-live-result");
+      setPickLive(card, false);
       var iso = card.getAttribute("data-commence-time") || "";
       var timeStr = formatLocalTime(iso);
       clearCardTime(card);

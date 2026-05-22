@@ -243,6 +243,74 @@
     return scoreboardHtml + matchupRow;
   }
 
+  // ── MLB in-progress live section builder ─────────────────────────────────
+  // Always renders the full scoreboard even when ESPN has no situation data.
+  // Adds a pitcher + batter row below when ESPN provides those fields.
+  function _mlbLiveHtml(sit, ev, prob) {
+    var ctr;
+    if (sit) {
+      var balls   = Math.min(3, sit.balls   || 0);
+      var strikes = Math.min(2, sit.strikes || 0);
+      var outs    = Math.min(2, sit.outs    || 0);
+      var sc1 = sit.onFirst  ? "#eab308" : "#374151";
+      var sc2 = sit.onSecond ? "#eab308" : "#374151";
+      var sc3 = sit.onThird  ? "#eab308" : "#374151";
+      function _mkPoly(cx, cy, fill, sz) {
+        var pts = cx+","+(cy-sz)+" "+(cx+sz)+","+cy+" "+cx+","+(cy+sz)+" "+(cx-sz)+","+cy;
+        return '<polygon points="'+pts+'" fill="'+fill+'"/>';
+      }
+      function _mkDots(n, max, fc, ds) {
+        var s = "";
+        for (var i = 0; i < max; i++)
+          s += '<span style="display:inline-block;width:'+ds+'px;height:'+ds+'px;border-radius:50%;background:'+(i<n?fc:"#374151")+';margin-right:2px;vertical-align:middle;"></span>';
+        return s;
+      }
+      var svg =
+        '<svg width="32" height="24" viewBox="0 0 32 24" style="display:block;margin:0 auto;">' +
+        '<line x1="16" y1="7" x2="26" y2="17" stroke="#4b5563" stroke-width="0.9"/>' +
+        '<line x1="6" y1="17" x2="16" y2="7" stroke="#4b5563" stroke-width="0.9"/>' +
+        _mkPoly(16,7,sc2,6) + _mkPoly(26,17,sc1,6) + _mkPoly(6,17,sc3,6) + '</svg>';
+      var bso =
+        '<div style="font-size:0.68rem;color:#94a3b8;margin-top:4px;white-space:nowrap;">' +
+        'B&nbsp;' + _mkDots(balls,3,"#22c55e",8) +
+        '&nbsp;S&nbsp;' + _mkDots(strikes,2,"#eab308",8) +
+        '&nbsp;O&nbsp;' + _mkDots(outs,2,"#ef4444",8) + '</div>';
+      ctr = '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
+        '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
+        '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;margin-bottom:2px;">' + (ev.detail||'') + '</span>' +
+        probHtml(prob) + svg + bso + '</div>';
+    } else {
+      ctr = '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
+        '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
+        '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;">' + (ev.detail||'') + '</span>' +
+        probHtml(prob) + '</div>';
+    }
+    var html = _renderScoreboard(ev, ctr);
+    // Pitcher + batter below the scoreboard (ESPN situation fields)
+    if (sit) {
+      var mParts = [];
+      var mp = sit.pitcher;
+      if (mp) {
+        var mpN = mp.shortName || mp.displayName || mp.fullName || '';
+        if (mpN) {
+          var mpL = mpN.split(' ').pop();
+          var mpP = (sit.pitchCount || {}).pitches;
+          mParts.push('⚾&nbsp;<strong style="color:#e2e8f0;">' + mpL + '</strong>' +
+            (mpP ? '&nbsp;<span style="color:#64748b;">' + mpP + 'p</span>' : ''));
+        }
+      }
+      var mb = sit.batter;
+      if (mb) {
+        var mbN = mb.shortName || mb.displayName || mb.fullName || '';
+        if (mbN) mParts.push('🏏&nbsp;<strong style="color:#e2e8f0;">' + mbN.split(' ').pop() + '</strong>');
+      }
+      if (mParts.length)
+        html += '<div style="font-size:0.65rem;color:#94a3b8;text-align:center;margin-top:5px;letter-spacing:0.01em;">' +
+          mParts.join('&ensp;<span style="color:#374151;">·</span>&ensp;') + '</div>';
+    }
+    return html;
+  }
+
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
   function normalCDF(z) {
     var t = 1 / (1 + 0.2316419 * Math.abs(z));
@@ -789,6 +857,12 @@
     if (t) t.style.display = "none";
   }
 
+  // Show or hide the inline ● LIVE pill inside the card-pick line.
+  function setPickLive(card, on) {
+    var pill = card.querySelector('.pick-live-pill');
+    if (pill) pill.style.display = on ? 'inline' : 'none';
+  }
+
   // Props and IPL cards have no ESPN matching — use commence_time directly.
   function checkPropLocks() {
     var now = Date.now();
@@ -989,6 +1063,7 @@
     if (ev.stateId === "3") {
       showLockBadge(card);
       clearCardTime(card);
+      setPickLive(card, false);
       // Game over — show score line + WON/LOST
       var result = outcome(betType, pick, ourTeam, evHome, evHScore, evAScore, sport);
       // Store result on the card so updatePerformance() can read it
@@ -1006,6 +1081,7 @@
     } else if (ev.stateId === "2") {
       showLockBadge(card);
       clearCardTime(card);
+      setPickLive(card, true);
       card.removeAttribute("data-live-result");
       // Rain delay / suspended / postponed — don't show win probability
       var detailLower = (ev.detail || "").toLowerCase();
@@ -1022,13 +1098,10 @@
         var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
         var prob = winProb(betType, pick, ourTeam, evHome, evAway,
                            evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom, marketProb);
-        // All sports: scoreboard widget with logos + scores + centre info
-        // MLB centre: inning + base diamond + B/S/O + pitcher (via renderDiamond)
-        // Other sports centre: ● LIVE badge + game clock/period + win probability
+        // MLB: always render full scoreboard; add diamond+BSO when ESPN has situation data
+        // Other sports: scoreboard with ● LIVE badge + clock + win probability
         var centerLive = sport === "MLB"
-          ? '<span class="live-pill" style="font-size:0.75rem;">● LIVE</span>' +
-            '&nbsp;&nbsp;' + probHtml(prob) +
-            renderDiamond(ev.situation, ev)
+          ? _mlbLiveHtml(ev.situation, ev, prob)
           : _renderScoreboard(ev,
               '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
                 '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
@@ -1041,6 +1114,7 @@
     } else {
       // Pre-game — scoreboard with logos and start time in centre (replaces plain time text)
       card.removeAttribute("data-live-result");
+      setPickLive(card, false);
       var iso = card.getAttribute("data-commence-time") || "";
       var timeStr = formatLocalTime(iso);
       clearCardTime(card);
