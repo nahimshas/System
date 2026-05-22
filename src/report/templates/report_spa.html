@@ -81,7 +81,9 @@
     </div>
   </div>
   {%- set prop_label = prop.prop_type.replace(' Over (1+)','').replace(' Over','').lower() %}
-  <div class="proj-score-hl">Model projects {{ prop.model_line }} {{ prop_label }}{% if prop.prop_stat_avg %} · {{ prop.prop_stat_avg }}{% endif %}</div>
+  {%- set has_pctx = prop.note or prop.narrative or prop.context %}
+  {%- set prop_ctx_id = ('ctx-' ~ prop.player ~ '-' ~ prop.prop_type) | replace(' ', '-') | lower %}
+  <div class="proj-score-hl{% if has_pctx %} context-toggle{% endif %}"{% if has_pctx %} onclick="toggleCtx(this)" data-target="{{ prop_ctx_id }}"{% endif %}>{%- if has_pctx %}<span class="ctx-arrow">›</span> {% endif %}Model projects {{ prop.model_line }} {{ prop_label }}{% if prop.prop_stat_avg %} · {{ prop.prop_stat_avg }}{% endif %}</div>
   {%- set bar_max = [(prop.market_line * 2)|round(0,'ceil')|int, 8]|max %}
   {%- set line_pct = ((prop.market_line / bar_max) * 100)|round(1) %}
   <div class="prop-bar-wrap"
@@ -107,9 +109,8 @@
     Last: {{ last.result }} (actual {{ last.actual }}, proj {{ last.projected }}) — {{ last.date }}
   </div>
   {% endif %}
-  {% if prop.note or prop.narrative or prop.context %}
-  <div class="context-toggle" onclick="toggleCtx(this)"><span class="ctx-arrow">›</span> Context &amp; Stats</div>
-  <div class="context-body">
+  {% if has_pctx %}
+  <div class="context-body" id="{{ prop_ctx_id }}">
     {% if prop.note %}<div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">{{ prop.note }}</div>{% endif %}
     {% if prop.narrative %}<div class="context-item" style="color:var(--text);border-left-color:var(--blue);">{{ prop.narrative }}</div>{% endif %}
     {% if prop.context %}{% for item in prop.context %}<div class="context-item">{{ item }}</div>{% endfor %}{% endif %}
