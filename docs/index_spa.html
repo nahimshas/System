@@ -3259,7 +3259,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 01:45 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 02:01 PM PDT</div>
         </div>
         
       </div>
@@ -3985,26 +3985,28 @@ function toggleCtx(el) {
   }
   // Wraps away/home logos + scores around a centre-column HTML block.
   // Pre-game (stateId "1"): scores show as "—" instead of 0.
-  function _renderScoreboard(ev, centerHtml) {
+  // awayExtra / homeExtra: optional small text shown below each team's record (e.g. pitcher/batter name)
+  function _renderScoreboard(ev, centerHtml, awayExtra, homeExtra) {
     var isPre = ev.stateId === "1";
     var aScore = isPre ? '—' : ev.awayScore;
     var hScore = isPre ? '—' : ev.homeScore;
-    function teamCol(logo, abbr, record) {
+    function teamCol(logo, abbr, record, extra) {
       return (
         '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
           _teamIcon(logo || '', abbr || '') +
           '<span style="font-size:0.6rem;color:#94a3b8;">' + (abbr || '') + '</span>' +
           (record ? '<span style="font-size:0.55rem;color:#64748b;font-weight:500;">' + record + '</span>' : '') +
+          (extra  ? '<span style="font-size:0.58rem;color:#94a3b8;margin-top:1px;font-weight:500;white-space:nowrap;">' + extra + '</span>' : '') +
         '</div>'
       );
     }
     return (
       '<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:4px;">' +
-        teamCol(ev.awayLogo, ev.awayAbbr, ev.awayRecord) +
+        teamCol(ev.awayLogo, ev.awayAbbr, ev.awayRecord, awayExtra || '') +
         '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + aScore + '</span>' +
         centerHtml +
         '<span style="font-size:1.8rem;font-weight:800;color:#e2e8f0;line-height:1;">' + hScore + '</span>' +
-        teamCol(ev.homeLogo, ev.homeAbbr, ev.homeRecord) +
+        teamCol(ev.homeLogo, ev.homeAbbr, ev.homeRecord, homeExtra || '') +
       '</div>'
     );
   }
@@ -4087,27 +4089,28 @@ function toggleCtx(el) {
 
     var scoreboardHtml = ev ? _renderScoreboard(ev, centerMlb) : centerMlb;
 
-    // Pitcher + batter row — rendered below the scoreboard (below the team records)
-    var matchupParts = [];
-    var pitcher = situation.pitcher || null;
-    if (pitcher) {
-      var pA    = pitcher.athlete || pitcher;
-      var pName = pA.shortName || pA.displayName || pA.fullName || '';
-      if (pName) matchupParts.push('⚾&nbsp;<strong style="color:#e2e8f0;">' + pName.split(' ').pop() + '</strong>');
+    // Place pitcher under pitching team, batter under batting team.
+    var rdAwayExtra = '', rdHomeExtra = '';
+    var rdPitcher = situation.pitcher || null;
+    if (rdPitcher) {
+      var rdPA = rdPitcher.athlete || rdPitcher;
+      var rdPN = rdPA.shortName || rdPA.displayName || rdPA.fullName || '';
+      if (rdPN) {
+        var rdPL = '⚾ ' + rdPN.split(' ').pop();
+        if (ev && ev.isBottom) rdAwayExtra = rdPL; else rdHomeExtra = rdPL;
+      }
     }
-    var batter = situation.batter || null;
-    if (batter) {
-      var bA    = batter.athlete || batter;
-      var bName = bA.shortName || bA.displayName || bA.fullName || '';
-      if (bName) matchupParts.push('🏏&nbsp;<strong style="color:#e2e8f0;">' + bName.split(' ').pop() + '</strong>');
+    var rdBatter = situation.batter || null;
+    if (rdBatter) {
+      var rdBA = rdBatter.athlete || rdBatter;
+      var rdBN = rdBA.shortName || rdBA.displayName || rdBA.fullName || '';
+      if (rdBN) {
+        var rdBL = '🧢 ' + rdBN.split(' ').pop();
+        if (ev && ev.isBottom) rdHomeExtra = rdBL; else rdAwayExtra = rdBL;
+      }
     }
-    var matchupRow = matchupParts.length
-      ? '<div style="font-size:0.65rem;color:#94a3b8;text-align:center;margin-top:5px;letter-spacing:0.01em;">' +
-          matchupParts.join('&ensp;<span style="color:#374151;">·</span>&ensp;') +
-        '</div>'
-      : '';
 
-    return scoreboardHtml + matchupRow;
+    return ev ? _renderScoreboard(ev, centerMlb, rdAwayExtra, rdHomeExtra) : centerMlb;
   }
 
   // ── MLB in-progress live section builder ─────────────────────────────────
@@ -4150,27 +4153,31 @@ function toggleCtx(el) {
         '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;">' + (ev.detail||'') + '</span>' +
         probHtml(prob) + '</div>';
     }
-    var html = _renderScoreboard(ev, ctr);
-    // Pitcher + batter below the scoreboard (ESPN situation fields)
+    // Place pitcher under pitching team's column, batter under batting team's column.
+    // Top of inning (isBottom=0): home team pitching, away team batting.
+    // Bottom of inning (isBottom=1): away team pitching, home team batting.
+    var awayExtra = '', homeExtra = '';
     if (sit) {
-      var mParts = [];
       var mp = sit.pitcher;
       if (mp) {
-        var mpA = mp.athlete || mp;  // ESPN nests name fields under .athlete
+        var mpA = mp.athlete || mp;
         var mpN = mpA.shortName || mpA.displayName || mpA.fullName || '';
-        if (mpN) mParts.push('⚾&nbsp;<strong style="color:#e2e8f0;">' + mpN.split(' ').pop() + '</strong>');
+        if (mpN) {
+          var pitcherLabel = '⚾ ' + mpN.split(' ').pop();
+          if (ev.isBottom) awayExtra = pitcherLabel; else homeExtra = pitcherLabel;
+        }
       }
       var mb = sit.batter;
       if (mb) {
         var mbA = mb.athlete || mb;
         var mbN = mbA.shortName || mbA.displayName || mbA.fullName || '';
-        if (mbN) mParts.push('🏏&nbsp;<strong style="color:#e2e8f0;">' + mbN.split(' ').pop() + '</strong>');
+        if (mbN) {
+          var batterLabel = '🧢 ' + mbN.split(' ').pop();
+          if (ev.isBottom) homeExtra = batterLabel; else awayExtra = batterLabel;
+        }
       }
-      if (mParts.length)
-        html += '<div style="font-size:0.65rem;color:#94a3b8;text-align:center;margin-top:5px;letter-spacing:0.01em;">' +
-          mParts.join('&ensp;<span style="color:#374151;">·</span>&ensp;') + '</div>';
     }
-    return html;
+    return _renderScoreboard(ev, ctr, awayExtra, homeExtra);
   }
 
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
