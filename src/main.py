@@ -123,6 +123,26 @@ def _hydrate_prop(d: dict) -> dict:
     return out
 
 
+def _write_sw(out_dir: Path, run_date) -> None:
+    """Rewrite sw.js with a date-stamped cache name so browsers detect a new SW on each report."""
+    sw_path = out_dir / "sw.js"
+    if not sw_path.exists():
+        return
+    try:
+        content = sw_path.read_text(encoding="utf-8")
+        import re as _re
+        new_content = _re.sub(
+            r"const CACHE = 'picks-[^']*';",
+            f"const CACHE = 'picks-{run_date.isoformat()}';",
+            content,
+        )
+        if new_content != content:
+            sw_path.write_text(new_content, encoding="utf-8")
+            logger.info(f"sw.js updated: cache key → picks-{run_date.isoformat()}")
+    except Exception as e:
+        logger.warning(f"sw.js update skipped: {e}")
+
+
 def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         code_only: bool = False) -> int:
     from src.data.odds_client import _today_pacific
@@ -209,6 +229,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             except Exception as e:
                 logger.warning(f"SPA render skipped: {e}")
 
+            _write_sw(out_dir, today)
             bet_count = len(final_singles) + len(final_parlays)
             if send_email:
                 send_report(html, today, bet_count)
@@ -845,6 +866,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     except Exception as e:
         logger.warning(f"SPA render skipped: {e}")
 
+    _write_sw(out_dir, today)
     bet_count = len(report_data["all_singles"]) + len(final_parlays)
     if send_email:
         send_report(html, today, bet_count)
