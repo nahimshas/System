@@ -3259,7 +3259,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 01:25 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 01:31 PM PDT</div>
         </div>
         
       </div>
@@ -3813,10 +3813,7 @@ function toggleCtx(el) {
       var dot   = btn.querySelector('.tab-dot');
       if (!panel) return;
 
-      var tabLive = false;
-      panel.querySelectorAll('.live-status').forEach(function(el) {
-        if (el.innerHTML.indexOf('● LIVE') !== -1) tabLive = true;
-      });
+      var tabLive = panel.querySelector('[data-game-live]') !== null;
 
       var isDone = false;
       if (!tabLive) {
@@ -4735,9 +4732,12 @@ function toggleCtx(el) {
   }
 
   // Show or hide the inline ● LIVE pill inside the card-pick line.
+  // Also stamps data-game-live so checkLive() can detect in-progress tabs.
   function setPickLive(card, on) {
     var pill = card.querySelector('.pick-live-pill');
     if (pill) pill.style.display = on ? 'inline' : 'none';
+    if (on) card.setAttribute('data-game-live', '1');
+    else    card.removeAttribute('data-game-live');
   }
 
   // Props and IPL cards have no ESPN matching — use commence_time directly.

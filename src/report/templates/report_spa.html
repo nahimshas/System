@@ -2038,10 +2038,7 @@ function toggleCtx(el) {
       var dot   = btn.querySelector('.tab-dot');
       if (!panel) return;
 
-      var tabLive = false;
-      panel.querySelectorAll('.live-status').forEach(function(el) {
-        if (el.innerHTML.indexOf('● LIVE') !== -1) tabLive = true;
-      });
+      var tabLive = panel.querySelector('[data-game-live]') !== null;
 
       var isDone = false;
       if (!tabLive) {

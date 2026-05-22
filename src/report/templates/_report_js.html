@@ -856,9 +856,12 @@
   }
 
   // Show or hide the inline ● LIVE pill inside the card-pick line.
+  // Also stamps data-game-live so checkLive() can detect in-progress tabs.
   function setPickLive(card, on) {
     var pill = card.querySelector('.pick-live-pill');
     if (pill) pill.style.display = on ? 'inline' : 'none';
+    if (on) card.setAttribute('data-game-live', '1');
+    else    card.removeAttribute('data-game-live');
   }
 
   // Props and IPL cards have no ESPN matching — use commence_time directly.
