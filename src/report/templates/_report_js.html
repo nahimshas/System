@@ -206,29 +206,41 @@
       '&nbsp;O&nbsp;' + mkDots(outs,    2, "#ef4444", 8) +
       '</div>';
 
-    // Pitcher info
-    var pitcherLine = '';
-    var pitcher = situation.pitcher || null;
-    if (pitcher && (pitcher.shortName || pitcher.displayName)) {
-      var pName    = pitcher.shortName || pitcher.displayName;
-      var lastName = pName.split(' ').pop();
-      var pitches  = (situation.pitchCount || {}).pitches;
-      pitcherLine  =
-        '<div style="font-size:0.65rem;color:#94a3b8;margin-top:3px;">' +
-        '⚾ ' + lastName + (pitches ? ' &middot; ' + pitches + 'p' : '') +
-        '</div>';
-    }
-
     var detail = ev ? (ev.detail || '') : '';
     var centerMlb =
       '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
         '<span style="font-size:0.7rem;color:#14b8a6;font-weight:700;margin-bottom:2px;">' + detail + '</span>' +
         smallSvg +
         bso +
-        pitcherLine +
       '</div>';
 
-    return ev ? _renderScoreboard(ev, centerMlb) : centerMlb;
+    var scoreboardHtml = ev ? _renderScoreboard(ev, centerMlb) : centerMlb;
+
+    // Pitcher + batter row — rendered below the scoreboard (below the team records)
+    var matchupParts = [];
+    var pitcher = situation.pitcher || null;
+    if (pitcher && (pitcher.shortName || pitcher.displayName)) {
+      var pName   = pitcher.shortName || pitcher.displayName;
+      var pLast   = pName.split(' ').pop();
+      var pitches = (situation.pitchCount || {}).pitches;
+      matchupParts.push(
+        '⚾&nbsp;<strong style="color:#e2e8f0;">' + pLast + '</strong>' +
+        (pitches ? '&nbsp;<span style="color:#64748b;font-weight:400;">' + pitches + 'p</span>' : '')
+      );
+    }
+    var batter = situation.batter || null;
+    if (batter && (batter.shortName || batter.displayName)) {
+      var bName = batter.shortName || batter.displayName;
+      var bLast = bName.split(' ').pop();
+      matchupParts.push('🏏&nbsp;<strong style="color:#e2e8f0;">' + bLast + '</strong>');
+    }
+    var matchupRow = matchupParts.length
+      ? '<div style="font-size:0.65rem;color:#94a3b8;text-align:center;margin-top:5px;letter-spacing:0.01em;">' +
+          matchupParts.join('&ensp;<span style="color:#374151;">·</span>&ensp;') +
+        '</div>'
+      : '';
+
+    return scoreboardHtml + matchupRow;
   }
 
   // ── Normal CDF (Abramowitz & Stegun approximation) ───────────────────────
