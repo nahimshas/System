@@ -276,12 +276,10 @@
         '&nbsp;S&nbsp;' + _mkDots(strikes,2,"#eab308",8) +
         '&nbsp;O&nbsp;' + _mkDots(outs,2,"#ef4444",8) + '</div>';
       ctr = '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
-        '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
         '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;margin-bottom:2px;">' + (ev.detail||'') + '</span>' +
         probHtml(prob) + svg + bso + '</div>';
     } else {
       ctr = '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
-        '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
         '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;">' + (ev.detail||'') + '</span>' +
         probHtml(prob) + '</div>';
     }
@@ -1104,7 +1102,6 @@
           ? _mlbLiveHtml(ev.situation, ev, prob)
           : _renderScoreboard(ev,
               '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
-                '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
                 '<span style="color:#14b8a6;font-size:0.7rem;font-weight:600;">' + (ev.detail || '') + '</span>' +
                 probHtml(prob) +
               '</div>'

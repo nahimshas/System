@@ -854,7 +854,7 @@
             <span class="alloc-edge" style="color:{% if row.edge_pct >= 7 %}var(--green){% else %}var(--yellow){% endif %};">+{{ row.edge_pct }}%</span>
             {% if row.locked %}<span class="lock-badge">🔒</span>{% endif %}
           </div>
-          <div class="alloc-pick">{{ row.label }}</div>
+          <div class="alloc-pick">{{ row.label }}<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           {% if row.game and row.bet_type != "Parlay" %}<div class="alloc-game short-game">{{ row.game }}</div>{% endif %}
           {% if row.bet_type != "Parlay" and row.game_time %}<div class="alloc-time">{{ row.game_time }}</div>{% endif %}
         </div>

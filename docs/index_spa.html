@@ -659,7 +659,7 @@
             <span class="alloc-edge" style="color:var(--green);">+14.4%</span>
             
           </div>
-          <div class="alloc-pick">Athletics (ML)</div>
+          <div class="alloc-pick">Athletics (ML)<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Athletics @ San Diego Padres</div>
           <div class="alloc-time">6:41 PM PDT</div>
         </div>
@@ -694,7 +694,7 @@
             <span class="alloc-edge" style="color:var(--green);">+12.1%</span>
             <span class="lock-badge">🔒</span>
           </div>
-          <div class="alloc-pick">Over 6.5</div>
+          <div class="alloc-pick">Over 6.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Houston Astros @ Chicago Cubs</div>
           <div class="alloc-time">11:21 AM PDT</div>
         </div>
@@ -729,7 +729,7 @@
             <span class="alloc-edge" style="color:var(--green);">+10.4%</span>
             
           </div>
-          <div class="alloc-pick">Under 9.5</div>
+          <div class="alloc-pick">Under 9.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Colorado Rockies @ Arizona Diamondbacks</div>
           <div class="alloc-time">6:41 PM PDT</div>
         </div>
@@ -764,7 +764,7 @@
             <span class="alloc-edge" style="color:var(--green);">+9.9%</span>
             
           </div>
-          <div class="alloc-pick">Under 8.5</div>
+          <div class="alloc-pick">Under 8.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Athletics @ San Diego Padres</div>
           <div class="alloc-time">6:41 PM PDT</div>
         </div>
@@ -799,7 +799,7 @@
             <span class="alloc-edge" style="color:var(--green);">+9.8%</span>
             
           </div>
-          <div class="alloc-pick">Under 8.5</div>
+          <div class="alloc-pick">Under 8.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">New York Mets @ Miami Marlins</div>
           <div class="alloc-time">4:11 PM PDT</div>
         </div>
@@ -834,7 +834,7 @@
             <span class="alloc-edge" style="color:var(--green);">+13.5%</span>
             
           </div>
-          <div class="alloc-pick">Athletics (ML) + Under 8.5</div>
+          <div class="alloc-pick">Athletics (ML) + Under 8.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           
           
         </div>
@@ -869,7 +869,7 @@
             <span class="alloc-edge" style="color:var(--green);">+10.9%</span>
             
           </div>
-          <div class="alloc-pick">Miami Marlins +1.5 + Under 8.5</div>
+          <div class="alloc-pick">Miami Marlins +1.5 + Under 8.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           
           
         </div>
@@ -3259,7 +3259,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 12:59 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 22, 2026 at 01:25 PM PDT</div>
         </div>
         
       </div>
@@ -4155,12 +4155,10 @@ function toggleCtx(el) {
         '&nbsp;S&nbsp;' + _mkDots(strikes,2,"#eab308",8) +
         '&nbsp;O&nbsp;' + _mkDots(outs,2,"#ef4444",8) + '</div>';
       ctr = '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
-        '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
         '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;margin-bottom:2px;">' + (ev.detail||'') + '</span>' +
         probHtml(prob) + svg + bso + '</div>';
     } else {
       ctr = '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">' +
-        '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
         '<span style="color:#14b8a6;font-size:0.7rem;font-weight:700;">' + (ev.detail||'') + '</span>' +
         probHtml(prob) + '</div>';
     }
@@ -4983,7 +4981,6 @@ function toggleCtx(el) {
           ? _mlbLiveHtml(ev.situation, ev, prob)
           : _renderScoreboard(ev,
               '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
-                '<span class="live-pill" style="font-size:0.72rem;">● LIVE</span>' +
                 '<span style="color:#14b8a6;font-size:0.7rem;font-weight:600;">' + (ev.detail || '') + '</span>' +
                 probHtml(prob) +
               '</div>'
