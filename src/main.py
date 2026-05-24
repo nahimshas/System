@@ -157,6 +157,16 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         state = load_state(today)
         if state is not None:
             logger.info("Code-only mode — re-rendering report from saved state (no API calls)")
+            # Use the state file's own date so TODAY_DATE in the JS matches the picks'
+            # game dates. Without this, ESPN scoreboard calls use today's date and
+            # can't match picks from a prior day (e.g. morning hasn't run yet).
+            state_date_str = state.get("date", "")
+            if state_date_str:
+                try:
+                    from datetime import date as _date
+                    today = _date.fromisoformat(state_date_str)
+                except ValueError:
+                    pass
             final_singles   = state.get("singles", [])
             final_parlays   = state.get("parlays", [])
             final_props     = state.get("props",   [])
