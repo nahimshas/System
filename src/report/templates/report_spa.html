@@ -607,10 +607,18 @@
     /* ── Watchlist card ──────────────────────────────────────────────────── */
     .wl-card {
       background: var(--card);
-      border: 1px solid var(--teal);
+      border: 1px solid rgba(255,255,255,0.07);
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 10px;
+    }
+    @keyframes live-border-pulse {
+      0%, 100% { box-shadow: 0 0 5px var(--live-bc, #eab308); border-color: var(--live-bc, #eab308); }
+      50%       { box-shadow: 0 0 14px var(--live-bc, #eab308); border-color: transparent; }
+    }
+    .card-live-border {
+      border: 1.5px solid var(--live-bc, #eab308) !important;
+      animation: live-border-pulse 1.5s ease-in-out infinite;
     }
     .wl-status {
       display: inline-flex; align-items: center; gap: 4px;

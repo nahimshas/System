@@ -857,11 +857,25 @@
 
   // Show or hide the inline ● LIVE pill inside the card-pick line.
   // Also stamps data-game-live so checkLive() can detect in-progress tabs.
-  function setPickLive(card, on) {
+  function setPickLive(card, on, prob) {
     var pill = card.querySelector('.pick-live-pill');
     if (pill) pill.style.display = on ? 'inline' : 'none';
-    if (on) card.setAttribute('data-game-live', '1');
-    else    card.removeAttribute('data-game-live');
+    if (on) {
+      card.setAttribute('data-game-live', '1');
+      // Pulsating coloured border — only on watchlist cards while live
+      if (card.classList.contains('wl-card')) {
+        var p   = (typeof prob === 'number') ? prob : 0.5;
+        var col = p >= 0.60 ? '#16a34a' : p >= 0.40 ? '#eab308' : '#ef4444';
+        card.style.setProperty('--live-bc', col);
+        card.classList.add('card-live-border');
+      }
+    } else {
+      card.removeAttribute('data-game-live');
+      if (card.classList.contains('wl-card')) {
+        card.classList.remove('card-live-border');
+        card.style.removeProperty('--live-bc');
+      }
+    }
   }
 
   // Props and IPL cards have no ESPN matching — use commence_time directly.
@@ -1082,12 +1096,12 @@
     } else if (ev.stateId === "2") {
       showLockBadge(card);
       clearCardTime(card);
-      setPickLive(card, true);
       card.removeAttribute("data-live-result");
       // Rain delay / suspended / postponed — don't show win probability
       var detailLower = (ev.detail || "").toLowerCase();
       var isDelayed = /delay|suspend|postpone|rain|weather/.test(detailLower);
       if (isDelayed) {
+        setPickLive(card, true, 0.5);  // yellow border for unknown prob
         liveDiv.innerHTML = _renderScoreboard(ev,
           '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
             '<span style="color:#eab308;font-weight:700;font-size:0.72rem;">⏸ Delay</span>' +
@@ -1099,6 +1113,7 @@
         var marketProb = parseFloat(card.getAttribute("data-market-prob-pct") || "50") / 100;
         var prob = winProb(betType, pick, ourTeam, evHome, evAway,
                            evHScore, evAScore, sport, ev.period, ev.clockSec, ev.isBottom, marketProb);
+        setPickLive(card, true, prob);  // pass prob so border reflects win chance
         // MLB: always render full scoreboard; add diamond+BSO when ESPN has situation data
         // Other sports: scoreboard with ● LIVE badge + clock + win probability
         var centerLive = sport === "MLB"
@@ -2698,13 +2713,13 @@
             updatePerformance();
           } else if (isLive) {
             showLockBadge(card);
-            setPickLive(card, true);
             card.removeAttribute("data-live-result");
             if (timeDiv) {
               timeDiv.removeAttribute("data-ipl-commence");
               timeDiv.textContent = "";
             }
             var winProb = calcIplWinProb(competitors, pickName, marketProb);
+            setPickLive(card, true, winProb);  // pass prob so border reflects win chance
             if (liveDiv) {
               var liveCenter =
                 '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
