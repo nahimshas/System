@@ -906,6 +906,7 @@
     var allFinal   = true;
     var anyLost    = false;
     var anyStarted = false;
+    var hasLiveLeg = false;
     var combined   = 1;
 
     for (var li = 0; li < legs.length; li++) {
@@ -933,7 +934,8 @@
         // WON leg: prob stays 1 (already hit)
       } else {
         // In-progress
-        anyStarted = true;
+        anyStarted  = true;
+        hasLiveLeg  = true;
         var legOurTeam2 = (legBT === "Moneyline" || legBT === "Spread") ? legPick : legHT;
         var legEvHome2  = teamMatch(legEv.home, legHT) ? legEv.home : legEv.away;
         var legHS2      = teamMatch(legEv.home, legHT) ? legEv.homeScore : legEv.awayScore;
@@ -1000,9 +1002,10 @@
         legSummaryParts.join('<br>') + '</div>'
       : '';
 
-    if (!anyStarted) { liveDiv.innerHTML = legSummary; return; }
+    if (!anyStarted) { setPickLive(card, false); liveDiv.innerHTML = legSummary; return; }
 
     if (anyLost) {
+      setPickLive(card, false);
       card.setAttribute("data-live-result", "LOST");
       cacheParlayResult(card, "LOST");
       updatePerformance();
@@ -1010,6 +1013,7 @@
       return;
     }
     if (allFinal) {
+      setPickLive(card, false);
       card.setAttribute("data-live-result", "WON");
       cacheParlayResult(card, "WON");
       updatePerformance();
@@ -1017,6 +1021,8 @@
       return;
     }
 
+    // At least one leg still in-progress — show live border coloured by combined prob
+    if (hasLiveLeg) setPickLive(card, true, combined);
     card.removeAttribute("data-live-result");
     var pct = Math.min(99, Math.max(1, Math.round(combined * 100)));
     var col = pct >= 60 ? "var(--green)" : pct >= 40 ? "var(--yellow)" : "var(--red)";

@@ -3509,7 +3509,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 01:41 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 01:45 PM PDT</div>
         </div>
         
       </div>
@@ -5027,6 +5027,7 @@ function toggleCtx(el) {
     var allFinal   = true;
     var anyLost    = false;
     var anyStarted = false;
+    var hasLiveLeg = false;
     var combined   = 1;
 
     for (var li = 0; li < legs.length; li++) {
@@ -5054,7 +5055,8 @@ function toggleCtx(el) {
         // WON leg: prob stays 1 (already hit)
       } else {
         // In-progress
-        anyStarted = true;
+        anyStarted  = true;
+        hasLiveLeg  = true;
         var legOurTeam2 = (legBT === "Moneyline" || legBT === "Spread") ? legPick : legHT;
         var legEvHome2  = teamMatch(legEv.home, legHT) ? legEv.home : legEv.away;
         var legHS2      = teamMatch(legEv.home, legHT) ? legEv.homeScore : legEv.awayScore;
@@ -5121,9 +5123,10 @@ function toggleCtx(el) {
         legSummaryParts.join('<br>') + '</div>'
       : '';
 
-    if (!anyStarted) { liveDiv.innerHTML = legSummary; return; }
+    if (!anyStarted) { setPickLive(card, false); liveDiv.innerHTML = legSummary; return; }
 
     if (anyLost) {
+      setPickLive(card, false);
       card.setAttribute("data-live-result", "LOST");
       cacheParlayResult(card, "LOST");
       updatePerformance();
@@ -5131,6 +5134,7 @@ function toggleCtx(el) {
       return;
     }
     if (allFinal) {
+      setPickLive(card, false);
       card.setAttribute("data-live-result", "WON");
       cacheParlayResult(card, "WON");
       updatePerformance();
@@ -5138,6 +5142,8 @@ function toggleCtx(el) {
       return;
     }
 
+    // At least one leg still in-progress — show live border coloured by combined prob
+    if (hasLiveLeg) setPickLive(card, true, combined);
     card.removeAttribute("data-live-result");
     var pct = Math.min(99, Math.max(1, Math.round(combined * 100)));
     var col = pct >= 60 ? "var(--green)" : pct >= 40 ? "var(--yellow)" : "var(--red)";
