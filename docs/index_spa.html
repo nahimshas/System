@@ -454,6 +454,7 @@
     }
     .card-live-border {
       border: 1.5px solid var(--live-bc, #eab308) !important;
+      border-left: 1.5px solid var(--live-bc, #eab308) !important;
       animation: live-border-pulse 1.5s ease-in-out infinite;
     }
     .wl-status {
@@ -3508,7 +3509,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 01:37 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 01:41 PM PDT</div>
         </div>
         
       </div>
@@ -4982,19 +4983,15 @@ function toggleCtx(el) {
     if (pill) pill.style.display = on ? 'inline' : 'none';
     if (on) {
       card.setAttribute('data-game-live', '1');
-      // Pulsating coloured border — only on watchlist cards while live
-      if (card.classList.contains('wl-card')) {
-        var p   = (typeof prob === 'number') ? prob : 0.5;
-        var col = p >= 0.60 ? '#16a34a' : p >= 0.40 ? '#eab308' : '#ef4444';
-        card.style.setProperty('--live-bc', col);
-        card.classList.add('card-live-border');
-      }
+      // Pulsating coloured border on all card types while live
+      var p   = (typeof prob === 'number') ? prob : 0.5;
+      var col = p >= 0.60 ? '#16a34a' : p >= 0.40 ? '#eab308' : '#ef4444';
+      card.style.setProperty('--live-bc', col);
+      card.classList.add('card-live-border');
     } else {
       card.removeAttribute('data-game-live');
-      if (card.classList.contains('wl-card')) {
-        card.classList.remove('card-live-border');
-        card.style.removeProperty('--live-bc');
-      }
+      card.classList.remove('card-live-border');
+      card.style.removeProperty('--live-bc');
     }
   }
 
