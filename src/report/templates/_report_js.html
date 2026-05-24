@@ -2682,6 +2682,7 @@
             // Re-run tile updater so the W-L count reflects this just-settled pick.
             if (typeof updateWatchlistTiles === "function") updateWatchlistTiles();
             showLockBadge(card);
+            setPickLive(card, false);
             if (timeDiv) {
               timeDiv.removeAttribute("data-ipl-commence");
               timeDiv.textContent = "";
@@ -2697,6 +2698,7 @@
             updatePerformance();
           } else if (isLive) {
             showLockBadge(card);
+            setPickLive(card, true);
             card.removeAttribute("data-live-result");
             if (timeDiv) {
               timeDiv.removeAttribute("data-ipl-commence");
@@ -2715,6 +2717,7 @@
               liveDiv.innerHTML = iplScoreboard(teams[0], teams[1], liveCenter);
             }
           } else {
+            setPickLive(card, false);
             // Pre-game: scoreboard with logos + date/time in centre (replaces plain time text)
             var iplIso = card.getAttribute("data-commence-time") || "";
             var iplDtStr = "";
