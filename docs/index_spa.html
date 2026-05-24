@@ -657,7 +657,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+15.0%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">Over 6.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Houston Astros @ Chicago Cubs</div>
@@ -692,7 +692,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+15.0%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">Over 7.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Minnesota Twins @ Boston Red Sox</div>
@@ -727,7 +727,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+12.5%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">Los Angeles Dodgers (ML)<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Los Angeles Dodgers @ Milwaukee Brewers</div>
@@ -762,7 +762,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+10.1%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">San Francisco Giants (ML)<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Chicago White Sox @ San Francisco Giants</div>
@@ -797,7 +797,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+9.7%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">Over 6.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Tampa Bay Rays @ New York Yankees</div>
@@ -1518,7 +1518,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
@@ -1565,7 +1565,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
@@ -1612,7 +1612,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
@@ -1659,7 +1659,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
@@ -1706,7 +1706,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
@@ -3500,7 +3500,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 09:39 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 01:22 PM PDT</div>
         </div>
         
       </div>
@@ -4346,7 +4346,7 @@ function toggleCtx(el) {
       var rdBA = rdBatter.athlete || rdBatter;
       var rdBN = rdBA.shortName || rdBA.displayName || rdBA.fullName || '';
       if (rdBN) {
-        var rdBL = '🧢 ' + rdBN.split(' ').pop();
+        var rdBL = '🏑 ' + rdBN.split(' ').pop();
         if (ev && ev.isBottom) rdHomeExtra = rdBL; else rdAwayExtra = rdBL;
       }
     }
@@ -4413,7 +4413,7 @@ function toggleCtx(el) {
         var mbA = mb.athlete || mb;
         var mbN = mbA.shortName || mbA.displayName || mbA.fullName || '';
         if (mbN) {
-          var batterLabel = '🧢 ' + mbN.split(' ').pop();
+          var batterLabel = '🏑 ' + mbN.split(' ').pop();
           if (ev.isBottom) homeExtra = batterLabel; else awayExtra = batterLabel;
         }
       }

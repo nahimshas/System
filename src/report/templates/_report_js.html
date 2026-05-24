@@ -234,7 +234,7 @@
       var rdBA = rdBatter.athlete || rdBatter;
       var rdBN = rdBA.shortName || rdBA.displayName || rdBA.fullName || '';
       if (rdBN) {
-        var rdBL = '🧢 ' + rdBN.split(' ').pop();
+        var rdBL = '🏑 ' + rdBN.split(' ').pop();
         if (ev && ev.isBottom) rdHomeExtra = rdBL; else rdAwayExtra = rdBL;
       }
     }
@@ -301,7 +301,7 @@
         var mbA = mb.athlete || mb;
         var mbN = mbA.shortName || mbA.displayName || mbA.fullName || '';
         if (mbN) {
-          var batterLabel = '🧢 ' + mbN.split(' ').pop();
+          var batterLabel = '🏑 ' + mbN.split(' ').pop();
           if (ev.isBottom) homeExtra = batterLabel; else awayExtra = batterLabel;
         }
       }
