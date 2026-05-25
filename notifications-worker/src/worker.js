@@ -228,11 +228,18 @@ const SPORT_EMOJI = {
   MLB: '⚾', NBA: '🏀', NHL: '🏒', WNBA: '🏀', MLS: '⚽', NFL: '🏈', IPL: '🏏',
 };
 
+// Use Pacific time for all date keys — picks are stored under the Pacific date
+// by the daily report, and ESPN returns games under local (ET) dates which
+// match Pacific for any game starting before midnight Pacific.
+function todayPacific() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+  // en-CA returns YYYY-MM-DD
+}
 function todayDateStr() {
-  return new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  return todayPacific().replace(/-/g, '');
 }
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  return todayPacific();
 }
 
 async function espnScoreboard(sport, dateStr) {
