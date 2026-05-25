@@ -166,8 +166,9 @@ jobs:
           account_id = accounts[0]['id']
 
           singles_display = state.get('singles_display', [])
-          # state['singles'] = the 5 budget-allocated Today's Card picks
-          # state['singles_display'] = all ~27 analyzed picks shown across sport tabs
+          # state['singles'] = 5 budget-allocated Today's Card picks
+          # state['singles_display'] = all analyzed picks for main sports (MLB/NBA/NHL/NFL)
+          # Watchlist sports (WNBA/MLS/IPL) have their own separate display lists
           today_card  = state.get('singles', singles_display)
           parlays     = state.get('parlays', [])
           props       = state.get('props_display', [])
@@ -180,9 +181,38 @@ jobs:
           pick_count = len(today_card)
           prop_count = len([p for p in props if not p.get('locked')])
 
+          # Build the per-tab display list — matching exactly what each tab shows.
+          #   MLB / NBA / NFL  → top 5 by edge, deduped by (home, away, bet_type)
+          #   NHL              → all picks from singles_display (uncapped watchlist)
+          #   WNBA / MLS / IPL → separate state keys (already tab-ready)
+          MAX_TAB = 5
+          def top_for_sport(sport, pool, max_n=MAX_TAB):
+              picks = sorted(
+                  [s for s in pool if s.get('sport') == sport],
+                  key=lambda x: x.get('edge_pct', x.get('edge', 0)), reverse=True,
+              )
+              seen, out = set(), []
+              for p in picks:
+                  dk = (p.get('home_team',''), p.get('away_team',''), p.get('bet_type',''))
+                  if dk not in seen:
+                      seen.add(dk)
+                      out.append(p)
+                  if len(out) >= max_n:
+                      break
+              return out
+
+          tab_picks = (
+              top_for_sport('MLB', singles_display) +
+              top_for_sport('NBA', singles_display) +
+              top_for_sport('NFL', singles_display) +
+              [s for s in singles_display if s.get('sport') == 'NHL'] +  # watchlist, uncapped
+              state.get('wnba_display', []) +
+              state.get('mls_display',  []) +
+              state.get('ipl_display',  [])
+          )
+
           # Build singles with all fields the worker needs for game tracking.
-          # singles_display has all sport-tab picks (~27); inTodaysCard is only
-          # true for the 5 budget-allocated Today's Card picks (state['singles']).
+          # inTodaysCard is only true for the 5 budget picks (state['singles']).
           stored_singles = [
               {
                   'id':           f's{i}',
@@ -198,7 +228,7 @@ jobs:
                   'isParlay':     False,
                   'espnEventId':  None,
               }
-              for i, s in enumerate(singles_display)
+              for i, s in enumerate(tab_picks)
           ]
 
           # Build parlays + flat parlay_legs array the worker expects
@@ -262,7 +292,11 @@ jobs:
               with urllib.request.urlopen(kv_req, timeout=15) as r:
                   result = json.loads(r.read())
                   if result.get('success'):
-                      print(f'Picks stored in KV: {pick_count} singles, {len(parlay_legs)} parlay legs, {prop_count} props ({today})')
+                      by_sport = {}
+                      for s in stored_singles:
+                          by_sport[s['sport']] = by_sport.get(s['sport'], 0) + 1
+                      sport_str = ', '.join(f'{sp}:{n}' for sp, n in sorted(by_sport.items()))
+                      print(f'Picks stored in KV: {pick_count} Today\'s Card, {len(stored_singles)} tab picks ({sport_str}), {len(parlay_legs)} parlay legs ({today})')
                       print('Picks-ready broadcast will fire on next cron tick (≤3 min)')
                   else:
                       print(f'KV write failed: {result}')
