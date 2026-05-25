@@ -231,9 +231,11 @@ const SPORT_EMOJI = {
 // Use Pacific time for all date keys — picks are stored under the Pacific date
 // by the daily report, and ESPN returns games under local (ET) dates which
 // match Pacific for any game starting before midnight Pacific.
+// PDT = UTC-7 (active Mar–Nov, covers the entire sports season).
+// Pure arithmetic avoids Intl/locale/timezone-database dependencies in V8.
 function todayPacific() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
-  // en-CA returns YYYY-MM-DD
+  const d = new Date(Date.now() - 7 * 60 * 60 * 1000);
+  return d.toISOString().slice(0, 10); // always YYYY-MM-DD
 }
 function todayDateStr() {
   return todayPacific().replace(/-/g, '');
@@ -613,6 +615,50 @@ async function handleNotifyPicksReady(req, env) {
   return jsonResp({ ok: true, subscribers: subCount });
 }
 
+async function handleHealth(env) {
+  const isoDate = todayIso();
+  const raw     = await env.PICKS_STORE.get(`picks:${isoDate}`);
+  const store   = raw ? JSON.parse(raw) : null;
+  const subList = await env.SUBSCRIPTIONS.list({ limit: 1000 });
+
+  // Collect per-subscriber prefs (without exposing keys/endpoints)
+  const subPrefs = await Promise.all(
+    subList.keys.map(async ({ name }) => {
+      const s = await env.SUBSCRIPTIONS.get(name);
+      return s ? (JSON.parse(s).prefs || {}) : null;
+    })
+  );
+
+  // Summarise game state for all tracked games
+  const gameStates = [];
+  if (store) {
+    const sports = {};
+    for (const p of [...(store.singles || []), ...(store.parlay_legs || [])]) {
+      (sports[p.sport] = sports[p.sport] || []).push(p);
+    }
+    for (const [sport, picks] of Object.entries(sports)) {
+      for (const p of picks) {
+        if (p.espnEventId) {
+          const gsRaw = await env.GAME_STATE.get(`gs:${sport}:${p.espnEventId}`);
+          if (gsRaw) gameStates.push({ sport, id: p.espnEventId, ...JSON.parse(gsRaw) });
+        }
+      }
+    }
+  }
+
+  return jsonResp({
+    ok:           true,
+    pacificDate:  isoDate,
+    dateStr:      todayDateStr(),
+    hasPicks:     !!store,
+    singles:      store ? (store.singles     || []).length : 0,
+    parlayLegs:   store ? (store.parlay_legs || []).length : 0,
+    subscribers:  subList.keys.length,
+    subPrefs,
+    gameStates,
+  });
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export default {
@@ -630,7 +676,7 @@ export default {
     else if (pathname === '/update-prefs'       && request.method === 'PUT')    resp = await handleUpdatePrefs(request, env);
     else if (pathname === '/unsubscribe'        && request.method === 'DELETE') resp = await handleUnsubscribe(request, env);
     else if (pathname === '/notify-picks-ready' && request.method === 'POST')   resp = await handleNotifyPicksReady(request, env);
-    else if (pathname === '/health')                                             resp = new Response('OK');
+    else if (pathname === '/health')                                             resp = await handleHealth(env);
     else resp = new Response('Not Found', { status: 404 });
 
     const headers = new Headers(resp.headers);
