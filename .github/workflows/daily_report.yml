@@ -178,43 +178,72 @@ jobs:
           pick_count = len(morning)
           prop_count = len([p for p in props if not p.get('locked')])
 
+          # Build singles with all fields the worker needs for game tracking
+          stored_singles = [
+              {
+                  'id':           f's{i}',
+                  'sport':        s['sport'],
+                  'homeTeam':     s['home_team'],
+                  'awayTeam':     s['away_team'],
+                  'pick':         s['pick'],
+                  'betType':      s['bet_type'],
+                  'cost':         s.get('total_cost', 0),
+                  'profitIfWin':  s.get('profit_if_win', 0),
+                  'commenceTime': s.get('commence_time', ''),
+                  'inTodaysCard': _key(s) in today_card_keys,
+                  'isParlay':     False,
+                  'espnEventId':  None,
+              }
+              for i, s in enumerate(singles)
+          ]
+
+          # Build parlays + flat parlay_legs array the worker expects
+          parlay_legs = []
+          stored_parlays = []
+          for pi, p in enumerate(parlays):
+              parlay_id    = f'parlay-{pi}'
+              label        = p.get('label', f'Parlay {pi+1}')
+              p_cost       = p.get('total_cost', 0)
+              p_profit     = p.get('profit_if_win', 0)
+              raw_legs     = p.get('legs', [])
+              stored_legs  = []
+              for li, leg in enumerate(raw_legs):
+                  leg_obj = {
+                      'id':           f'p{pi}-l{li}',
+                      'parlayId':     parlay_id,
+                      'parlayLabel':  label,
+                      'legNum':       li + 1,
+                      'legTotal':     len(raw_legs),
+                      'sport':        leg['sport'],
+                      'homeTeam':     leg['home_team'],
+                      'awayTeam':     leg['away_team'],
+                      'pick':         leg['pick'],
+                      'betType':      leg['bet_type'],
+                      'commenceTime': leg.get('commence_time', ''),
+                      'cost':         p_cost,
+                      'profitIfWin':  p_profit,
+                      'isParlay':     True,
+                      'inTodaysCard': True,
+                      'espnEventId':  None,
+                  }
+                  parlay_legs.append(leg_obj)
+                  stored_legs.append(leg_obj)
+              stored_parlays.append({
+                  'id':             parlay_id,
+                  'label':          label,
+                  'cost':           p_cost,
+                  'profitIfWin':    p_profit,
+                  'legs':           stored_legs,
+                  'notifiedFinal':  False,
+              })
+
           payload = {
-              'date':       today,
-              'pickCount':  pick_count,
-              'propCount':  prop_count,
-              'singles': [
-                  {
-                      'sport':        s['sport'],
-                      'homeTeam':     s['home_team'],
-                      'awayTeam':     s['away_team'],
-                      'pick':         s['pick'],
-                      'betType':      s['bet_type'],
-                      'cost':         s.get('total_cost', 0),
-                      'profitIfWin':  s.get('profit_if_win', 0),
-                      'commenceTime': s.get('commence_time', ''),
-                      'inTodaysCard': _key(s) in today_card_keys,
-                  }
-                  for s in singles
-              ],
-              'parlays': [
-                  {
-                      'label':       p.get('label', f'Parlay {i+1}'),
-                      'cost':        p.get('total_cost', 0),
-                      'profitIfWin': p.get('profit_if_win', 0),
-                      'legs': [
-                          {
-                              'sport':        leg['sport'],
-                              'homeTeam':     leg['home_team'],
-                              'awayTeam':     leg['away_team'],
-                              'pick':         leg['pick'],
-                              'betType':      leg['bet_type'],
-                              'commenceTime': leg.get('commence_time', ''),
-                          }
-                          for leg in p.get('legs', [])
-                      ],
-                  }
-                  for i, p in enumerate(parlays)
-              ],
+              'date':        today,
+              'pickCount':   pick_count,
+              'propCount':   prop_count,
+              'singles':     stored_singles,
+              'parlay_legs': parlay_legs,
+              'parlays':     stored_parlays,
           }
 
           # Write picks directly to KV (bypasses workers.dev Bot Fight Mode)
@@ -229,7 +258,7 @@ jobs:
               with urllib.request.urlopen(kv_req, timeout=15) as r:
                   result = json.loads(r.read())
                   if result.get('success'):
-                      print(f'Picks stored in KV: {pick_count} picks, {prop_count} props ({today})')
+                      print(f'Picks stored in KV: {pick_count} singles, {len(parlay_legs)} parlay legs, {prop_count} props ({today})')
                       print('Picks-ready broadcast will fire on next cron tick (≤3 min)')
                   else:
                       print(f'KV write failed: {result}')

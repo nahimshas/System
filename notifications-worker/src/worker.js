@@ -440,14 +440,17 @@ async function runCron(env) {
           } else {
             const ctx = { sport, inTodaysCard: !!pick.inTodaysCard };
             if (outcome === 'WON') {
-              const pnl = pick.profitIfWin != null ? ` · +$${Number(pick.profitIfWin).toFixed(2)}` : '';
+              // Only show P&L for picks actually in today's card (real money at stake)
+              const pnl = (pick.inTodaysCard && pick.profitIfWin != null)
+                ? ` · +$${Number(pick.profitIfWin).toFixed(2)}` : '';
               await broadcastFiltered({
                 title: `✅ ${pick.pick} — WON`,
                 body:  `${scoreStr}${pnl}`,
                 tag:   `end-${pick.id}`, url: '/',
               }, ctx, env);
             } else if (outcome === 'LOST') {
-              const pnl = pick.cost != null ? ` · -$${Number(pick.cost).toFixed(2)}` : '';
+              const pnl = (pick.inTodaysCard && pick.cost != null)
+                ? ` · -$${Number(pick.cost).toFixed(2)}` : '';
               await broadcastFiltered({
                 title: `❌ ${pick.pick} — LOST`,
                 body:  `${scoreStr}${pnl}`,
