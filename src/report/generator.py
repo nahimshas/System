@@ -150,28 +150,29 @@ def build_report(
 
     # NHL is monitoring-only — exclude from budget allocation pool entirely.
     # All other active sports (NBA, MLB, NFL) compete for the top-5 slots.
+    # Cap all watchlist tabs at MAX_SINGLE_BETS (5) for consistency.
     nhl_watchlist = sorted(
         [s for s in _display if s.get("sport") == "NHL"],
         key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
-    )
+    )[:MAX_SINGLE_BETS]
 
     # IPL is watchlist-only — never enters budget allocation or parlays.
     ipl_watchlist = sorted(
         ipl_display or [],
         key=lambda r: (0 if r.get("confidence") == "HIGH" else 1, -r.get("edge", 0)),
-    )
+    )[:MAX_SINGLE_BETS]
 
     # WNBA is watchlist-only — never enters budget allocation or parlays.
     wnba_watchlist = sorted(
         [s for s in (wnba_display or []) if s.get("sport") == "WNBA"],
         key=lambda r: (0 if r.get("confidence") == "HIGH" else 1, -r.get("edge", 0)),
-    )
+    )[:MAX_SINGLE_BETS]
 
     # MLS is watchlist-only — never enters budget allocation or parlays.
     mls_watchlist = sorted(
         [s for s in (mls_display or []) if s.get("sport") == "MLS"],
         key=lambda s: (0 if s.get("confidence") == "HIGH" else 1, -s.get("edge", 0)),
-    )
+    )[:MAX_SINGLE_BETS]
 
     # Decorate settled NHL / WNBA / MLS watchlist cards with status='settled'
     # and result='WON'/'LOST' so the HTML template can stamp data-in-history="1"

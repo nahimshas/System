@@ -186,7 +186,9 @@ jobs:
           #   NHL              → all picks from singles_display (uncapped watchlist)
           #   WNBA / MLS / IPL → separate state keys (already tab-ready)
           MAX_TAB = 5
+
           def top_for_sport(sport, pool, max_n=MAX_TAB):
+              """Mirror generator._top_singles_for_sport: sort by edge, dedup, cap at 5."""
               picks = sorted(
                   [s for s in pool if s.get('sport') == sport],
                   key=lambda x: x.get('edge_pct', x.get('edge', 0)), reverse=True,
@@ -201,14 +203,22 @@ jobs:
                       break
               return out
 
+          def top_watchlist(pool, sport, max_n=MAX_TAB):
+              """Mirror generator watchlist sort: HIGH confidence first, then edge desc, cap at 5."""
+              picks = sorted(
+                  [s for s in pool if s.get('sport') == sport],
+                  key=lambda x: (0 if x.get('confidence') == 'HIGH' else 1, -x.get('edge', 0)),
+              )
+              return picks[:max_n]
+
           tab_picks = (
               top_for_sport('MLB', singles_display) +
               top_for_sport('NBA', singles_display) +
               top_for_sport('NFL', singles_display) +
-              [s for s in singles_display if s.get('sport') == 'NHL'] +  # watchlist, uncapped
-              state.get('wnba_display', []) +
-              state.get('mls_display',  []) +
-              state.get('ipl_display',  [])
+              top_watchlist(singles_display,           'NHL') +
+              top_watchlist(state.get('wnba_display', []), 'WNBA') +
+              top_watchlist(state.get('mls_display',  []), 'MLS') +
+              top_watchlist(state.get('ipl_display',  []), 'IPL')
           )
 
           # Build singles with all fields the worker needs for game tracking.
