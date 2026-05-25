@@ -123,21 +123,6 @@
       display: inline-block;
     }
 
-    /* ── Bell notification button ───────────────────────────────────────── */
-    .bell-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 0.85rem;
-      padding: 1px 0;
-      line-height: 1;
-      opacity: 0.38;
-      transition: opacity 0.2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .bell-btn.active { opacity: 1; }
-    .bell-btn:active { transform: scale(0.88); }
-
     /* ── SPA layout ──────────────────────────────────────────────────────── */
     #spa-wrap {
       display: flex;
@@ -242,6 +227,7 @@
 
     /* ── Tab sticky header ───────────────────────────────────────────────── */
     .tab-header {
+      display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
@@ -250,8 +236,17 @@
       margin: 0 -16px;
       padding-left: 16px; padding-right: 16px;
     }
+    .tab-header-text  { flex: 1; min-width: 0; }
     .tab-header-title { font-size: 1.05rem; font-weight: 700; }
     .tab-header-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .tab-bell-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 0.9rem; padding: 4px 0 4px 14px; line-height: 1;
+      opacity: 0.3; flex-shrink: 0; transition: opacity 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab-bell-btn.active { opacity: 1; }
+    .tab-bell-btn:active { transform: scale(0.88); }
 
     /* ── Section / divider label ─────────────────────────────────────────── */
     .sec-label, .divider-label {
@@ -637,7 +632,6 @@
   </div>
   <div class="header-right">
     <span class="header-live-badge" id="hdr-live">● LIVE</span>
-    <button id="bell-btn" class="bell-btn" onclick="togglePushSub()" title="Enable notifications" style="display:none">🔕</button>
     <div class="header-date-block"><div class="header-date-day">Sunday</div>
         <div class="header-date-date">May 24</div></div>
   </div>
@@ -649,6 +643,13 @@
 
   <!-- ═══════════════ TODAY TAB ══════════════════════════════════════════ -->
   <div id="tab-today" class="spa-tab active">
+    <div class="tab-header">
+      <div class="tab-header-text">
+        <div class="tab-header-title">📋 Today's Card</div>
+        <div class="tab-header-sub">Picks ready · parlays · picks-ready alerts</div>
+      </div>
+      <button class="tab-bell-btn" data-pref="today" onclick="tabBellClick(this)" style="display:none">🔕</button>
+    </div>
 
     
     
@@ -1048,11 +1049,14 @@
   <!-- ═══════════════ NBA TAB ════════════════════════════════════════════ -->
   <div id="tab-nba" class="spa-tab">
     <div class="tab-header">
-      <div class="tab-header-title">🏀 NBA</div>
-      <div class="tab-header-sub">
-        2 picks &middot; 6 props
-        
+      <div class="tab-header-text">
+        <div class="tab-header-title">🏀 NBA</div>
+        <div class="tab-header-sub">
+          2 picks &middot; 6 props
+          
+        </div>
       </div>
+      <button class="tab-bell-btn" data-pref="NBA" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
     
     
@@ -1508,11 +1512,14 @@
   <!-- ═══════════════ MLB TAB ════════════════════════════════════════════ -->
   <div id="tab-mlb" class="spa-tab">
     <div class="tab-header">
-      <div class="tab-header-title">⚾ MLB</div>
-      <div class="tab-header-sub">
-        5 picks &middot; 6 props
-        
+      <div class="tab-header-text">
+        <div class="tab-header-title">⚾ MLB</div>
+        <div class="tab-header-sub">
+          5 picks &middot; 6 props
+          
+        </div>
       </div>
+      <button class="tab-bell-btn" data-pref="MLB" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
     
     
@@ -2105,11 +2112,14 @@
   <!-- ═══════════════ IPL TAB ════════════════════════════════════════════ -->
   <div id="tab-ipl" class="spa-tab">
     <div class="tab-header">
-      <div class="tab-header-title">🏏 IPL</div>
-      <div class="tab-header-sub">
-        2 picks &middot; watchlist
-        
+      <div class="tab-header-text">
+        <div class="tab-header-title">🏏 IPL</div>
+        <div class="tab-header-sub">
+          2 picks &middot; watchlist
+          
+        </div>
       </div>
+      <button class="tab-bell-btn" data-pref="IPL" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
     
     <div class="sec-label">Watchlist</div>
@@ -2199,11 +2209,14 @@
   <!-- ═══════════════ NHL TAB ════════════════════════════════════════════ -->
   <div id="tab-nhl" class="spa-tab">
     <div class="tab-header">
-      <div class="tab-header-title">🏒 NHL</div>
-      <div class="tab-header-sub">
-        1 pick &middot; watchlist
-        
+      <div class="tab-header-text">
+        <div class="tab-header-title">🏒 NHL</div>
+        <div class="tab-header-sub">
+          1 pick &middot; watchlist
+          
+        </div>
       </div>
+      <button class="tab-bell-btn" data-pref="NHL" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
     
     <div class="sec-label">Watchlist</div>
@@ -2254,11 +2267,14 @@
   <!-- ═══════════════ WNBA TAB ═══════════════════════════════════════════ -->
   <div id="tab-wnba" class="spa-tab">
     <div class="tab-header">
-      <div class="tab-header-title">🏀 WNBA</div>
-      <div class="tab-header-sub">
-        3 picks &middot; watchlist
-        
+      <div class="tab-header-text">
+        <div class="tab-header-title">🏀 WNBA</div>
+        <div class="tab-header-sub">
+          3 picks &middot; watchlist
+          
+        </div>
       </div>
+      <button class="tab-bell-btn" data-pref="WNBA" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
     
     <div class="sec-label">Watchlist</div>
@@ -2387,11 +2403,14 @@
   <!-- ═══════════════ NFL TAB ════════════════════════════════════════════ -->
   <div id="tab-nfl" class="spa-tab">
     <div class="tab-header">
-      <div class="tab-header-title">🏈 NFL</div>
-      <div class="tab-header-sub">
-        No games today
-        
+      <div class="tab-header-text">
+        <div class="tab-header-title">🏈 NFL</div>
+        <div class="tab-header-sub">
+          No games today
+          
+        </div>
       </div>
+      <button class="tab-bell-btn" data-pref="NFL" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
     
     <div class="empty-state"><div class="icon">🏈</div>No NFL games scheduled today.</div>
@@ -2402,11 +2421,14 @@
   <!-- ═══════════════ MLS TAB ════════════════════════════════════════════ -->
   <div id="tab-mls" class="spa-tab">
     <div class="tab-header">
-      <div class="tab-header-title">⚽ MLS</div>
-      <div class="tab-header-sub">
-        5 picks &middot; watchlist
-        
+      <div class="tab-header-text">
+        <div class="tab-header-title">⚽ MLS</div>
+        <div class="tab-header-sub">
+          5 picks &middot; watchlist
+          
+        </div>
       </div>
+      <button class="tab-bell-btn" data-pref="MLS" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
     
     <div class="sec-label">Watchlist</div>
@@ -3525,7 +3547,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 08:12 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 09:09 PM PDT</div>
         </div>
         
       </div>
@@ -7497,82 +7519,92 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- ── Push notification subscription ──────────────────────────────────── -->
+<!-- ── Per-tab push notification subscriptions ──────────────────────────── -->
 <script>
 (function () {
-  // ── Config — replace these after deploying the Cloudflare Worker ───────────
   var VAPID_PUBLIC_KEY = 'BIBvM0hIKq4CzTIWw4dYUylhUuFIYwH8uY-IDDr_0DgZ-u7mlaCL8LRadV9Xr39tu3Aju5O_qg14Auob6VS67x0';
   var WORKER_URL       = 'https://picks-notifications.nahimshas.workers.dev';
 
-  // Don't show bell if worker not configured yet
-  if (VAPID_PUBLIC_KEY === 'REPLACE_WITH_VAPID_PUBLIC_KEY' ||
-      WORKER_URL       === 'REPLACE_WITH_WORKER_URL') return;
+  // Bail if push not supported or worker not configured
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
 
-  // Don't show bell if browser doesn't support push
-  if (!('serviceWorker' in navigator) || !('PushManager' in window) ||
-      !('Notification' in window)) return;
+  function getPrefs() {
+    try { return JSON.parse(localStorage.getItem('pushPrefs') || '{}'); }
+    catch { return {}; }
+  }
+  function savePrefs(p) { localStorage.setItem('pushPrefs', JSON.stringify(p)); }
 
-  var bellBtn  = document.getElementById('bell-btn');
-  var bellIcon = bellBtn;
-
-  function setBell(on) {
-    bellBtn.textContent = on ? '🔔' : '🔕';
-    bellBtn.classList.toggle('active', on);
-    bellBtn.title = on ? 'Notifications on — tap to disable' : 'Enable notifications';
+  function setBellUI(prefKey, on) {
+    document.querySelectorAll('.tab-bell-btn[data-pref="' + prefKey + '"]').forEach(function (btn) {
+      btn.textContent = on ? '🔔' : '🔕';
+      btn.classList.toggle('active', on);
+    });
   }
 
-  function urlB64ToUint8(b64url) {
-    var s = b64url.replace(/-/g, '+').replace(/_/g, '/');
+  function urlB64ToUint8(b64) {
+    var s = b64.replace(/-/g, '+').replace(/_/g, '/');
     while (s.length % 4) s += '=';
-    var raw = atob(s);
-    var arr = new Uint8Array(raw.length);
+    var raw = atob(s), arr = new Uint8Array(raw.length);
     for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
     return arr;
   }
 
-  // Reveal bell, sync state with current subscription
+  // On page load: show all bells and restore states from localStorage
   navigator.serviceWorker.ready.then(function (reg) {
-    bellBtn.style.display = '';
     reg.pushManager.getSubscription().then(function (sub) {
-      setBell(!!sub);
+      document.querySelectorAll('.tab-bell-btn').forEach(function (btn) {
+        btn.style.display = '';
+      });
+      if (!sub) {
+        // Not subscribed — clear stale prefs, all bells off
+        savePrefs({});
+        return;
+      }
+      // Subscribed — restore each bell from saved prefs
+      var prefs = getPrefs();
+      document.querySelectorAll('.tab-bell-btn').forEach(function (btn) {
+        setBellUI(btn.dataset.pref, !!prefs[btn.dataset.pref]);
+      });
     });
   });
 
-  window.togglePushSub = async function () {
-    var reg = await navigator.serviceWorker.ready;
-    var existing = await reg.pushManager.getSubscription();
+  window.tabBellClick = async function (btn) {
+    var prefKey = btn.dataset.pref;
+    var prefs   = getPrefs();
+    var newOn   = !prefs[prefKey];
 
-    if (existing) {
-      // Unsubscribe
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+
+    // First bell tap ever — need to create the push subscription
+    if (!sub) {
+      if (!newOn) return; // turning off when not subscribed → nothing to do
+      var perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
       try {
-        await fetch(WORKER_URL + '/unsubscribe', {
-          method:  'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ endpoint: existing.endpoint }),
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly:      true,
+          applicationServerKey: urlB64ToUint8(VAPID_PUBLIC_KEY),
         });
-        await existing.unsubscribe();
-        setBell(false);
-      } catch (e) { console.error('Unsubscribe failed:', e); }
-      return;
+        await fetch(WORKER_URL + '/subscribe', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sub.toJSON()),
+        });
+      } catch (e) { console.error('Subscribe failed:', e); return; }
     }
 
-    // Request permission
-    var perm = await Notification.requestPermission();
-    if (perm !== 'granted') return;
+    // Update pref locally
+    prefs[prefKey] = newOn;
+    savePrefs(prefs);
+    setBellUI(prefKey, newOn);
 
-    // Subscribe
+    // Sync prefs with Worker
     try {
-      var sub = await reg.pushManager.subscribe({
-        userVisibleOnly:      true,
-        applicationServerKey: urlB64ToUint8(VAPID_PUBLIC_KEY),
+      await fetch(WORKER_URL + '/update-prefs', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: sub.endpoint, prefs: prefs }),
       });
-      await fetch(WORKER_URL + '/subscribe', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(sub.toJSON()),
-      });
-      setBell(true);
-    } catch (e) { console.error('Subscribe failed:', e); }
+    } catch (e) { console.error('Prefs sync failed:', e); }
   };
 }());
 </script>

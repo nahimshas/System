@@ -140,13 +140,20 @@ jobs:
               print(f'No state file at {state_path} — skipping notification')
               exit(0)
 
-          singles = state.get('singles_display', [])
-          parlays = state.get('parlays', [])
-          props   = state.get('props_display', [])
+          singles  = state.get('singles_display', [])
+          morning  = state.get('morning_singles_display', singles)  # today's card picks
+          parlays  = state.get('parlays', [])
+          props    = state.get('props_display', [])
 
-          # Count non-locked picks (those on today's card)
-          pick_count = len([s for s in singles if not s.get('locked')])
-          prop_count = len([p for p in props   if not p.get('locked')])
+          # Build a set of (sport, home, away, bet_type, pick) tuples for today's card
+          def _key(s):
+              return (s.get('sport',''), s.get('home_team',''), s.get('away_team',''),
+                      s.get('bet_type',''), s.get('pick',''))
+          today_card_keys = {_key(s) for s in morning}
+
+          # Count picks in today's card
+          pick_count = len(morning)
+          prop_count = len([p for p in props if not p.get('locked')])
 
           payload = {
               'date':       today,
@@ -162,8 +169,9 @@ jobs:
                       'cost':         s.get('total_cost', 0),
                       'profitIfWin':  s.get('profit_if_win', 0),
                       'commenceTime': s.get('commence_time', ''),
+                      'inTodaysCard': _key(s) in today_card_keys,
                   }
-                  for s in singles if not s.get('locked')
+                  for s in singles
               ],
               'parlays': [
                   {
