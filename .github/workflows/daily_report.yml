@@ -165,20 +165,24 @@ jobs:
               exit(0)
           account_id = accounts[0]['id']
 
-          singles  = state.get('singles_display', [])
-          morning  = state.get('morning_singles_display', singles)
-          parlays  = state.get('parlays', [])
-          props    = state.get('props_display', [])
+          singles_display = state.get('singles_display', [])
+          # state['singles'] = the 5 budget-allocated Today's Card picks
+          # state['singles_display'] = all ~27 analyzed picks shown across sport tabs
+          today_card  = state.get('singles', singles_display)
+          parlays     = state.get('parlays', [])
+          props       = state.get('props_display', [])
 
           def _key(s):
               return (s.get('sport',''), s.get('home_team',''), s.get('away_team',''),
                       s.get('bet_type',''), s.get('pick',''))
-          today_card_keys = {_key(s) for s in morning}
+          today_card_keys = {_key(s) for s in today_card}
 
-          pick_count = len(morning)
+          pick_count = len(today_card)
           prop_count = len([p for p in props if not p.get('locked')])
 
-          # Build singles with all fields the worker needs for game tracking
+          # Build singles with all fields the worker needs for game tracking.
+          # singles_display has all sport-tab picks (~27); inTodaysCard is only
+          # true for the 5 budget-allocated Today's Card picks (state['singles']).
           stored_singles = [
               {
                   'id':           f's{i}',
@@ -194,7 +198,7 @@ jobs:
                   'isParlay':     False,
                   'espnEventId':  None,
               }
-              for i, s in enumerate(singles)
+              for i, s in enumerate(singles_display)
           ]
 
           # Build parlays + flat parlay_legs array the worker expects
