@@ -115,6 +115,100 @@ jobs:
           fi
           python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG $REEVALUATE_ARG $CODE_ONLY_ARG
 
+      - name: Notify subscribers — picks ready
+        # Only on real morning runs (not code-only re-renders)
+        if: ${{ github.event.inputs.code_only != 'true' }}
+        env:
+          NOTIFY_SECRET: ${{ secrets.NOTIFY_SECRET }}
+          NOTIFICATIONS_WORKER_URL: ${{ vars.NOTIFICATIONS_WORKER_URL }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, urllib.request, datetime
+
+          # Determine today's date in LA time (same as main.py)
+          try:
+              from zoneinfo import ZoneInfo
+              today = datetime.datetime.now(ZoneInfo('America/Los_Angeles')).date().isoformat()
+          except Exception:
+              today = datetime.date.today().isoformat()
+
+          state_path = f'state/picks_{today}.json'
+          try:
+              with open(state_path) as f:
+                  state = json.load(f)
+          except FileNotFoundError:
+              print(f'No state file at {state_path} — skipping notification')
+              exit(0)
+
+          singles = state.get('singles_display', [])
+          parlays = state.get('parlays', [])
+          props   = state.get('props_display', [])
+
+          # Count non-locked picks (those on today's card)
+          pick_count = len([s for s in singles if not s.get('locked')])
+          prop_count = len([p for p in props   if not p.get('locked')])
+
+          payload = {
+              'date':       today,
+              'pickCount':  pick_count,
+              'propCount':  prop_count,
+              'singles': [
+                  {
+                      'sport':        s['sport'],
+                      'homeTeam':     s['home_team'],
+                      'awayTeam':     s['away_team'],
+                      'pick':         s['pick'],
+                      'betType':      s['bet_type'],
+                      'cost':         s.get('total_cost', 0),
+                      'profitIfWin':  s.get('profit_if_win', 0),
+                      'commenceTime': s.get('commence_time', ''),
+                  }
+                  for s in singles if not s.get('locked')
+              ],
+              'parlays': [
+                  {
+                      'label':       p.get('label', f'Parlay {i+1}'),
+                      'cost':        p.get('total_cost', 0),
+                      'profitIfWin': p.get('profit_if_win', 0),
+                      'legs': [
+                          {
+                              'sport':        leg['sport'],
+                              'homeTeam':     leg['home_team'],
+                              'awayTeam':     leg['away_team'],
+                              'pick':         leg['pick'],
+                              'betType':      leg['bet_type'],
+                              'commenceTime': leg.get('commence_time', ''),
+                          }
+                          for leg in p.get('legs', [])
+                      ],
+                  }
+                  for i, p in enumerate(parlays)
+              ],
+          }
+
+          worker_url = os.environ.get('NOTIFICATIONS_WORKER_URL', '').rstrip('/')
+          secret     = os.environ.get('NOTIFY_SECRET', '')
+
+          if not worker_url or not secret:
+              print('NOTIFICATIONS_WORKER_URL or NOTIFY_SECRET not set — skipping')
+              exit(0)
+
+          req = urllib.request.Request(
+              f'{worker_url}/notify-picks-ready',
+              data=json.dumps(payload).encode(),
+              headers={
+                  'Content-Type':  'application/json',
+                  'Authorization': f'Bearer {secret}',
+              },
+              method='POST',
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=15) as resp:
+                  print(f'Notified: {resp.status} — {pick_count} picks, {prop_count} props')
+          except Exception as e:
+              print(f'Notification failed (non-fatal): {e}')
+          PYEOF
+
       - name: Commit updated report and state to repo
         run: |
           cp docs/index.html /tmp/report.html

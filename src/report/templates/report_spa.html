@@ -287,6 +287,21 @@
       display: inline-block;
     }
 
+    /* ── Bell notification button ───────────────────────────────────────── */
+    .bell-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 1px 0;
+      line-height: 1;
+      opacity: 0.38;
+      transition: opacity 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bell-btn.active { opacity: 1; }
+    .bell-btn:active { transform: scale(0.88); }
+
     /* ── SPA layout ──────────────────────────────────────────────────────── */
     #spa-wrap {
       display: flex;
@@ -788,6 +803,7 @@
   </div>
   <div class="header-right">
     <span class="header-live-badge" id="hdr-live">● LIVE</span>
+    <button id="bell-btn" class="bell-btn" onclick="togglePushSub()" title="Enable notifications" style="display:none">🔕</button>
     <div class="header-date-block">
       {%- set rd = report.run_date -%}
       {%- if ',' in rd -%}
@@ -2156,6 +2172,86 @@ function toggleCtx(el) {
   document.querySelectorAll('.spa-tab .empty-state').forEach(function (el) {
     el.innerHTML = WAIT_HTML;
   });
+}());
+</script>
+
+<!-- ── Push notification subscription ──────────────────────────────────── -->
+<script>
+(function () {
+  // ── Config — replace these after deploying the Cloudflare Worker ───────────
+  var VAPID_PUBLIC_KEY = 'REPLACE_WITH_VAPID_PUBLIC_KEY';
+  var WORKER_URL       = 'REPLACE_WITH_WORKER_URL'; // e.g. https://picks-notifications.xxx.workers.dev
+
+  // Don't show bell if worker not configured yet
+  if (VAPID_PUBLIC_KEY === 'REPLACE_WITH_VAPID_PUBLIC_KEY' ||
+      WORKER_URL       === 'REPLACE_WITH_WORKER_URL') return;
+
+  // Don't show bell if browser doesn't support push
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) ||
+      !('Notification' in window)) return;
+
+  var bellBtn  = document.getElementById('bell-btn');
+  var bellIcon = bellBtn;
+
+  function setBell(on) {
+    bellBtn.textContent = on ? '🔔' : '🔕';
+    bellBtn.classList.toggle('active', on);
+    bellBtn.title = on ? 'Notifications on — tap to disable' : 'Enable notifications';
+  }
+
+  function urlB64ToUint8(b64url) {
+    var s = b64url.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    var raw = atob(s);
+    var arr = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+
+  // Reveal bell, sync state with current subscription
+  navigator.serviceWorker.ready.then(function (reg) {
+    bellBtn.style.display = '';
+    reg.pushManager.getSubscription().then(function (sub) {
+      setBell(!!sub);
+    });
+  });
+
+  window.togglePushSub = async function () {
+    var reg = await navigator.serviceWorker.ready;
+    var existing = await reg.pushManager.getSubscription();
+
+    if (existing) {
+      // Unsubscribe
+      try {
+        await fetch(WORKER_URL + '/unsubscribe', {
+          method:  'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ endpoint: existing.endpoint }),
+        });
+        await existing.unsubscribe();
+        setBell(false);
+      } catch (e) { console.error('Unsubscribe failed:', e); }
+      return;
+    }
+
+    // Request permission
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+
+    // Subscribe
+    try {
+      var sub = await reg.pushManager.subscribe({
+        userVisibleOnly:      true,
+        applicationServerKey: urlB64ToUint8(VAPID_PUBLIC_KEY),
+      });
+      await fetch(WORKER_URL + '/subscribe', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(sub.toJSON()),
+      });
+      setBell(true);
+    } catch (e) { console.error('Subscribe failed:', e); }
+  };
 }());
 </script>
 </body>

@@ -1,0 +1,31 @@
+name = "picks-notifications"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+
+[triggers]
+crons = ["*/3 * * * *"]
+
+# ── KV Namespaces ─────────────────────────────────────────────────────────────
+# Create these with:
+#   wrangler kv namespace create SUBSCRIPTIONS
+#   wrangler kv namespace create GAME_STATE
+#   wrangler kv namespace create PICKS_STORE
+# Then paste the returned IDs below.
+
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS"
+id = "REPLACE_WITH_SUBSCRIPTIONS_KV_ID"
+
+[[kv_namespaces]]
+binding = "GAME_STATE"
+id = "REPLACE_WITH_GAME_STATE_KV_ID"
+
+[[kv_namespaces]]
+binding = "PICKS_STORE"
+id = "REPLACE_WITH_PICKS_STORE_KV_ID"
+
+# ── Secrets (set with `wrangler secret put <NAME>`) ───────────────────────────
+# VAPID_PRIVATE_KEY  — 32-byte P-256 private key, base64url (from generate-keys.js)
+# VAPID_PUBLIC_KEY   — 65-byte uncompressed P-256 public key, base64url (same script)
+# NOTIFY_SECRET      — random string; also stored in GitHub Actions secrets
+# VAPID_SUBJECT      — optional, e.g. "mailto:you@example.com" (default used if unset)

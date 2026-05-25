@@ -1,0 +1,661 @@
+/**
+ * Picks — Push Notification Worker
+ *
+ * Routes
+ *   POST   /subscribe            save a push subscription
+ *   DELETE /unsubscribe          remove a subscription
+ *   POST   /notify-picks-ready   (Bearer NOTIFY_SECRET) store picks + send "ready" blast
+ *   GET    /health               liveness probe
+ *
+ * Cron  * /3 * * * *
+ *   Poll ESPN scoreboards for today's picks.
+ *   Fire start / end / parlay notifications on state transitions.
+ *
+ * KV bindings expected in wrangler.toml:
+ *   SUBSCRIPTIONS   push subscription objects   key = sub:{hash32}
+ *   GAME_STATE      per-game ESPN state          key = gs:{SPORT}:{espnId}
+ *   PICKS_STORE     today's pick list            key = picks:{YYYY-MM-DD}
+ */
+
+// ─── Base64url helpers ────────────────────────────────────────────────────────
+
+function b64url(buf) {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let s = '';
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function fromB64url(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function concat(...arrays) {
+  const total = arrays.reduce((n, a) => n + a.length, 0);
+  const out = new Uint8Array(total);
+  let pos = 0;
+  for (const a of arrays) { out.set(a, pos); pos += a.length; }
+  return out;
+}
+
+// ─── VAPID JWT (ES256) ────────────────────────────────────────────────────────
+
+async function vapidAuthHeader(endpoint, env) {
+  const origin = new URL(endpoint).origin;
+  const exp    = Math.floor(Date.now() / 1000) + 43200; // 12 h
+  const sub    = env.VAPID_SUBJECT || 'mailto:admin@example.com';
+
+  const hdr = b64url(new TextEncoder().encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
+  const pay = b64url(new TextEncoder().encode(JSON.stringify({ aud: origin, exp, sub })));
+  const unsigned = `${hdr}.${pay}`;
+
+  // Reconstruct JWK from raw public (65 bytes uncompressed) + private key
+  const pubBytes = fromB64url(env.VAPID_PUBLIC_KEY);
+  const x = b64url(pubBytes.slice(1, 33));
+  const y = b64url(pubBytes.slice(33, 65));
+
+  const privKey = await crypto.subtle.importKey(
+    'jwk',
+    { kty: 'EC', crv: 'P-256', x, y, d: env.VAPID_PRIVATE_KEY, key_ops: ['sign'] },
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false, ['sign']
+  );
+
+  const sig = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    privKey,
+    new TextEncoder().encode(unsigned)
+  );
+
+  return `vapid t=${unsigned}.${b64url(sig)},k=${env.VAPID_PUBLIC_KEY}`;
+}
+
+// ─── RFC 8291 Web Push encryption ────────────────────────────────────────────
+
+async function encryptPayload(sub, payloadObj) {
+  const plaintext   = new TextEncoder().encode(JSON.stringify(payloadObj));
+  const recipPub    = fromB64url(sub.keys.p256dh);
+  const authSecret  = fromB64url(sub.keys.auth);
+
+  // Ephemeral sender key pair
+  const senderKP = await crypto.subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']
+  );
+  const senderPub = new Uint8Array(
+    await crypto.subtle.exportKey('raw', senderKP.publicKey)
+  ); // 65 bytes
+
+  // ECDH shared secret
+  const recipKey = await crypto.subtle.importKey(
+    'raw', recipPub, { name: 'ECDH', namedCurve: 'P-256' }, false, []
+  );
+  const sharedBits = await crypto.subtle.deriveBits(
+    { name: 'ECDH', public: recipKey }, senderKP.privateKey, 256
+  );
+
+  // 16-byte random salt
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+
+  // PRK = HKDF-SHA256( salt=authSecret, IKM=sharedBits,
+  //                    info="WebPush: info\0" || recipPub || senderPub )
+  const ikm = await crypto.subtle.importKey('raw', sharedBits, 'HKDF', false, ['deriveBits']);
+  const prkInfo = concat(
+    new TextEncoder().encode('WebPush: info\x00'),
+    recipPub,
+    senderPub
+  );
+  const prkBits = await crypto.subtle.deriveBits(
+    { name: 'HKDF', hash: 'SHA-256', salt: authSecret, info: prkInfo }, ikm, 256
+  );
+
+  const prk = await crypto.subtle.importKey('raw', prkBits, 'HKDF', false, ['deriveBits']);
+
+  // CEK = HKDF(prk, salt, "Content-Encoding: aes128gcm\0", 16 bytes)
+  const cekBits = await crypto.subtle.deriveBits(
+    { name: 'HKDF', hash: 'SHA-256', salt,
+      info: new TextEncoder().encode('Content-Encoding: aes128gcm\x00') },
+    prk, 128
+  );
+
+  // Nonce = HKDF(prk, salt, "Content-Encoding: nonce\0", 12 bytes)
+  const nonceBits = await crypto.subtle.deriveBits(
+    { name: 'HKDF', hash: 'SHA-256', salt,
+      info: new TextEncoder().encode('Content-Encoding: nonce\x00') },
+    prk, 96
+  );
+
+  const cek   = await crypto.subtle.importKey('raw', cekBits, 'AES-GCM', false, ['encrypt']);
+  const nonce = new Uint8Array(nonceBits);
+
+  // Pad: plaintext + 0x02 delimiter byte
+  const padded = new Uint8Array(plaintext.length + 1);
+  padded.set(plaintext);
+  padded[plaintext.length] = 0x02;
+
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, cek, padded)
+  );
+
+  // RFC 8188 body: salt(16) + rs(4 BE=4096) + idlen(1=65) + senderPub(65) + ciphertext
+  const rs  = 4096;
+  const hdr = new Uint8Array(21); // 16+4+1
+  hdr.set(salt, 0);
+  hdr[16] = (rs >> 24) & 0xff; hdr[17] = (rs >> 16) & 0xff;
+  hdr[18] = (rs >>  8) & 0xff; hdr[19] =  rs        & 0xff;
+  hdr[20] = 65;
+
+  return concat(hdr, senderPub, ciphertext);
+}
+
+// ─── Send one push notification ───────────────────────────────────────────────
+
+async function sendPush(sub, payload, env) {
+  let body;
+  try {
+    body = await encryptPayload(sub, payload);
+  } catch (e) {
+    console.error('encryptPayload error:', e.message);
+    return false;
+  }
+
+  const authorization = await vapidAuthHeader(sub.endpoint, env);
+
+  const resp = await fetch(sub.endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization':    authorization,
+      'Content-Type':     'application/octet-stream',
+      'Content-Encoding': 'aes128gcm',
+      'TTL':              '86400',
+    },
+    body,
+  });
+
+  if (resp.status === 410 || resp.status === 404) {
+    // Subscription expired; clean up
+    await env.SUBSCRIPTIONS.delete(await subKey(sub.endpoint));
+  } else if (!resp.ok) {
+    console.error(`Push HTTP ${resp.status}: ${sub.endpoint.slice(-40)}`);
+  }
+
+  return resp.ok || resp.status === 201;
+}
+
+// ─── Broadcast to all subscribers ────────────────────────────────────────────
+
+async function broadcast(payload, env) {
+  const list = await env.SUBSCRIPTIONS.list({ limit: 1000 });
+  if (!list.keys.length) return;
+
+  const results = await Promise.allSettled(
+    list.keys.map(async ({ name }) => {
+      const raw = await env.SUBSCRIPTIONS.get(name);
+      if (!raw) return;
+      return sendPush(JSON.parse(raw), payload, env);
+    })
+  );
+
+  const sent = results.filter(r => r.status === 'fulfilled' && r.value).length;
+  console.log(`broadcast "${payload.title}": ${sent}/${list.keys.length}`);
+}
+
+// ─── KV key for a subscription (SHA-256 of endpoint) ─────────────────────────
+
+async function subKey(endpoint) {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(endpoint));
+  return 'sub:' + b64url(hash).slice(0, 32);
+}
+
+// ─── ESPN helpers ─────────────────────────────────────────────────────────────
+
+const ESPN_SPORT_PATH = {
+  MLB:  'baseball/mlb',
+  NBA:  'basketball/nba',
+  NHL:  'hockey/nhl',
+  WNBA: 'basketball/wnba',
+  MLS:  'soccer/usa.1',
+  NFL:  'football/nfl',
+  IPL:  'cricket/ipl',
+};
+
+const SPORT_EMOJI = {
+  MLB: '⚾', NBA: '🏀', NHL: '🏒', WNBA: '🏀', MLS: '⚽', NFL: '🏈', IPL: '🏏',
+};
+
+function todayDateStr() {
+  // YYYYMMDD in UTC (ESPN accepts UTC dates)
+  return new Date().toISOString().slice(0, 10).replace(/-/g, '');
+}
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function espnScoreboard(sport, dateStr) {
+  const path = ESPN_SPORT_PATH[sport];
+  if (!path) return null;
+  const url = `https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard?dates=${dateStr}`;
+  try {
+    const r = await fetch(url, { cf: { cacheTtl: 25 } });
+    return r.ok ? r.json() : null;
+  } catch { return null; }
+}
+
+function normTeam(name) {
+  return (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function gameMatchesPick(event, homeTeam, awayTeam) {
+  const comps = event.competitions?.[0]?.competitors || [];
+  const names = comps.map(c => normTeam(c.team?.displayName || c.team?.name || ''));
+  const hn = normTeam(homeTeam);
+  const an = normTeam(awayTeam);
+  const hits = (n, t) => n.includes(t) || t.includes(n);
+  return names.some(n => hits(n, hn)) && names.some(n => hits(n, an));
+}
+
+function gameScores(event) {
+  let home = 0, away = 0;
+  for (const c of (event.competitions?.[0]?.competitors || [])) {
+    const s = parseInt(c.score ?? '0', 10);
+    if (c.homeAway === 'home') home = s;
+    else away = s;
+  }
+  return { home, away };
+}
+
+function gameStatus(event) {
+  const state = event.status?.type?.state;
+  if (state === 'post') return 'final';
+  if (state === 'in')   return 'live';
+  return 'pre';
+}
+
+function gameDetail(event) {
+  return event.status?.type?.shortDetail || event.status?.type?.detail || '';
+}
+
+function getCompAbbr(event, side) {
+  const comps = event.competitions?.[0]?.competitors || [];
+  const c = comps.find(x => x.homeAway === side);
+  return c?.team?.abbreviation || c?.team?.shortDisplayName || '';
+}
+
+// ─── Outcome from final scores ────────────────────────────────────────────────
+
+function determineOutcome(pick, homeTeamFull, homeScore, awayScore) {
+  const p  = (pick.pick || '').trim();
+  const bt = (pick.betType || '').toLowerCase();
+  const normPick = normTeam(p.replace(/ ML$/i, '').trim());
+  const normHome = normTeam(homeTeamFull);
+
+  if (bt === 'moneyline' || /\bML$/i.test(p)) {
+    // pick team name wins?
+    const homeWon    = homeScore > awayScore;
+    const isHomePick = normPick.includes(normHome) || normHome.includes(normPick);
+    return homeWon === isHomePick ? 'WON' : 'LOST';
+  }
+
+  if (bt === 'total' || /^(over|under)\s/i.test(p)) {
+    const isOver = /^over/i.test(p);
+    const line   = parseFloat(p.replace(/^(over|under)\s*/i, ''));
+    if (isNaN(line)) return null;
+    const total = homeScore + awayScore;
+    if (total === line) return null; // push
+    return (isOver ? total > line : total < line) ? 'WON' : 'LOST';
+  }
+
+  if (bt === 'spread') {
+    const m = p.match(/^(.+?)\s+([-+]?\d+\.?\d*)\s*$/);
+    if (!m) return null;
+    const spread     = parseFloat(m[2]);
+    const normPickTm = normTeam(m[1].trim());
+    const isHomePick = normPickTm.includes(normHome) || normHome.includes(normPickTm);
+    const diff       = isHomePick ? homeScore - awayScore : awayScore - homeScore;
+    if (diff + spread === 0) return null; // push
+    return diff + spread > 0 ? 'WON' : 'LOST';
+  }
+
+  return null; // unknown type
+}
+
+// ─── ESPN cron main ───────────────────────────────────────────────────────────
+
+async function runCron(env) {
+  const dateStr = todayDateStr();
+  const isoDate = todayIso();
+
+  // Load today's picks
+  const raw = await env.PICKS_STORE.get(`picks:${isoDate}`);
+  if (!raw) return;
+
+  const store = JSON.parse(raw);
+  if (!store.date || store.date !== isoDate) return; // stale
+
+  const singles    = store.singles    || [];
+  const parlayLegs = store.parlay_legs || [];
+  const parlays    = store.parlays    || [];
+
+  // Group all trackable picks by sport
+  const bySport = {};
+  for (const p of [...singles, ...parlayLegs]) {
+    (bySport[p.sport] = bySport[p.sport] || []).push(p);
+  }
+
+  let storeModified = false;
+
+  for (const [sport, picks] of Object.entries(bySport)) {
+    const data = await espnScoreboard(sport, dateStr);
+    if (!data?.events?.length) continue;
+
+    for (const event of data.events) {
+      const espnId = event.id;
+      const status = gameStatus(event);
+      const scores = gameScores(event);
+      const detail = gameDetail(event);
+
+      // Find picks for this game
+      const gamePicks = picks.filter(p =>
+        p.espnEventId === espnId ||
+        (!p.espnEventId && gameMatchesPick(event, p.homeTeam, p.awayTeam))
+      );
+      if (!gamePicks.length) continue;
+
+      // Stamp ESPN IDs (persisted back to KV at end of loop)
+      for (const p of gamePicks) {
+        if (!p.espnEventId) { p.espnEventId = espnId; storeModified = true; }
+      }
+
+      // Load / initialise game state
+      const gsKey = `gs:${sport}:${espnId}`;
+      const prevRaw = await env.GAME_STATE.get(gsKey);
+      const prev = prevRaw ? JSON.parse(prevRaw) : {
+        status: 'pre', homeScore: 0, awayScore: 0,
+        seenLive: false, seenFinal: false,
+      };
+
+      const homeAbbr  = getCompAbbr(event, 'home');
+      const awayAbbr  = getCompAbbr(event, 'away');
+      const homeFull  = (event.competitions?.[0]?.competitors || [])
+        .find(c => c.homeAway === 'home')?.team?.displayName || gamePicks[0]?.homeTeam || '';
+
+      // ── Game started ──────────────────────────────────────────────────────
+      if (status === 'live' && !prev.seenLive) {
+        for (const pick of gamePicks) {
+          const emoji = SPORT_EMOJI[sport] || '🏆';
+          if (pick.isParlay) {
+            await broadcast({
+              title: `🎰 Parlay ${pick.parlayLabel} · Leg ${pick.legNum}/${pick.legTotal} LIVE`,
+              body:  `${pick.pick} · ${awayAbbr} 0 – ${homeAbbr} 0`,
+              tag:   `live-${pick.id}`,
+              url:   '/',
+            }, env);
+          } else {
+            await broadcast({
+              title: `${emoji} ${pick.pick} — LIVE`,
+              body:  `${awayAbbr} 0 · ${homeAbbr} 0 · Game started`,
+              tag:   `live-${pick.id}`,
+              url:   '/',
+            }, env);
+          }
+        }
+        prev.seenLive = true;
+      }
+
+      // ── Game ended ────────────────────────────────────────────────────────
+      if (status === 'final' && !prev.seenFinal) {
+        const scoreStr = `Final: ${awayAbbr} ${scores.away} · ${homeAbbr} ${scores.home}`;
+
+        for (const pick of gamePicks) {
+          const emoji   = SPORT_EMOJI[sport] || '🏆';
+          const outcome = determineOutcome(pick, homeFull, scores.home, scores.away);
+
+          if (pick.isParlay) {
+            const legEmoji = outcome === 'WON' ? '✅' : outcome === 'LOST' ? '❌' : emoji;
+            const legLabel = outcome ? `Leg ${pick.legNum} ${outcome}` : `Leg ${pick.legNum} FINAL`;
+            await broadcast({
+              title: `${legEmoji} Parlay ${pick.parlayLabel} · ${legLabel}`,
+              body:  `${pick.pick} · ${scoreStr}`,
+              tag:   `end-${pick.id}`,
+              url:   '/',
+            }, env);
+          } else {
+            if (outcome === 'WON') {
+              const pnl = pick.profitIfWin != null ? ` · +$${Number(pick.profitIfWin).toFixed(2)}` : '';
+              await broadcast({
+                title: `✅ ${pick.pick} — WON`,
+                body:  `${scoreStr}${pnl}`,
+                tag:   `end-${pick.id}`,
+                url:   '/',
+              }, env);
+            } else if (outcome === 'LOST') {
+              const pnl = pick.cost != null ? ` · -$${Number(pick.cost).toFixed(2)}` : '';
+              await broadcast({
+                title: `❌ ${pick.pick} — LOST`,
+                body:  `${scoreStr}${pnl}`,
+                tag:   `end-${pick.id}`,
+                url:   '/',
+              }, env);
+            } else {
+              await broadcast({
+                title: `${emoji} ${pick.pick} — FINAL`,
+                body:  scoreStr,
+                tag:   `end-${pick.id}`,
+                url:   '/',
+              }, env);
+            }
+          }
+        }
+
+        prev.seenFinal = true;
+
+        // Check if any parlay can now be finalized
+        await checkParlayFinal(parlays, parlayLegs, sport, espnId, scores, homeFull, env);
+      }
+
+      // Persist updated game state
+      await env.GAME_STATE.put(gsKey, JSON.stringify({
+        ...prev, status,
+        homeScore: scores.home, awayScore: scores.away, detail,
+      }), { expirationTtl: 172800 }); // 2 days
+    }
+  }
+
+  // Persist any espnEventId stamps we filled in
+  if (storeModified) {
+    await env.PICKS_STORE.put(`picks:${isoDate}`, JSON.stringify(store), {
+      expirationTtl: 604800,
+    });
+  }
+}
+
+// ─── Parlay finalization ──────────────────────────────────────────────────────
+
+async function checkParlayFinal(parlays, allLegs, resolvedSport, resolvedEspnId, resolvedScores, resolvedHomeFull, env) {
+  for (const parlay of parlays) {
+    if (parlay.notifiedFinal) continue;
+
+    const legs = parlay.legs || [];
+    if (!legs.length) continue;
+
+    // Check every leg has a final game state
+    let allResolved = true;
+    let allWon      = true;
+
+    for (const leg of legs) {
+      if (!leg.espnEventId) { allResolved = false; break; }
+      const gsKey  = `gs:${leg.sport}:${leg.espnEventId}`;
+      const gsRaw  = await env.GAME_STATE.get(gsKey);
+      if (!gsRaw) { allResolved = false; break; }
+      const gs = JSON.parse(gsRaw);
+      if (!gs.seenFinal) { allResolved = false; break; }
+
+      const outcome = determineOutcome(leg, gs.homeFullName || leg.homeTeam, gs.homeScore, gs.awayScore);
+      if (outcome !== 'WON') allWon = false;
+    }
+
+    if (!allResolved) continue;
+
+    if (allWon) {
+      await broadcast({
+        title: `🏆 ${parlay.label} — WON`,
+        body:  `All ${legs.length} legs hit · +$${Number(parlay.profitIfWin || 0).toFixed(2)}`,
+        tag:   `parlay-final-${parlay.id}`,
+        url:   '/',
+      }, env);
+    } else {
+      await broadcast({
+        title: `❌ ${parlay.label} — LOST`,
+        body:  `Parlay lost · -$${Number(parlay.cost || 0).toFixed(2)}`,
+        tag:   `parlay-final-${parlay.id}`,
+        url:   '/',
+      }, env);
+    }
+
+    parlay.notifiedFinal = true;
+  }
+}
+
+// ─── HTTP handlers ────────────────────────────────────────────────────────────
+
+function cors(origin) {
+  return {
+    'Access-Control-Allow-Origin':  origin || '*',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age':       '86400',
+  };
+}
+
+function jsonResp(body, status = 200, extraHeaders = {}) {
+  return new Response(typeof body === 'string' ? body : JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
+  });
+}
+
+async function handleSubscribe(req, env) {
+  let sub;
+  try { sub = await req.json(); } catch { return jsonResp('Bad JSON', 400); }
+
+  if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) {
+    return jsonResp('Missing required fields', 400);
+  }
+
+  const key = await subKey(sub.endpoint);
+  await env.SUBSCRIPTIONS.put(key, JSON.stringify({
+    endpoint: sub.endpoint,
+    keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth },
+  }));
+  return jsonResp({ ok: true }, 201);
+}
+
+async function handleUnsubscribe(req, env) {
+  let body;
+  try { body = await req.json(); } catch { return jsonResp('Bad JSON', 400); }
+  if (!body?.endpoint) return jsonResp('Missing endpoint', 400);
+
+  await env.SUBSCRIPTIONS.delete(await subKey(body.endpoint));
+  return jsonResp({ ok: true });
+}
+
+async function handleNotifyPicksReady(req, env) {
+  const auth = req.headers.get('Authorization') || '';
+  if (auth !== `Bearer ${env.NOTIFY_SECRET}`) {
+    return jsonResp('Unauthorized', 401);
+  }
+
+  let data;
+  try { data = await req.json(); } catch { return jsonResp('Bad JSON', 400); }
+
+  const { date, pickCount = 0, propCount = 0, singles = [], parlays = [] } = data;
+  if (!date) return jsonResp('Missing date', 400);
+
+  // Flatten parlay legs for the PICKS_STORE (cron needs them individually)
+  const parlayLegs = [];
+  const storedParlays = parlays.map((p, pi) => {
+    const id    = `parlay-${pi}`;
+    const label = p.label || `Parlay ${pi + 1}`;
+    const legs  = (p.legs || []).map((leg, li) => {
+      const legObj = {
+        ...leg,
+        id:          `p${pi}-l${li}`,
+        parlayId:    id,
+        parlayLabel: label,
+        legNum:      li + 1,
+        legTotal:    p.legs.length,
+        isParlay:    true,
+        cost:        p.cost || 0,
+        profitIfWin: p.profitIfWin || 0,
+        espnEventId: null,
+      };
+      parlayLegs.push(legObj);
+      return { ...legObj };
+    });
+    return {
+      id, label,
+      cost:          p.cost || 0,
+      profitIfWin:   p.profitIfWin || 0,
+      legs,
+      notifiedFinal: false,
+    };
+  });
+
+  const storedSingles = singles.map((s, i) => ({
+    ...s, id: `s${i}`, isParlay: false, espnEventId: null,
+  }));
+
+  await env.PICKS_STORE.put(`picks:${date}`, JSON.stringify({
+    date,
+    singles:     storedSingles,
+    parlay_legs: parlayLegs,
+    parlays:     storedParlays,
+  }), { expirationTtl: 604800 }); // 7 days
+
+  // Broadcast picks-ready notification
+  const pickWord = pickCount === 1 ? '1 pick' : `${pickCount} picks`;
+  const propPart = propCount > 0 ? ` · ${propCount} props` : '';
+  await broadcast({
+    title: "🎯 Today's picks are ready",
+    body:  `${pickWord}${propPart} · Tap to view`,
+    tag:   `picks-ready-${date}`,
+    url:   '/',
+  }, env);
+
+  return jsonResp({ ok: true, subscribers: (await env.SUBSCRIPTIONS.list()).keys.length });
+}
+
+// ─── Main export ──────────────────────────────────────────────────────────────
+
+export default {
+  async fetch(request, env) {
+    const { pathname } = new URL(request.url);
+    const origin = request.headers.get('Origin') || '';
+    const corsHdrs = cors(origin);
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHdrs });
+    }
+
+    let resp;
+    if (pathname === '/subscribe'          && request.method === 'POST')   resp = await handleSubscribe(request, env);
+    else if (pathname === '/unsubscribe'   && request.method === 'DELETE') resp = await handleUnsubscribe(request, env);
+    else if (pathname === '/notify-picks-ready' && request.method === 'POST') resp = await handleNotifyPicksReady(request, env);
+    else if (pathname === '/health')       resp = new Response('OK');
+    else resp = new Response('Not Found', { status: 404 });
+
+    // Attach CORS headers to every response
+    const headers = new Headers(resp.headers);
+    for (const [k, v] of Object.entries(corsHdrs)) headers.set(k, v);
+    return new Response(resp.body, { status: resp.status, headers });
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runCron(env));
+  },
+};
