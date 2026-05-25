@@ -3525,7 +3525,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 07:50 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 24, 2026 at 08:12 PM PDT</div>
         </div>
         
       </div>
@@ -7486,6 +7486,15 @@ function toggleCtx(el) {
     el.innerHTML = WAIT_HTML;
   });
 }());
+</script>
+
+<!-- ── Service worker registration ─────────────────────────────────────── -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(function (e) {
+    console.warn('SW registration failed:', e);
+  });
+}
 </script>
 
 <!-- ── Push notification subscription ──────────────────────────────────── -->
