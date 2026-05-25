@@ -207,6 +207,7 @@ jobs:
               headers={
                   'Content-Type':  'application/json',
                   'Authorization': f'Bearer {secret}',
+                  'User-Agent':    'picks-notifier/1.0',
               },
               method='POST',
           )
