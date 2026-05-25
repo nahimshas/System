@@ -210,6 +210,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 nfl_game_count=state.get("nfl_game_count", 0),
                 nhl_game_count=state.get("nhl_game_count", 0),
                 ipl_game_count=state.get("ipl_game_count", 0),
+                ipl_games_analyzed=state.get("ipl_games_analyzed", state.get("ipl_game_count", 0)),
                 ipl_display=final_ipl_display,
                 wnba_game_count=state.get("wnba_game_count", 0),
                 wnba_display=final_wnba_display,
@@ -328,6 +329,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     props_display_raw: list = []   # all positive-EV props for display
     game_counts:       dict = {}   # slug → int  (0 if skipped / out of season)
     own_display:       dict = {}   # slug → list[BetRecommendation]  (own-tile sports)
+    ipl_games_analyzed: int = 0   # raw Odds API game count, captured before pending override
 
     for slug, entry in REGISTRY.items():
         if slug not in leagues:
@@ -544,6 +546,12 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     #  not yet settled) and a fresh upcoming pick — becomes fresh_ipl_display
     #  so the report always shows the correct live picture.
     # ------------------------------------------------------------------ #
+    # Capture the raw Odds API game count BEFORE the pending section
+    # overrides game_counts["ipl"] with the number of display picks.
+    # This lets the template distinguish "no games today" from "games
+    # were analyzed but no edge was found".
+    ipl_games_analyzed = game_counts.get("ipl", 0)
+
     if "ipl" in leagues and today.month in ipl.caps.active_months:
         _wl_pending  = load_watchlist_pending()
         _pending_keys = {p.get("game_key", "") for p in _wl_pending}
@@ -645,6 +653,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "props_display": fresh_props_display,
             "warnings":      [],
             "odds_api_credits": get_api_credits(),
+            "ipl_games_analyzed": ipl_games_analyzed,
             # Per-sport game counts — one key per registry sport.
             **{f"{_s}_game_count": game_counts.get(_s, 0) for _s in REGISTRY},
             # Own-tile display picks — one key per own-tile sport.
@@ -792,6 +801,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             "props_display": final_props_display,
             "warnings":      change_warnings,
             "odds_api_credits": get_api_credits(),
+            "ipl_games_analyzed": ipl_games_analyzed if ipl_games_analyzed else state.get("ipl_games_analyzed", 0),
             # Per-sport game counts — falls back to morning state for sports not
             # analyzed this run (e.g. filtered out by --league).
             **{f"{_s}_game_count": game_counts.get(_s, state.get(f"{_s}_game_count", 0))
@@ -842,6 +852,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         nfl_game_count=nfl_game_count,
         nhl_game_count=nhl_game_count,
         ipl_game_count=ipl_game_count,
+        ipl_games_analyzed=ipl_games_analyzed,
         ipl_display=fresh_ipl_display,
         wnba_game_count=wnba_game_count,
         wnba_display=fresh_wnba_display,

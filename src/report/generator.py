@@ -130,6 +130,7 @@ def build_report(
     nfl_game_count: int = 0,
     nhl_game_count: int = 0,
     ipl_game_count: int = 0,
+    ipl_games_analyzed: int = 0,                    # raw Odds API game count (before pending override)
     ipl_display: Optional[List[Dict]] = None,       # all positive-EV IPL picks (watchlist only)
     singles_display: Optional[List[Dict]] = None,   # all positive-EV picks for league section display
     props_display: Optional[List[Dict]] = None,     # all positive-EV props for league section display
@@ -528,12 +529,13 @@ def build_report(
         "nfl_game_count":     nfl_game_count,
         "nhl_game_count":     nhl_game_count,
         "ipl_game_count":     ipl_game_count,
+        "ipl_games_analyzed": max(ipl_games_analyzed, ipl_game_count),
         "has_nba":            nba_game_count > 0,
         "has_mlb":            mlb_game_count > 0,
         "has_nfl":            nfl_game_count > 0,
         "has_nhl":            nhl_game_count > 0,
         "ipl_watchlist":      ipl_watchlist,
-        "has_ipl":            ipl_game_count > 0,
+        "has_ipl":            ipl_game_count > 0 or ipl_games_analyzed > 0,
         "wnba_watchlist":     wnba_watchlist,
         "wnba_game_count":    wnba_game_count,
         "has_wnba":           wnba_game_count > 0,

@@ -1027,7 +1027,7 @@
         <div class="tab-header-sub">
           {% if not report.has_ipl %}No matches today
           {% elif report.ipl_watchlist %}{{ report.ipl_watchlist|length }} pick{% if report.ipl_watchlist|length != 1 %}s{% endif %} &middot; watchlist
-          {% else %}No qualifying picks{% endif %}
+          {% else %}0 edges &middot; {{ report.ipl_games_analyzed }} game{% if report.ipl_games_analyzed != 1 %}s{% endif %} analyzed{% endif %}
         </div>
       </div>
       <button class="tab-bell-btn" data-pref="IPL" onclick="tabBellClick(this)" style="display:none">🔕</button>
@@ -1035,7 +1035,7 @@
     {% if not report.has_ipl %}
     <div class="empty-state"><div class="icon">🏏</div>No IPL matches scheduled today.</div>
     {% elif not report.ipl_watchlist %}
-    <div class="empty-state"><div class="icon">😕</div>No picks with edge &gt; 3% today.</div>
+    <div class="empty-state"><div class="icon">😕</div>0 qualifying edges found across {{ report.ipl_games_analyzed }} game{% if report.ipl_games_analyzed != 1 %}s{% endif %}.</div>
     {% else %}
     <div class="sec-label">Watchlist</div>
     {% for bet in report.ipl_watchlist %}
