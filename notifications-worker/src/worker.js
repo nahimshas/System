@@ -348,6 +348,25 @@ async function runCron(env) {
     (bySport[p.sport] = bySport[p.sport] || []).push(p);
   }
 
+  // ── Picks-ready broadcast (fires once, on first cron after KV write) ─────────
+  // The workflow writes picks directly to KV via the Cloudflare REST API to
+  // bypass workers.dev Bot Fight Mode.  A broadcast_done flag prevents re-firing.
+  const broadcastKey  = `broadcast_done:${isoDate}`;
+  const broadcastDone = await env.PICKS_STORE.get(broadcastKey);
+  if (!broadcastDone) {
+    const pickCount  = singles.length;
+    const propCount  = 0;   // props not stored in KV (display-only)
+    const pickWord   = pickCount === 1 ? '1 pick' : `${pickCount} picks`;
+    const propPart   = propCount > 0 ? ` · ${propCount} props` : '';
+    await broadcastFiltered({
+      title: "🎯 Today's picks are ready",
+      body:  `${pickWord}${propPart} · Tap to view`,
+      tag:   `picks-ready-${isoDate}`, url: '/',
+    }, { isPicksReady: true }, env);
+    await env.PICKS_STORE.put(broadcastKey, '1', { expirationTtl: 86400 });
+    console.log(`picks-ready broadcast fired: ${pickCount} picks`);
+  }
+
   let storeModified = false;
 
   for (const [sport, picks] of Object.entries(bySport)) {
@@ -675,7 +694,7 @@ export default {
     if      (pathname === '/subscribe'          && request.method === 'POST')   resp = await handleSubscribe(request, env);
     else if (pathname === '/update-prefs'       && request.method === 'PUT')    resp = await handleUpdatePrefs(request, env);
     else if (pathname === '/unsubscribe'        && request.method === 'DELETE') resp = await handleUnsubscribe(request, env);
-    else if (pathname === '/notify-picks-ready' && request.method === 'POST')   resp = await handleNotifyPicksReady(request, env);
+    else if (pathname === '/notify-picks-ready' && request.method === 'POST')   resp = jsonResp({ ok: true, note: 'picks now written directly to KV by workflow' });
     else if (pathname === '/health')                                             resp = await handleHealth(env);
     else resp = new Response('Not Found', { status: 404 });
 

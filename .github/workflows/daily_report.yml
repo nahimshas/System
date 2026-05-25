@@ -116,11 +116,15 @@ jobs:
           python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG $REEVALUATE_ARG $CODE_ONLY_ARG
 
       - name: Notify subscribers — picks ready
-        # Only on real morning runs (not code-only re-renders)
+        # Only on real morning runs (not code-only re-renders).
+        # Writes picks directly to Cloudflare KV via the REST API —
+        # bypasses workers.dev Bot Fight Mode entirely.
+        # The picks-ready broadcast is sent by the cron on its first
+        # run after the KV write (broadcast_done flag pattern).
         if: ${{ github.event.inputs.code_only != 'true' }}
         env:
-          NOTIFY_SECRET: ${{ secrets.NOTIFY_SECRET }}
-          NOTIFICATIONS_WORKER_URL: ${{ vars.NOTIFICATIONS_WORKER_URL }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PICKS_KV_NAMESPACE:   "673db77b785c4b4b8fd4d8b9d545b490"
         run: |
           python3 - <<'PYEOF'
           import json, os, urllib.request, datetime
@@ -137,21 +141,40 @@ jobs:
               with open(state_path) as f:
                   state = json.load(f)
           except FileNotFoundError:
-              print(f'No state file at {state_path} — skipping notification')
+              print(f'No state file at {state_path} — skipping')
               exit(0)
 
+          token      = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          ns_id      = os.environ.get('PICKS_KV_NAMESPACE', '')
+          if not token or not ns_id:
+              print('CLOUDFLARE_API_TOKEN or PICKS_KV_NAMESPACE not set — skipping')
+              exit(0)
+
+          # Resolve account ID from the API token
+          def cf_get(path):
+              req = urllib.request.Request(
+                  f'https://api.cloudflare.com/client/v4{path}',
+                  headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
+              )
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  return json.loads(r.read())
+
+          accounts = cf_get('/accounts?per_page=1').get('result', [])
+          if not accounts:
+              print('Could not resolve Cloudflare account ID — skipping')
+              exit(0)
+          account_id = accounts[0]['id']
+
           singles  = state.get('singles_display', [])
-          morning  = state.get('morning_singles_display', singles)  # today's card picks
+          morning  = state.get('morning_singles_display', singles)
           parlays  = state.get('parlays', [])
           props    = state.get('props_display', [])
 
-          # Build a set of (sport, home, away, bet_type, pick) tuples for today's card
           def _key(s):
               return (s.get('sport',''), s.get('home_team',''), s.get('away_team',''),
                       s.get('bet_type',''), s.get('pick',''))
           today_card_keys = {_key(s) for s in morning}
 
-          # Count picks in today's card
           pick_count = len(morning)
           prop_count = len([p for p in props if not p.get('locked')])
 
@@ -194,28 +217,24 @@ jobs:
               ],
           }
 
-          worker_url = os.environ.get('NOTIFICATIONS_WORKER_URL', '').rstrip('/')
-          secret     = os.environ.get('NOTIFY_SECRET', '')
-
-          if not worker_url or not secret:
-              print('NOTIFICATIONS_WORKER_URL or NOTIFY_SECRET not set — skipping')
-              exit(0)
-
-          req = urllib.request.Request(
-              f'{worker_url}/notify-picks-ready',
-              data=json.dumps(payload).encode(),
-              headers={
-                  'Content-Type':  'application/json',
-                  'Authorization': f'Bearer {secret}',
-                  'User-Agent':    'picks-notifier/1.0',
-              },
-              method='POST',
+          # Write picks directly to KV (bypasses workers.dev Bot Fight Mode)
+          kv_url  = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/storage/kv/namespaces/{ns_id}/values/picks:{today}'
+          kv_data = json.dumps(payload).encode()
+          kv_req  = urllib.request.Request(
+              kv_url, data=kv_data,
+              headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
+              method='PUT',
           )
           try:
-              with urllib.request.urlopen(req, timeout=15) as resp:
-                  print(f'Notified: {resp.status} — {pick_count} picks, {prop_count} props')
+              with urllib.request.urlopen(kv_req, timeout=15) as r:
+                  result = json.loads(r.read())
+                  if result.get('success'):
+                      print(f'Picks stored in KV: {pick_count} picks, {prop_count} props ({today})')
+                      print('Picks-ready broadcast will fire on next cron tick (≤3 min)')
+                  else:
+                      print(f'KV write failed: {result}')
           except Exception as e:
-              print(f'Notification failed (non-fatal): {e}')
+              print(f'KV write failed (non-fatal): {e}')
           PYEOF
 
       - name: Commit updated report and state to repo
