@@ -293,6 +293,17 @@ function getCompAbbr(event, side) {
   return c?.team?.abbreviation || c?.team?.shortDisplayName || '';
 }
 
+// ─── Notification label helpers ──────────────────────────────────────────────
+
+// Returns the pick name with " ML" appended for moneyline picks that don't
+// already end in "ML" (e.g. "New York Yankees" → "New York Yankees ML").
+function pickLabel(pick) {
+  const p  = (pick.pick || '').trim();
+  const bt = (pick.betType || '').toLowerCase();
+  if (bt === 'moneyline' && !/\bML$/i.test(p)) return p + ' ML';
+  return p;
+}
+
 // ─── Outcome determination ────────────────────────────────────────────────────
 
 function determineOutcome(pick, homeTeamFull, homeScore, awayScore) {
@@ -410,12 +421,12 @@ async function runCron(env) {
             if (parentParlay?.notifiedFinal) continue;
             await broadcastFiltered({
               title: `🎰 ${pick.parlayLabel} · Leg ${pick.legNum}/${pick.legTotal} LIVE`,
-              body:  `${pick.pick} · ${awayAbbr} 0 – ${homeAbbr} 0`,
+              body:  `${pickLabel(pick)} · ${awayAbbr} 0 – ${homeAbbr} 0`,
               tag:   `live-${pick.id}`, url: '/',
             }, { isParlay: true }, env);
           } else {
             await broadcastFiltered({
-              title: `${emoji} ${pick.pick} — LIVE`,
+              title: `${emoji} ${pickLabel(pick)} — LIVE`,
               body:  `${awayAbbr} 0 · ${homeAbbr} 0 · Game started`,
               tag:   `live-${pick.id}`, url: '/',
             }, { sport, inTodaysCard: !!pick.inTodaysCard }, env);
@@ -437,7 +448,7 @@ async function runCron(env) {
             const pnl = (pick.inTodaysCard && pick.profitIfWin != null)
               ? ` · +$${Number(pick.profitIfWin).toFixed(2)}` : '';
             await broadcastFiltered({
-              title: `✅ ${pick.pick} — WON`,
+              title: `✅ ${pickLabel(pick)} — WON`,
               body:  `${scoreStr}${pnl}`,
               tag:   `end-${pick.id}`, url: '/',
             }, ctx, env);
@@ -445,13 +456,13 @@ async function runCron(env) {
             const pnl = (pick.inTodaysCard && pick.cost != null)
               ? ` · -$${Number(pick.cost).toFixed(2)}` : '';
             await broadcastFiltered({
-              title: `❌ ${pick.pick} — LOST`,
+              title: `❌ ${pickLabel(pick)} — LOST`,
               body:  `${scoreStr}${pnl}`,
               tag:   `end-${pick.id}`, url: '/',
             }, ctx, env);
           } else {
             await broadcastFiltered({
-              title: `${emoji} ${pick.pick} — FINAL`,
+              title: `${emoji} ${pickLabel(pick)} — FINAL`,
               body:  scoreStr,
               tag:   `end-${pick.id}`, url: '/',
             }, ctx, env);
@@ -521,7 +532,7 @@ async function updateParlayOnLegFinal(parlays, resolvedEspnId, resolvedScores, r
       const killerLeg = legs.find(leg => leg.outcome === 'LOST');
       await broadcastFiltered({
         title: `❌ ${parlay.label} — LOST`,
-        body:  `${killerLeg.pick} didn't hit · -$${Number(parlay.cost || 0).toFixed(2)}`,
+        body:  `${pickLabel(killerLeg)} didn't hit · -$${Number(parlay.cost || 0).toFixed(2)}`,
         tag:   `parlay-final-${parlay.id}`, url: '/',
       }, { isParlay: true }, env);
       parlay.notifiedFinal = true;
@@ -540,7 +551,7 @@ async function updateParlayOnLegFinal(parlays, resolvedEspnId, resolvedScores, r
     } else if (!allSameGame && wonLegs.length > 0) {
       // ── Intermediate: some legs WON, more games still pending ────────────────
       const remaining  = pendingLegs.length;
-      const legNames   = thisGameLegs.filter(l => l.outcome === 'WON').map(l => l.pick).join(' + ');
+      const legNames   = thisGameLegs.filter(l => l.outcome === 'WON').map(l => pickLabel(l)).join(' + ');
       await broadcastFiltered({
         title: `✅ ${parlay.label} — Leg ${wonLegs.length}/${legs.length} hit`,
         body:  `${legNames} · ${remaining} leg${remaining !== 1 ? 's' : ''} remaining`,
