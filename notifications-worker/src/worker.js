@@ -423,6 +423,10 @@ async function runCron(env) {
       const homeFull = (event.competitions?.[0]?.competitors || [])
         .find(c => c.homeAway === 'home')?.team?.displayName || gamePicks[0]?.homeTeam || '';
 
+      // ── Skip entirely if already fully settled (no more state changes possible) ──
+      // This avoids a GAME_STATE write every cron tick after a game is final.
+      if (prev.seenFinal) continue;
+
       // ── Game started ──────────────────────────────────────────────────────
       if (status === 'live' && !prev.seenLive) {
         for (const pick of gamePicks) {
@@ -487,10 +491,25 @@ async function runCron(env) {
         prev.seenFinal = true;
       }
 
-      await env.GAME_STATE.put(gsKey, JSON.stringify({
-        ...prev, status,
-        homeScore: scores.home, awayScore: scores.away, detail,
-      }), { expirationTtl: 172800 });
+      // Only write GAME_STATE if something meaningful changed — avoids burning the
+      // free-tier 1,000 writes/day limit with 480 unconditional writes per game.
+      const nextState = {
+        status,
+        homeScore: scores.home, awayScore: scores.away,
+        seenLive:  prev.seenLive,
+        seenFinal: prev.seenFinal,
+        detail,
+      };
+      const stateChanged = (
+        nextState.status    !== prev.status    ||
+        nextState.homeScore !== prev.homeScore ||
+        nextState.awayScore !== prev.awayScore ||
+        nextState.seenLive  !== prev.seenLive  ||
+        nextState.seenFinal !== prev.seenFinal
+      );
+      if (stateChanged) {
+        await env.GAME_STATE.put(gsKey, JSON.stringify(nextState), { expirationTtl: 172800 });
+      }
     }
   }
 
