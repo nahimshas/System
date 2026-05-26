@@ -397,7 +397,19 @@ async function runCron(env) {
       if (!gamePicks.length) continue;
 
       for (const p of gamePicks) {
-        if (!p.espnEventId) { p.espnEventId = espnId; storeModified = true; }
+        if (!p.espnEventId) {
+          p.espnEventId = espnId;
+          storeModified = true;
+          // Sync espnEventId to the nested copy in store.parlays[i].legs so that
+          // updateParlayOnLegFinal (which reads parlay.legs) can match the leg.
+          // The flat parlay_legs and the nested parlay.legs are separate objects
+          // after JSON.parse, so we must update both.
+          if (p.isParlay && p.parlayId) {
+            const pp = parlays.find(x => x.id === p.parlayId);
+            const nl = pp?.legs?.find(l => l.id === p.id);
+            if (nl && !nl.espnEventId) nl.espnEventId = espnId;
+          }
+        }
       }
 
       const gsKey  = `gs:${sport}:${espnId}`;
