@@ -405,8 +405,11 @@ async function runCron(env) {
         for (const pick of gamePicks) {
           const emoji = SPORT_EMOJI[sport] || '🏆';
           if (pick.isParlay) {
+            // Skip if the parent parlay is already resolved (e.g. leg 1 already lost)
+            const parentParlay = parlays.find(p => p.id === pick.parlayId);
+            if (parentParlay?.notifiedFinal) continue;
             await broadcastFiltered({
-              title: `🎰 Parlay ${pick.parlayLabel} · Leg ${pick.legNum}/${pick.legTotal} LIVE`,
+              title: `🎰 ${pick.parlayLabel} · Leg ${pick.legNum}/${pick.legTotal} LIVE`,
               body:  `${pick.pick} · ${awayAbbr} 0 – ${homeAbbr} 0`,
               tag:   `live-${pick.id}`, url: '/',
             }, { isParlay: true }, env);
@@ -426,47 +429,38 @@ async function runCron(env) {
         const scoreStr = `Final: ${awayAbbr} ${scores.away} · ${homeAbbr} ${scores.home}`;
 
         for (const pick of gamePicks) {
+          if (pick.isParlay) continue; // parlays handled by updateParlayOnLegFinal below
           const emoji   = SPORT_EMOJI[sport] || '🏆';
           const outcome = determineOutcome(pick, homeFull, scores.home, scores.away);
-
-          if (pick.isParlay) {
-            const legEmoji = outcome === 'WON' ? '✅' : outcome === 'LOST' ? '❌' : emoji;
-            const legLabel = outcome ? `Leg ${pick.legNum} ${outcome}` : `Leg ${pick.legNum} FINAL`;
+          const ctx     = { sport, inTodaysCard: !!pick.inTodaysCard };
+          if (outcome === 'WON') {
+            const pnl = (pick.inTodaysCard && pick.profitIfWin != null)
+              ? ` · +$${Number(pick.profitIfWin).toFixed(2)}` : '';
             await broadcastFiltered({
-              title: `${legEmoji} Parlay ${pick.parlayLabel} · ${legLabel}`,
-              body:  `${pick.pick} · ${scoreStr}`,
+              title: `✅ ${pick.pick} — WON`,
+              body:  `${scoreStr}${pnl}`,
               tag:   `end-${pick.id}`, url: '/',
-            }, { isParlay: true }, env);
+            }, ctx, env);
+          } else if (outcome === 'LOST') {
+            const pnl = (pick.inTodaysCard && pick.cost != null)
+              ? ` · -$${Number(pick.cost).toFixed(2)}` : '';
+            await broadcastFiltered({
+              title: `❌ ${pick.pick} — LOST`,
+              body:  `${scoreStr}${pnl}`,
+              tag:   `end-${pick.id}`, url: '/',
+            }, ctx, env);
           } else {
-            const ctx = { sport, inTodaysCard: !!pick.inTodaysCard };
-            if (outcome === 'WON') {
-              // Only show P&L for picks actually in today's card (real money at stake)
-              const pnl = (pick.inTodaysCard && pick.profitIfWin != null)
-                ? ` · +$${Number(pick.profitIfWin).toFixed(2)}` : '';
-              await broadcastFiltered({
-                title: `✅ ${pick.pick} — WON`,
-                body:  `${scoreStr}${pnl}`,
-                tag:   `end-${pick.id}`, url: '/',
-              }, ctx, env);
-            } else if (outcome === 'LOST') {
-              const pnl = (pick.inTodaysCard && pick.cost != null)
-                ? ` · -$${Number(pick.cost).toFixed(2)}` : '';
-              await broadcastFiltered({
-                title: `❌ ${pick.pick} — LOST`,
-                body:  `${scoreStr}${pnl}`,
-                tag:   `end-${pick.id}`, url: '/',
-              }, ctx, env);
-            } else {
-              await broadcastFiltered({
-                title: `${emoji} ${pick.pick} — FINAL`,
-                body:  scoreStr,
-                tag:   `end-${pick.id}`, url: '/',
-              }, ctx, env);
-            }
+            await broadcastFiltered({
+              title: `${emoji} ${pick.pick} — FINAL`,
+              body:  scoreStr,
+              tag:   `end-${pick.id}`, url: '/',
+            }, ctx, env);
           }
         }
 
-        await checkParlayFinal(parlays, sport, espnId, scores, homeFull, env);
+        if (await updateParlayOnLegFinal(parlays, espnId, scores, homeFull, env)) {
+          storeModified = true;
+        }
         prev.seenFinal = true;
       }
 
@@ -484,45 +478,80 @@ async function runCron(env) {
   }
 }
 
-// ─── Parlay finalization ──────────────────────────────────────────────────────
+// ─── Smart parlay leg resolution ─────────────────────────────────────────────
+//
+// Called each time a game goes final. Handles three cases:
+//   1. Any leg LOST  → notify "Parlay LOST" immediately, ignore remaining legs
+//   2. All legs from SAME game → resolve entire parlay in one notification
+//   3. Sequential legs (different games) → "Leg X/N hit · N remaining" until all done
+//
+// Leg outcomes are persisted on the leg object itself (leg.outcome = 'WON'/'LOST'/null)
+// so state survives across cron ticks. Returns true if the store was modified.
 
-async function checkParlayFinal(parlays, resolvedSport, resolvedEspnId, resolvedScores, resolvedHomeFull, env) {
+async function updateParlayOnLegFinal(parlays, resolvedEspnId, resolvedScores, resolvedHomeFull, env) {
+  let modified = false;
+
   for (const parlay of parlays) {
     if (parlay.notifiedFinal) continue;
     const legs = parlay.legs || [];
     if (!legs.length) continue;
 
-    let allResolved = true;
-    let allWon      = true;
+    // Only process parlays that have at least one leg in this game
+    const thisGameLegs = legs.filter(leg => leg.espnEventId === resolvedEspnId);
+    if (!thisGameLegs.length) continue;
 
-    for (const leg of legs) {
-      if (!leg.espnEventId) { allResolved = false; break; }
-      const gsRaw = await env.GAME_STATE.get(`gs:${leg.sport}:${leg.espnEventId}`);
-      if (!gsRaw) { allResolved = false; break; }
-      const gs = JSON.parse(gsRaw);
-      if (!gs.seenFinal) { allResolved = false; break; }
-      const outcome = determineOutcome(leg, gs.homeFullName || leg.homeTeam, gs.homeScore, gs.awayScore);
-      if (outcome !== 'WON') allWon = false;
+    // Resolve outcomes for all legs from this game
+    for (const leg of thisGameLegs) {
+      if (leg.outcome != null) continue; // already resolved in a previous cron tick
+      leg.outcome = determineOutcome(leg, resolvedHomeFull, resolvedScores.home, resolvedScores.away);
+      // null outcome = push/tie → treat as LOST (conservative)
+      if (leg.outcome === null) leg.outcome = 'LOST';
+      modified = true;
     }
 
-    if (!allResolved) continue;
+    // Are ALL legs of this parlay from the same game?
+    const allSameGame = legs.every(leg => leg.espnEventId === resolvedEspnId);
 
-    if (allWon) {
+    const anyLost    = legs.some(leg => leg.outcome === 'LOST');
+    const wonLegs    = legs.filter(leg => leg.outcome === 'WON');
+    const pendingLegs = legs.filter(leg => leg.outcome == null);
+
+    if (anyLost) {
+      // ── Parlay dead — fire immediately, no more notifications for this parlay ──
+      const killerLeg = legs.find(leg => leg.outcome === 'LOST');
+      await broadcastFiltered({
+        title: `❌ ${parlay.label} — LOST`,
+        body:  `${killerLeg.pick} didn't hit · -$${Number(parlay.cost || 0).toFixed(2)}`,
+        tag:   `parlay-final-${parlay.id}`, url: '/',
+      }, { isParlay: true }, env);
+      parlay.notifiedFinal = true;
+      modified = true;
+
+    } else if (pendingLegs.length === 0) {
+      // ── All legs resolved and all WON ────────────────────────────────────────
       await broadcastFiltered({
         title: `🏆 ${parlay.label} — WON`,
         body:  `All ${legs.length} legs hit · +$${Number(parlay.profitIfWin || 0).toFixed(2)}`,
         tag:   `parlay-final-${parlay.id}`, url: '/',
       }, { isParlay: true }, env);
-    } else {
-      await broadcastFiltered({
-        title: `❌ ${parlay.label} — LOST`,
-        body:  `Parlay lost · -$${Number(parlay.cost || 0).toFixed(2)}`,
-        tag:   `parlay-final-${parlay.id}`, url: '/',
-      }, { isParlay: true }, env);
-    }
+      parlay.notifiedFinal = true;
+      modified = true;
 
-    parlay.notifiedFinal = true;
+    } else if (!allSameGame && wonLegs.length > 0) {
+      // ── Intermediate: some legs WON, more games still pending ────────────────
+      const remaining  = pendingLegs.length;
+      const legNames   = thisGameLegs.filter(l => l.outcome === 'WON').map(l => l.pick).join(' + ');
+      await broadcastFiltered({
+        title: `✅ ${parlay.label} — Leg ${wonLegs.length}/${legs.length} hit`,
+        body:  `${legNames} · ${remaining} leg${remaining !== 1 ? 's' : ''} remaining`,
+        tag:   `parlay-progress-${parlay.id}-${wonLegs.length}`, url: '/',
+      }, { isParlay: true }, env);
+      // notifiedFinal stays false — waiting for remaining legs
+    }
+    // allSameGame + pending: all same-game legs resolve together, no intermediate needed
   }
+
+  return modified;
 }
 
 // ─── HTTP handlers ────────────────────────────────────────────────────────────
