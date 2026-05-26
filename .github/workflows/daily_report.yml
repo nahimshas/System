@@ -116,15 +116,19 @@ jobs:
           python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG $REEVALUATE_ARG $CODE_ONLY_ARG
 
       - name: Notify subscribers — picks ready
-        # Only on real morning runs (not code-only re-renders).
-        # Writes picks directly to Cloudflare KV via the REST API —
-        # bypasses workers.dev Bot Fight Mode entirely.
-        # The picks-ready broadcast is sent by the cron on its first
-        # run after the KV write (broadcast_done flag pattern).
-        if: ${{ github.event.inputs.code_only != 'true' }}
+        # Runs on ALL workflow_dispatch triggers, including code-only re-renders.
+        # code-only runs still need to write picks to KV so that if the morning run's
+        # KV write failed (e.g. transient 429), a code-only re-run can recover it
+        # without burning Odds API credits.  The broadcast_done flag already prevents
+        # double-sending the picks-ready notification.
+        # Skipped only when no_email=true (debug/test runs where picks aren't finalised).
+        if: ${{ github.event.inputs.no_email != 'true' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           PICKS_KV_NAMESPACE:   "673db77b785c4b4b8fd4d8b9d545b490"
+          # Account ID is static — hardcoded to eliminate the /accounts API call on
+          # every run (one fewer round-trip that can fail with a transient 429).
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           python3 - <<'PYEOF'
           import json, os, urllib.request, datetime
@@ -150,20 +154,23 @@ jobs:
               print('CLOUDFLARE_API_TOKEN or PICKS_KV_NAMESPACE not set — skipping')
               exit(0)
 
-          # Resolve account ID from the API token
-          def cf_get(path):
-              req = urllib.request.Request(
-                  f'https://api.cloudflare.com/client/v4{path}',
-                  headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
-              )
-              with urllib.request.urlopen(req, timeout=15) as r:
-                  return json.loads(r.read())
-
-          accounts = cf_get('/accounts?per_page=1').get('result', [])
-          if not accounts:
-              print('Could not resolve Cloudflare account ID — skipping')
-              exit(0)
-          account_id = accounts[0]['id']
+          # Resolve account ID — prefer hardcoded var (zero extra API call),
+          # fall back to the /accounts lookup if the var isn't set yet.
+          account_id = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '').strip()
+          if not account_id:
+              def cf_get(path):
+                  req = urllib.request.Request(
+                      f'https://api.cloudflare.com/client/v4{path}',
+                      headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
+                  )
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      return json.loads(r.read())
+              accounts = cf_get('/accounts?per_page=1').get('result', [])
+              if not accounts:
+                  print('Could not resolve Cloudflare account ID — skipping')
+                  exit(0)
+              account_id = accounts[0]['id']
+              print(f'Tip: set CLOUDFLARE_ACCOUNT_ID={account_id} as a GitHub Actions variable to skip this lookup')
 
           singles_display = state.get('singles_display', [])
           # state['singles'] = 5 budget-allocated Today's Card picks
