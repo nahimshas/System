@@ -3090,12 +3090,31 @@
     // ── 5. Live today P&L: scan DOM for live-settled cards ────────────────
     // Cards settled live (applyCard / applyIplEvent) have data-live-result
     // but NOT data-in-history="1" (those are already in the JSON).
+    // Only count cards whose game commences on today's local date — this prevents
+    // yesterday's settled cards (still in the HTML before the morning run) from
+    // leaking into today's heatmap cell.
     function getLiveTodayPnl() {
       var livePnl = 0, hasAny = false;
+      var tKey = todayKey(); // "YYYY-MM-DD" in local time
+
+      function cardIsToday(c) {
+        var ct = c.getAttribute("data-commence-time");
+        if (!ct) return true; // no timestamp → don't filter out (safe default)
+        try {
+          var d = new Date(ct);
+          if (isNaN(d.getTime())) return true;
+          var cardKey = d.getFullYear() + "-" +
+                        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+                        String(d.getDate()).padStart(2, "0");
+          return cardKey === tKey;
+        } catch (e) { return true; }
+      }
+
       // Singles
       document.querySelectorAll(".card[data-home-team][data-in-budget='true']").forEach(function (c) {
         var result = c.getAttribute("data-live-result");
         if (!result || c.getAttribute("data-in-history") === "1") return;
+        if (!cardIsToday(c)) return;
         var cost   = parseFloat(c.getAttribute("data-cost")   || "0");
         var profit = parseFloat(c.getAttribute("data-profit") || "0");
         livePnl += (result === "WON" ? profit : result === "PUSH" ? 0 : -cost);
@@ -3105,6 +3124,7 @@
       document.querySelectorAll(".alloc-card[data-legs]").forEach(function (c) {
         var result = c.getAttribute("data-live-result");
         if (!result || c.getAttribute("data-in-history") === "1") return;
+        if (!cardIsToday(c)) return;
         var cost   = parseFloat(c.getAttribute("data-cost")   || "0");
         var profit = parseFloat(c.getAttribute("data-profit") || "0");
         livePnl += (result === "WON" ? profit : result === "PUSH" ? 0 : -cost);
