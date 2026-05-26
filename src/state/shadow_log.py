@@ -30,7 +30,7 @@ import json
 import logging
 import os
 import tempfile
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set
 
@@ -442,7 +442,10 @@ def settle_shadow_from_espn(today: date) -> int:
     Supported sports:
       • NBA, MLB       — via _fetch_espn_final_scores (ESPN_SPORT_PATHS)
       • NHL, WNBA, MLS — via _fetch_watchlist_final_scores (ESPN_WATCHLIST_PATHS)
-      • IPL, NFL       — skipped (IPL uses Cricbuzz; NFL out of season)
+      • IPL            — via Cricbuzz (_settle_ipl_pick), using commence_time
+                         to recover the actual game date (shadow run-date is
+                         always one day earlier than the game date for IPL)
+      • NFL            — skipped (out of season)
 
     Idempotent: entries already settled (outcome != None) are skipped.
     Today's picks are never settled (games not yet finished).
@@ -463,7 +466,8 @@ def settle_shadow_from_espn(today: date) -> int:
     # Sports that have ESPN paths we can use
     MAIN_SPORTS      = {"NBA", "MLB"}               # _fetch_espn_final_scores
     WATCHLIST_SPORTS = {"NHL", "WNBA", "MLS"}       # _fetch_watchlist_final_scores
-    SUPPORTED        = MAIN_SPORTS | WATCHLIST_SPORTS
+    IPL_SPORTS       = {"IPL"}                      # Cricbuzz via _settle_ipl_pick
+    SUPPORTED        = MAIN_SPORTS | WATCHLIST_SPORTS | IPL_SPORTS
 
     OUTCOME_MAP = {"WON": "win", "LOST": "loss", "PUSH": "push"}
 
@@ -490,10 +494,16 @@ def settle_shadow_from_espn(today: date) -> int:
                 date_str = entry.get("date", "")
                 if not date_str or date_str >= today_str:
                     continue
-                # Game must have started (locked or past commence_time)
-                if not entry.get("game_locked") and not _game_started(
-                    entry.get("commence_time", "")
-                ):
+                # Game must have started. Three gates — any one is sufficient:
+                #   1. game_locked flag explicitly set (normal path)
+                #   2. commence_time parses as a full ISO datetime and is in the past
+                #   3. The entry's run-date itself is more than 1 day old — safe fallback
+                #      for entries where commence_time is a date-only string (e.g. IPL)
+                #      that _game_started() can't parse (returns False silently).
+                _two_days_old = date_str < (today - timedelta(days=1)).isoformat()
+                if (not entry.get("game_locked")
+                        and not _game_started(entry.get("commence_time", ""))
+                        and not _two_days_old):
                     continue
                 sport = (entry.get("sport") or "").upper()
                 if sport not in SUPPORTED:
@@ -527,6 +537,67 @@ def settle_shadow_from_espn(today: date) -> int:
         now_iso = datetime.now(timezone.utc).isoformat()
 
         for (date_str, sport), items in needs_settling.items():
+            # ── IPL: Cricbuzz via commence_time ───────────────────────────────
+            # Shadow run-date ≠ game-date (IPL games are picked the morning before
+            # they play). We have commence_time stored in each entry — use it to
+            # derive the exact game date and call Cricbuzz directly, which is the
+            # same source the normal IPL settler uses.
+            if sport == "IPL":
+                # Each IPL entry stores commence_time — extract the exact game date
+                # from it and call Cricbuzz (same source as the normal IPL settler).
+                # We do NOT call _fetch_watchlist_final_scores here because the ESPN
+                # cricket/ipl endpoint returns 404.
+                try:
+                    from src.data.outcome_checker import _settle_ipl_pick
+                    from datetime import timezone as _tz
+                except Exception as _imp_e:
+                    logger.warning(f"IPL shadow: import failed — {_imp_e}")
+                    continue
+
+                for shard_path, key, entry in items:
+                    game     = entry.get("game", "")
+                    pick     = entry.get("pick", "")
+                    commence = entry.get("commence_time", "")
+                    if not commence:
+                        logger.debug(f"IPL shadow: no commence_time for {game} — skipping")
+                        continue
+                    try:
+                        game_dt   = datetime.fromisoformat(commence.replace("Z", "+00:00"))
+                        game_date = game_dt.astimezone(_tz.utc).date()
+                    except Exception:
+                        logger.debug(f"IPL shadow: bad commence_time '{commence}' — skipping")
+                        continue
+
+                    # Build a minimal pick dict that _settle_ipl_pick expects
+                    parts = game.split(" @ ")
+                    mock_pick = {
+                        "game":      game,
+                        "pick":      pick,
+                        "home_team": parts[1].strip() if len(parts) == 2 else "",
+                        "away_team": parts[0].strip() if len(parts) == 2 else "",
+                        "sport":     "IPL",
+                    }
+                    try:
+                        settled = _settle_ipl_pick(mock_pick, game_date)
+                    except Exception as _ce:
+                        logger.debug(f"IPL shadow: Cricbuzz error for {game} {game_date}: {_ce}")
+                        continue
+                    if not settled:
+                        logger.debug(
+                            f"IPL shadow: result not available for {game} on {game_date}"
+                        )
+                        continue
+                    result, _ = settled
+                    if result not in ("WON", "LOST"):
+                        continue
+                    entry["outcome"]    = OUTCOME_MAP[result]
+                    entry["settled_at"] = now_iso
+                    modified_shards.add(shard_path)
+                    total_settled += 1
+                    logger.info(f"IPL shadow settled (Cricbuzz): {pick} {game_date} → {result}")
+                continue  # done with IPL bucket
+
+            # ── ESPN sports ───────────────────────────────────────────────────
             scores = score_cache.get((date_str, sport), {})
             if not scores:
                 logger.debug(
