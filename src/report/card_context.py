@@ -480,18 +480,32 @@ def _prop_narrative(prop_type: str, player: str, team: str, opponent: str,
 def _wnba_narrative(pick: str, signals: List[str], research: List[str],
                     edge: float) -> str:
     ew = _edge_word(edge)
-    # Pattern: "{team} injuries benefit {other_team} (+X%)"
+    # "{team} injuries benefit {other_team} (+X%)" — {team} is the injured side
     inj_m = _search_first(
         r"(.+?) injuries benefit (.+?) \(\+(\d+(?:\.\d+)?)%\)", signals
     )
-    # Pattern: "{team} lineup impact (-X%)" — that team is short-handed
-    own_inj = _search_first(
+    # "{team} lineup impact (-X%)" — that team is short-handed (hurts them, helps opponent)
+    lineup_m = _search_first(
         r"(.+?) lineup impact \(-(\d+(?:\.\d+)?)%\)", signals
     )
-    # B2B: "{team} on back-to-back (-X%)"
+    # "{team} on back-to-back" — that team has fatigue (hurts them)
     b2b_m = _search_first(r"(.+?) on back-to-back", signals)
 
     parts = []
+
+    # Identify who has back-to-back fatigue (if any)
+    b2b_team      = b2b_m.group(1).strip() if b2b_m else None
+    pick_has_b2b  = b2b_team and (pick in b2b_team or b2b_team in pick)
+    opp_has_b2b   = b2b_team and not pick_has_b2b
+
+    # Identify opponent lineup impact — this is a POSITIVE signal for the pick
+    opp_lineup_pct = None
+    opp_lineup_team = None
+    if lineup_m:
+        lt = lineup_m.group(1).strip()
+        if not (pick in lt or lt in pick):          # lineup hit is on the opponent
+            opp_lineup_team = lt
+            opp_lineup_pct  = float(lineup_m.group(2))
 
     if inj_m:
         injured_team = inj_m.group(1).strip()
@@ -502,26 +516,48 @@ def _wnba_narrative(pick: str, signals: List[str], research: List[str],
         pick_is_injured     = (pick in injured_team or injured_team in pick)
 
         if pick_is_beneficiary:
-            # Pick's opponent is injured
-            if own_inj and (pick in own_inj.group(1) or own_inj.group(1) in pick):
-                own_pct = float(own_inj.group(2))
+            # The injured team is the opponent — good for the pick
+            if opp_lineup_pct is not None:
+                # Both injury signals say the same opponent is hurt
+                own_pct_str = (
+                    f" despite {pick}'s own lineup losses ({opp_lineup_pct:.0f}% pts-share)"
+                    if opp_lineup_team and (pick in opp_lineup_team or opp_lineup_team in pick)
+                    else ""
+                )
                 parts.append(
-                    f"Despite {pick}'s own lineup losses ({own_pct:.0f}% pts-share), "
-                    f"{injured_team}'s heavier absences ({inj_pct:.0f}%) give the model a net edge."
+                    f"Key absences for {injured_team} ({inj_pct:.0f}% of their scoring output) "
+                    f"shift win probability toward {pick}."
                 )
             else:
                 parts.append(
                     f"Key absences for {injured_team} ({inj_pct:.0f}% of their scoring output) "
                     f"shift win probability toward {pick}."
                 )
+
         elif pick_is_injured:
-            # Pick's own team is injured but model still favors them
-            if b2b_m:
-                b2b_team = b2b_m.group(1).strip()
+            # The PICK team has a minor injury — but check if the opponent has a bigger problem
+            if opp_lineup_pct is not None:
+                # Opponent's lineup impact is the dominant reason for the pick
+                b2b_clause = ""
+                if pick_has_b2b:
+                    b2b_clause = ", and despite a back-to-back,"
+                elif opp_has_b2b:
+                    b2b_clause = f", aided by {b2b_team}'s back-to-back fatigue,"
                 parts.append(
-                    f"Although {pick} is missing key contributors ({inj_pct:.0f}% pts-share), "
-                    f"{b2b_team}'s back-to-back fatigue and the underlying net rating advantage "
-                    f"still favor {pick}."
+                    f"{opp_lineup_team}'s heavy injury load ({opp_lineup_pct:.0f}% pts-share missing)"
+                    f"{b2b_clause} gives {pick} a {ew} edge despite their own minor absences "
+                    f"({inj_pct:.0f}%)."
+                )
+            elif pick_has_b2b:
+                # Pick is on back-to-back AND injured — model still likes them
+                parts.append(
+                    f"Despite {pick}'s minor lineup losses ({inj_pct:.0f}% pts-share) and "
+                    f"back-to-back fatigue, the underlying net rating advantage still favors {pick}."
+                )
+            elif opp_has_b2b:
+                parts.append(
+                    f"Although {pick} is missing some contributors ({inj_pct:.0f}% pts-share), "
+                    f"{b2b_team}'s back-to-back fatigue gives {pick} the edge."
                 )
             else:
                 parts.append(
@@ -529,13 +565,20 @@ def _wnba_narrative(pick: str, signals: List[str], research: List[str],
                     f"({inj_pct:.0f}% pts-share), as their net rating edge holds a {ew} advantage."
                 )
 
-    if not parts and b2b_m:
-        b2b_team = b2b_m.group(1).strip()
-        if b2b_team not in pick and pick not in b2b_team:
-            parts.append(
-                f"{b2b_team}'s back-to-back fatigue reduces their effective strength, "
-                f"creating a {ew} {edge*100:.1f}% edge for {pick}."
-            )
+    # No inj_m but opponent has lineup impact
+    if not parts and opp_lineup_pct is not None:
+        b2b_clause = f" aided by {b2b_team}'s back-to-back fatigue and" if opp_has_b2b else ""
+        parts.append(
+            f"Key absences for {opp_lineup_team} ({opp_lineup_pct:.0f}% pts-share missing)"
+            f"{b2b_clause} shift win probability toward {pick}."
+        )
+
+    # No injury signals but opponent is on back-to-back
+    if not parts and opp_has_b2b:
+        parts.append(
+            f"{b2b_team}'s back-to-back fatigue reduces their effective strength, "
+            f"creating a {ew} {edge*100:.1f}% edge for {pick}."
+        )
 
     if not parts:
         parts.append(
