@@ -603,10 +603,16 @@
     #hm-popup-box { background:var(--card); border-radius:16px 16px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); width:100%; max-width:520px; max-height:72vh; overflow-y:auto; }
     .hm-bet-row { padding:7px 0; border-bottom:1px solid var(--border); }
     .hm-bet-row:last-child { border-bottom:none; }
+  /* ── Calibration & Cap tables: hide lower-priority columns on narrow screens ─ */
+  @media (max-width: 500px) {
+    .cal-col-ratio, .cal-col-pred, .cal-col-milestone { display: none; }
+    .cap-col-default, .cap-col-delta, .cap-col-firings { display: none; }
+    .cal-table, .cap-table { min-width: unset !important; font-size: 0.74rem; }
+  }
   </style>
 </head>
 <body>
-<div id="spa-wrap" data-report-date="2026-05-26" data-fresh-odds="true">
+<div id="spa-wrap" data-report-date="2026-05-26" data-fresh-odds="false">
 
 <!-- Header (stats bar) -->
 <div class="app-header">
@@ -2812,6 +2818,25 @@
       <span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · 2026-05-26 15:58:42 UTC</span>
     </summary>
     <div class="card">
+      <details style="margin-bottom:12px;">
+        <summary style="cursor:pointer;list-style:none;font-size:0.85rem;color:var(--teal);padding:4px 0;">▶ How calibration works</summary>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;margin:8px 0 4px;padding-left:6px;border-left:2px solid var(--border);">
+          The calibration engine reads outcomes from every settled pick the model has produced (both displayed and shadow-only)
+          and computes a per-sport, per-market <em>realised vs predicted</em> ratio.
+          As sample size grows, each sport × market auto-promotes through phases:
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li><strong>Phase 0</strong> — &lt; 100 settled picks: no adjustment, raw edges shown.</li>
+            <li><strong>Phase A</strong> — single ratio applied to every pick's edge (effective_edge = raw_edge &times; ratio).</li>
+            <li><strong>Phase B</strong> — per-bucket ratios (50–60% / 60–70% / 70–80% / 80%+) — &ge; 400 settled picks with &ge; 30 per bucket.</li>
+            <li><strong>Phase C</strong> — isotonic regression smooth curve (reserved, future build-out).</li>
+          </ul>
+          <div style="margin-top:6px;">
+            <strong>Reading the ratio:</strong> realised / predicted &middot;
+            <span style="color:var(--green);">&gt; 1.0</span> = model underconfident (real edge bigger than shown),
+            <span style="color:var(--red);">&lt; 1.0</span> = model overconfident (real edge smaller than shown).
+          </div>
+        </div>
+      </details>
       
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:0.74rem;">
         
@@ -2824,16 +2849,16 @@
         
         
       </div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table class="cal-table" style="width:100%;border-collapse:collapse;font-size:0.78rem;min-width:480px;">
           <thead><tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
             <th style="text-align:left;padding:8px 6px;">Sport · Market</th>
             <th style="text-align:right;padding:8px 6px;">Settled/Total</th>
             <th style="text-align:left;padding:8px 6px;">Phase</th>
-            <th style="text-align:right;padding:8px 6px;">Ratio</th>
-            <th style="text-align:right;padding:8px 6px;">Predicted</th>
+            <th class="cal-col-ratio" style="text-align:right;padding:8px 6px;">Ratio</th>
+            <th class="cal-col-pred" style="text-align:right;padding:8px 6px;">Predicted</th>
             <th style="text-align:right;padding:8px 6px;">Realised</th>
-            <th style="text-align:left;padding:8px 6px;">Next milestone</th>
+            <th class="cal-col-milestone" style="text-align:left;padding:8px 6px;">Next milestone</th>
           </tr></thead>
           <tbody>
             
@@ -2841,150 +2866,150 @@
               <td style="padding:7px 6px;"><strong>MLB</strong> · <span style="color:var(--muted);">Moneyline</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">104 / 107</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#0e7490;color:#fff;">A</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--red);">0.810 (-19.0%)</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">61.7%</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--red);">0.810 (-19.0%)</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">61.7%</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">50.0%</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">296 settled picks to Phase B (buckets)</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">296 settled picks to Phase B (buckets)</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>MLB</strong> · <span style="color:var(--muted);">Spread</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">106 / 106</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#0e7490;color:#fff;">A</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--red);">0.852 (-14.8%)</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">66.4%</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--red);">0.852 (-14.8%)</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">66.4%</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">56.6%</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">294 settled picks to Phase B (buckets)</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">294 settled picks to Phase B (buckets)</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>IPL</strong> · <span style="color:var(--muted);">Moneyline</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">11 / 13</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">89 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">89 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>MLB</strong> · <span style="color:var(--muted);">Total</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">90 / 91</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">10 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">10 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>MLS</strong> · <span style="color:var(--muted);">Draw</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">17 / 17</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">83 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">83 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>MLS</strong> · <span style="color:var(--muted);">Moneyline</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">10 / 10</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">90 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">90 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>MLS</strong> · <span style="color:var(--muted);">Spread</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">15 / 17</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">85 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">85 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>MLS</strong> · <span style="color:var(--muted);">Total</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">17 / 17</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">83 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">83 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>NBA</strong> · <span style="color:var(--muted);">Moneyline</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">12 / 12</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">88 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">88 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>NBA</strong> · <span style="color:var(--muted);">Spread</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">21 / 21</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">79 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">79 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>NBA</strong> · <span style="color:var(--muted);">Total</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">30 / 30</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">70 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">70 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>NHL</strong> · <span style="color:var(--muted);">Moneyline</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">12 / 12</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">88 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">88 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>NHL</strong> · <span style="color:var(--muted);">Spread</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">10 / 10</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">90 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">90 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>NHL</strong> · <span style="color:var(--muted);">Total</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">7 / 7</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">93 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">93 settled picks to Phase A</td>
             </tr>
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>WNBA</strong> · <span style="color:var(--muted);">Moneyline</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">30 / 30</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--muted);">—</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">70 settled picks to Phase A</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">70 settled picks to Phase A</td>
             </tr>
             
           </tbody>
@@ -3002,15 +3027,29 @@
       <span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · 2026-05-26 15:57:49 UTC</span>
     </summary>
     <div class="card">
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+      <details style="margin-bottom:12px;">
+        <summary style="cursor:pointer;list-style:none;font-size:0.85rem;color:var(--teal);padding:4px 0;">▶ How auto-adjustment works</summary>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;margin:8px 0 4px;padding-left:6px;border-left:2px solid var(--border);">
+          The system records every pick where the credibility cap fired (capping the model probability toward market).
+          When a cap fires, the shadow log captures both the <em>raw</em> (uncapped) and <em>capped</em> probabilities — so once enough firings have settled,
+          we can compare which prediction was closer to the actual outcome.
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li><strong>Value tuning:</strong> if raw was more accurate → <strong>widen +2.5%</strong>; if capped was more accurate → <strong>tighten -2.5%</strong>; otherwise keep.</li>
+            <li><strong>Mode upgrade:</strong> after &gt; 200 cap firings, the system evaluates whether a smooth tanh saturation (Mode 1) would have beaten Mode 0 (hard clip). If tanh wins by &gt; 1.5% MAE, the cap auto-promotes.</li>
+          </ul>
+          Safety bounds: never tighter than &plusmn;5.0%, never wider than &plusmn;30.0%.
+          Value adjustments throttled to once per 30 days; mode upgrades throttled to once per 60 days. Minimum 50 cap firings required.
+        </div>
+      </details>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table class="cap-table" style="width:100%;border-collapse:collapse;font-size:0.78rem;min-width:420px;">
           <thead><tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
             <th style="text-align:left;padding:8px 6px;">Cap</th>
             <th style="text-align:left;padding:8px 6px;">Mode</th>
             <th style="text-align:right;padding:8px 6px;">Current</th>
-            <th style="text-align:right;padding:8px 6px;">Default</th>
-            <th style="text-align:right;padding:8px 6px;">Δ</th>
-            <th style="text-align:right;padding:8px 6px;">Firings</th>
+            <th class="cap-col-default" style="text-align:right;padding:8px 6px;">Default</th>
+            <th class="cap-col-delta" style="text-align:right;padding:8px 6px;">Δ</th>
+            <th class="cap-col-firings" style="text-align:right;padding:8px 6px;">Firings</th>
             <th style="text-align:right;padding:8px 6px;">Status</th>
           </tr></thead>
           <tbody>
@@ -3019,9 +3058,9 @@
               <td style="padding:7px 6px;font-weight:600;">NBA Moneylines</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">4</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">4</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (4 / 50 cap firings)</td>
             </tr>
             
@@ -3029,9 +3068,9 @@
               <td style="padding:7px 6px;font-weight:600;">NBA Spreads</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">2</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">2</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (2 / 50 cap firings)</td>
             </tr>
             
@@ -3039,9 +3078,9 @@
               <td style="padding:7px 6px;font-weight:600;">NBA Over/Unders</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (0 / 50 cap firings)</td>
             </tr>
             
@@ -3049,9 +3088,9 @@
               <td style="padding:7px 6px;font-weight:600;">NBA Props</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (0 / 50 cap firings)</td>
             </tr>
             
@@ -3059,9 +3098,9 @@
               <td style="padding:7px 6px;font-weight:600;">MLB Moneylines</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">4</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">4</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (4 / 50 cap firings)</td>
             </tr>
             
@@ -3069,9 +3108,9 @@
               <td style="padding:7px 6px;font-weight:600;">MLB Spreads</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">1</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">1</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (1 / 50 cap firings)</td>
             </tr>
             
@@ -3079,9 +3118,9 @@
               <td style="padding:7px 6px;font-weight:600;">MLB Over/Unders</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">18</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">18</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (18 / 50 cap firings)</td>
             </tr>
             
@@ -3089,9 +3128,9 @@
               <td style="padding:7px 6px;font-weight:600;">MLB Props</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (0 / 50 cap firings)</td>
             </tr>
             
@@ -3099,9 +3138,9 @@
               <td style="padding:7px 6px;font-weight:600;">NFL Moneylines</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (0 / 50 cap firings)</td>
             </tr>
             
@@ -3109,9 +3148,9 @@
               <td style="padding:7px 6px;font-weight:600;">NFL Spreads</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (0 / 50 cap firings)</td>
             </tr>
             
@@ -3119,9 +3158,9 @@
               <td style="padding:7px 6px;font-weight:600;">NFL Over/Unders</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (0 / 50 cap firings)</td>
             </tr>
             
@@ -3129,9 +3168,9 @@
               <td style="padding:7px 6px;font-weight:600;">NHL Moneylines</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">5</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">5</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (5 / 50 cap firings)</td>
             </tr>
             
@@ -3139,9 +3178,9 @@
               <td style="padding:7px 6px;font-weight:600;">NHL Spreads</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">6</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">6</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (6 / 50 cap firings)</td>
             </tr>
             
@@ -3149,9 +3188,9 @@
               <td style="padding:7px 6px;font-weight:600;">NHL Over/Unders</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">3</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">3</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (3 / 50 cap firings)</td>
             </tr>
             
@@ -3159,9 +3198,9 @@
               <td style="padding:7px 6px;font-weight:600;">MLS Moneylines</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;10.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">6</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">6</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (6 / 50 cap firings)</td>
             </tr>
             
@@ -3169,9 +3208,9 @@
               <td style="padding:7px 6px;font-weight:600;">MLS Spreads</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;10.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">7</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">7</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (7 / 50 cap firings)</td>
             </tr>
             
@@ -3179,9 +3218,9 @@
               <td style="padding:7px 6px;font-weight:600;">MLS Over/Unders</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;10.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">15</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">15</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (15 / 50 cap firings)</td>
             </tr>
             
@@ -3189,9 +3228,9 @@
               <td style="padding:7px 6px;font-weight:600;">MLS Draws</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;10.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (0 / 50 cap firings)</td>
             </tr>
             
@@ -3199,9 +3238,9 @@
               <td style="padding:7px 6px;font-weight:600;">WNBA Moneylines</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">14</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">14</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (14 / 50 cap firings)</td>
             </tr>
             
@@ -3209,9 +3248,9 @@
               <td style="padding:7px 6px;font-weight:600;">IPL Moneylines</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">3</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;15.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">3</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (3 / 50 cap firings)</td>
             </tr>
             
@@ -3239,7 +3278,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 26, 2026 at 08:58 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 26, 2026 at 09:17 AM PDT</div>
         </div>
         
       </div>
