@@ -299,8 +299,10 @@ jobs:
 
           # Write picks directly to KV (bypasses workers.dev Bot Fight Mode)
           # Retry up to 3 times with exponential backoff to handle transient 429s.
-          import time
-          kv_url  = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/storage/kv/namespaces/{ns_id}/values/picks:{today}'
+          import time, urllib.parse
+          # URL-encode the key name so the colon in "picks:YYYY-MM-DD" is safe in the path.
+          kv_key  = urllib.parse.quote(f'picks:{today}', safe='')
+          kv_url  = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/storage/kv/namespaces/{ns_id}/values/{kv_key}'
           kv_data = json.dumps(payload).encode()
 
           kv_success = False
@@ -324,6 +326,12 @@ jobs:
                           break
                       else:
                           print(f'KV write attempt {attempt} failed: {result}')
+              except urllib.error.HTTPError as e:
+                  body = ''
+                  try: body = e.read().decode('utf-8', errors='replace')[:400]
+                  except: pass
+                  retry_after = e.headers.get('Retry-After', '')
+                  print(f'KV write attempt {attempt} HTTP {e.code}: {body} | Retry-After: {retry_after}')
               except Exception as e:
                   print(f'KV write attempt {attempt} error: {e}')
               if attempt < 3:
