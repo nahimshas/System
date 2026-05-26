@@ -318,6 +318,7 @@ jobs:
         run: |
           cp docs/index.html /tmp/report.html
           cp docs/index_spa.html /tmp/report_spa.html
+          cp docs/sw.js /tmp/sw.js
           cp -r state /tmp/state 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -325,8 +326,9 @@ jobs:
           git reset --hard origin/main
           cp /tmp/report.html docs/index.html
           cp /tmp/report_spa.html docs/index_spa.html
+          cp /tmp/sw.js docs/sw.js
           mkdir -p state
           cp -r /tmp/state/. state/ 2>/dev/null || true
-          git add docs/index.html docs/index_spa.html state/
+          git add docs/index.html docs/index_spa.html docs/sw.js state/
           git diff --cached --quiet || git commit -m "Report: $(date +'%Y-%m-%d %H:%M UTC')"
           git push
