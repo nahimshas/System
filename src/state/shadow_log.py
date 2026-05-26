@@ -543,58 +543,49 @@ def settle_shadow_from_espn(today: date) -> int:
             # derive the exact game date and call Cricbuzz directly, which is the
             # same source the normal IPL settler uses.
             if sport == "IPL":
-                # Each IPL entry stores commence_time — extract the exact game date
-                # from it and call Cricbuzz (same source as the normal IPL settler).
-                # We do NOT call _fetch_watchlist_final_scores here because the ESPN
-                # cricket/ipl endpoint returns 404.
-                try:
-                    from src.data.outcome_checker import _settle_ipl_pick
-                    from datetime import timezone as _tz
-                except Exception as _imp_e:
-                    logger.warning(f"IPL shadow: import failed — {_imp_e}")
-                    continue
+                # IPL shadow run-date is always one day earlier than the game date in
+                # watchlist_history.json, so settle_from_history() (which matches by
+                # stable key including date) never finds these entries.
+                #
+                # Fix: match by (game, pick) ignoring date — safe because the game
+                # string includes home/away order ("SRH @ CSK" vs "CSK @ SRH"), making
+                # each venue-specific matchup unique within a season.
+                #
+                # We do NOT use Cricbuzz/ESPN here. Those are designed for real-time
+                # settlement and produce incorrect results on historical dates (the ESPN
+                # cricket/8048 fallback gets the winner wrong for past matches).
+                # watchlist_history.json is already verified by the normal settler.
+                # Entries not yet in history are left unsettled for a future run.
+                wl_hist_path = Path("state/watchlist_history.json")
+                ipl_hist_lookup: Dict[tuple, str] = {}
+                if wl_hist_path.exists():
+                    try:
+                        with open(wl_hist_path) as _f:
+                            wl_hist = json.load(_f)
+                        for rec in wl_hist:
+                            if rec.get("sport") != "IPL":
+                                continue
+                            _hk = (rec.get("game", ""), rec.get("pick", ""))
+                            if _hk not in ipl_hist_lookup:
+                                ipl_hist_lookup[_hk] = rec.get("result", "")
+                    except Exception as _he:
+                        logger.warning(f"IPL shadow: failed to read watchlist_history: {_he}")
 
                 for shard_path, key, entry in items:
-                    game     = entry.get("game", "")
-                    pick     = entry.get("pick", "")
-                    commence = entry.get("commence_time", "")
-                    if not commence:
-                        logger.debug(f"IPL shadow: no commence_time for {game} — skipping")
-                        continue
-                    try:
-                        game_dt   = datetime.fromisoformat(commence.replace("Z", "+00:00"))
-                        game_date = game_dt.astimezone(_tz.utc).date()
-                    except Exception:
-                        logger.debug(f"IPL shadow: bad commence_time '{commence}' — skipping")
-                        continue
-
-                    # Build a minimal pick dict that _settle_ipl_pick expects
-                    parts = game.split(" @ ")
-                    mock_pick = {
-                        "game":      game,
-                        "pick":      pick,
-                        "home_team": parts[1].strip() if len(parts) == 2 else "",
-                        "away_team": parts[0].strip() if len(parts) == 2 else "",
-                        "sport":     "IPL",
-                    }
-                    try:
-                        settled = _settle_ipl_pick(mock_pick, game_date)
-                    except Exception as _ce:
-                        logger.debug(f"IPL shadow: Cricbuzz error for {game} {game_date}: {_ce}")
-                        continue
-                    if not settled:
+                    game = entry.get("game", "")
+                    pick = entry.get("pick", "")
+                    hist_result = ipl_hist_lookup.get((game, pick), "")
+                    if hist_result not in ("WON", "LOST", "PUSH"):
                         logger.debug(
-                            f"IPL shadow: result not available for {game} on {game_date}"
+                            f"IPL shadow: no history match for game='{game}' pick='{pick}'"
+                            " — leaving unsettled"
                         )
                         continue
-                    result, _ = settled
-                    if result not in ("WON", "LOST"):
-                        continue
-                    entry["outcome"]    = OUTCOME_MAP[result]
+                    entry["outcome"]    = OUTCOME_MAP[hist_result]
                     entry["settled_at"] = now_iso
                     modified_shards.add(shard_path)
                     total_settled += 1
-                    logger.info(f"IPL shadow settled (Cricbuzz): {pick} {game_date} → {result}")
+                    logger.info(f"IPL shadow settled (history): {pick} → {hist_result}")
                 continue  # done with IPL bucket
 
             # ── ESPN sports ───────────────────────────────────────────────────
