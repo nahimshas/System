@@ -197,6 +197,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_props_display   = [_hydrate_prop(d) for d in final_props_display]
             final_props           = [_hydrate_prop(d) for d in final_props]
             final_mls_display     = [_hydrate_bet(d) for d in final_mls_display]
+            final_wnba_display    = [_hydrate_bet(d) for d in final_wnba_display]
+            final_ipl_display     = [_hydrate_bet(d) for d in final_ipl_display]
 
             report_data = build_report(
                 run_date=today,
