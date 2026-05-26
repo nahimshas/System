@@ -291,27 +291,38 @@ jobs:
           }
 
           # Write picks directly to KV (bypasses workers.dev Bot Fight Mode)
+          # Retry up to 3 times with exponential backoff to handle transient 429s.
+          import time
           kv_url  = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/storage/kv/namespaces/{ns_id}/values/picks:{today}'
           kv_data = json.dumps(payload).encode()
-          kv_req  = urllib.request.Request(
-              kv_url, data=kv_data,
-              headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
-              method='PUT',
-          )
-          try:
-              with urllib.request.urlopen(kv_req, timeout=15) as r:
-                  result = json.loads(r.read())
-                  if result.get('success'):
-                      by_sport = {}
-                      for s in stored_singles:
-                          by_sport[s['sport']] = by_sport.get(s['sport'], 0) + 1
-                      sport_str = ', '.join(f'{sp}:{n}' for sp, n in sorted(by_sport.items()))
-                      print(f'Picks stored in KV: {pick_count} Today\'s Card, {len(stored_singles)} tab picks ({sport_str}), {len(parlay_legs)} parlay legs ({today})')
-                      print('Picks-ready broadcast will fire on next cron tick (≤3 min)')
-                  else:
-                      print(f'KV write failed: {result}')
-          except Exception as e:
-              print(f'KV write failed (non-fatal): {e}')
+
+          kv_success = False
+          for attempt in range(1, 4):
+              kv_req = urllib.request.Request(
+                  kv_url, data=kv_data,
+                  headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
+                  method='PUT',
+              )
+              try:
+                  with urllib.request.urlopen(kv_req, timeout=15) as r:
+                      result = json.loads(r.read())
+                      if result.get('success'):
+                          by_sport = {}
+                          for s in stored_singles:
+                              by_sport[s['sport']] = by_sport.get(s['sport'], 0) + 1
+                          sport_str = ', '.join(f'{sp}:{n}' for sp, n in sorted(by_sport.items()))
+                          print(f'Picks stored in KV: {pick_count} Today\'s Card, {len(stored_singles)} tab picks ({sport_str}), {len(parlay_legs)} parlay legs ({today})')
+                          print('Picks-ready broadcast will fire on next cron tick (≤3 min)')
+                          kv_success = True
+                          break
+                      else:
+                          print(f'KV write attempt {attempt} failed: {result}')
+              except Exception as e:
+                  print(f'KV write attempt {attempt} error: {e}')
+              if attempt < 3:
+                  time.sleep(attempt * 4)  # 4s, then 8s before final attempt
+          if not kv_success:
+              print('KV write failed after 3 attempts (non-fatal — picks-ready notification skipped today)')
           PYEOF
 
       - name: Commit updated report and state to repo

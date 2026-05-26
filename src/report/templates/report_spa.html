@@ -767,6 +767,12 @@
     #hm-popup-box { background:var(--card); border-radius:16px 16px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); width:100%; max-width:520px; max-height:72vh; overflow-y:auto; }
     .hm-bet-row { padding:7px 0; border-bottom:1px solid var(--border); }
     .hm-bet-row:last-child { border-bottom:none; }
+  /* ── Calibration & Cap tables: hide lower-priority columns on narrow screens ─ */
+  @media (max-width: 500px) {
+    .cal-col-ratio, .cal-col-pred, .cal-col-milestone { display: none; }
+    .cap-col-default, .cap-col-delta, .cap-col-firings { display: none; }
+    .cal-table, .cap-table { min-width: unset !important; font-size: 0.74rem; }
+  }
   </style>
 </head>
 <body>
@@ -1438,6 +1444,25 @@
       {% if cal.computed_at %}<span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · {{ cal.computed_at[:19].replace('T', ' ') }} UTC</span>{% endif %}
     </summary>
     <div class="card">
+      <details style="margin-bottom:12px;">
+        <summary style="cursor:pointer;list-style:none;font-size:0.85rem;color:var(--teal);padding:4px 0;">▶ How calibration works</summary>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;margin:8px 0 4px;padding-left:6px;border-left:2px solid var(--border);">
+          The calibration engine reads outcomes from every settled pick the model has produced (both displayed and shadow-only)
+          and computes a per-sport, per-market <em>realised vs predicted</em> ratio.
+          As sample size grows, each sport × market auto-promotes through phases:
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li><strong>Phase 0</strong> — &lt; {{ cal.thresholds.phase_a_min or 100 }} settled picks: no adjustment, raw edges shown.</li>
+            <li><strong>Phase A</strong> — single ratio applied to every pick's edge (effective_edge = raw_edge &times; ratio).</li>
+            <li><strong>Phase B</strong> — per-bucket ratios (50–60% / 60–70% / 70–80% / 80%+) — &ge; {{ cal.thresholds.phase_b_min or 400 }} settled picks with &ge; {{ cal.thresholds.bucket_min_n or 30 }} per bucket.</li>
+            <li><strong>Phase C</strong> — isotonic regression smooth curve (reserved, future build-out).</li>
+          </ul>
+          <div style="margin-top:6px;">
+            <strong>Reading the ratio:</strong> realised / predicted &middot;
+            <span style="color:var(--green);">&gt; 1.0</span> = model underconfident (real edge bigger than shown),
+            <span style="color:var(--red);">&lt; 1.0</span> = model overconfident (real edge smaller than shown).
+          </div>
+        </div>
+      </details>
       {% if not cal.has_data %}
       <div style="font-size:0.85rem;color:var(--muted);">No calibration data yet. Collecting shadow picks — will activate at ≥ {{ cal.thresholds.phase_a_min or 100 }} settled picks per market.</div>
       {% else %}
@@ -1447,16 +1472,16 @@
         <span style="padding:3px 9px;border-radius:99px;background:{% if phase == '0' %}#3b3a52{% elif phase == 'A' %}#0e7490{% elif phase == 'B' %}#0f766e{% else %}#14532d{% endif %};color:#fff;font-weight:600;">Phase {{ phase }}: {{ count }} market{{ 's' if count != 1 else '' }}</span>
         {% endif %}{% endfor %}
       </div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table class="cal-table" style="width:100%;border-collapse:collapse;font-size:0.78rem;min-width:480px;">
           <thead><tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
             <th style="text-align:left;padding:8px 6px;">Sport · Market</th>
             <th style="text-align:right;padding:8px 6px;">Settled/Total</th>
             <th style="text-align:left;padding:8px 6px;">Phase</th>
-            <th style="text-align:right;padding:8px 6px;">Ratio</th>
-            <th style="text-align:right;padding:8px 6px;">Predicted</th>
+            <th class="cal-col-ratio" style="text-align:right;padding:8px 6px;">Ratio</th>
+            <th class="cal-col-pred" style="text-align:right;padding:8px 6px;">Predicted</th>
             <th style="text-align:right;padding:8px 6px;">Realised</th>
-            <th style="text-align:left;padding:8px 6px;">Next milestone</th>
+            <th class="cal-col-milestone" style="text-align:left;padding:8px 6px;">Next milestone</th>
           </tr></thead>
           <tbody>
             {% for m in cal.markets %}
@@ -1464,10 +1489,10 @@
               <td style="padding:7px 6px;"><strong>{{ m.sport }}</strong> · <span style="color:var(--muted);">{{ m.market_type }}</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">{{ m.n_settled }} / {{ m.n_total }}</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:{% if m.phase == '0' %}#3b3a52{% elif m.phase == 'A' %}#0e7490{% elif m.phase == 'B' %}#0f766e{% else %}#14532d{% endif %};color:#fff;">{{ m.phase }}</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:{% if m.phase == '0' %}var(--muted){% elif m.ratio_drift_pct < -3 %}var(--red){% elif m.ratio_drift_pct > 3 %}var(--green){% else %}var(--text){% endif %};">{{ m.ratio_display }}</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">{% if m.predicted_rate_pct is not none %}{{ m.predicted_rate_pct }}%{% else %}—{% endif %}</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:{% if m.phase == '0' %}var(--muted){% elif m.ratio_drift_pct < -3 %}var(--red){% elif m.ratio_drift_pct > 3 %}var(--green){% else %}var(--text){% endif %};">{{ m.ratio_display }}</td>
+              <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">{% if m.predicted_rate_pct is not none %}{{ m.predicted_rate_pct }}%{% else %}—{% endif %}</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">{% if m.realized_rate_pct is not none %}{{ m.realized_rate_pct }}%{% else %}—{% endif %}</td>
-              <td style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">{{ m.next_milestone }}</td>
+              <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">{{ m.next_milestone }}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -1485,15 +1510,29 @@
       {% if caps.computed_at %}<span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · {{ caps.computed_at[:19].replace('T', ' ') }} UTC</span>{% endif %}
     </summary>
     <div class="card">
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+      <details style="margin-bottom:12px;">
+        <summary style="cursor:pointer;list-style:none;font-size:0.85rem;color:var(--teal);padding:4px 0;">▶ How auto-adjustment works</summary>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;margin:8px 0 4px;padding-left:6px;border-left:2px solid var(--border);">
+          The system records every pick where the credibility cap fired (capping the model probability toward market).
+          When a cap fires, the shadow log captures both the <em>raw</em> (uncapped) and <em>capped</em> probabilities — so once enough firings have settled,
+          we can compare which prediction was closer to the actual outcome.
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li><strong>Value tuning:</strong> if raw was more accurate → <strong>widen +{{ (caps.bounds.tick * 100) | round(1) }}%</strong>; if capped was more accurate → <strong>tighten -{{ (caps.bounds.tick * 100) | round(1) }}%</strong>; otherwise keep.</li>
+            <li><strong>Mode upgrade:</strong> after &gt; 200 cap firings, the system evaluates whether a smooth tanh saturation (Mode 1) would have beaten Mode 0 (hard clip). If tanh wins by &gt; 1.5% MAE, the cap auto-promotes.</li>
+          </ul>
+          Safety bounds: never tighter than &plusmn;{{ (caps.bounds.min * 100) | round(0) }}%, never wider than &plusmn;{{ (caps.bounds.max * 100) | round(0) }}%.
+          Value adjustments throttled to once per {{ caps.bounds.throttle_days }} days; mode upgrades throttled to once per 60 days. Minimum {{ caps.bounds.min_triggers }} cap firings required.
+        </div>
+      </details>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table class="cap-table" style="width:100%;border-collapse:collapse;font-size:0.78rem;min-width:420px;">
           <thead><tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
             <th style="text-align:left;padding:8px 6px;">Cap</th>
             <th style="text-align:left;padding:8px 6px;">Mode</th>
             <th style="text-align:right;padding:8px 6px;">Current</th>
-            <th style="text-align:right;padding:8px 6px;">Default</th>
-            <th style="text-align:right;padding:8px 6px;">Δ</th>
-            <th style="text-align:right;padding:8px 6px;">Firings</th>
+            <th class="cap-col-default" style="text-align:right;padding:8px 6px;">Default</th>
+            <th class="cap-col-delta" style="text-align:right;padding:8px 6px;">Δ</th>
+            <th class="cap-col-firings" style="text-align:right;padding:8px 6px;">Firings</th>
             <th style="text-align:right;padding:8px 6px;">Status</th>
           </tr></thead>
           <tbody>
@@ -1502,9 +1541,9 @@
               <td style="padding:7px 6px;font-weight:600;">{{ c.display_label }}</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:{% if c.current_mode == 0 %}#3b3a52{% elif c.current_mode == 1 %}#0e7490{% else %}#14532d{% endif %};color:#fff;">{{ c.current_mode }} — {{ c.current_mode_label }}</span></td>
               <td style="text-align:right;padding:7px 6px;">&plusmn;{{ (c.current * 100) | round(1) }}%</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;{{ (c.default * 100) | round(1) }}%</td>
-              <td style="text-align:right;padding:7px 6px;color:{% if c.delta_from_default > 0.0005 %}var(--green){% elif c.delta_from_default < -0.0005 %}var(--yellow){% else %}var(--muted){% endif %};">{{ c.delta_display }}</td>
-              <td style="text-align:right;padding:7px 6px;color:var(--muted);">{{ c.counterfactual.trigger_count if c.counterfactual.trigger_count else '—' }}</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;{{ (c.default * 100) | round(1) }}%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:{% if c.delta_from_default > 0.0005 %}var(--green){% elif c.delta_from_default < -0.0005 %}var(--yellow){% else %}var(--muted){% endif %};">{{ c.delta_display }}</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">{{ c.counterfactual.trigger_count if c.counterfactual.trigger_count else '—' }}</td>
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">{{ c.status_label }}</td>
             </tr>
             {% endfor %}
