@@ -428,6 +428,187 @@ def _key_for_history_rec(rec: Dict[str, Any]) -> Optional[str]:
     return _stable_key(d, sport, game, _market_type(wrapper), _pick_side(wrapper))
 
 
+def settle_shadow_from_espn(today: date) -> int:
+    """
+    Settle shadow log entries that have no outcome but whose game is past,
+    using ESPN final scores directly.
+
+    This closes the gap between `n_total` and `n_settled` in the calibration
+    panel.  `settle_from_history()` only covers budget picks (those in
+    history.json).  Shadow-only display picks (displayed_in_top=False) that
+    were analyzed but not allocated budget never appear in history.json and
+    would remain permanently unsettled without this function.
+
+    Supported sports:
+      • NBA, MLB       — via _fetch_espn_final_scores (ESPN_SPORT_PATHS)
+      • NHL, WNBA, MLS — via _fetch_watchlist_final_scores (ESPN_WATCHLIST_PATHS)
+      • IPL, NFL       — skipped (IPL uses Cricbuzz; NFL out of season)
+
+    Idempotent: entries already settled (outcome != None) are skipped.
+    Today's picks are never settled (games not yet finished).
+    Failures are logged but never raised — shadow settlement is non-critical.
+
+    Returns the number of shadow log entries newly settled.
+    """
+    # Lazy imports to avoid circular-import issues at module load time
+    from src.data.outcome_checker import (
+        _fetch_espn_final_scores,
+        _fetch_watchlist_final_scores,
+        _find_game_score,
+        _determine_outcome,
+        _determine_mls_outcome,
+    )
+    from collections import defaultdict
+
+    # Sports that have ESPN paths we can use
+    MAIN_SPORTS      = {"NBA", "MLB"}               # _fetch_espn_final_scores
+    WATCHLIST_SPORTS = {"NHL", "WNBA", "MLS"}       # _fetch_watchlist_final_scores
+    SUPPORTED        = MAIN_SPORTS | WATCHLIST_SPORTS
+
+    OUTCOME_MAP = {"WON": "win", "LOST": "loss", "PUSH": "push"}
+
+    try:
+        if not SHADOW_LOG_DIR.exists():
+            return 0
+
+        today_str = today.isoformat()
+
+        # ── Step 1: scan all shards; collect unsettled past entries ──────────
+        # loaded_shards keeps the live dict objects so in-place mutation is reflected
+        # when we write them back in step 4.
+        loaded_shards: Dict[Path, Dict[str, Any]] = {}
+        # (date_str, sport) → list of (shard_path, key, entry)
+        needs_settling: Dict[tuple, list] = defaultdict(list)
+
+        for shard_path in sorted(SHADOW_LOG_DIR.glob("*.json")):
+            shard = _load_shard(shard_path)
+            loaded_shards[shard_path] = shard
+            for key, entry in shard.get("entries", {}).items():
+                # Skip already-settled or today's entries
+                if entry.get("outcome") is not None:
+                    continue
+                date_str = entry.get("date", "")
+                if not date_str or date_str >= today_str:
+                    continue
+                # Game must have started (locked or past commence_time)
+                if not entry.get("game_locked") and not _game_started(
+                    entry.get("commence_time", "")
+                ):
+                    continue
+                sport = (entry.get("sport") or "").upper()
+                if sport not in SUPPORTED:
+                    continue
+                needs_settling[(date_str, sport)].append((shard_path, key, entry))
+
+        if not needs_settling:
+            return 0
+
+        n_candidates = sum(len(v) for v in needs_settling.values())
+        logger.info(
+            f"Shadow ESPN settlement: {n_candidates} unsettled past entries found "
+            f"across {len(needs_settling)} (date, sport) pair(s)"
+        )
+
+        # ── Step 2: fetch ESPN scores per (date, sport) — one call per pair ──
+        score_cache: Dict[tuple, Dict] = {}
+        for (date_str, sport) in needs_settling:
+            try:
+                game_date = date.fromisoformat(date_str)
+            except Exception:
+                continue
+            if sport in MAIN_SPORTS:
+                score_cache[(date_str, sport)] = _fetch_espn_final_scores(sport, game_date)
+            else:
+                score_cache[(date_str, sport)] = _fetch_watchlist_final_scores(sport, game_date)
+
+        # ── Step 3: settle entries in-place ──────────────────────────────────
+        modified_shards: Set[Path] = set()
+        total_settled = 0
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        for (date_str, sport), items in needs_settling.items():
+            scores = score_cache.get((date_str, sport), {})
+            if not scores:
+                logger.debug(
+                    f"Shadow ESPN settlement: no ESPN scores for {sport} on {date_str} — "
+                    f"skipping {len(items)} entries"
+                )
+                continue
+
+            for shard_path, key, entry in items:
+                game     = entry.get("game", "")
+                pick     = entry.get("pick", "")
+                bet_type = entry.get("bet_type", "")
+
+                # Parse home/away abbreviations from the game string "AWAY @ HOME"
+                parts = game.split(" @ ")
+                if len(parts) == 2:
+                    away_abbr = parts[0].strip()
+                    home_abbr = parts[1].strip()
+                else:
+                    # Non-standard format — try full string as home (best effort)
+                    away_abbr = ""
+                    home_abbr = game.strip()
+
+                score_data = _find_game_score(scores, home_abbr, away_abbr)
+                if not score_data:
+                    logger.debug(
+                        f"Shadow ESPN settlement: no score match for game '{game}' "
+                        f"({sport} {date_str})"
+                    )
+                    continue
+
+                # Use full ESPN display names for outcome matching (better substring match
+                # than raw Odds API abbreviations stored in the game field).
+                espn_home = score_data.get("home_name", home_abbr)
+                espn_away = score_data.get("away_name", away_abbr)
+
+                if sport == "MLS":
+                    result = _determine_mls_outcome(
+                        pick, bet_type, espn_home, espn_away,
+                        score_data["home_score"], score_data["away_score"],
+                    )
+                else:
+                    result = _determine_outcome(
+                        pick, bet_type, espn_home, espn_away,
+                        score_data["home_score"], score_data["away_score"],
+                    )
+
+                if result not in OUTCOME_MAP:
+                    logger.debug(
+                        f"Shadow ESPN settlement: UNKNOWN result for pick='{pick}' "
+                        f"bet_type='{bet_type}' game='{game}' — skipping"
+                    )
+                    continue
+
+                # Mutate entry in-place — same object as in loaded_shards[shard_path]
+                entry["outcome"]    = OUTCOME_MAP[result]
+                entry["settled_at"] = now_iso
+                modified_shards.add(shard_path)
+                total_settled += 1
+
+        # ── Step 4: persist modified shards ──────────────────────────────────
+        for shard_path in modified_shards:
+            _save_shard_atomic(shard_path, loaded_shards[shard_path])
+
+        if total_settled:
+            logger.info(
+                f"Shadow ESPN settlement: {total_settled} entries settled "
+                f"across {len(modified_shards)} shard(s)"
+            )
+        else:
+            logger.info(
+                f"Shadow ESPN settlement: 0 entries settled "
+                f"({n_candidates} candidates — scores may not yet be final)"
+            )
+
+        return total_settled
+
+    except Exception as e:
+        logger.error(f"Shadow ESPN settlement failed (non-fatal): {e}")
+        return 0
+
+
 def settle_from_history() -> int:
     """
     Read settled outcomes from state/history.json and state/watchlist_history.json

@@ -296,6 +296,18 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     except Exception as _e_shadow_settle:
         logger.warning(f"Shadow log settlement failed (non-fatal): {_e_shadow_settle}")
 
+    # Shadow ESPN settlement: settle shadow-only display picks (displayed_in_top=False)
+    # that never appear in history.json because they weren't budget-allocated.
+    # This closes the n_total vs n_settled gap in the calibration panel.
+    # Uses the same ESPN infrastructure as check_and_settle / check_and_settle_watchlist.
+    try:
+        from src.state.shadow_log import settle_shadow_from_espn
+        _settled_espn = settle_shadow_from_espn(today)
+        if _settled_espn:
+            logger.info(f"Shadow ESPN settlement: {_settled_espn} display-only entries settled")
+    except Exception as _e_espn_settle:
+        logger.warning(f"Shadow ESPN settlement failed (non-fatal): {_e_espn_settle}")
+
     # Cap auto-relaxation: counterfactual analysis on cap-fired picks decides
     # whether each credibility cap should widen, tighten, or stay. Throttled
     # to once per 30 days per cap with hard safety bounds (±5% to ±30%).
