@@ -1496,7 +1496,7 @@
     // Both record and win-rate share the same colour thresholds (≥55% green, ≥45% yellow, else red)
     var winRateColor = winRate !== null ? pctColor(parseFloat(winRate), 60, 45) : "var(--text)";
     if (recEl) {
-      recEl.textContent = won + "W–" + lost + "L";
+      recEl.textContent = won + "–" + lost;
       recEl.style.color = winRateColor;
     }
     if (wrEl) {
@@ -1516,7 +1516,7 @@
 
     // Mirror updates to the header stat bar (hdr-record / hdr-wr / hdr-pnl / hdr-roi)
     var hdrRecEl = document.getElementById("hdr-record");
-    if (hdrRecEl) { hdrRecEl.textContent = won + "W–" + lost + "L"; hdrRecEl.style.color = winRateColor; }
+    if (hdrRecEl) { hdrRecEl.textContent = won + "–" + lost; hdrRecEl.style.color = winRateColor; }
     var hdrWrEl = document.getElementById("hdr-wr");
     if (hdrWrEl) { hdrWrEl.textContent = winRate !== null ? winRate + "%" : "—"; hdrWrEl.style.color = winRateColor; }
     var hdrPnlEl = document.getElementById("hdr-pnl");
