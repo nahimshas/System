@@ -771,6 +771,10 @@
   /* Targets any card that has data-live-result set (live-settled or server-settled). */
   [data-live-result="WON"]  { background: rgba(34,197,94,0.09)  !important; }
   [data-live-result="LOST"] { background: rgba(239,68,68,0.09)  !important; }
+  /* Prop cards use data-prop-result (HIT/MISS/DNP) instead of data-live-result. */
+  [data-prop-result="HIT"]  { background: rgba(34,197,94,0.09)  !important; }
+  [data-prop-result="MISS"] { background: rgba(239,68,68,0.09)  !important; }
+  [data-prop-result="DNP"]  { background: rgba(148,163,184,0.06) !important; }
 
   /* ── Calibration & Cap tables: hide lower-priority columns on narrow screens ─ */
   @media (max-width: 500px) {
