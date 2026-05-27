@@ -405,7 +405,7 @@ def build_report(
             "pct_of_budget": round(par["total_cost"] / DAILY_BUDGET * 100, 1),
             "confidence":    0,
             "locked":        par.get("locked", False),
-            "commence_time": "",
+            "commence_time": min((l.get("commence_time", "") for l in par.get("legs", [])), default=""),
             "bet_type":      "Parlay",
             "pick":          par["label"],
             "legs_json":     legs_json,

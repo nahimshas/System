@@ -776,12 +776,14 @@
     .hm-bet-row { padding:7px 0; border-bottom:1px solid var(--border); }
     .hm-bet-row:last-child { border-bottom:none; }
   /* ── WON / LOST card background wash ────────────────────────────────────────── */
-  /* Targets any card that has data-live-result set (live-settled or server-settled). */
-  [data-live-result="WON"]  { background: rgba(34,197,94,0.09)  !important; }
-  [data-live-result="LOST"] { background: rgba(239,68,68,0.09)  !important; }
+  /* Solid colors: card bg (#1a1d27) interpolated ~20% toward heatmap green/red   */
+  /* — matches the visual weight of a ~±$15 heatmap cell. Using solid (not rgba)   */
+  /* avoids compositing against the near-black page bg instead of the card bg.     */
+  [data-live-result="WON"]  { background: #1c3f32 !important; }
+  [data-live-result="LOST"] { background: #45252d !important; }
   /* Prop cards use data-prop-result (HIT/MISS/DNP) instead of data-live-result. */
-  [data-prop-result="HIT"]  { background: rgba(34,197,94,0.09)  !important; }
-  [data-prop-result="MISS"] { background: rgba(239,68,68,0.09)  !important; }
+  [data-prop-result="HIT"]  { background: #1c3f32 !important; }
+  [data-prop-result="MISS"] { background: #45252d !important; }
   [data-prop-result="DNP"]  { background: rgba(148,163,184,0.06) !important; }
 
   /* ── Calibration & Cap tables: hide lower-priority columns on narrow screens ─ */
