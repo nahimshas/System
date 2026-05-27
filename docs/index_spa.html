@@ -3044,7 +3044,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 27, 2026 at 02:35 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 27, 2026 at 03:09 PM PDT</div>
         </div>
         
       </div>
@@ -5152,7 +5152,7 @@ function toggleCtx(el) {
     // Both record and win-rate share the same colour thresholds (≥55% green, ≥45% yellow, else red)
     var winRateColor = winRate !== null ? pctColor(parseFloat(winRate), 60, 45) : "var(--text)";
     if (recEl) {
-      recEl.textContent = won + "W–" + lost + "L";
+      recEl.textContent = won + "–" + lost;
       recEl.style.color = winRateColor;
     }
     if (wrEl) {
@@ -5172,7 +5172,7 @@ function toggleCtx(el) {
 
     // Mirror updates to the header stat bar (hdr-record / hdr-wr / hdr-pnl / hdr-roi)
     var hdrRecEl = document.getElementById("hdr-record");
-    if (hdrRecEl) { hdrRecEl.textContent = won + "W–" + lost + "L"; hdrRecEl.style.color = winRateColor; }
+    if (hdrRecEl) { hdrRecEl.textContent = won + "–" + lost; hdrRecEl.style.color = winRateColor; }
     var hdrWrEl = document.getElementById("hdr-wr");
     if (hdrWrEl) { hdrWrEl.textContent = winRate !== null ? winRate + "%" : "—"; hdrWrEl.style.color = winRateColor; }
     var hdrPnlEl = document.getElementById("hdr-pnl");
