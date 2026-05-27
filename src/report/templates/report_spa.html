@@ -810,7 +810,7 @@
       <span class="sc-lbl">Win%</span>
     </div>
     <div class="stat-chip">
-      <span class="sc-val {% if hp.total_pnl > 0 %}green{% elif hp.total_pnl < 0 %}red{% endif %}" id="hdr-pnl">${{ "%+.2f"|format(hp.total_pnl) }}</span>
+      <span class="sc-val {% if hp.total_pnl > 0 %}green{% elif hp.total_pnl < 0 %}red{% endif %}" id="hdr-pnl">{{ '+' if hp.total_pnl >= 0 else '-' }}${{ "%.2f"|format(hp.total_pnl|abs) }}</span>
       <span class="sc-lbl">P&amp;L</span>
     </div>
     <div class="stat-chip">
@@ -1208,7 +1208,7 @@
         </div>
         <div class="stat-box">
           <div class="stat-label">Total PnL</div>
-          <div class="stat-value {% if p.total_pnl > 0 %}green{% elif p.total_pnl < 0 %}red{% endif %}" id="perf-pnl">${{ "%+.2f"|format(p.total_pnl) }}</div>
+          <div class="stat-value {% if p.total_pnl > 0 %}green{% elif p.total_pnl < 0 %}red{% endif %}" id="perf-pnl">{{ '+' if p.total_pnl >= 0 else '-' }}${{ "%.2f"|format(p.total_pnl|abs) }}</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">ROI</div>
@@ -1230,7 +1230,7 @@
               <span class="confidence-badge {{ conf }}" style="font-size:0.65rem;">{{ conf }}</span>
             </div>
             <div class="perf-conf-record" style="font-size:0.82rem;">{{ cs.won }}W–{{ cs.lost }}L{% if cs.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ cs.win_rate_pct }}%)</span>{% endif %}</div>
-            <div class="perf-conf-pnl" style="font-size:0.78rem;color:{% if cs.total_pnl > 0 %}var(--green){% elif cs.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">${{ "%+.2f"|format(cs.total_pnl) }}</div>
+            <div class="perf-conf-pnl" style="font-size:0.78rem;color:{% if cs.total_pnl > 0 %}var(--green){% elif cs.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">{{ '+' if cs.total_pnl >= 0 else '-' }}${{ "%.2f"|format(cs.total_pnl|abs) }}</div>
           </div>
           {% endfor %}
           {% if p.by_sport %}
@@ -1249,7 +1249,7 @@
               {% else %}<span style="color:var(--muted);">PARLAYS</span>{% endif %}
             </div>
             <div class="perf-sport-record" style="font-size:0.82rem;">{{ ss.won }}W–{{ ss.lost }}L{% if ss.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ ss.win_rate_pct }}%)</span>{% endif %}</div>
-            <div class="perf-sport-pnl" style="font-size:0.78rem;color:{% if ss.total_pnl > 0 %}var(--green){% elif ss.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">${{ "%+.2f"|format(ss.total_pnl) }}</div>
+            <div class="perf-sport-pnl" style="font-size:0.78rem;color:{% if ss.total_pnl > 0 %}var(--green){% elif ss.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">{{ '+' if ss.total_pnl >= 0 else '-' }}${{ "%.2f"|format(ss.total_pnl|abs) }}</div>
           </div>
           {% endfor %}
           {% endif %}
@@ -1292,7 +1292,7 @@
         </summary>
         <div style="margin-top:12px;">
           <div style="font-size:0.72rem;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.05em;margin-bottom:6px;">
-            Cumulative PnL <span id="chart-pnl-total" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px;color:{% if cd.final_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};">${{ "%+.2f"|format(cd.final_pnl) }} total</span>
+            Cumulative PnL <span id="chart-pnl-total" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px;color:{% if cd.final_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};">{{ '+' if cd.final_pnl >= 0 else '-' }}${{ "%.2f"|format(cd.final_pnl|abs) }} total</span>
           </div>
           <svg id="svg-pnl" viewBox="0 0 {{ cd.svg_w }} {{ cd.svg_h }}" style="width:100%;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">
             <line x1="{{ cd.pad_l }}" y1="{{ cd.zero_y }}" x2="{{ cd.svg_w - 12 }}" y2="{{ cd.zero_y }}" stroke="#2d3148" stroke-width="1" stroke-dasharray="3,3"/>

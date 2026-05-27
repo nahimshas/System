@@ -1487,7 +1487,7 @@
       return v >= hi ? "var(--green)" : v <= lo ? "var(--red)" : "var(--yellow)";
     }
     function fmt(v) {
-      return (v >= 0 ? "$+" : "$") + Math.abs(v).toFixed(2);
+      return (v >= 0 ? "+$" : "-$") + Math.abs(v).toFixed(2);
     }
 
     // Update headline stats
@@ -1530,7 +1530,7 @@
     // Update Today's Profit live row in the allocation table
     var todayPnlEl = document.getElementById("today-pnl");
     if (todayPnlEl) {
-      todayPnlEl.textContent = (livePnl >= 0 ? "$+" : "$") + livePnl.toFixed(2);
+      todayPnlEl.textContent = (livePnl >= 0 ? "+$" : "-$") + Math.abs(livePnl).toFixed(2);
       todayPnlEl.style.color = livePnl > 0 ? "var(--green)" : livePnl < 0 ? "var(--red)" : "var(--text)";
     }
 
@@ -1936,8 +1936,8 @@
 
     // Y-axis labels
     var pnlYLbls = [
-      { y: _sy(pnlHi, pnlLo, pnlHi), val: "$" + (pnlHi >= 0 ? "+" : "") + pnlHi.toFixed(0) },
-      { y: _sy(pnlLo, pnlLo, pnlHi), val: "$" + (pnlLo >= 0 ? "+" : "") + pnlLo.toFixed(0) },
+      { y: _sy(pnlHi, pnlLo, pnlHi), val: (pnlHi >= 0 ? "+" : "-") + "$" + Math.abs(pnlHi).toFixed(0) },
+      { y: _sy(pnlLo, pnlLo, pnlHi), val: (pnlLo >= 0 ? "+" : "-") + "$" + Math.abs(pnlLo).toFixed(0) },
     ];
     if (pnlLo < 0 && pnlHi > 0) {
       pnlYLbls.splice(1, 0, { y: parseFloat(zeroY), val: "$0" });
@@ -1969,7 +1969,7 @@
 
     var pnlHeader = document.getElementById("chart-pnl-total");
     if (pnlHeader) {
-      pnlHeader.textContent = (finalPnl >= 0 ? "$+" : "$") + Math.abs(finalPnl).toFixed(2) + " total";
+      pnlHeader.textContent = (finalPnl >= 0 ? "+$" : "-$") + Math.abs(finalPnl).toFixed(2) + " total";
       pnlHeader.style.color = pnlColor;
     }
 
