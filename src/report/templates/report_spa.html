@@ -95,7 +95,7 @@
     </div>
     <div class="prop-bar-track">
       <div class="prop-bar-fill"></div>
-      <div class="prop-bar-marker" style="left:{{ line_pct }}%"></div>
+      <div class="prop-bar-marker" style="left:{{ line_pct }}%" data-line="{{ prop.market_line }}"></div>
     </div>
     <div class="prop-bar-scale"><span>0</span><span>{{ bar_max }}</span></div>
   </div>
@@ -564,9 +564,17 @@
       transform: translateX(-50%);
       font-size: 0.45rem; color: rgba(255,255,255,0.35);
     }
+    .prop-bar-marker::before {
+      content: attr(data-line);
+      position: absolute; bottom: -23px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem; font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      white-space: nowrap;
+    }
     .prop-bar-scale {
       display: flex; justify-content: space-between;
-      font-size: 0.58rem; color: var(--muted); margin-top: 3px;
+      font-size: 0.58rem; color: var(--muted); margin-top: 18px;
     }
 
     /* ── Edge row ────────────────────────────────────────────────────────── */
