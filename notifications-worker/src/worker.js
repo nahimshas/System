@@ -221,7 +221,9 @@ const ESPN_SPORT_PATH = {
   WNBA: 'basketball/wnba',
   MLS:  'soccer/usa.1',
   NFL:  'football/nfl',
-  IPL:  'cricket/ipl',
+  // cricket/ipl returns 404 — use the IPL series ID endpoint instead
+  // (same fix as outcome_checker.py which switched to cricket/8048)
+  IPL:  'cricket/8048',
 };
 
 const SPORT_EMOJI = {
