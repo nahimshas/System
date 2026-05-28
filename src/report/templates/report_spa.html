@@ -763,6 +763,8 @@
     .hm-nav-btn { background:var(--card2); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:4px 10px; cursor:pointer; font-size:0.85rem; line-height:1; -webkit-tap-highlight-color:transparent; }
     .hm-nav-btn:disabled { opacity:0.25; cursor:default; }
     .hm-month-label { font-size:0.85rem; font-weight:700; color:var(--text); }
+    .hm-mode-toggle { background:var(--card2); border:1px solid var(--border); color:var(--muted); border-radius:99px; padding:3px 9px; cursor:pointer; font-size:0.68rem; font-weight:700; letter-spacing:0.04em; -webkit-tap-highlight-color:transparent; transition:color 0.15s,border-color 0.15s; }
+    .hm-mode-toggle.active { color:var(--teal); border-color:var(--teal); }
     .hm-dow-row { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:3px; }
     .hm-dow { font-size:0.6rem; text-align:center; color:var(--muted); font-weight:600; padding:2px 0; }
     .hm-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
@@ -1355,6 +1357,9 @@
         <button class="hm-nav-btn" id="heatmap-prev">&#9664;</button>
         <span class="hm-month-label" id="heatmap-month-label"></span>
         <button class="hm-nav-btn" id="heatmap-next">&#9654;</button>
+      </div>
+      <div style="text-align:right;margin:-4px 0 8px;">
+        <button class="hm-mode-toggle" id="hm-mode-toggle">% view</button>
       </div>
       <div class="hm-dow-row">
         <div class="hm-dow">S</div><div class="hm-dow">M</div><div class="hm-dow">T</div>
