@@ -3155,7 +3155,6 @@
 
     // ── 7. Render month ───────────────────────────────────────────────────
     function renderMonth() {
-      lblEl.textContent = MONTHS[hmMonth] + " " + hmYear;
       prevBtn.disabled = (hmYear < minYear) || (hmYear === minYear && hmMonth <= minMonth);
       nextBtn.disabled = (hmYear > today.getFullYear()) || (hmYear === today.getFullYear() && hmMonth >= today.getMonth());
       gridEl.innerHTML = "";
@@ -3165,6 +3164,24 @@
       var daysInMonth = new Date(hmYear, hmMonth + 1, 0).getDate();
       var tKey        = todayKey();
       var livePnlMap  = getLivePnlByDate();
+
+      // ── Month total P&L (for header label) ───────────────────────────
+      var monthPnl = 0, monthHasData = false;
+      var mmStr = String(hmMonth + 1).padStart(2, "0");
+      for (var d0 = 1; d0 <= daysInMonth; d0++) {
+        var dk0 = hmYear + "-" + mmStr + "-" + String(d0).padStart(2, "0");
+        var h0  = byDate[dk0], l0 = livePnlMap[dk0];
+        if (h0 || l0 !== undefined) {
+          monthPnl += (h0 ? h0.pnl : 0) + (l0 || 0);
+          monthHasData = true;
+        }
+      }
+      var pnlPart = monthHasData
+        ? ' <span style="font-size:0.72rem;font-weight:700;color:' +
+          (monthPnl > 0 ? 'var(--green)' : monthPnl < 0 ? 'var(--red)' : 'var(--muted)') +
+          ';">' + (monthPnl >= 0 ? '+' : '-') + '$' + Math.abs(monthPnl).toFixed(2) + '</span>'
+        : '';
+      lblEl.innerHTML = MONTHS[hmMonth] + ' ' + hmYear + pnlPart;
 
       // Blank lead cells
       for (var i = 0; i < firstDay; i++) {
