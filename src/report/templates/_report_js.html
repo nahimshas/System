@@ -3158,7 +3158,7 @@
     var lblEl      = document.getElementById("heatmap-month-label");
     var gridEl     = document.getElementById("heatmap-calendar");
     var modeToggle = document.getElementById("hm-mode-toggle");
-    var hmPctMode  = false;  // false = $ mode, true = % mode
+    var hmPctMode  = localStorage.getItem("hmPctMode") === "1";  // persist across refreshes
     var overlay    = document.getElementById("hm-popup-overlay");
     var popupBox = document.getElementById("hm-popup-box");
     if (!prevBtn || !nextBtn || !lblEl || !gridEl || !overlay || !popupBox) return;
@@ -3336,8 +3336,13 @@
       renderMonth();
     });
     if (modeToggle) {
+      // Sync button UI to restored state on page load
+      modeToggle.textContent = hmPctMode ? "$ view" : "% view";
+      modeToggle.classList.toggle("active", hmPctMode);
+
       modeToggle.addEventListener("click", function () {
         hmPctMode = !hmPctMode;
+        localStorage.setItem("hmPctMode", hmPctMode ? "1" : "0");
         modeToggle.textContent = hmPctMode ? "$ view" : "% view";
         modeToggle.classList.toggle("active", hmPctMode);
         renderMonth();
