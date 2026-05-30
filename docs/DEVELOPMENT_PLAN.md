@@ -75,7 +75,7 @@ See `CLAUDE.md` in the repo root for a quick-start guide, and the project memory
 
 **What it does (read-only suggestions, no auto-apply):**
 
-The system analyzes `history.json` for systematic biases and surfaces them as flagged suggestions in the report. A human reviews and manually updates `src/config.py` if warranted.
+The system analyzes `history.json` for systematic biases and surfaces them as flagged suggestions in the report. A human reviews and manually updates the relevant `src/config/{sport}.py` if warranted.
 
 **Bias checks to run:**
 
@@ -171,13 +171,13 @@ The system analyzes `history.json` for systematic biases and surfaces them as fl
 
 **Watchlist-only sport (never enters budget pool or parlays). Active May–September.**
 
-**Files:** `src/data/wnba_stats.py` (new), `src/config.py`, `src/models/edge_finder.py`, `src/data/outcome_checker.py`, `src/report/generator.py`, `src/main.py`, `src/report/templates/report.html`, `.github/workflows/daily_report.yml`
+**Files:** `src/data/wnba_stats.py` (new), `src/config/wnba.py`, `src/models/edge_finder.py`, `src/data/outcome_checker.py`, `src/report/generator.py`, `src/main.py`, `src/report/templates/report.html`, `.github/workflows/daily_report.yml`
 
 **Model:** Moneyline-only. Normal CDF on blended net ratings (season + recent form weighted 45/55). Home advantage +2%, B2B penalty −4%. Compound lineup penalty from injured players using points-share formula: `player_weight = max(player_ppg/team_ppg, mpg/40 * 0.6)` → continuously differentiates stars from role players. Capped at 30% total lineup penalty.
 
 **Data sources:** All ESPN public APIs (no key). Team stats, schedule-based rest days, recent form from last 8 games, injury report with per-player PPG/MPG fetched from `sports.core.api.espn.com`.
 
-**Constants in `src/config.py`:** `WNBA_HOME_ADVANTAGE=0.020`, `WNBA_BACK_TO_BACK_PENALTY=0.040`, `WNBA_RECENT_WEIGHT=0.45`, `WNBA_SPREAD_STD=8.5`, `WNBA_REPLACEMENT_RATE=0.55`, `WNBA_MAX_LINEUP_PENALTY=0.30`, `WNBA_STATUS_WEIGHTS`.
+**Constants in `src/config/wnba.py`:** `WNBA_HOME_ADVANTAGE=0.020`, `WNBA_BACK_TO_BACK_PENALTY=0.040`, `WNBA_RECENT_WEIGHT=0.45`, `WNBA_SPREAD_STD=8.5`, `WNBA_REPLACEMENT_RATE=0.55`, `WNBA_MAX_LINEUP_PENALTY=0.30`, `WNBA_STATUS_WEIGHTS`.
 
 **Settlement:** Date-based via `check_and_settle_watchlist()` (same pattern as NHL/IPL). Live scores via 4th ESPN fetch in the browser (`basketball/wnba` scoreboard). Dedicated tile in the watchlist performance section.
 
