@@ -4,8 +4,11 @@ MLS (Major League Soccer) model constants — watchlist only. Active February–
 Uses a Poisson goal-scoring model with xG data from the ASA API.
 """
 
-MLS_LEAGUE_HOME_XG    = 1.35    # league baseline home xG per game
-MLS_LEAGUE_AWAY_XG    = 1.15    # league baseline away xG per game
+MLS_LEAGUE_HOME_XG    = 1.68    # league baseline home xG/game (was 1.35 — too low vs
+                                # actual ~1.68). FALLBACK only; live league averages are
+                                # computed from ASA game data each run.
+MLS_LEAGUE_AWAY_XG    = 1.29    # league baseline away xG/game (was 1.15 — too low vs
+                                # actual ~1.29). Fallback only.
 MLS_RECENT_WEIGHT     = 0.40    # 40% recent form, 60% season
 MLS_MIN_HOME_GAMES    = 5       # min home games to use team-specific home advantage
 MLS_HOME_ADV_DEFAULT  = 0.02    # league-wide home win prob boost (2%)

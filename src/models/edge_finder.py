@@ -3089,8 +3089,7 @@ def analyze_mls_game(
     from src.data.mls_stats import normalize as mls_normalize
     from src.config import (
         MLS_LEAGUE_HOME_XG, MLS_LEAGUE_AWAY_XG, MLS_RECENT_WEIGHT,
-        MLS_MIN_HOME_GAMES, MLS_HOME_ADV_DEFAULT, MLS_STRONG_VENUES,
-        MLS_STRONG_VENUE_ADV, MLS_MAX_INJURY_PENALTY,
+        MLS_STRONG_VENUES, MLS_STRONG_VENUE_ADV, MLS_MAX_INJURY_PENALTY,
     )
 
     _zero_sizing = BetSizing(
@@ -3150,31 +3149,33 @@ def analyze_mls_game(
     blended_away_xgf = (1 - MLS_RECENT_WEIGHT) * away_xgf + MLS_RECENT_WEIGHT * away_rxgf
     blended_away_xga = (1 - MLS_RECENT_WEIGHT) * away_xga + MLS_RECENT_WEIGHT * away_rxga
 
-    # Attack / defense ratings (normalized to league baseline)
-    attack_home   = blended_home_xgf / MLS_LEAGUE_HOME_XG
-    defense_away  = blended_away_xga / MLS_LEAGUE_AWAY_XG
-    attack_away   = blended_away_xgf / MLS_LEAGUE_AWAY_XG
-    defense_home  = blended_home_xga / MLS_LEAGUE_HOME_XG
+    # League averages — live from ASA (current season), config fallback. The
+    # model normalizes each team's attack/defense by the OVERALL league mean,
+    # then scales the home side to the league HOME scoring level and the away
+    # side to the AWAY level. That fixes the prior bug (defense normalized by the
+    # attack baseline, inflating total λ ~17%: avg matchup 3.54 vs actual ~3.03)
+    # and makes league home advantage intrinsic to the scaling.
+    _la = mls_ctx.get("league_avg") or {}
+    LG_HOME    = _la.get("home", MLS_LEAGUE_HOME_XG)
+    LG_AWAY    = _la.get("away", MLS_LEAGUE_AWAY_XG)
+    LG_OVERALL = _la.get("overall") or ((LG_HOME + LG_AWAY) / 2)
 
-    lam_home = max(0.3, min(4.0, MLS_LEAGUE_HOME_XG * attack_home * defense_away))
-    lam_away = max(0.3, min(4.0, MLS_LEAGUE_AWAY_XG * attack_away * defense_home))
+    attack_home   = blended_home_xgf / LG_OVERALL
+    defense_away  = blended_away_xga / LG_OVERALL
+    attack_away   = blended_away_xgf / LG_OVERALL
+    defense_home  = blended_home_xga / LG_OVERALL
 
-    # Home advantage
-    home_games = home_stats.get("home_games", 0)
-    away_games = away_stats.get("away_games", 0)
-    if home_games >= MLS_MIN_HOME_GAMES and away_games >= MLS_MIN_HOME_GAMES:
-        home_home_xgd = home_stats.get("home_xgf", lam_home) - home_stats.get("home_xga", lam_away)
-        home_away_xgd = home_stats.get("away_xgf", lam_away) - home_stats.get("away_xga", lam_home)
-        venue_delta   = home_home_xgd - home_away_xgd
-        lam_boost = max(0.0, min(0.3, venue_delta * 0.15))
-        lam_home  = min(4.0, lam_home + lam_boost)
-        adv_label = "fortress " if home_raw in MLS_STRONG_VENUES else ""
-        signals.append(f"Home {adv_label}venue: {home_raw} (data-driven advantage)")
-    else:
-        adv = MLS_STRONG_VENUE_ADV if home_raw in MLS_STRONG_VENUES else MLS_HOME_ADV_DEFAULT
-        lam_home = min(4.0, lam_home * (1 + adv * 2))
-        label_adv = "fortress " if home_raw in MLS_STRONG_VENUES else ""
-        signals.append(f"Home {label_adv}venue: {home_raw} (+{adv*100:.0f}%)")
+    lam_home = max(0.3, min(4.0, LG_HOME * attack_home * defense_away))
+    lam_away = max(0.3, min(4.0, LG_AWAY * attack_away * defense_home))
+
+    # Home advantage is now intrinsic to the home/away scaling above (the home
+    # side scales toward the league HOME level, the away side toward the lower
+    # AWAY level). Apply only a small extra bump for known fortress venues;
+    # team-specific home-field modeling is a future refinement (it previously
+    # double-counted the league home edge).
+    if home_raw in MLS_STRONG_VENUES:
+        lam_home = min(4.0, lam_home * (1 + MLS_STRONG_VENUE_ADV))
+        signals.append(f"Home fortress venue: {home_raw} (+{MLS_STRONG_VENUE_ADV*100:.0f}%)")
 
     # Research: team stats
     n_home = home_recent.get("games", 0)

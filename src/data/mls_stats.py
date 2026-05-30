@@ -460,6 +460,24 @@ def get_mls_context(today: date, team_names: List[str]) -> dict:
     if game_records:
         _compute_home_away_splits(game_records, season_stats)
 
+    # 4b. Live league-average xG (home / away / overall) for lambda normalization.
+    # The model normalizes attack/defense by the overall mean and scales by the
+    # home/away mean. Computing these live keeps the model self-calibrating to the
+    # current season instead of relying on stale hardcoded baselines.
+    league_avg = None
+    if len(game_records) >= 20:
+        h_vals = [g["home_xg"] for g in game_records if g.get("home_xg") is not None]
+        a_vals = [g["away_xg"] for g in game_records if g.get("away_xg") is not None]
+        if h_vals and a_vals:
+            home_mean = sum(h_vals) / len(h_vals)
+            away_mean = sum(a_vals) / len(a_vals)
+            league_avg = {
+                "home":    round(home_mean, 3),
+                "away":    round(away_mean, 3),
+                "overall": round((home_mean + away_mean) / 2, 3),
+            }
+            logger.info(f"MLS live league xG: home {league_avg['home']} | away {league_avg['away']}")
+
     # 5. Recent form (last 8 games)
     recent_form_raw = _compute_recent_form(game_records)
     # Map raw team names → season_stats names
@@ -489,4 +507,5 @@ def get_mls_context(today: date, team_names: List[str]) -> dict:
         "recent_form": recent_form,
         "rest_days": rest_days,
         "injuries": injuries,
+        "league_avg": league_avg,   # {home, away, overall} or None → model falls back to config
     }
