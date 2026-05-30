@@ -133,6 +133,7 @@ _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
     "WNBA": [
         re.compile(r"^Model projected score"),              # projected score
         re.compile(r"PPG|NetRtg"),                          # season records + ratings
+        re.compile(r"^Strength of schedule"),               # SOS adjustment
         re.compile(r"recent"),                              # recent form
         re.compile(r"back-to-back"),                        # B2B fatigue
         re.compile(r"[Rr]est"),                             # rest days
@@ -611,6 +612,22 @@ def _wnba_narrative(pick: str, signals: List[str], research: List[str],
             f"The model rates {pick} at a {ew} {edge*100:.1f}% edge based on "
             f"blended season and recent net ratings."
         )
+
+    # Strength-of-schedule note when the pick has faced a meaningfully tougher
+    # slate than its opponent (the model credits that in its rating).
+    sos_m = _search_first(
+        r"Strength of schedule — (.+?): opp avg net ([+-][\d.]+) \| (.+?): opp avg net ([+-][\d.]+)",
+        research,
+    )
+    if sos_m:
+        t1, s1, t2, s2 = sos_m.group(1), float(sos_m.group(2)), sos_m.group(3), float(sos_m.group(4))
+        pick_sos = s1 if (pick in t1 or t1 in pick) else (s2 if (pick in t2 or t2 in pick) else None)
+        opp_sos  = s2 if (pick in t1 or t1 in pick) else (s1 if (pick in t2 or t2 in pick) else None)
+        if pick_sos is not None and opp_sos is not None and (pick_sos - opp_sos) >= 1.0:
+            parts.append(
+                f"{pick} has also faced a tougher schedule (opponents avg "
+                f"{pick_sos:+.1f} net vs {opp_sos:+.1f}), which the model credits."
+            )
 
     return " ".join(parts)
 
