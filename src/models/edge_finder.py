@@ -2041,9 +2041,14 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
 # NHL Edge Finder
 # ---------------------------------------------------------------------------
 
-# NHL goal differential std ≈ 1.7 goals.  Puck line = always ±1.5.
-NHL_SPREAD_STD   = 1.7
-NHL_TOTAL_STD    = 1.5   # real NHL game-total std ≈ 1.5–1.7; 1.3 was too tight
+# Empirically measured from 289 NHL games (2024-25): final-margin SD ≈ 2.53,
+# total-goals SD ≈ 2.19. The prior values (1.7 / 1.5) were far too tight and
+# drove severe win-prob overconfidence (model ~70% vs realised ~55%). NHL is a
+# high-variance sport (OT/SO coin-flips, hot goalies), so win probability should
+# be flat in team strength. Set ~5% below the measured SDs (small allowance for
+# the portion of variance the net-rating prediction explains).
+NHL_SPREAD_STD   = 2.4   # was 1.7; measured margin SD ≈ 2.53. Also used for puck-line cover.
+NHL_TOTAL_STD    = 2.1   # was 1.5; measured total SD ≈ 2.19
 NHL_HOME_ADV     = 0.020   # ~2% residual beyond market
 NHL_B2B_PENALTY  = 0.025   # back-to-back (1 day rest) penalty
 NHL_RECENT_WEIGHT = 0.40   # NHL form is more volatile, weight recent more
