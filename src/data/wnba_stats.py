@@ -112,7 +112,53 @@ def get_wnba_context(today: date, team_names: List[str]) -> Dict:
     for display_name, tid in resolved.items():
         _fetch_team_stats(display_name, tid, today, ctx)
 
+    # ── Strength of schedule ──────────────────────────────────────────────────
+    # One standings call gives every team's season net rating (avg points for −
+    # against). SOS for a team = the average net rating of the opponents it has
+    # faced (captured per team above). The model nudges each team's blended
+    # rating by SOS × WNBA_SOS_WEIGHT, so beating a tough slate counts for more.
+    league_net = _fetch_league_net()
+    ctx["sos"] = {}
+    if league_net:
+        for display_name, opp_ids in ctx.get("_opp_ids", {}).items():
+            opp_nets = [league_net[o] for o in opp_ids if o in league_net]
+            if opp_nets:
+                ctx["sos"][display_name] = round(sum(opp_nets) / len(opp_nets), 2)
+
     return ctx
+
+
+def _fetch_league_net() -> Dict[str, float]:
+    """
+    Return {team_id: season net rating (avg points for − against)} for all WNBA
+    teams, from a single standings call. Used for strength-of-schedule. Empty
+    dict on failure (SOS then contributes nothing — model degrades gracefully).
+    """
+    out: Dict[str, float] = {}
+    try:
+        r = requests.get(
+            "https://site.api.espn.com/apis/v2/sports/basketball/wnba/standings",
+            timeout=12,
+        )
+        r.raise_for_status()
+        data = r.json()
+
+        def _stat(entry: dict, name: str):
+            for s in entry.get("stats", []):
+                if s.get("name") == name:
+                    return s.get("value")
+            return None
+
+        for child in data.get("children", []):
+            for e in child.get("standings", {}).get("entries", []):
+                tid = e.get("team", {}).get("id")
+                pf  = _stat(e, "avgPointsFor")
+                pa  = _stat(e, "avgPointsAgainst")
+                if tid and pf is not None and pa is not None:
+                    out[tid] = round(float(pf) - float(pa), 2)
+    except Exception as e:
+        logger.warning(f"WNBA standings (SOS) fetch failed: {e}")
+    return out
 
 
 def _fetch_team_stats(display_name: str, tid: str, today: date, ctx: Dict) -> None:
@@ -246,6 +292,7 @@ def _fetch_team_stats(display_name: str, tid: str, today: date, ctx: Dict) -> No
         # season, not only the recent window. Also stores season opp_ppg for the
         # projected-score fallback.
         s_pf = s_pa = s_n = 0.0
+        opp_ids: List[str] = []
         for g in past_games:
             comp = (g["event"].get("competitions") or [{}])[0]
             competitors = comp.get("competitors", [])
@@ -257,12 +304,17 @@ def _fetch_team_stats(display_name: str, tid: str, today: date, ctx: Dict) -> No
                     s_pf += ocs
                     s_pa += ops
                     s_n  += 1
+                    opp_id = opp_c.get("team", {}).get("id")
+                    if opp_id:
+                        opp_ids.append(opp_id)
         if s_n > 0 and display_name in ctx["season_stats"]:
             # Derive ppg, opp_ppg, and net_rtg all from the same schedule
             # aggregation so the card's "PPG − opp_ppg = NetRtg" reconciles.
             ctx["season_stats"][display_name]["ppg"]     = round(s_pf / s_n, 1)
             ctx["season_stats"][display_name]["opp_ppg"] = round(s_pa / s_n, 1)
             ctx["season_stats"][display_name]["net_rtg"] = round((s_pf - s_pa) / s_n, 2)
+            # Record opponents faced (by team id) for the strength-of-schedule pass.
+            ctx.setdefault("_opp_ids", {})[display_name] = opp_ids
 
     except Exception as e:
         logger.warning(f"WNBA schedule fetch failed ({display_name}): {e}")

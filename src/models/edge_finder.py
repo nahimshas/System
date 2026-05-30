@@ -2793,6 +2793,7 @@ def analyze_wnba_game(
     from src.data.wnba_stats import normalize as wnba_normalize, _name_match
     from src.config import (
         WNBA_HOME_ADVANTAGE, WNBA_BACK_TO_BACK_PENALTY, WNBA_RECENT_WEIGHT,
+        WNBA_SOS_WEIGHT,
         WNBA_SPREAD_STD, WNBA_REPLACEMENT_RATE, WNBA_MAX_LINEUP_PENALTY,
         WNBA_STATUS_WEIGHTS,
     )
@@ -2854,6 +2855,22 @@ def analyze_wnba_game(
     away_recent_net = away_recent.get("recent_net_rtg", away_net)
     home_blended = (1 - WNBA_RECENT_WEIGHT) * home_net + WNBA_RECENT_WEIGHT * home_recent_net
     away_blended = (1 - WNBA_RECENT_WEIGHT) * away_net + WNBA_RECENT_WEIGHT * away_recent_net
+
+    # ── Strength of schedule ──────────────────────────────────────────────────
+    # Nudge each team's rating by the average net rating of opponents faced
+    # (partial weight). Beating a tough slate → rating revised up; feasting on
+    # weak opponents → revised down. When both teams' SOS is similar it cancels
+    # in net_diff, so this only moves the line when schedules genuinely differ.
+    sos_map  = wnba_ctx.get("sos", {})
+    home_sos = sos_map.get(home, 0.0)
+    away_sos = sos_map.get(away, 0.0)
+    home_blended += WNBA_SOS_WEIGHT * home_sos
+    away_blended += WNBA_SOS_WEIGHT * away_sos
+    if abs(home_sos) >= 0.5 or abs(away_sos) >= 0.5:
+        research.append(
+            f"Strength of schedule — {home_raw}: opp avg net {home_sos:+.1f} | "
+            f"{away_raw}: opp avg net {away_sos:+.1f} (×{WNBA_SOS_WEIGHT:g} applied)"
+        )
 
     # Point margin from blended net ratings. The probability adjustments below
     # (home court, B2B, injuries) are accumulated in `adj` as probability points,
@@ -2917,12 +2934,17 @@ def analyze_wnba_game(
         adj += WNBA_BACK_TO_BACK_PENALTY
         signals.append(f"{away_raw} on back-to-back — favors {home_raw} (+{WNBA_BACK_TO_BACK_PENALTY*100:.0f}%)")
 
-    # ── Projected score ───────────────────────────────────────────────────────
+    # ── Projected score (quality/pace-aware, additive offense-vs-defense) ──────
+    # Standard ratings combination: a team's expected output = its offense + the
+    # opponent's points-allowed − league average. This correctly spreads the
+    # projection for tempo/quality mismatches (strong offense vs leaky defense
+    # projects high; vs elite defense projects low) instead of regressing to the
+    # mean like a simple average. Uses the real opp_ppg now available (Tier 1).
     _wnba_avg = 82.0
     _away_def_allowed = away_recent.get("recent_opp_ppg", away_stats.get("opp_ppg", _wnba_avg))
     _home_def_allowed = home_recent.get("recent_opp_ppg", home_stats.get("opp_ppg", _wnba_avg))
-    _proj_home_pts = (home_ppg + _away_def_allowed) / 2
-    _proj_away_pts = (away_ppg + _home_def_allowed) / 2
+    _proj_home_pts = max(50.0, min(120.0, home_ppg + _away_def_allowed - _wnba_avg))
+    _proj_away_pts = max(50.0, min(120.0, away_ppg + _home_def_allowed - _wnba_avg))
     signals.append(f"Model projected score: {home_raw} {_proj_home_pts:.0f} — {away_raw} {_proj_away_pts:.0f}")
 
     # ── Lineup penalty (points-share based) ───────────────────────────────────

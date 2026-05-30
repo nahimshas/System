@@ -4,7 +4,15 @@ WNBA model constants — watchlist only. Active May–September.
 
 WNBA_HOME_ADVANTAGE = 0.020
 WNBA_BACK_TO_BACK_PENALTY = 0.040
-WNBA_RECENT_WEIGHT = 0.45
+WNBA_RECENT_WEIGHT = 0.35   # was 0.45. With the real points-for-minus-against season
+                            # net rating (Tier 1), the full-season sample is now
+                            # trustworthy, so lean less on the noisier last-8 window
+                            # (aligns with NBA's regular-season recent weight).
+WNBA_SOS_WEIGHT = 0.5       # strength-of-schedule credibility. A team's blended net
+                            # rating is nudged by the average net rating of opponents
+                            # faced, at half weight — full SOS is noisy early-season, so
+                            # we apply a partial correction that still rewards/punishes
+                            # teams for the quality of schedule they've played.
 WNBA_SPREAD_STD = 13.0   # was 8.5 (far too tight → favorite overconfidence).
                          # Empirical WNBA game-margin SD is ~15.3 (2025 season, 93-game
                          # sample); 13.0 sits ~15% below raw, mirroring NBA's 12-vs-14
