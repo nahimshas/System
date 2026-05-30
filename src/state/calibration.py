@@ -305,7 +305,16 @@ def adjustment_for(sport: str, market_type: str, model_prob: float) -> float:
             return 1.0
 
         if mc.phase == "0":
-            return 1.0
+            # Credibility-weighted partial correction instead of a hard cliff at
+            # PHASE_A_MIN. Below the Phase-A threshold we don't yet fully trust the
+            # measured ratio, but a clear, sizeable miss (e.g. NBA totals ~51%
+            # realised vs ~71% predicted at n≈31) should not be ignored for months.
+            # Blend toward the measured ratio in proportion to how much settled
+            # data backs it: cred = n_settled / PHASE_A_MIN. At n=0 this is 1.0
+            # (no change, identical to before); it ramps smoothly to the full
+            # single_ratio at n = PHASE_A_MIN, where Phase A takes over seamlessly.
+            cred = min(1.0, mc.n_settled / PHASE_A_MIN)
+            return 1.0 + (mc.single_ratio - 1.0) * cred
         if mc.phase == "A":
             return mc.single_ratio
 

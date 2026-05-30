@@ -36,6 +36,15 @@ logger = logging.getLogger(__name__)
 #      The tanh cap below handles overconfidence at the high end without touching mid-range picks.
 NBA_SPREAD_STD  = 12.0  # model uncertainty for point margin; 14.0 was too wide (suppressed all edges)
 MLB_SPREAD_STD  = 1.8   # calibrated via backtest — do not change without re-running calibration
+
+# Probability→margin conversion for the NBA model. The residual adjustments
+# (home court, B2B, rest, schedule load, injuries) are tuned as probability
+# deltas near 50%. To add them in MARGIN space (so the single CDF compresses
+# them correctly in the tails instead of overshooting) we divide by the central
+# CDF slope = pdf(0). At σ=12 this is ≈30.1 pts per 1.00 prob, i.e. a 2.5% home
+# edge ≈ 0.75 pts. By construction the conversion leaves mid-range (~50%) picks
+# unchanged and only deflates the overconfident tails.
+_NBA_PROB_TO_MARGIN = 1.0 / float(norm.pdf(0, 0, NBA_SPREAD_STD))
 # Soft ceiling on raw run differential before norm.cdf conversion.
 # When multiple factors stack (great SP + good bullpen + strong offense + injuries),
 # the linear sum overshoots realistic expectation. tanh(x / CAP) * CAP compresses
@@ -325,6 +334,24 @@ def _nba_margin_to_prob(expected_margin: float) -> float:
     return float(norm.cdf(expected_margin, 0, NBA_SPREAD_STD))
 
 
+def _nba_blend_per100(season_rtg: float, recent_per_game, pace, w: float) -> float:
+    """
+    Blend a season per-100-possessions rating with recent per-GAME scoring.
+
+    off_rtg/def_rtg are points per 100 possessions; recent_ppg/recent_oppg are
+    points per game. Blending them directly (the old code) mixed units — it only
+    looked fine because NBA pace ≈ 100. We convert the recent per-game value to
+    per-100 (× 100 / pace) before blending so the result is a clean per-100
+    rating, which the caller then re-paces to the matchup via × avg_pace / 100.
+    Falls back to the season rating when no recent value is available.
+    """
+    if recent_per_game is None:
+        return season_rtg
+    p = pace if (pace and pace > 0) else 100.0
+    recent_per100 = recent_per_game * 100.0 / p
+    return (1 - w) * season_rtg + w * recent_per100
+
+
 def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: float = None) -> List[BetRecommendation]:
     home = nba_normalize(game["home_team"])
     away = nba_normalize(game["away_team"])
@@ -353,14 +380,12 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         _hrf_pre = nba_ctx["recent_form"].get(home, {})
         _arf_pre = nba_ctx["recent_form"].get(away, {})
         _w_pre = NBA_PLAYOFF_RECENT_WEIGHT if playoff else NBA_RECENT_FORM_WEIGHT
-        _home_off_pre = ((1 - _w_pre) * _home_stats_pre.get("off_rtg", 110)
-                         + _w_pre * _hrf_pre.get("recent_ppg", _home_stats_pre.get("off_rtg", 110)))
-        _home_def_pre = ((1 - _w_pre) * _home_stats_pre.get("def_rtg", 110)
-                         + _w_pre * _hrf_pre.get("recent_oppg", _home_stats_pre.get("def_rtg", 110)))
-        _away_off_pre = ((1 - _w_pre) * _away_stats_pre.get("off_rtg", 110)
-                         + _w_pre * _arf_pre.get("recent_ppg", _away_stats_pre.get("off_rtg", 110)))
-        _away_def_pre = ((1 - _w_pre) * _away_stats_pre.get("def_rtg", 110)
-                         + _w_pre * _arf_pre.get("recent_oppg", _away_stats_pre.get("def_rtg", 110)))
+        _home_pace_pre = _home_stats_pre.get("pace", 100)
+        _away_pace_pre = _away_stats_pre.get("pace", 100)
+        _home_off_pre = _nba_blend_per100(_home_stats_pre.get("off_rtg", 110), _hrf_pre.get("recent_ppg"),  _home_pace_pre, _w_pre)
+        _home_def_pre = _nba_blend_per100(_home_stats_pre.get("def_rtg", 110), _hrf_pre.get("recent_oppg"), _home_pace_pre, _w_pre)
+        _away_off_pre = _nba_blend_per100(_away_stats_pre.get("off_rtg", 110), _arf_pre.get("recent_ppg"),  _away_pace_pre, _w_pre)
+        _away_def_pre = _nba_blend_per100(_away_stats_pre.get("def_rtg", 110), _arf_pre.get("recent_oppg"), _away_pace_pre, _w_pre)
         _avg_pace_pre = (_home_stats_pre.get("pace", 100) + _away_stats_pre.get("pace", 100)) / 2
         if playoff:
             _avg_pace_pre *= NBA_PLAYOFF_PACE_FACTOR
@@ -512,7 +537,16 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         # Calibration capture: raw prob (pre-any-cap) + cap firing trackers.
         # Stamped onto each rec at the end so the shadow log can later run
         # cap counterfactual analysis.
-        _nba_raw_home = _nba_margin_to_prob(base_margin) + adj
+        #
+        # Add the accumulated adjustments in MARGIN space, then convert with a
+        # single CDF. Previously `adj` was added in probability space on top of
+        # the CDF output, which overshoots in the tails (a flat +X% means far
+        # more in margin terms at 80% than at 50%) — the mechanical source of the
+        # high-edge overconfidence. Converting via the central slope leaves
+        # mid-range picks unchanged and compresses only the tails. The spread
+        # block below derives its margin from this prob via inverse-CDF, so it
+        # stays consistent automatically.
+        _nba_raw_home = _nba_margin_to_prob(base_margin + adj * _NBA_PROB_TO_MARGIN)
         _nba_hardcap_fired = (_nba_raw_home > 0.90) or (_nba_raw_home < 0.10)
         adjusted_home_prob = min(0.90, max(0.10, _nba_raw_home))
         adjusted_away_prob = 1 - adjusted_home_prob
@@ -671,19 +705,20 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         home_stats = nba_ctx["season_stats"].get(home, {})
         away_stats = nba_ctx["season_stats"].get(away, {})
         if home_stats and away_stats:
-            # Blend season PPG/OPPG with recent form — same weight used by ML/Spread strength model.
-            # recent_form carries recent_ppg / recent_oppg from the 14-day schedule window.
+            # Blend season per-100 ratings with recent per-GAME form, unit-corrected.
+            # recent_form carries recent_ppg / recent_oppg (per game) from the
+            # 14-day window; _nba_blend_per100 converts them to per-100 before
+            # blending so the result is a clean per-100 rating (same weight as the
+            # ML/Spread strength model).
             home_recent_form = nba_ctx["recent_form"].get(home, {})
             away_recent_form = nba_ctx["recent_form"].get(away, {})
             w = NBA_PLAYOFF_RECENT_WEIGHT if playoff else NBA_RECENT_FORM_WEIGHT
-            home_off = ((1 - w) * home_stats.get("off_rtg", 110)
-                        + w * home_recent_form.get("recent_ppg", home_stats.get("off_rtg", 110)))
-            home_def = ((1 - w) * home_stats.get("def_rtg", 110)
-                        + w * home_recent_form.get("recent_oppg", home_stats.get("def_rtg", 110)))
-            away_off = ((1 - w) * away_stats.get("off_rtg", 110)
-                        + w * away_recent_form.get("recent_ppg", away_stats.get("off_rtg", 110)))
-            away_def = ((1 - w) * away_stats.get("def_rtg", 110)
-                        + w * away_recent_form.get("recent_oppg", away_stats.get("def_rtg", 110)))
+            home_pace = home_stats.get("pace", 100)
+            away_pace = away_stats.get("pace", 100)
+            home_off = _nba_blend_per100(home_stats.get("off_rtg", 110), home_recent_form.get("recent_ppg"),  home_pace, w)
+            home_def = _nba_blend_per100(home_stats.get("def_rtg", 110), home_recent_form.get("recent_oppg"), home_pace, w)
+            away_off = _nba_blend_per100(away_stats.get("off_rtg", 110), away_recent_form.get("recent_ppg"),  away_pace, w)
+            away_def = _nba_blend_per100(away_stats.get("def_rtg", 110), away_recent_form.get("recent_oppg"), away_pace, w)
 
             avg_pace = (home_stats.get("pace", 100) + away_stats.get("pace", 100)) / 2
             if playoff:
