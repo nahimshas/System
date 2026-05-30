@@ -41,6 +41,25 @@ def _name_match(a: str, b: str) -> bool:
     return a == b or a in b or b in a
 
 
+def _score_val(competitor: dict) -> float:
+    """
+    Extract a numeric score from an ESPN schedule competitor.
+
+    The schedule endpoint returns score as a dict {"value": 112.0,
+    "displayValue": "112"}, NOT a scalar. The original code did
+    float(competitor["score"]) which threw on the dict and was silently
+    swallowed — leaving recent-form (and the new season margin) empty. This
+    handles both the dict and legacy scalar shapes.
+    """
+    s = competitor.get("score", 0)
+    if isinstance(s, dict):
+        s = s.get("value", 0)
+    try:
+        return float(s)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def get_wnba_context(today: date, team_names: List[str]) -> Dict:
     """
     Returns {season_stats, recent_form, rest_days} for all requested teams.
@@ -131,7 +150,10 @@ def _fetch_team_stats(display_name: str, tid: str, today: date, ctx: Dict) -> No
         except Exception:
             wins   = int(stats_map.get("wins",   0))
             losses = int(stats_map.get("losses", 0))
-        # Simple composite net_rtg proxy: PPG + defensive contributions - avg
+        # Fallback net_rtg proxy, used ONLY if the schedule fetch below fails.
+        # The schedule block overrides this with a real points-for-minus-against
+        # season margin. This offense-only proxy ignores defense and is a poor
+        # strength estimate — kept solely as a last resort.
         net_rtg_proxy = ppg + (blk + stl) * 1.5 - 82.0  # centered around ~82 PPG league avg
 
         ctx["season_stats"][display_name] = {
@@ -196,17 +218,15 @@ def _fetch_team_stats(display_name: str, tid: str, today: date, ctx: Dict) -> No
                     (c for c in competitors if c.get("team", {}).get("id") != tid), None
                 )
                 if our_comp and opp_comp:
-                    try:
-                        our_score = float(our_comp.get("score", 0))
-                        opp_score = float(opp_comp.get("score", 0))
+                    our_score = _score_val(our_comp)
+                    opp_score = _score_val(opp_comp)
+                    if our_score or opp_score:
                         ppg_sum     += our_score
                         opp_ppg_sum += opp_score
                         if our_comp.get("winner"):
                             w += 1
                         else:
                             l += 1
-                    except (TypeError, ValueError):
-                        pass
 
             total = w + l
             if total > 0:
@@ -218,6 +238,31 @@ def _fetch_team_stats(display_name: str, tid: str, today: date, ctx: Dict) -> No
                     "recent_w_pct":   round(w / total, 3),
                     "games":          total,
                 }
+
+        # ── Real season net rating (points for − against over ALL games) ──────
+        # Replaces the old offense-only proxy (ppg + (blk+stl)×1.5 − 82), which
+        # ignored opponent scoring and over-rated high-scoring/leaky teams. The
+        # margin data is already here in past_games — we just aggregate the full
+        # season, not only the recent window. Also stores season opp_ppg for the
+        # projected-score fallback.
+        s_pf = s_pa = s_n = 0.0
+        for g in past_games:
+            comp = (g["event"].get("competitions") or [{}])[0]
+            competitors = comp.get("competitors", [])
+            our_c = next((c for c in competitors if c.get("team", {}).get("id") == tid), None)
+            opp_c = next((c for c in competitors if c.get("team", {}).get("id") != tid), None)
+            if our_c and opp_c:
+                ocs, ops = _score_val(our_c), _score_val(opp_c)
+                if ocs or ops:
+                    s_pf += ocs
+                    s_pa += ops
+                    s_n  += 1
+        if s_n > 0 and display_name in ctx["season_stats"]:
+            # Derive ppg, opp_ppg, and net_rtg all from the same schedule
+            # aggregation so the card's "PPG − opp_ppg = NetRtg" reconciles.
+            ctx["season_stats"][display_name]["ppg"]     = round(s_pf / s_n, 1)
+            ctx["season_stats"][display_name]["opp_ppg"] = round(s_pa / s_n, 1)
+            ctx["season_stats"][display_name]["net_rtg"] = round((s_pf - s_pa) / s_n, 2)
 
     except Exception as e:
         logger.warning(f"WNBA schedule fetch failed ({display_name}): {e}")
