@@ -55,6 +55,15 @@ MLB_RUN_DIFF_CAP = 1.8
 # and RL lines.
 MLB_RUNLINE_SIGMA = 3.5
 
+# Standard deviation for the GAME TOTAL (sum of both teams' runs) cover model.
+# Previously this used MLB_SPREAD_STD * 1.5 = 2.7, which is tighter than even the
+# run-line margin sigma (3.5) — backwards, since a sum has at least as much
+# variance as a difference. The realised SD of MLB game totals is ~4 runs; 2.7
+# made small projection-vs-line gaps look like large edges and manufactured
+# false Over edges (backtest: model "Over 66%" picks realised ~39%). 3.8 sits
+# just above the run-line sigma and better-calibrates the totals probability.
+MLB_TOTAL_STD = 3.8
+
 # Injury credibility gate ─────────────────────────────────────────────────────
 # When a team's injury_adjustment ≥ INJURY_GATE, our season net-rating baseline
 # is stale (the injured player's contributions are baked in but unavailable
@@ -220,7 +229,11 @@ def _apply_credibility_cap_dispatched(
 
 # Totals model helpers
 _NBA_INJ_TO_PTS    = 75.0  # converts win-prob injury_adj → expected pts reduction in totals
-_TOTAL_MARKET_ANCHOR = 0.20  # 20% weight toward market line — shrinks systematic projection bias
+_TOTAL_MARKET_ANCHOR = 0.40  # 40% weight toward market line — was 0.20; raised to neutralise
+                             # the systematic upward (Over) projection bias measured in MLB totals
+                             # (model "Over 66%" realised ~39%). The market total line is essentially
+                             # unbiased, so anchoring harder removes the bias at its source while
+                             # leaving genuine large model/market disagreements as (smaller) edges.
 
 
 def _is_nba_playoff(dt: Optional[datetime] = None) -> bool:
@@ -1495,7 +1508,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         # Stamp onto game dict so props_analyzer can use the same projection
         game["model_total"]  = round(blended_total, 1)
         game["market_total"] = market_line
-        model_over_prob = float(1 - norm.cdf(market_line, blended_total, MLB_SPREAD_STD * 1.5))
+        model_over_prob = float(1 - norm.cdf(market_line, blended_total, MLB_TOTAL_STD))
         market_over_prob = total["over_prob"]
         market_under_prob = total["under_prob"]
 

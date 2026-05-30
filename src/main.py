@@ -76,12 +76,48 @@ def _slot_sort_key(rec):
     same chokepoint progressively factors in realised hit rates without any
     other code changes.
     """
+    eff = _effective_edge_safe(rec)
+    return (0 if rec.confidence == "HIGH" else 1, -eff)
+
+
+# HIGH-confidence edge threshold — mirrors _confidence_label / _mlb_conf in
+# edge_finder. Used by _recalibrate_confidence to downgrade picks whose edge,
+# once shrunk by the calibration ratio, no longer clears the HIGH bar.
+_HIGH_CONF_EDGE = 0.07
+
+
+def _effective_edge_safe(rec) -> float:
+    """
+    Calibration-adjusted edge with a safe fallback to raw edge.
+
+    effective_edge = raw_edge × calibration_ratio(sport, market, model_prob).
+    In Phase 0 the ratio is 1.0, so this equals the raw edge and behaviour is
+    unchanged. Any failure (missing state, import error) falls back to raw edge
+    so selection never blocks on the calibration layer.
+    """
     try:
         from src.state.calibration import effective_edge
-        eff = effective_edge(rec)
+        return float(effective_edge(rec))
     except Exception:
-        eff = float(getattr(rec, "edge", 0.0) or 0.0)
-    return (0 if rec.confidence == "HIGH" else 1, -eff)
+        return float(getattr(rec, "edge", 0.0) or 0.0)
+
+
+def _recalibrate_confidence(recs) -> None:
+    """
+    Downgrade HIGH → MEDIUM for any pick whose *calibrated* edge falls below the
+    HIGH threshold. Confidence is assigned in edge_finder from the RAW edge, so
+    a systematically overconfident market (e.g. game totals) can earn HIGH off
+    an inflated raw edge and then jump the confidence-first slot queue ahead of
+    better-calibrated Moneyline/Spread picks. Routing the label through the
+    calibration ratio keeps confidence honest.
+
+    Downgrade-only by design: never promotes MEDIUM → HIGH. In Phase 0 the ratio
+    is 1.0 and effective edge == raw edge, so nothing is downgraded and behaviour
+    is identical to before calibration data exists.
+    """
+    for r in recs:
+        if getattr(r, "confidence", "") == "HIGH" and _effective_edge_safe(r) < _HIGH_CONF_EDGE:
+            r.confidence = "MEDIUM"
 
 
 # ---------------------------------------------------------------------------
@@ -373,7 +409,14 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         ctx         = module.fetch_context(today_str, games)
         display_raw = module.analyze_games(games, ctx)
-        qualifying  = [r for r in display_raw if r.edge >= MIN_EDGE]
+        # Honest confidence: downgrade HIGH picks whose calibrated edge no longer
+        # clears the HIGH bar (overconfident markets like totals), so they don't
+        # jump the confidence-first slot queue ahead of better-calibrated picks.
+        _recalibrate_confidence(display_raw)
+        # Budget gate uses the CALIBRATED edge — a market the calibration layer has
+        # learned to distrust (ratio < 1) must clear MIN_EDGE on its shrunk edge,
+        # not its inflated raw edge. Phase 0 ratio = 1.0 → identical to before.
+        qualifying  = [r for r in display_raw if _effective_edge_safe(r) >= MIN_EDGE]
 
         # Route display picks based on capability flags
         if caps.in_main_display_pool:
@@ -388,6 +431,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         if caps.has_props:
             _sport_props_raw      = module.fetch_props(games, ctx, min_edge=MIN_EDGE)
             _sport_props_display  = module.fetch_props(games, ctx, min_edge=0.0)
+            _recalibrate_confidence(_sport_props_raw)
+            _recalibrate_confidence(_sport_props_display)
             props_raw.extend(_sport_props_raw)
             props_display_raw.extend(_sport_props_display)
 

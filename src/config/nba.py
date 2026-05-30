@@ -16,5 +16,9 @@ NBA_RECENT_FORM_WEIGHT = 0.30        # weight toward last-14d vs season avg (reg
 NBA_PLAYOFF_SCORING_FACTOR = 0.94    # ~6% scoring reduction vs regular season
 NBA_PLAYOFF_PACE_FACTOR    = 0.96    # ~4% pace reduction
 NBA_PLAYOFF_RECENT_WEIGHT  = 0.55    # flip toward recent form — playoff games >> reg season
-NBA_TOTAL_STD              = 15.0    # model prediction uncertainty for game totals (~15 pts)
-NBA_PLAYOFF_TOTAL_STD      = 13.0    # slightly tighter in playoffs (better film, fewer blowouts)
+NBA_TOTAL_STD              = 16.5    # model prediction uncertainty for game totals (was 15.0);
+                                     # widened because totals realised ~51% vs ~73% predicted —
+                                     # the distribution was too tight, manufacturing false edges.
+NBA_PLAYOFF_TOTAL_STD      = 16.5    # was 13.0 (tighter than regular season — backwards: that
+                                     # raised totals confidence in exactly the worst-performing
+                                     # period). Now equal to the regular-season value.
