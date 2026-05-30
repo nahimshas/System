@@ -171,6 +171,7 @@ class MLBModule:
         from src.data.mlb_stats import (
             get_pitcher_stats, get_pitcher_recent_stats,
             get_team_batting_stats, get_bullpen_stats, get_team_schedule_load,
+            get_pitcher_hand, get_team_splits_vs_hand,
         )
         from src.data.umpire import get_umpire_tendency
         from src.data.weather import get_game_weather
@@ -211,6 +212,15 @@ class MLBModule:
                 away_bat  = get_team_batting_stats(game.get("away_team_id"))
                 home_bp   = get_bullpen_stats(game.get("home_team_id"))
                 away_bp   = get_bullpen_stats(game.get("away_team_id"))
+
+                # Platoon splits: each lineup's OPS vs the OPPOSING starter's hand.
+                # home_off_split = home batters vs the away starter's throwing hand.
+                home_hand = get_pitcher_hand(game.get("home_pitcher_id"))
+                away_hand = get_pitcher_hand(game.get("away_pitcher_id"))
+                home_splits = get_team_splits_vs_hand(game.get("home_team_id"))
+                away_splits = get_team_splits_vs_hand(game.get("away_team_id"))
+                home_off_split = home_splits.get(away_hand) if away_hand else None
+                away_off_split = away_splits.get(home_hand) if home_hand else None
                 home_load = get_team_schedule_load(game.get("home_team_id"), today_date)
                 away_load = get_team_schedule_load(game.get("away_team_id"), today_date)
 
@@ -234,6 +244,8 @@ class MLBModule:
                     weather=wx,
                     home_season_stats=home_record,
                     away_season_stats=away_record,
+                    home_off_split=home_off_split,
+                    away_off_split=away_off_split,
                     min_edge=min_edge,
                 )
                 results.extend(recs)

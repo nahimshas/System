@@ -991,6 +991,20 @@ def _mlb_conf(edge: float, signal_count: int, stats_available: bool,
     return "MEDIUM"
 
 
+def _platoon_ops(overall_ops: float, split: Optional[Dict]) -> float:
+    """
+    Blend a lineup's overall OPS toward its split vs the opposing starter's hand,
+    weighted by how much the split sample supports it. Full split weight at
+    ~300 PA vs that hand; thin early-season samples lean on overall OPS. Falls
+    back to overall when no split is available.
+    """
+    if not split or not split.get("ops"):
+        return overall_ops
+    pa = float(split.get("pa", 0) or 0)
+    w  = min(1.0, pa / 300.0)
+    return (1 - w) * overall_ops + w * float(split["ops"])
+
+
 def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: Dict,
                      home_batting: Dict, away_batting: Dict,
                      home_bullpen: Dict, away_bullpen: Dict,
@@ -1001,6 +1015,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                      weather: Optional[Dict] = None,
                      home_season_stats: Optional[Dict] = None,
                      away_season_stats: Optional[Dict] = None,
+                     home_off_split: Optional[Dict] = None,
+                     away_off_split: Optional[Dict] = None,
                      min_edge: float = None) -> List[BetRecommendation]:
     from src.data.mlb_stats import get_park_factor
     from src.data.umpire import build_umpire_signals
@@ -1184,6 +1200,24 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     # --- Expected runs ---
     home_ops = home_batting.get("ops", 0.735)
     away_ops = away_batting.get("ops", 0.735)
+
+    # Platoon split: nudge each lineup's OPS toward its performance vs the
+    # OPPOSING starter's throwing hand (PA-weighted toward overall — thin early
+    # samples barely move it). Applied before the Coors deflator so altitude
+    # correction operates on the platoon-adjusted value.
+    _home_ops_pre_split, _away_ops_pre_split = home_ops, away_ops
+    home_ops = _platoon_ops(home_ops, home_off_split)
+    away_ops = _platoon_ops(away_ops, away_off_split)
+    if home_off_split and abs(home_ops - _home_ops_pre_split) >= 0.003:
+        signals.append(
+            f"Platoon: {home} OPS vs hand {home_off_split.get('ops'):.3f} "
+            f"({home_off_split.get('pa')} PA) → blended {home_ops:.3f}"
+        )
+    if away_off_split and abs(away_ops - _away_ops_pre_split) >= 0.003:
+        signals.append(
+            f"Platoon: {away} OPS vs hand {away_off_split.get('ops'):.3f} "
+            f"({away_off_split.get('pa')} PA) → blended {away_ops:.3f}"
+        )
 
     # Coors Field correction — Colorado's season OPS and pitcher xFIP/ERA are
     # heavily inflated by home games at altitude. When the Rockies play AWAY,

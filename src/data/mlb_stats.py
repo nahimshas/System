@@ -212,6 +212,62 @@ def get_team_batting_stats(team_id: int) -> Dict:
         return {}
 
 
+def get_pitcher_hand(pitcher_id: int) -> str:
+    """
+    Returns a starting pitcher's throwing hand: "L", "R", or "" if unknown.
+
+    The schedule's probablePitcher hydrate only carries id/name, so handedness
+    needs a small /people/{id} lookup. Used to pick the opposing lineup's
+    platoon split (vs LHP / vs RHP).
+    """
+    if not pitcher_id:
+        return ""
+    data = _get(f"/people/{pitcher_id}")
+    try:
+        return data["people"][0].get("pitchHand", {}).get("code", "") or ""
+    except (KeyError, IndexError, TypeError):
+        return ""
+
+
+def get_team_splits_vs_hand(team_id: int) -> Dict[str, Dict]:
+    """
+    Team hitting OPS split vs left- and right-handed pitching (season to date).
+
+    Returns {"L": {"ops": float, "pa": int}, "R": {...}} — keyed by the
+    PITCHER'S throwing hand. Empty dict on failure. One API call (sitCodes
+    vl,vr returns both splits together). The model blends the relevant split
+    toward overall team OPS, PA-weighted, so thin early-season samples don't
+    swing the projection.
+    """
+    if not team_id:
+        return {}
+    data = _get(f"/teams/{team_id}/stats", {
+        "stats":    "statSplits",
+        "group":    "hitting",
+        "sitCodes": "vl,vr",
+        "season":   date.today().year,
+    })
+    if not data:
+        return {}
+    out: Dict[str, Dict] = {}
+    try:
+        for sp in data["stats"][0]["splits"]:
+            code = (sp.get("split", {}) or {}).get("code", "")
+            # API split codes: "vl" = vs left-handed pitching, "vr" = vs right
+            hand = {"vl": "L", "vr": "R"}.get(code)
+            if not hand:
+                continue
+            s = sp.get("stat", {}) or {}
+            obp = float(s.get("obp", "0") or "0")
+            slg = float(s.get("slg", "0") or "0")
+            pa  = int(s.get("plateAppearances", 0) or 0)
+            out[hand] = {"ops": round(obp + slg, 3), "pa": pa}
+    except (KeyError, IndexError, ValueError, TypeError) as e:
+        logger.warning(f"Team splits parse error (id={team_id}): {e}")
+        return {}
+    return out
+
+
 def get_bullpen_stats(team_id: int) -> Dict:
     """
     Fetches relief-only ERA/WHIP by querying individual pitcher stats for the team
