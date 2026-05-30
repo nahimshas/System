@@ -14,6 +14,10 @@ MLS_MIN_HOME_GAMES    = 5       # min home games to use team-specific home advan
 MLS_HOME_ADV_DEFAULT  = 0.02    # league-wide home win prob boost (2%)
 MLS_STRONG_VENUE_ADV  = 0.03    # fortress venue boost (3%)
 MLS_MAX_INJURY_PENALTY = 0.15   # max 15% lambda reduction from injuries per team
+MLS_DC_RHO            = -0.10    # Dixon-Coles low-score correlation. Independent Poisson
+                                 # under-counts draws (~23.5% vs actual ~25.5%); this
+                                 # adjusts the 0-0/1-0/0-1/1-1 cells. Calibrated to 2024
+                                 # MLS: rho=-0.10 → model draw 25.6% vs actual 25.5%.
 
 # Teams with notably strong home atmospheres
 MLS_STRONG_VENUES = {

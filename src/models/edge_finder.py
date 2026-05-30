@@ -3066,13 +3066,47 @@ def _poisson_prob(lam: float, k: int) -> float:
     return exp(-lam) * (lam ** k) / factorial(k)
 
 
-def _mls_prob_matrix(lam_home: float, lam_away: float, max_goals: int = 10) -> dict:
-    """Returns {(i, j): probability} for all goal combinations 0..max_goals."""
+def _dc_tau(i: int, j: int, lam_home: float, lam_away: float, rho: float) -> float:
+    """
+    Dixon-Coles low-score correction factor. Independent Poisson misprices the
+    four lowest-scoring cells (real soccer goals are mildly negatively correlated
+    at low scores, producing more draws than independence implies). rho < 0
+    raises 0-0/1-1 and lowers 1-0/0-1.
+    """
+    if i == 0 and j == 0:
+        return 1.0 - lam_home * lam_away * rho
+    if i == 0 and j == 1:
+        return 1.0 + lam_home * rho
+    if i == 1 and j == 0:
+        return 1.0 + lam_away * rho
+    if i == 1 and j == 1:
+        return 1.0 - rho
+    return 1.0
+
+
+def _mls_prob_matrix(lam_home: float, lam_away: float, max_goals: int = 10,
+                     rho: float = 0.0) -> dict:
+    """
+    Returns {(i, j): probability} for all goal combinations 0..max_goals.
+
+    With rho != 0, applies the Dixon-Coles low-score correction and renormalizes
+    so the matrix still sums to 1. rho defaults to 0 (pure independent Poisson)
+    for backward compatibility / callers that don't pass it.
+    """
     matrix = {}
     for i in range(max_goals + 1):
         ph = _poisson_prob(lam_home, i)
         for j in range(max_goals + 1):
             matrix[(i, j)] = ph * _poisson_prob(lam_away, j)
+
+    if rho:
+        for (i, j) in matrix:
+            if i <= 1 and j <= 1:
+                matrix[(i, j)] = max(0.0, matrix[(i, j)] * _dc_tau(i, j, lam_home, lam_away, rho))
+        total = sum(matrix.values())
+        if total > 0:
+            for k in matrix:
+                matrix[k] /= total
     return matrix
 
 
@@ -3090,6 +3124,7 @@ def analyze_mls_game(
     from src.config import (
         MLS_LEAGUE_HOME_XG, MLS_LEAGUE_AWAY_XG, MLS_RECENT_WEIGHT,
         MLS_STRONG_VENUES, MLS_STRONG_VENUE_ADV, MLS_MAX_INJURY_PENALTY,
+        MLS_DC_RHO,
     )
 
     _zero_sizing = BetSizing(
@@ -3259,7 +3294,7 @@ def analyze_mls_game(
     lam_away = max(0.3, min(4.0, lam_away))
 
     # Probability matrix
-    matrix = _mls_prob_matrix(lam_home, lam_away)
+    matrix = _mls_prob_matrix(lam_home, lam_away, rho=MLS_DC_RHO)
     p_home_win = sum(v for (i, j), v in matrix.items() if i > j)
     p_draw     = sum(v for (i, j), v in matrix.items() if i == j)
     p_away_win = sum(v for (i, j), v in matrix.items() if i < j)
