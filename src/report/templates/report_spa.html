@@ -1475,11 +1475,16 @@
           and computes a per-sport, per-market <em>realised vs predicted</em> ratio.
           As sample size grows, each sport × market auto-promotes through phases:
           <ul style="margin:6px 0 0 18px;padding:0;">
-            <li><strong>Phase 0</strong> — &lt; {{ cal.thresholds.phase_a_min or 100 }} settled picks: no adjustment, raw edges shown.</li>
-            <li><strong>Phase A</strong> — single ratio applied to every pick's edge (effective_edge = raw_edge &times; ratio).</li>
+            <li><strong>Phase 0</strong> — &lt; {{ cal.thresholds.phase_a_min or 100 }} settled picks: a <em>credibility-weighted</em> share of the target is applied (cred = settled ÷ {{ cal.thresholds.phase_a_min or 100 }}), so a clear miss starts being corrected immediately and ramps up as data grows.</li>
+            <li><strong>Phase A</strong> — full single ratio applied to every pick's edge (effective_edge = raw_edge &times; ratio); applied now equals target.</li>
             <li><strong>Phase B</strong> — per-bucket ratios (50–60% / 60–70% / 70–80% / 80%+) — &ge; {{ cal.thresholds.phase_b_min or 400 }} settled picks with &ge; {{ cal.thresholds.bucket_min_n or 30 }} per bucket.</li>
             <li><strong>Phase C</strong> — isotonic regression smooth curve (reserved, future build-out).</li>
           </ul>
+          <div style="margin-top:6px;">
+            <strong>Target vs Applied:</strong> <em>Target</em> is the full measured correction (realised ÷ predicted);
+            <em>Applied</em> is what multiplies edges right now. They're equal from Phase A on; in Phase 0 Applied is a
+            partial share of Target that grows toward it as more picks settle. Both shift daily as new results land.
+          </div>
           <div style="margin-top:6px;">
             <strong>Reading the ratio:</strong> realised / predicted &middot;
             <span style="color:var(--green);">&gt; 1.0</span> = model underconfident (real edge bigger than shown),
@@ -1497,12 +1502,13 @@
         {% endif %}{% endfor %}
       </div>
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-        <table class="cal-table" style="width:100%;border-collapse:collapse;font-size:0.78rem;min-width:480px;">
+        <table class="cal-table" style="width:100%;border-collapse:collapse;font-size:0.78rem;min-width:540px;">
           <thead><tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
             <th style="text-align:left;padding:8px 6px;">Sport · Market</th>
             <th style="text-align:right;padding:8px 6px;">Settled/Total</th>
             <th style="text-align:left;padding:8px 6px;">Phase</th>
-            <th class="cal-col-ratio" style="text-align:right;padding:8px 6px;">Ratio</th>
+            <th class="cal-col-ratio" style="text-align:right;padding:8px 6px;">Target</th>
+            <th style="text-align:right;padding:8px 6px;">Applied</th>
             <th class="cal-col-pred" style="text-align:right;padding:8px 6px;">Predicted</th>
             <th style="text-align:right;padding:8px 6px;">Realised</th>
             <th class="cal-col-milestone" style="text-align:left;padding:8px 6px;">Next milestone</th>
@@ -1513,7 +1519,8 @@
               <td style="padding:7px 6px;"><strong>{{ m.sport }}</strong> · <span style="color:var(--muted);">{{ m.market_type }}</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">{{ m.n_settled }} / {{ m.n_total }}</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:{% if m.phase == '0' %}#3b3a52{% elif m.phase == 'A' %}#0e7490{% elif m.phase == 'B' %}#0f766e{% else %}#14532d{% endif %};color:#fff;">{{ m.phase }}</span></td>
-              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:{% if m.phase == '0' %}var(--muted){% elif m.ratio_drift_pct < -3 %}var(--red){% elif m.ratio_drift_pct > 3 %}var(--green){% else %}var(--text){% endif %};">{{ m.ratio_display }}</td>
+              <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:{% if m.n_settled == 0 %}var(--muted){% elif m.ratio_drift_pct < -3 %}var(--red){% elif m.ratio_drift_pct > 3 %}var(--green){% else %}var(--text){% endif %};">{{ m.ratio_display }}</td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:{% if m.applied_drift_pct < -3 %}var(--red){% elif m.applied_drift_pct > 3 %}var(--green){% else %}var(--text){% endif %};">{{ m.applied_display }}</td>
               <td class="cal-col-pred" style="text-align:right;padding:7px 6px;color:var(--muted);">{% if m.predicted_rate_pct is not none %}{{ m.predicted_rate_pct }}%{% else %}—{% endif %}</td>
               <td style="text-align:right;padding:7px 6px;color:var(--muted);">{% if m.realized_rate_pct is not none %}{{ m.realized_rate_pct }}%{% else %}—{% endif %}</td>
               <td class="cal-col-milestone" style="padding:7px 6px;color:var(--muted);font-size:0.74rem;">{{ m.next_milestone }}</td>

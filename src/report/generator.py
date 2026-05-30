@@ -49,6 +49,17 @@ def _load_calibration_panel() -> Dict:
         n_settled = int(m.get("n_settled", 0))
         n_total   = int(m.get("n_total", n_settled))
         single_ratio = float(m.get("single_ratio", 1.0))
+        # "Applied" = what edges are multiplied by right now. In Phase 0 this is
+        # the target shrunk by sample-size credibility; in Phase A+ it equals the
+        # target. Fall back to recomputing it if an older state file lacks the
+        # field, so the panel works before the next calibration run rewrites state.
+        if "applied_ratio" in m:
+            applied_ratio = float(m["applied_ratio"])
+        elif phase == "0":
+            cred = min(1.0, n_settled / phase_a_min) if phase_a_min else 0.0
+            applied_ratio = 1.0 + (single_ratio - 1.0) * cred
+        else:
+            applied_ratio = single_ratio
 
         # Status label and progress toward next phase
         if phase == "0":
@@ -72,12 +83,19 @@ def _load_calibration_panel() -> Dict:
             status_label   = phase
             status_class   = ""
 
-        # Ratio drift indicator (how far from 1.0)
-        ratio_pct_drift = (single_ratio - 1.0) * 100 if phase != "0" else 0.0
-        if phase == "0":
-            ratio_display = "—"
+        # Target = the full measured correction (realized ÷ predicted).
+        # Applied = what's multiplying edges right now (ramps toward target as
+        # data accumulates). They're equal in Phase A+; in Phase 0 applied is a
+        # credibility-weighted fraction of target.
+        ratio_pct_drift   = (single_ratio - 1.0) * 100
+        applied_pct_drift = (applied_ratio - 1.0) * 100
+        # Only show a numeric target once there's enough data to be meaningful.
+        if n_settled > 0:
+            ratio_display   = f"{single_ratio:.3f} ({ratio_pct_drift:+.1f}%)"
+            applied_display = f"{applied_ratio:.3f} ({applied_pct_drift:+.1f}%)"
         else:
-            ratio_display = f"{single_ratio:.3f} ({ratio_pct_drift:+.1f}%)"
+            ratio_display   = "—"
+            applied_display = "1.000 (+0.0%)"
 
         out["phase_counts"][phase] = out["phase_counts"].get(phase, 0) + 1
         out["markets"].append({
@@ -89,8 +107,11 @@ def _load_calibration_panel() -> Dict:
             "single_ratio":   single_ratio,
             "ratio_display":  ratio_display,
             "ratio_drift_pct": ratio_pct_drift,
-            "predicted_rate_pct": round(float(m.get("single_predicted_rate", 0)) * 100, 1) if phase != "0" else None,
-            "realized_rate_pct":  round(float(m.get("single_realized_rate",  0)) * 100, 1) if phase != "0" else None,
+            "applied_ratio":   applied_ratio,
+            "applied_display": applied_display,
+            "applied_drift_pct": applied_pct_drift,
+            "predicted_rate_pct": round(float(m.get("single_predicted_rate", 0)) * 100, 1) if n_settled > 0 else None,
+            "realized_rate_pct":  round(float(m.get("single_realized_rate",  0)) * 100, 1) if n_settled > 0 else None,
             "status_label":   status_label,
             "status_class":   status_class,
             "next_milestone": next_milestone,

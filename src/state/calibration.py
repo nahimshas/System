@@ -288,6 +288,37 @@ def get_state(force_refresh: bool = False) -> Dict[Tuple[str, str], MarketCalibr
     return _STATE_CACHE
 
 
+def _phase0_applied_ratio(mc: "MarketCalibration") -> float:
+    """
+    Credibility-weighted partial correction used in Phase 0 (n < PHASE_A_MIN).
+
+    Below the Phase-A threshold we don't yet fully trust the measured ratio, but
+    a clear, sizeable miss (e.g. NBA totals ~51% realised vs ~71% predicted at
+    n≈31) should not be ignored for months. We blend toward the measured ratio
+    in proportion to how much settled data backs it: cred = n_settled / PHASE_A_MIN.
+    At n=0 this returns 1.0 (no change); it ramps smoothly to the full
+    single_ratio at n = PHASE_A_MIN, where Phase A takes over seamlessly.
+
+    Single source of truth for both adjustment_for() (live selection) and
+    persist_state() (the report panel's "applied" column).
+    """
+    cred = min(1.0, mc.n_settled / PHASE_A_MIN)
+    return 1.0 + (mc.single_ratio - 1.0) * cred
+
+
+def applied_single_ratio(mc: "MarketCalibration") -> float:
+    """
+    The currently-applied scalar edge multiplier at the single (non-bucket)
+    level, mirroring adjustment_for()'s phase logic:
+      Phase 0 → credibility-weighted partial ratio (ramps toward target)
+      Phase A → the full single_ratio (applied == target)
+      Phase B/C → single_ratio is the fallback; per-bucket ratios apply per pick
+    """
+    if mc.phase == "0":
+        return _phase0_applied_ratio(mc)
+    return mc.single_ratio
+
+
 def adjustment_for(sport: str, market_type: str, model_prob: float) -> float:
     """
     Return the multiplicative edge adjustment for a (sport, market, model_prob).
@@ -305,16 +336,7 @@ def adjustment_for(sport: str, market_type: str, model_prob: float) -> float:
             return 1.0
 
         if mc.phase == "0":
-            # Credibility-weighted partial correction instead of a hard cliff at
-            # PHASE_A_MIN. Below the Phase-A threshold we don't yet fully trust the
-            # measured ratio, but a clear, sizeable miss (e.g. NBA totals ~51%
-            # realised vs ~71% predicted at n≈31) should not be ignored for months.
-            # Blend toward the measured ratio in proportion to how much settled
-            # data backs it: cred = n_settled / PHASE_A_MIN. At n=0 this is 1.0
-            # (no change, identical to before); it ramps smoothly to the full
-            # single_ratio at n = PHASE_A_MIN, where Phase A takes over seamlessly.
-            cred = min(1.0, mc.n_settled / PHASE_A_MIN)
-            return 1.0 + (mc.single_ratio - 1.0) * cred
+            return _phase0_applied_ratio(mc)
         if mc.phase == "A":
             return mc.single_ratio
 
@@ -403,6 +425,10 @@ def persist_state() -> None:
                 "n_total":        mc.n_total,
                 "n_settled":      mc.n_settled,
                 "single_ratio":   round(mc.single_ratio, 4),
+                # What the system multiplies edges by RIGHT NOW (target single_ratio
+                # shrunk by sample-size credibility in Phase 0; == single_ratio in
+                # Phase A). The panel shows this as the "applied" amount.
+                "applied_ratio":  round(applied_single_ratio(mc), 4),
                 "single_predicted_rate": round(mc.single_predicted_rate, 4),
                 "single_realized_rate":  round(mc.single_realized_rate, 4),
                 "buckets": [
