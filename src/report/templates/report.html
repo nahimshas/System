@@ -1612,11 +1612,16 @@
           and computes a per-sport, per-market <em>realised vs predicted</em> ratio.
           As sample size grows, each sport × market auto-promotes through phases without any manual intervention:
           <ul style="margin:6px 0 0 18px;padding:0;">
-            <li><strong>Phase 0</strong> — &lt; {{ cal.thresholds.phase_a_min or 100 }} settled picks: no adjustment, raw edges shown.</li>
-            <li><strong>Phase A</strong> — single ratio applied to every pick's edge (effective_edge = raw_edge &times; ratio).</li>
+            <li><strong>Phase 0</strong> — &lt; {{ cal.thresholds.phase_a_min or 100 }} settled picks: a <em>credibility-weighted</em> share of the target is applied (cred = settled &divide; {{ cal.thresholds.phase_a_min or 100 }}), so a clear miss starts being corrected immediately and ramps up as data grows.</li>
+            <li><strong>Phase A</strong> — full single ratio applied to every pick's edge (effective_edge = raw_edge &times; ratio); applied now equals target.</li>
             <li><strong>Phase B</strong> — per-bucket ratios (50–60% / 60–70% / 70–80% / 80%+) — &ge; {{ cal.thresholds.phase_b_min or 400 }} settled picks with &ge; {{ cal.thresholds.bucket_min_n or 30 }} per bucket.</li>
             <li><strong>Phase C</strong> — isotonic regression smooth curve (reserved, future build-out).</li>
           </ul>
+          <div style="margin-top:6px;">
+            <strong>Target vs Applied:</strong> <em>Target</em> is the full measured correction (realised &divide; predicted);
+            <em>Applied</em> is what multiplies edges right now. They're equal from Phase A on; in Phase 0 Applied is a
+            partial share of Target that grows toward it as more picks settle. Both shift daily as new results land.
+          </div>
           The same effective edge is used to rank picks for the top-5 slots, so a noisier model whose 30% edges historically realise as 10% will have those edges shrunk automatically — no longer crowding out tighter-edge picks from sports with better-calibrated models.
         </div>
       </details>
