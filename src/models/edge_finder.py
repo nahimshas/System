@@ -2073,6 +2073,13 @@ def _nhl_margin_to_prob(expected_margin: float) -> float:
     return float(norm.cdf(expected_margin, 0, NHL_SPREAD_STD))
 
 
+# Probability→margin conversion for adding the NHL residual adjustments (home
+# ice, B2B, injuries) in MARGIN space, then converting with a single CDF — so a
+# flat ±X% no longer overshoots in the tails. Dividing by the central CDF slope
+# (pdf(0)) keeps mid-range picks unchanged and compresses only the tails.
+_NHL_PROB_TO_MARGIN = 1.0 / float(norm.pdf(0, 0, NHL_SPREAD_STD))
+
+
 def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: float = None) -> List[BetRecommendation]:
     from src.data.nhl_stats import normalize as nhl_normalize
     home = nhl_normalize(game["home_team"])
@@ -2226,7 +2233,12 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             signals.append(_nhl_proj_signal)
 
         # Calibration capture: raw prob + cap firing trackers.
-        _nhl_raw_home = _nhl_margin_to_prob(base_margin) + adj
+        # Add the accumulated adjustments (home ice / B2B / injuries) in MARGIN
+        # space, then convert with a single CDF — previously `+ adj` added flat
+        # probability points on top of the CDF, which overshoots in the tails.
+        # The puck-line block below derives its margin from this prob via
+        # inverse-CDF, so it stays consistent automatically.
+        _nhl_raw_home = _nhl_margin_to_prob(base_margin + adj * _NHL_PROB_TO_MARGIN)
         _nhl_hardcap_fired = (_nhl_raw_home > 0.90) or (_nhl_raw_home < 0.10)
         adjusted_home_prob = min(0.90, max(0.10, _nhl_raw_home))
         adjusted_away_prob = 1 - adjusted_home_prob
