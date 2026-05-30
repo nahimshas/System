@@ -991,6 +991,11 @@ def _mlb_conf(edge: float, signal_count: int, stats_available: bool,
     return "MEDIUM"
 
 
+def _hand_label(code: Optional[str]) -> str:
+    """Map a pitcher hand code to a readable label for card display."""
+    return {"L": "LHP", "R": "RHP"}.get(code or "", "opposing SP")
+
+
 def _platoon_ops(overall_ops: float, split: Optional[Dict]) -> float:
     """
     Blend a lineup's overall OPS toward its split vs the opposing starter's hand,
@@ -1208,15 +1213,20 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     _home_ops_pre_split, _away_ops_pre_split = home_ops, away_ops
     home_ops = _platoon_ops(home_ops, home_off_split)
     away_ops = _platoon_ops(away_ops, away_off_split)
-    if home_off_split and abs(home_ops - _home_ops_pre_split) >= 0.003:
+    # Emit a transparent platoon line whenever a split is available, naming the
+    # opposing starter's hand, the split OPS + sample, the season OPS, and the
+    # value the model actually used. Card context + narrative read these.
+    if home_off_split and home_off_split.get("ops"):
         signals.append(
-            f"Platoon: {home} OPS vs hand {home_off_split.get('ops'):.3f} "
-            f"({home_off_split.get('pa')} PA) → blended {home_ops:.3f}"
+            f"Platoon: {home} vs {_hand_label(home_off_split.get('vs_hand'))} — "
+            f"{home_off_split['ops']:.3f} OPS ({home_off_split.get('pa', 0)} PA), "
+            f"season {_home_ops_pre_split:.3f} → model {home_ops:.3f}"
         )
-    if away_off_split and abs(away_ops - _away_ops_pre_split) >= 0.003:
+    if away_off_split and away_off_split.get("ops"):
         signals.append(
-            f"Platoon: {away} OPS vs hand {away_off_split.get('ops'):.3f} "
-            f"({away_off_split.get('pa')} PA) → blended {away_ops:.3f}"
+            f"Platoon: {away} vs {_hand_label(away_off_split.get('vs_hand'))} — "
+            f"{away_off_split['ops']:.3f} OPS ({away_off_split.get('pa', 0)} PA), "
+            f"season {_away_ops_pre_split:.3f} → model {away_ops:.3f}"
         )
 
     # Coors Field correction — Colorado's season OPS and pitcher xFIP/ERA are

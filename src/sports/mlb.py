@@ -219,8 +219,14 @@ class MLBModule:
                 away_hand = get_pitcher_hand(game.get("away_pitcher_id"))
                 home_splits = get_team_splits_vs_hand(game.get("home_team_id"))
                 away_splits = get_team_splits_vs_hand(game.get("away_team_id"))
-                home_off_split = home_splits.get(away_hand) if away_hand else None
-                away_off_split = away_splits.get(home_hand) if home_hand else None
+                home_off_split = (
+                    {**home_splits[away_hand], "vs_hand": away_hand}
+                    if away_hand and away_hand in home_splits else None
+                )
+                away_off_split = (
+                    {**away_splits[home_hand], "vs_hand": home_hand}
+                    if home_hand and home_hand in away_splits else None
+                )
                 home_load = get_team_schedule_load(game.get("home_team_id"), today_date)
                 away_load = get_team_schedule_load(game.get("away_team_id"), today_date)
 

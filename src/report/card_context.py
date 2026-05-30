@@ -89,7 +89,8 @@ _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
         re.compile(r"^Model projected score"),              # 0  projected score
         re.compile(r"^Model expected total"),               # 1  expected total
         re.compile(r"(?i)\boffense:|\bbatting:"),           # 2  team batting / records
-        re.compile(r"(?i)\bBullpen"),                       # 3  team bullpen stats
+        re.compile(r"^Platoon:"),                           # 3  platoon split vs opp hand
+        re.compile(r"(?i)\bBullpen"),                       # 4  team bullpen stats
         re.compile(r"^(?:🔵|🔴)"),                         # 4  pitcher matchup
         re.compile(r"^Venue:"),                             # 5  venue / park factor
         re.compile(r"^(?:🌤|Weather)"),                    # 6  weather (emoji prefix)
@@ -225,6 +226,17 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
         if m:
             injuries.append((m.group(1), float(m.group(2))))
 
+    # Platoon splits: "Platoon: TEAM vs RHP — .806 OPS (695 PA), season .735 → model .772"
+    platoons = []
+    for s in signals:
+        m = re.search(
+            r"Platoon: (.+?) vs (\w+) — ([\d.]+) OPS \((\d+) PA\), "
+            r"season ([\d.]+) → model ([\d.]+)",
+            s,
+        )
+        if m:
+            platoons.append(m)  # groups: team, hand, split_ops, pa, season, blended
+
     score_m = _search_first(
         r"Model projected score: (.+?) ([\d.]+) — (.+?) ([\d.]+)", signals
     )
@@ -327,6 +339,20 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
             leader = t1 if float(r1) > float(r2) else t2
             diff = abs(float(r1) - float(r2))
             parts.append(f"Model projects {leader} by {diff:.1f} runs ({t1} {r1} — {t2} {r2}).")
+
+    # Favorable platoon for the team we're backing (ML/Spread only — totals
+    # already fold both lineups' splits into the projected total above).
+    if bet_type != "Total":
+        for m in platoons:
+            pteam, hand = m.group(1), m.group(2)
+            split_ops, season, blended = float(m.group(3)), float(m.group(5)), float(m.group(6))
+            if (pteam in pick or pick.startswith(pteam)) and (blended - season) >= 0.012:
+                parts.append(
+                    f"{pteam} also profiles well against {hand} this year "
+                    f"({split_ops:.3f} OPS vs {season:.3f} overall), which the model "
+                    f"folds into its run projection."
+                )
+                break
 
     return " ".join(parts)
 
