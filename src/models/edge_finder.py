@@ -2855,10 +2855,15 @@ def analyze_wnba_game(
     home_blended = (1 - WNBA_RECENT_WEIGHT) * home_net + WNBA_RECENT_WEIGHT * home_recent_net
     away_blended = (1 - WNBA_RECENT_WEIGHT) * away_net + WNBA_RECENT_WEIGHT * away_recent_net
 
-    # Point margin from net ratings, converted to win probability via Normal CDF
-    net_diff   = home_blended - away_blended
-    base_prob  = float(_norm.cdf(net_diff / WNBA_SPREAD_STD))
-    base_prob  = min(0.88, max(0.12, base_prob))
+    # Point margin from blended net ratings. The probability adjustments below
+    # (home court, B2B, injuries) are accumulated in `adj` as probability points,
+    # then converted to MARGIN points and added to net_diff before a single
+    # Normal CDF maps the total to a win probability (see _wnba_raw_home). This
+    # replaces the old `base_prob + adj` (adding flat percentage points on top of
+    # the CDF), which overshot in the tails. Conversion via the central CDF slope
+    # leaves mid-range picks unchanged and compresses only the tails.
+    net_diff = home_blended - away_blended
+    _wnba_prob_to_margin = 1.0 / float(_norm.pdf(0, 0, WNBA_SPREAD_STD))
 
     adj = 0.0
 
@@ -2969,7 +2974,8 @@ def analyze_wnba_game(
 
     # ── Final probability ─────────────────────────────────────────────────────
     # Calibration capture: raw prob + cap firing trackers.
-    _wnba_raw_home = base_prob + adj
+    # Adjustments added in margin space, then one CDF (see net_diff comment).
+    _wnba_raw_home = float(_norm.cdf((net_diff + adj * _wnba_prob_to_margin) / WNBA_SPREAD_STD))
     _wnba_hardcap_fired = (_wnba_raw_home > 0.90) or (_wnba_raw_home < 0.10)
     adj_home_prob = min(0.90, max(0.10, _wnba_raw_home))
     adj_away_prob = 1.0 - adj_home_prob
