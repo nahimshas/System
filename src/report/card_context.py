@@ -103,8 +103,8 @@ _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
     "NBA": [
         re.compile(r"^Model projected score"),              # projected score
         re.compile(r"^Model expected total"),               # expected total
-        re.compile(r"OffRtg|DefRtg|NetRtg"),               # season records + ratings
-        re.compile(r"recent"),                              # recent form
+        re.compile(r"OffRtg|DefRtg"),                       # season records + ratings
+        re.compile(r"recent|last \d+ days"),                # recent form ("last 14 days: …")
         re.compile(r"back-to-back"),                        # B2B fatigue
         re.compile(r"[Rr]est"),                             # rest days
         re.compile(r"schedule"),                            # schedule load
@@ -132,9 +132,9 @@ _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
     ],
     "WNBA": [
         re.compile(r"^Model projected score"),              # projected score
-        re.compile(r"PPG|NetRtg"),                          # season records + ratings
+        re.compile(r"NetRtg|FG "),                          # season records + ratings (recent line has neither)
         re.compile(r"^Strength of schedule"),               # SOS adjustment
-        re.compile(r"recent"),                              # recent form
+        re.compile(r"recent|last \d+ games"),               # recent form ("last N games: …")
         re.compile(r"back-to-back"),                        # B2B fatigue
         re.compile(r"[Rr]est"),                             # rest days
         re.compile(r"⚕"),                                   # injured player details
