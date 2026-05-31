@@ -227,6 +227,14 @@ class MLBModule:
                     {**away_splits[home_hand], "vs_hand": home_hand}
                     if home_hand and home_hand in away_splits else None
                 )
+                # Stamp each starter's throwing hand onto its stats so the card's
+                # pitcher line can show R/L — lets you corroborate the platoon split
+                # is computed vs the correct hand. Guarded so it doesn't make an
+                # empty (stats-unavailable) dict look populated.
+                if hp_stats and home_hand:
+                    hp_stats["hand"] = home_hand
+                if ap_stats and away_hand:
+                    ap_stats["hand"] = away_hand
                 home_load = get_team_schedule_load(game.get("home_team_id"), today_date)
                 away_load = get_team_schedule_load(game.get("away_team_id"), today_date)
 

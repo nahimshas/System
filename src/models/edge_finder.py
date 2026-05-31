@@ -1061,9 +1061,12 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         xfip_str = f" / xFIP {xfip:.2f}" if xfip is not None else ""
         babip_str = f" | BABIP {babip:.3f}" if babip is not None else ""
         ip_str   = f"{ip:.0f}" if isinstance(ip, float) else str(ip)
+        # Throwing hand (R/L), same value the platoon split is computed against —
+        # lets you corroborate the lineup's "vs RHP/LHP" split uses the right hand.
+        hand_str = {"R": " · RHP", "L": " · LHP"}.get(stats.get("hand", ""), "")
 
         research.append(
-            f"{colour} {name} ({team}): ERA {era} | {fip_str}{xfip_str} | "
+            f"{colour} {name} ({team}){hand_str}: ERA {era} | {fip_str}{xfip_str} | "
             f"K/9 {k9} | BB/9 {bb9} | IP {ip_str}{babip_str}"
         )
         signals.append(f"{name} {fip_str}{xfip_str} | K/9: {k9}")
