@@ -141,6 +141,26 @@
   }
 
   // ── MLB base diamond renderer ────────────────────────────────────────────
+  // Short player name: first-initial + last name, preserving a generational
+  // suffix. "Pedro Ortiz Jr" → "P. Ortiz Jr"; "Cam Sanders" → "C. Sanders".
+  // Replaces the old name.split(' ').pop() which returned just the last token
+  // (so suffixed names showed only "Jr"/"II"). Takes an ESPN athlete object.
+  function _shortPlayerName(athlete) {
+    if (!athlete) return '';
+    var full = athlete.fullName || athlete.displayName || athlete.shortName || '';
+    if (!full) return '';
+    var parts = full.trim().split(/\s+/);
+    if (parts.length < 2) return full;
+    var SUFFIX = { 'jr': 'Jr', 'jr.': 'Jr', 'sr': 'Sr', 'sr.': 'Sr',
+                   'ii': 'II', 'iii': 'III', 'iv': 'IV', 'v': 'V' };
+    var suffix = '';
+    var last = parts[parts.length - 1];
+    if (SUFFIX[last.toLowerCase()]) { suffix = ' ' + SUFFIX[last.toLowerCase()]; parts.pop(); }
+    if (parts.length < 2) return parts.join(' ') + suffix;
+    var lastName = parts[parts.length - 1];
+    return parts[0].charAt(0).toUpperCase() + '. ' + lastName + suffix;
+  }
+
   // Returns an inline HTML string showing the base diamond + B/S/O counts.
   // Only called for MLB in-progress games; returns "" if situation is null.
   // renderDiamond(situation, ev, compact)
@@ -222,19 +242,17 @@
     var rdAwayExtra = '', rdHomeExtra = '';
     var rdPitcher = situation.pitcher || null;
     if (rdPitcher) {
-      var rdPA = rdPitcher.athlete || rdPitcher;
-      var rdPN = rdPA.shortName || rdPA.displayName || rdPA.fullName || '';
+      var rdPN = _shortPlayerName(rdPitcher.athlete || rdPitcher);
       if (rdPN) {
-        var rdPL = '⚾ ' + rdPN.split(' ').pop();
+        var rdPL = '⚾ ' + rdPN;
         if (ev && ev.isBottom) rdAwayExtra = rdPL; else rdHomeExtra = rdPL;
       }
     }
     var rdBatter = situation.batter || null;
     if (rdBatter) {
-      var rdBA = rdBatter.athlete || rdBatter;
-      var rdBN = rdBA.shortName || rdBA.displayName || rdBA.fullName || '';
+      var rdBN = _shortPlayerName(rdBatter.athlete || rdBatter);
       if (rdBN) {
-        var rdBL = '🏑 ' + rdBN.split(' ').pop();
+        var rdBL = '🏑 ' + rdBN;
         if (ev && ev.isBottom) rdHomeExtra = rdBL; else rdAwayExtra = rdBL;
       }
     }
@@ -289,19 +307,17 @@
     if (sit) {
       var mp = sit.pitcher;
       if (mp) {
-        var mpA = mp.athlete || mp;
-        var mpN = mpA.shortName || mpA.displayName || mpA.fullName || '';
+        var mpN = _shortPlayerName(mp.athlete || mp);
         if (mpN) {
-          var pitcherLabel = '⚾ ' + mpN.split(' ').pop();
+          var pitcherLabel = '⚾ ' + mpN;
           if (ev.isBottom) awayExtra = pitcherLabel; else homeExtra = pitcherLabel;
         }
       }
       var mb = sit.batter;
       if (mb) {
-        var mbA = mb.athlete || mb;
-        var mbN = mbA.shortName || mbA.displayName || mbA.fullName || '';
+        var mbN = _shortPlayerName(mb.athlete || mb);
         if (mbN) {
-          var batterLabel = '🏑 ' + mbN.split(' ').pop();
+          var batterLabel = '🏑 ' + mbN;
           if (ev.isBottom) homeExtra = batterLabel; else awayExtra = batterLabel;
         }
       }
