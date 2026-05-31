@@ -2835,7 +2835,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 31, 2026 at 11:34 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 31, 2026 at 12:55 PM PDT</div>
         </div>
         
       </div>
@@ -3588,6 +3588,72 @@ function toggleCtx(el) {
   }
 
   // ── MLB base diamond renderer ────────────────────────────────────────────
+  // Short player name: first-initial + last name, preserving a generational
+  // suffix. "Pedro Ortiz Jr" → "P. Ortiz Jr"; "Cam Sanders" → "C. Sanders".
+  // Replaces the old name.split(' ').pop() which returned just the last token
+  // (so suffixed names showed only "Jr"/"II"). Takes an ESPN athlete object.
+  function _shortPlayerName(athlete) {
+    if (!athlete) return '';
+    var full = athlete.fullName || athlete.displayName || athlete.shortName || '';
+    if (!full) return '';
+    var parts = full.trim().split(/\s+/);
+    if (parts.length < 2) return full;
+    var SUFFIX = { 'jr': 'Jr', 'jr.': 'Jr', 'sr': 'Sr', 'sr.': 'Sr',
+                   'ii': 'II', 'iii': 'III', 'iv': 'IV', 'v': 'V' };
+    var suffix = '';
+    var last = parts[parts.length - 1];
+    if (SUFFIX[last.toLowerCase()]) { suffix = ' ' + SUFFIX[last.toLowerCase()]; parts.pop(); }
+    if (parts.length < 2) return parts.join(' ') + suffix;
+    var lastName = parts[parts.length - 1];
+    return parts[0].charAt(0).toUpperCase() + '. ' + lastName + suffix;
+  }
+
+  // ── Live pitcher hand + batter lineup spot (lazy-fetched, cached) ──────────
+  // ESPN's live situation has no throwing hand and no batting order, so we look
+  // them up by athlete/event id from CORS-open ESPN endpoints and cache. The
+  // live render reads whatever is cached; values appear within a poll cycle of
+  // a new pitcher/batter (hand never changes → cached forever; lineup per game).
+  var _pitcherHandCache = {};   // athleteId -> 'R'/'L'/'' (set once)
+  var _lineupCache = {};        // eventId -> { athleteId: batOrder 1-9 }
+
+  function _fetchPitcherHand(pid) {
+    if (!pid || _pitcherHandCache.hasOwnProperty(pid)) return;
+    _pitcherHandCache[pid] = '';   // mark requested to avoid duplicate fetches
+    fetch('https://sports.core.api.espn.com/v2/sports/baseball/leagues/mlb/athletes/' + pid)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var t = (d && d.throws) ? (d.throws.abbreviation || '') : '';
+        if (t === 'R' || t === 'L') _pitcherHandCache[pid] = t;
+      })
+      .catch(function () {});
+  }
+
+  function _fetchLineup(eventId) {
+    if (!eventId) return;
+    var cur = _lineupCache[eventId];
+    // (Re)fetch until we have a non-empty lineup (handles fetching before the
+    // lineup is posted); once populated it never refetches.
+    if (cur === '_pending') return;
+    if (cur && typeof cur === 'object' && Object.keys(cur).length > 0) return;
+    _lineupCache[eventId] = '_pending';
+    fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event=' + eventId)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var map = {};
+        var groups = (d.boxscore || {}).players || [];
+        groups.forEach(function (g) {
+          (g.statistics || []).forEach(function (st) {
+            (st.athletes || []).forEach(function (a) {
+              var id = (a.athlete || {}).id;
+              if (id && a.batOrder) map[id] = a.batOrder;
+            });
+          });
+        });
+        _lineupCache[eventId] = map;
+      })
+      .catch(function () { _lineupCache[eventId] = {}; });
+  }
+
   // Returns an inline HTML string showing the base diamond + B/S/O counts.
   // Only called for MLB in-progress games; returns "" if situation is null.
   // renderDiamond(situation, ev, compact)
@@ -3667,21 +3733,26 @@ function toggleCtx(el) {
 
     // Place pitcher under pitching team, batter under batting team.
     var rdAwayExtra = '', rdHomeExtra = '';
+    var rdEid = ev && ev.id;
     var rdPitcher = situation.pitcher || null;
     if (rdPitcher) {
-      var rdPA = rdPitcher.athlete || rdPitcher;
-      var rdPN = rdPA.shortName || rdPA.displayName || rdPA.fullName || '';
+      var rdPAth = rdPitcher.athlete || rdPitcher;
+      var rdPN = _shortPlayerName(rdPAth);
       if (rdPN) {
-        var rdPL = '⚾ ' + rdPN.split(' ').pop();
+        _fetchPitcherHand(rdPAth.id);
+        var rdHand = _pitcherHandCache[rdPAth.id];
+        var rdPL = '⚾ ' + rdPN + (rdHand ? ' (' + rdHand + ')' : '');
         if (ev && ev.isBottom) rdAwayExtra = rdPL; else rdHomeExtra = rdPL;
       }
     }
     var rdBatter = situation.batter || null;
     if (rdBatter) {
-      var rdBA = rdBatter.athlete || rdBatter;
-      var rdBN = rdBA.shortName || rdBA.displayName || rdBA.fullName || '';
+      var rdBAth = rdBatter.athlete || rdBatter;
+      var rdBN = _shortPlayerName(rdBAth);
       if (rdBN) {
-        var rdBL = '🏑 ' + rdBN.split(' ').pop();
+        _fetchLineup(rdEid);
+        var rdSpot = (_lineupCache[rdEid] || {})[rdBAth.id];
+        var rdBL = '🏑 ' + rdBN + (rdSpot ? ' #' + rdSpot : '');
         if (ev && ev.isBottom) rdHomeExtra = rdBL; else rdAwayExtra = rdBL;
       }
     }
@@ -3734,21 +3805,26 @@ function toggleCtx(el) {
     // Bottom of inning (isBottom=1): away team pitching, home team batting.
     var awayExtra = '', homeExtra = '';
     if (sit) {
+      var mlEid = ev && ev.id;
       var mp = sit.pitcher;
       if (mp) {
-        var mpA = mp.athlete || mp;
-        var mpN = mpA.shortName || mpA.displayName || mpA.fullName || '';
+        var mpAth = mp.athlete || mp;
+        var mpN = _shortPlayerName(mpAth);
         if (mpN) {
-          var pitcherLabel = '⚾ ' + mpN.split(' ').pop();
+          _fetchPitcherHand(mpAth.id);
+          var mpHand = _pitcherHandCache[mpAth.id];
+          var pitcherLabel = '⚾ ' + mpN + (mpHand ? ' (' + mpHand + ')' : '');
           if (ev.isBottom) awayExtra = pitcherLabel; else homeExtra = pitcherLabel;
         }
       }
       var mb = sit.batter;
       if (mb) {
-        var mbA = mb.athlete || mb;
-        var mbN = mbA.shortName || mbA.displayName || mbA.fullName || '';
+        var mbAth = mb.athlete || mb;
+        var mbN = _shortPlayerName(mbAth);
         if (mbN) {
-          var batterLabel = '🏑 ' + mbN.split(' ').pop();
+          _fetchLineup(mlEid);
+          var mbSpot = (_lineupCache[mlEid] || {})[mbAth.id];
+          var batterLabel = '🏑 ' + mbN + (mbSpot ? ' #' + mbSpot : '');
           if (ev.isBottom) homeExtra = batterLabel; else awayExtra = batterLabel;
         }
       }
