@@ -114,8 +114,8 @@ _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
     ],
     "NHL": [
         re.compile(r"^Model projected score"),              # projected score
-        re.compile(r"GPG|GAPG|NetRtg"),                    # season records + ratings
-        re.compile(r"recent"),                              # recent form
+        re.compile(r"GPG|GAPG"),                            # season records + ratings
+        re.compile(r"recent|last \d+ days"),                # recent form ("last 14 days: …")
         re.compile(r"back-to-back"),                        # B2B fatigue
         re.compile(r"[Rr]est"),                             # rest days
         re.compile(r"injur|⚕"),                            # injuries
