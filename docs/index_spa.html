@@ -1868,16 +1868,6 @@
       <div class="tab-header-sub">Performance · Props · Calibration · Cap</div>
     </div>
 
-    <details id="sect-tab-visibility">
-    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:14px;"><span class="det-arrow">▶</span>Show / Hide League Tabs</summary>
-    <div class="card">
-      <div style="font-size:0.78rem;color:var(--muted);line-height:1.5;margin-bottom:10px;">
-        Hide leagues you don't follow so they drop out of the bottom carousel. Saved on this device only — other devices keep their own choice. Today and Analytics always stay visible.
-      </div>
-      <div id="tab-visibility-list"></div>
-    </div>
-    </details>
-
     
     
     <details id="sect-model-perf" open>
@@ -2828,6 +2818,16 @@
     </details>
     
 
+    <details id="sect-tab-visibility">
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Show / Hide League Tabs</summary>
+    <div class="card">
+      <div style="font-size:0.78rem;color:var(--muted);line-height:1.5;margin-bottom:10px;">
+        Hide leagues you don't follow so they drop out of the bottom carousel. Saved on this device only — other devices keep their own choice.
+      </div>
+      <div id="tab-visibility-list"></div>
+    </div>
+    </details>
+
     <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:14px;">
       
       
@@ -2845,7 +2845,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 31, 2026 at 05:49 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">May 31, 2026 at 05:59 PM PDT</div>
         </div>
         
       </div>
@@ -2949,8 +2949,9 @@ window._tabDots = {
   function renderCarousel(centerIdx) {
     var dotMeta = window._tabDots || {};
     // Process slots center-out so the nearest instance of each tab wins. When
-    // fewer than 9 tabs are visible the wrap repeats tabs; we blank the repeats
-    // (keeping their layout space via visibility:hidden) so no duplicate shows.
+    // fewer than 9 tabs are visible the circular wrap repeats tabs; we collapse
+    // the repeats with display:none so the remaining flex:1 slots redistribute
+    // evenly across the bar (no gaps) instead of leaving blank holes.
     var order = [4, 3, 5, 2, 6, 1, 7, 0, 8];
     var seen = {};
     for (var oi = 0; oi < order.length; oi++) {
@@ -2961,15 +2962,15 @@ window._tabDots = {
       var slot   = document.getElementById("nav-s" + si);
       if (!slot) continue;
 
-      if (seen[meta.key]) {                           // duplicate → blank, keep grid centered
-        slot.style.visibility = "hidden";
+      if (seen[meta.key]) {                           // duplicate wrap → remove from layout
+        slot.style.display = "none";
         slot.onclick = null;
         slot.removeAttribute("data-tab");
         slot.innerHTML = "";
         continue;
       }
       seen[meta.key] = true;
-      slot.style.visibility = "";
+      slot.style.display = "";
 
       slot.setAttribute("data-tab",    meta.key);
       slot.setAttribute("data-offset", String(offset));
@@ -3033,8 +3034,9 @@ window._tabDots = {
     var hidden = getHiddenTabs();
     box.innerHTML = "";
     TABS_META_ALL.forEach(function (m) {
-      var pinned  = !!PINNED_TABS[m.key];
-      var visible = pinned || hidden.indexOf(m.key) < 0;
+      if (PINNED_TABS[m.key]) return;        // Today/Analytics always shown — no toggle
+      var pinned  = false;
+      var visible = hidden.indexOf(m.key) < 0;
       var row = document.createElement("div");
       row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--border);";
       row.innerHTML =
