@@ -1185,6 +1185,16 @@
       <div class="tab-header-sub">Performance · Props · Calibration · Cap</div>
     </div>
 
+    <details id="sect-tab-visibility">
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:14px;"><span class="det-arrow">▶</span>Show / Hide League Tabs</summary>
+    <div class="card">
+      <div style="font-size:0.78rem;color:var(--muted);line-height:1.5;margin-bottom:10px;">
+        Hide leagues you don't follow so they drop out of the bottom carousel. Saved on this device only — other devices keep their own choice. Today and Analytics always stay visible.
+      </div>
+      <div id="tab-visibility-list"></div>
+    </div>
+    </details>
+
     {% if report.has_performance %}
     {% set p = report.performance %}
     <details id="sect-model-perf" open>
@@ -1660,8 +1670,9 @@ window._tabDots = {
 (function () {
   "use strict";
 
-  var TABS = ["today","nba","mlb","ipl","nhl","wnba","nfl","mls","analytics"];
-  var TABS_META = [
+  // Master list (fixed order). TABS / TABS_META are the VISIBLE subset, rebuilt
+  // from per-device hidden prefs. today + analytics are always pinned visible.
+  var TABS_META_ALL = [
     { key:"today",     emoji:"📋", label:"Today"     },
     { key:"nba",       emoji:"🏀", label:"NBA"       },
     { key:"mlb",       emoji:"⚾", label:"MLB"       },
@@ -1672,6 +1683,30 @@ window._tabDots = {
     { key:"mls",       emoji:"⚽", label:"MLS"       },
     { key:"analytics", emoji:"📊", label:"Analytics" }
   ];
+  var PINNED_TABS = { today: true, analytics: true };
+  var HIDDEN_TABS_KEY = "hidden-tabs";
+
+  function getHiddenTabs() {
+    try {
+      var v = JSON.parse(localStorage.getItem(HIDDEN_TABS_KEY));
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+  function setHiddenTabs(arr) {
+    try { localStorage.setItem(HIDDEN_TABS_KEY, JSON.stringify(arr)); } catch (e) {}
+  }
+
+  var TABS = [];
+  var TABS_META = [];
+  function rebuildVisibleTabs() {
+    var hidden = getHiddenTabs();
+    TABS_META = TABS_META_ALL.filter(function (m) {
+      return PINNED_TABS[m.key] || hidden.indexOf(m.key) < 0;
+    });
+    TABS = TABS_META.map(function (m) { return m.key; });
+  }
+  rebuildVisibleTabs();
+
   var curIdx = 0;
 
   function _mod(n, m) { return ((n % m) + m) % m; }
@@ -1680,12 +1715,28 @@ window._tabDots = {
   // Each slot gets a data-offset (-4..+4) and data-tab; CSS handles sizing/opacity.
   function renderCarousel(centerIdx) {
     var dotMeta = window._tabDots || {};
-    for (var si = 0; si < 9; si++) {
-      var offset = si - 4;                            // -4, -3, -2, -1, 0, 1, 2, 3, 4
+    // Process slots center-out so the nearest instance of each tab wins. When
+    // fewer than 9 tabs are visible the wrap repeats tabs; we blank the repeats
+    // (keeping their layout space via visibility:hidden) so no duplicate shows.
+    var order = [4, 3, 5, 2, 6, 1, 7, 0, 8];
+    var seen = {};
+    for (var oi = 0; oi < order.length; oi++) {
+      var si     = order[oi];
+      var offset = si - 4;                            // -4..+4
       var tabIdx = _mod(centerIdx + offset, TABS.length);
       var meta   = TABS_META[tabIdx];
       var slot   = document.getElementById("nav-s" + si);
       if (!slot) continue;
+
+      if (seen[meta.key]) {                           // duplicate → blank, keep grid centered
+        slot.style.visibility = "hidden";
+        slot.onclick = null;
+        slot.removeAttribute("data-tab");
+        slot.innerHTML = "";
+        continue;
+      }
+      seen[meta.key] = true;
+      slot.style.visibility = "";
 
       slot.setAttribute("data-tab",    meta.key);
       slot.setAttribute("data-offset", String(offset));
@@ -1732,11 +1783,61 @@ window._tabDots = {
   // Expose globally for sport-grid tile clicks
   window.showTab = showTab;
 
-  // Restore last tab
+  // Restore last tab — fall back to Today if it was hidden on this device.
   try {
     var saved = localStorage.getItem("spa-tab");
     if (saved && TABS.indexOf(saved) >= 0) showTab(saved);
+    else if (saved && saved !== "today") showTab("today");
   } catch(e) {}
+
+  // ── League tab show/hide controls (Analytics tab) ───────────────────────
+  // Per-device: toggles live in localStorage, so each PWA install keeps its own
+  // visible set. Rebuilds the carousel live; if the active tab gets hidden,
+  // jumps to Today.
+  function buildTabVisibilityUI() {
+    var box = document.getElementById("tab-visibility-list");
+    if (!box) return;
+    var hidden = getHiddenTabs();
+    box.innerHTML = "";
+    TABS_META_ALL.forEach(function (m) {
+      var pinned  = !!PINNED_TABS[m.key];
+      var visible = pinned || hidden.indexOf(m.key) < 0;
+      var row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--border);";
+      row.innerHTML =
+        '<span style="font-size:0.9rem;">' + m.emoji + ' ' + m.label +
+        (pinned ? ' <span style="font-size:0.68rem;color:var(--muted);">(always shown)</span>' : '') + '</span>';
+      var btn = document.createElement("button");
+      btn.textContent = visible ? "Shown" : "Hidden";
+      btn.disabled = pinned;
+      btn.style.cssText =
+        "border:1px solid " + (visible ? "var(--teal)" : "var(--border)") + ";" +
+        "background:" + (visible ? "rgba(20,184,166,0.15)" : "transparent") + ";" +
+        "color:" + (visible ? "var(--teal)" : "var(--muted)") + ";" +
+        "border-radius:99px;padding:4px 14px;font-size:0.75rem;font-weight:600;" +
+        "cursor:" + (pinned ? "default" : "pointer") + ";opacity:" + (pinned ? "0.6" : "1") + ";";
+      if (!pinned) {
+        btn.onclick = function () {
+          var activeKey = TABS[curIdx] || "today";   // capture before rebuild
+          var h = getHiddenTabs();
+          var i = h.indexOf(m.key);
+          if (i < 0) h.push(m.key); else h.splice(i, 1);
+          setHiddenTabs(h);
+          rebuildVisibleTabs();
+          if (TABS.indexOf(activeKey) < 0) {
+            showTab("today");                          // active tab was just hidden
+          } else {
+            curIdx = TABS.indexOf(activeKey);
+            renderCarousel(curIdx);
+          }
+          buildTabVisibilityUI();
+        };
+      }
+      row.appendChild(btn);
+      box.appendChild(row);
+    });
+  }
+  buildTabVisibilityUI();
 
   // ── Today card → sport tab deep-link ─────────────────────────────────────
   document.querySelectorAll(".alloc-card").forEach(function(card) {
