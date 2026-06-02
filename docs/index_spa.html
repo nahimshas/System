@@ -681,6 +681,17 @@
     </div>
 
     
+    <div id="validation-banner" style="display:none;margin-top:10px;">
+      <div id="validation-banner-head" onclick="toggleValidationDetail()"
+           style="cursor:pointer;border-radius:8px;padding:9px 12px;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:8px;">
+        <span id="validation-icon">⚠️</span>
+        <span id="validation-summary" style="flex:1;"></span>
+        <span id="validation-chevron" style="color:var(--muted);font-size:0.7rem;">▾</span>
+      </div>
+      <div id="validation-detail" style="display:none;margin-top:6px;"></div>
+    </div>
+
+    
     
 
     
@@ -2979,7 +2990,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 02, 2026 at 09:16 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 02, 2026 at 02:11 PM PDT</div>
         </div>
         
       </div>
@@ -3207,6 +3218,64 @@ window._tabDots = {
     });
   }
   buildTabVisibilityUI();
+
+  // ── Morning-run validation banner ─────────────────────────────────────────
+  // Fetches docs/validation_report.json (written by the workflow's validate
+  // step) and shows a tappable banner on the Today tab ONLY when the latest run
+  // had findings. Tapping expands per-check what/why/fix. Silent on PASS.
+  window.toggleValidationDetail = function () {
+    var d = document.getElementById("validation-detail");
+    var c = document.getElementById("validation-chevron");
+    if (!d) return;
+    var open = d.style.display === "none";
+    d.style.display = open ? "block" : "none";
+    if (c) c.textContent = open ? "▴" : "▾";
+  };
+  (function loadValidation() {
+    fetch("validation_report.json?_=" + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rep) {
+        if (!rep || rep.status === "PASS" || !(rep.findings || []).length) return;
+        var banner  = document.getElementById("validation-banner");
+        var icon    = document.getElementById("validation-icon");
+        var summary = document.getElementById("validation-summary");
+        var head    = document.getElementById("validation-banner-head");
+        var detail  = document.getElementById("validation-detail");
+        if (!banner) return;
+
+        var isFail = rep.status === "FAIL";
+        // FAIL → red/amber, WARN(info-only) → muted yellow.
+        head.style.background = isFail ? "rgba(239,68,68,0.12)"  : "rgba(234,179,8,0.10)";
+        head.style.border     = "1px solid " + (isFail ? "rgba(239,68,68,0.4)" : "rgba(234,179,8,0.35)");
+        head.style.color      = isFail ? "#fca5a5" : "#fbbf24";
+        icon.textContent      = isFail ? "❌" : "⚠️";
+        var w = rep.warn_count || 0, i = rep.info_count || 0;
+        summary.textContent = "Morning-run check: " +
+          (w ? w + " issue" + (w !== 1 ? "s" : "") : "") +
+          (w && i ? ", " : "") +
+          (i ? i + " note" + (i !== 1 ? "s" : "") : "") +
+          " — tap for details";
+
+        var html = "";
+        (rep.findings || []).forEach(function (f) {
+          var sev = f.severity === "warn" ? "⚠️" : "ℹ️";
+          var col = f.severity === "warn" ? "#fca5a5" : "#94a3b8";
+          html += '<div style="background:var(--card2);border:1px solid var(--border);' +
+                  'border-radius:8px;padding:9px 11px;margin-bottom:6px;font-size:0.78rem;line-height:1.5;">' +
+                  '<div style="font-weight:600;color:' + col + ';">' + sev + ' ' + f.what + '</div>' +
+                  '<div style="color:var(--muted);margin-top:3px;"><strong>Why:</strong> ' + f.why + '</div>' +
+                  '<div style="color:var(--teal);margin-top:3px;"><strong>Fix:</strong> ' + f.fix + '</div>' +
+                  '</div>';
+        });
+        if (rep.generated_at) {
+          html += '<div style="font-size:0.66rem;color:var(--muted);text-align:right;">checked ' +
+                  rep.generated_at.slice(0, 19).replace("T", " ") + ' UTC</div>';
+        }
+        detail.innerHTML = html;
+        banner.style.display = "block";
+      })
+      .catch(function () { /* no report yet → banner stays hidden */ });
+  }());
 
   // ── Today card → sport tab deep-link ─────────────────────────────────────
   document.querySelectorAll(".alloc-card").forEach(function(card) {

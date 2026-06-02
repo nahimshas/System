@@ -115,6 +115,13 @@ jobs:
           fi
           python -m src.main $LEAGUE_ARG $NO_EMAIL_ARG $REEVALUATE_ARG $CODE_ONLY_ARG
 
+      - name: Validate morning run (report-only, never blocks)
+        # Post-settlement invariant checks: no dropped bets/props, P&L reconciles,
+        # tiles add up, no duplicate settlement, self-tuning state sane. Writes
+        # state/validation_report.json (surfaced as a banner in the report) and
+        # prints a PASS/WARN/FAIL summary to this log. Always exits 0.
+        run: python validate_morning_run.py
+
       - name: Notify subscribers — picks ready
         # Runs on ALL workflow_dispatch triggers, including code-only re-renders.
         # code-only runs still need to write picks to KV so that if the morning run's
@@ -355,6 +362,10 @@ jobs:
           cp /tmp/sw.js docs/sw.js
           mkdir -p state
           cp -r /tmp/state/. state/ 2>/dev/null || true
-          git add docs/index.html docs/index_spa.html docs/sw.js state/
+          # Serve the validation report from docs/ so the report banner can fetch
+          # it client-side (decouples it from render order — validation runs after
+          # the report is generated).
+          cp state/validation_report.json docs/validation_report.json 2>/dev/null || true
+          git add docs/index.html docs/index_spa.html docs/sw.js docs/validation_report.json state/
           git diff --cached --quiet || git commit -m "Report: $(date +'%Y-%m-%d %H:%M UTC')"
           git push
