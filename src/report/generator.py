@@ -169,13 +169,9 @@ def build_report(
     # in both cases falling back to singles is the right thing to do.
     _display = singles_display if singles_display else singles
 
-    # NHL is monitoring-only — exclude from budget allocation pool entirely.
-    # All other active sports (NBA, MLB, NFL) compete for the top-5 slots.
-    # Cap all watchlist tabs at MAX_SINGLE_BETS (5) for consistency.
-    nhl_watchlist = sorted(
-        [s for s in _display if s.get("sport") == "NHL"],
-        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
-    )[:MAX_SINGLE_BETS]
+    # NHL graduated to a budget sport (June 2026) — it now competes for the
+    # top-5 budget slots alongside NBA/MLB/NFL (handled below via the shared
+    # _top_singles_for_sport + _tag_alloc path). No separate watchlist routing.
 
     # IPL is watchlist-only — never enters budget allocation or parlays.
     ipl_watchlist = sorted(
@@ -229,7 +225,6 @@ def build_report(
                 out.append(c)
             return out
 
-        nhl_watchlist  = _mark_settled(nhl_watchlist,  "NHL")
         wnba_watchlist = _mark_settled(wnba_watchlist, "WNBA")
         mls_watchlist  = _mark_settled(mls_watchlist,  "MLS")
         ipl_watchlist  = _mark_settled(ipl_watchlist,  "IPL")
@@ -242,7 +237,7 @@ def build_report(
     _seen_game_bets: set = set()
     _deduped_pool = []
     for s in sorted(
-        [s for s in singles if s.get("sport") != "NHL"],
+        singles,
         key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
     ):
         _key = (s.get("sport", ""), s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
@@ -253,7 +248,7 @@ def build_report(
     nba_singles = [s for s in all_singles if s["sport"] == "NBA"]
     mlb_singles = [s for s in all_singles if s["sport"] == "MLB"]
     nfl_singles = [s for s in all_singles if s["sport"] == "NFL"]
-    nhl_singles = [s for s in all_singles if s["sport"] == "NHL"]  # always empty (filtered above)
+    nhl_singles = [s for s in all_singles if s["sport"] == "NHL"]
 
     # ── Per-league top-5 singles for display in league sections ─────────────
     def _top_singles_for_sport(sport: str) -> List[Dict]:
@@ -288,6 +283,7 @@ def build_report(
     nba_top_singles_raw = _top_singles_for_sport("NBA")
     mlb_top_singles_raw = _top_singles_for_sport("MLB")
     nfl_top_singles_raw = _top_singles_for_sport("NFL")
+    nhl_top_singles_raw = _top_singles_for_sport("NHL")   # NHL graduated to budget (Jun 2026)
 
     # Tag which singles are in the budget allocation pool (rank 1-5).
     # Also override cost/profit/contracts with the allocation pool's locked values so
@@ -327,7 +323,7 @@ def build_report(
     nba_top_singles = _tag_alloc(nba_top_singles_raw)
     mlb_top_singles = _tag_alloc(mlb_top_singles_raw)
     nfl_top_singles = _tag_alloc(nfl_top_singles_raw)
-    # nhl_watchlist: never in budget, no alloc_rank needed
+    nhl_top_singles = _tag_alloc(nhl_top_singles_raw)
 
     # ── Per-league top-6 props for display ───────────────────────────────────
     # Locked props (from the curated `props` list) are always shown first so
@@ -537,7 +533,6 @@ def build_report(
         "mlb_singles":        mlb_singles,
         "nfl_singles":        nfl_singles,
         "nhl_singles":        nhl_singles,
-        "nhl_watchlist":      nhl_watchlist,
         "all_singles":        all_singles,
         "parlays":            parlays,
         "props":              props,
@@ -580,6 +575,7 @@ def build_report(
         "nba_top_singles":         nba_top_singles,
         "mlb_top_singles":         mlb_top_singles,
         "nfl_top_singles":         nfl_top_singles,
+        "nhl_top_singles":         nhl_top_singles,
         "nba_props":               nba_props_display,
         "mlb_props":               mlb_props_display,
         "has_nba_props":           len(nba_props_display) > 0,
@@ -587,6 +583,7 @@ def build_report(
         "has_nba_singles":         len(nba_top_singles) > 0,
         "has_mlb_singles":         len(mlb_top_singles) > 0,
         "has_nfl_singles":         len(nfl_top_singles) > 0,
+        "has_nhl_singles":         len(nhl_top_singles) > 0,
         "prop_accuracy_by_sport":  prop_accuracy_by_sport,
         "watchlist_performance":   watchlist_performance,
         # Calibration panel — auto-promotes between phases as shadow log data

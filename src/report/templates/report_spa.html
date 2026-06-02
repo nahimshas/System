@@ -1072,7 +1072,7 @@
         <div class="tab-header-title">🏒 NHL</div>
         <div class="tab-header-sub">
           {% if not report.has_nhl %}No games today
-          {% elif report.nhl_watchlist %}{{ report.nhl_watchlist|length }} pick{% if report.nhl_watchlist|length != 1 %}s{% endif %} &middot; watchlist
+          {% elif report.nhl_top_singles %}{{ report.nhl_top_singles|length }} pick{% if report.nhl_top_singles|length != 1 %}s{% endif %}
           {% else %}No qualifying picks{% endif %}
         </div>
       </div>
@@ -1080,13 +1080,15 @@
     </div>
     {% if not report.has_nhl %}
     <div class="empty-state"><div class="icon">🏒</div>No NHL games scheduled today.</div>
-    {% elif not report.nhl_watchlist %}
+    {% elif not report.nhl_top_singles %}
     <div class="empty-state"><div class="icon">😕</div>No picks with edge &gt; 3% today.</div>
     {% else %}
-    <div class="sec-label">Watchlist</div>
-    {% for bet in report.nhl_watchlist %}
-    {{ watchlist_card(bet, "badge-nhl", "NHL", "nhl-" + loop.index|string, "NHL", "Watchlist only — not tracked in performance tables until NHL testing is complete.", "nhl-watchlist-card") }}
+    <details id="sect-nhl-singles" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Singles</summary>
+    {% for bet in report.nhl_top_singles %}
+    {{ bet_card(bet, "badge-nhl", "NHL", 'bet-' + bet.alloc_rank|string if bet.alloc_rank else 'nhl-' + loop.index|string, "NHL") }}
     {% endfor %}
+    </details>
     {% endif %}
     <div style="height:16px;"></div>
   </div><!-- /tab-nhl -->
@@ -1648,7 +1650,7 @@ window._tabDots = {
   nba:       {{ 'true' if (report.nba_top_singles or report.nba_props) else 'false' }},
   mlb:       {{ 'true' if (report.mlb_top_singles or report.mlb_props) else 'false' }},
   ipl:       {{ 'true' if report.ipl_watchlist else 'false' }},
-  nhl:       {{ 'true' if report.nhl_watchlist else 'false' }},
+  nhl:       {{ 'true' if report.nhl_top_singles else 'false' }},
   wnba:      {{ 'true' if report.wnba_watchlist else 'false' }},
   nfl:       {{ 'true' if report.nfl_top_singles else 'false' }},
   mls:       {{ 'true' if report.mls_watchlist else 'false' }},

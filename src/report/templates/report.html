@@ -720,14 +720,14 @@
   <div class="section" id="sec-nhl">
     <div class="section-title">🏒 NHL
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        {% if not report.has_nhl %}no games today{% elif report.nhl_watchlist %}{{ report.nhl_watchlist|length }} pick{% if report.nhl_watchlist|length != 1 %}s{% endif %} &middot; watchlist only{% else %}no qualifying picks{% endif %}
+        {% if not report.has_nhl %}no games today{% elif report.nhl_top_singles %}{{ report.nhl_top_singles|length }} pick{% if report.nhl_top_singles|length != 1 %}s{% endif %}{% else %}no qualifying picks{% endif %}
       </span>
     </div>
     {% if not report.has_nhl %}
     <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
       📅 No NHL games scheduled today.
     </div>
-    {% elif not report.nhl_watchlist %}
+    {% elif not report.nhl_top_singles %}
     <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
       😕 No picks found with edge &gt; 3% today — the model scanned all NHL games and found no suitable edges.
     </div>
@@ -737,7 +737,7 @@
       <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
     </div>
     <div class="sub-body">
-    {% for bet in report.nhl_watchlist %}
+    {% for bet in report.nhl_top_singles %}
     <div class="card nhl-watchlist-card"
          id="nhl-{{ loop.index }}"
          data-home-team="{{ bet.home_team }}"
