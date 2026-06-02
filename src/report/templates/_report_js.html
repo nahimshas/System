@@ -12,6 +12,7 @@
     NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=" + _espnDate,
     MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate,
     NHL: "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=" + _espnDate,
+    NFL: "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=" + _espnDate,
     WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate,
     MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _espnDate
   };
@@ -379,7 +380,7 @@
         if (n === 5) return "SO";
         return (n - 3) + "OT";          // 6 → 3OT, etc.
       }
-      // NBA / WNBA — 4 quarters then OT
+      // NBA / WNBA / NFL — 4 quarters then OT (NFL has a single OT period)
       if (n <= 4) return "Q" + n;
       return (n === 5) ? "OT" : (n - 4) + "OT";
     }
@@ -1296,7 +1297,7 @@
       if (!card.classList.contains("alloc-card")) {
         if (sport === "MLB") {
           finalHtml += _mlbLineScore(ev);
-        } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL") {
+        } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
           finalHtml += _periodLineScore(ev, sport);
         }
       }
@@ -1338,7 +1339,7 @@
         if (!card.classList.contains("alloc-card")) {
           if (sport === "MLB") {
             centerLive += _mlbLineScore(ev);
-          } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL") {
+          } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
             centerLive += _periodLineScore(ev, sport);
           }
         }
@@ -2644,6 +2645,7 @@
     { url: ESPN.NBA,  sport: "NBA"  },
     { url: ESPN.MLB,  sport: "MLB"  },
     { url: ESPN.NHL,  sport: "NHL"  },
+    { url: ESPN.NFL,  sport: "NFL"  },
     { url: ESPN.WNBA, sport: "WNBA" },
     { url: ESPN.MLS,  sport: "MLS"  },
   ];
