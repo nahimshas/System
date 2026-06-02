@@ -847,7 +847,7 @@
       <div class="tab-header-text">
         <div class="tab-header-title">📋 Today's Card</div>
         {% if report.has_bets %}
-        <div class="tab-header-sub">${{ "%.2f"|format(report.total_allocated) }} on {{ report.all_singles|length }} pick{% if report.all_singles|length != 1 %}s{% endif %}{% if report.parlays %} &middot; {{ report.parlays|length }} parlay{% if report.parlays|length != 1 %}s{% endif %}{% endif %} &middot; Reserve <span style="color:var(--green);">${{ "%.2f"|format(report.reserve) }}</span> &middot; P&amp;L <span id="today-pnl">—</span></div>
+        <div class="tab-header-sub">${{ "%.2f"|format(report.total_allocated) }} on {{ report.all_singles|length }} pick{% if report.all_singles|length != 1 %}s{% endif %}{% if report.parlays %} &middot; {{ report.parlays|length }} parlay{% if report.parlays|length != 1 %}s{% endif %}{% endif %} <span style="color:var(--border);">|</span> Reserve <span style="color:var(--green);">${{ "%.2f"|format(report.reserve) }}</span> <span style="color:var(--border);">|</span> P&amp;L <span id="today-pnl">—</span></div>
         {% endif %}
       </div>
       <button class="tab-bell-btn" data-pref="today" onclick="tabBellClick(this)" style="display:none">🔕</button>
@@ -876,10 +876,9 @@
       No qualifying picks found today — edge threshold not met across all sports.
     </div>
     {% else %}
-    <div class="sec-label" style="margin-top:14px;">Today's Card</div>
-
     {% for row in report.allocation %}
     <div class="alloc-card"
+         {% if loop.first %}style="margin-top:14px;"{% endif %}
          id="alloc-{{ row.rank | string | lower }}"
          data-home-team="{{ row.home_team }}"
          data-away-team="{{ row.away_team }}"
