@@ -2851,7 +2851,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 01, 2026 at 08:39 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 01, 2026 at 08:42 PM PDT</div>
         </div>
         
       </div>
@@ -4841,12 +4841,22 @@ function toggleCtx(el) {
         cacheBetResult(card, result);
       }
       // All sports: scoreboard style with logos + scores + "Final" centre
-      liveDiv.innerHTML = _renderScoreboard(ev,
+      var finalHtml = _renderScoreboard(ev,
         '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0;">' +
           '<span style="font-size:0.72rem;color:#94a3b8;font-weight:600;letter-spacing:0.03em;">Final</span>' +
           (result ? outcomeHtml(result) : '') +
         '</div>'
       );
+      // Keep the per-period line score on FINAL sport-tab cards (.card) too —
+      // shows the completed box score. Today alloc cards (.alloc-card) excluded.
+      if (!card.classList.contains("alloc-card")) {
+        if (sport === "MLB") {
+          finalHtml += _mlbLineScore(ev);
+        } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL") {
+          finalHtml += _periodLineScore(ev, sport);
+        }
+      }
+      liveDiv.innerHTML = finalHtml;
     } else if (ev.stateId === "2") {
       showLockBadge(card);
       clearCardTime(card);

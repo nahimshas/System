@@ -1285,12 +1285,22 @@
         cacheBetResult(card, result);
       }
       // All sports: scoreboard style with logos + scores + "Final" centre
-      liveDiv.innerHTML = _renderScoreboard(ev,
+      var finalHtml = _renderScoreboard(ev,
         '<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0;">' +
           '<span style="font-size:0.72rem;color:#94a3b8;font-weight:600;letter-spacing:0.03em;">Final</span>' +
           (result ? outcomeHtml(result) : '') +
         '</div>'
       );
+      // Keep the per-period line score on FINAL sport-tab cards (.card) too —
+      // shows the completed box score. Today alloc cards (.alloc-card) excluded.
+      if (!card.classList.contains("alloc-card")) {
+        if (sport === "MLB") {
+          finalHtml += _mlbLineScore(ev);
+        } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL") {
+          finalHtml += _periodLineScore(ev, sport);
+        }
+      }
+      liveDiv.innerHTML = finalHtml;
     } else if (ev.stateId === "2") {
       showLockBadge(card);
       clearCardTime(card);
