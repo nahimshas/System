@@ -846,7 +846,9 @@
     <div class="tab-header">
       <div class="tab-header-text">
         <div class="tab-header-title">📋 Today's Card</div>
-        <div class="tab-header-sub">Picks ready · parlays · picks-ready alerts</div>
+        {% if report.has_bets %}
+        <div class="tab-header-sub">${{ "%.2f"|format(report.total_allocated) }} on {{ report.all_singles|length }} pick{% if report.all_singles|length != 1 %}s{% endif %}{% if report.parlays %} &middot; {{ report.parlays|length }} parlay{% if report.parlays|length != 1 %}s{% endif %}{% endif %} &middot; Reserve <span style="color:var(--green);">${{ "%.2f"|format(report.reserve) }}</span> &middot; P&amp;L <span id="today-pnl">—</span></div>
+        {% endif %}
       </div>
       <button class="tab-bell-btn" data-pref="today" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
@@ -874,10 +876,7 @@
       No qualifying picks found today — edge threshold not met across all sports.
     </div>
     {% else %}
-    <div class="sec-label" style="margin-top:14px;">
-      Today's Card
-      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">${{ "%.2f"|format(report.total_allocated) }} on {{ report.all_singles|length }} pick{% if report.all_singles|length != 1 %}s{% endif %}{% if report.parlays %} &middot; {{ report.parlays|length }} parlay{% if report.parlays|length != 1 %}s{% endif %}{% endif %}</span>
-    </div>
+    <div class="sec-label" style="margin-top:14px;">Today's Card</div>
 
     {% for row in report.allocation %}
     <div class="alloc-card"
@@ -923,11 +922,6 @@
       </div>
     </div>
     {% endfor %}
-
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0;font-size:0.82rem;color:var(--muted);">
-      <span>Reserve: <span style="color:var(--green);">${{ "%.2f"|format(report.reserve) }}</span></span>
-      <span>Today's P&amp;L: <span id="today-pnl">—</span></span>
-    </div>
     {% endif %}
 
     {# ── YESTERDAY'S RESULTS (SECOND, COLLAPSIBLE) ── #}
