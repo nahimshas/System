@@ -11,7 +11,7 @@ Sport   enters_budget  in_main_display_pool  track_in_main_history  uses_pending
 NBA     True           True                  True                   False
 MLB     True           True                  True                   False
 NFL     True           True                  True                   False
-NHL     False          True                  False                  False   ← display-only in main card
+NHL     True           True                  True                   False   ← graduated to budget (Jun 2026); also still watchlist-tracked
 IPL     False          False                 False                  True    ← own tile + pending file
 WNBA    False          False                 False                  False   ← own tile
 MLS     False          False                 False                  False   ← own tile
@@ -115,19 +115,31 @@ REGISTRY: dict[str, SportEntry] = {
         ),
     ),
 
-    # ── NHL — display-only in main card, watchlist history, no budget ─── #
-    # NHL picks appear in the per-league card section alongside budget sports
-    # (in_main_display_pool=True) but are never allocated budget dollars,
-    # never enter parlays, and settle into watchlist_history.json not history.json.
+    # ── NHL — GRADUATED to budget sport (June 2026) ──────────────────── #
+    # NHL was watchlist-only; promoted to the budget pool as a learning exercise.
+    # The 3 flags below (enters_budget / enters_parlays / track_in_main_history)
+    # route its placed bets into the allocation table, parlays, and history.json
+    # (→ the by-sport P&L tile in Model Performance).
+    #
+    # "Track both in parallel": check_and_settle_watchlist() still reads NHL from
+    # state["singles_display"] (ALL model picks) and logs them to
+    # watchlist_history.json (→ the Watchlist Tracking W-L tile), while the budget
+    # settler check_and_settle() logs the PLACED bets from state["singles"] to
+    # history.json. Both settlers run unconditionally in main.py and read
+    # different lists, so the model-accuracy record and the money record both keep
+    # accumulating with no settlement-code changes.
+    #
+    # NOTE: graduated mid-playoffs as a learning exercise — real validation waits
+    # for next NHL season's volume.
 
     "nhl": SportEntry(
         slug="nhl",
         key="icehockey_nhl",
         label="NHL",
         caps=SportCapabilities(
-            enters_budget=False,
-            enters_parlays=False,
-            track_in_main_history=False,
+            enters_budget=True,
+            enters_parlays=True,
+            track_in_main_history=True,
             uses_pending_file=False,
             in_main_display_pool=True,
             active_months=frozenset({10, 11, 12, 1, 2, 3, 4, 5, 6}),
