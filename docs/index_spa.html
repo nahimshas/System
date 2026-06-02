@@ -2851,7 +2851,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 01, 2026 at 07:09 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 01, 2026 at 08:05 PM PDT</div>
         </div>
         
       </div>
@@ -3869,6 +3869,52 @@ function toggleCtx(el) {
     return ev ? _renderScoreboard(ev, centerMlb, rdAwayExtra, rdHomeExtra) : centerMlb;
   }
 
+  // ── MLB per-inning line score (R/H/E box) ────────────────────────────────
+  // Builds a compact inning-by-inning grid from ev.{home,away}Innings plus the
+  // R/H/E totals. Returns "" when no innings are available (pre-game). Shown
+  // only on the MLB-tab bet cards (not the Today alloc cards — too tall there).
+  function _mlbLineScore(ev) {
+    if (!ev || !ev.awayInnings || !ev.homeInnings) return "";
+    var periods = {};
+    Object.keys(ev.awayInnings).forEach(function (p) { periods[p] = true; });
+    Object.keys(ev.homeInnings).forEach(function (p) { periods[p] = true; });
+    var nums = Object.keys(periods).map(Number).sort(function (a, b) { return a - b; });
+    if (!nums.length) return "";
+
+    var cellCss  = "padding:2px 5px;text-align:center;font-variant-numeric:tabular-nums;color:#cbd5e1;";
+    var headCss  = "padding:2px 5px;text-align:center;color:#64748b;font-size:0.6rem;";
+    var totCss   = "padding:2px 5px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;";
+    var teamCss  = "padding:2px 6px 2px 0;text-align:left;color:#94a3b8;white-space:nowrap;";
+
+    function _row(abbr, innings, runs, hits, errs, isHdr) {
+      var cells = "";
+      if (isHdr) {
+        cells = '<td style="' + teamCss + '"></td>';
+        nums.forEach(function (n) { cells += '<th style="' + headCss + '">' + n + '</th>'; });
+        cells += '<th style="' + headCss + 'border-left:1px solid #2d3148;">R</th>'
+               + '<th style="' + headCss + '">H</th>'
+               + '<th style="' + headCss + '">E</th>';
+        return '<tr>' + cells + '</tr>';
+      }
+      cells = '<td style="' + teamCss + '">' + abbr + '</td>';
+      nums.forEach(function (n) {
+        var v = innings[n];
+        cells += '<td style="' + cellCss + '">' + (v != null ? v : "") + '</td>';
+      });
+      cells += '<td style="' + totCss + 'border-left:1px solid #2d3148;color:#14b8a6;">' + (runs != null ? runs : 0) + '</td>'
+             + '<td style="' + totCss + 'color:#cbd5e1;">' + (hits != null ? hits : 0) + '</td>'
+             + '<td style="' + totCss + 'color:#cbd5e1;">' + (errs != null ? errs : 0) + '</td>';
+      return '<tr>' + cells + '</tr>';
+    }
+
+    return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:6px;">' +
+      '<table style="border-collapse:collapse;font-size:0.66rem;margin:0 auto;">' +
+        _row("", null, null, null, null, true) +
+        _row(ev.awayAbbr, ev.awayInnings, ev.awayScore, ev.awayHits, ev.awayErrors, false) +
+        _row(ev.homeAbbr, ev.homeInnings, ev.homeScore, ev.homeHits, ev.homeErrors, false) +
+      '</table></div>';
+  }
+
   // ── MLB in-progress live section builder ─────────────────────────────────
   // Always renders the full scoreboard even when ESPN has no situation data.
   // Adds a pitcher + batter row below when ESPN provides those fields.
@@ -4293,6 +4339,22 @@ function toggleCtx(el) {
     var homeScore = parseInt(homeComp.score || "0", 10);
     var awayScore = parseInt(awayComp.score || "0", 10);
 
+    // MLB per-inning line score (R/H/E box). ESPN gives each competitor a
+    // `linescores` array ([{value, period}]) plus team `hits` / `errors`.
+    function _lineMap(comp) {
+      var out = {};
+      (comp.linescores || []).forEach(function (l) {
+        if (l && l.period != null) out[l.period] = (l.displayValue != null ? l.displayValue : l.value);
+      });
+      return out;
+    }
+    var homeInnings = _lineMap(homeComp);
+    var awayInnings = _lineMap(awayComp);
+    var homeHits   = homeComp.hits;
+    var awayHits   = awayComp.hits;
+    var homeErrors = homeComp.errors;
+    var awayErrors = awayComp.errors;
+
     var status    = event.status || {};
     var stype     = status.type  || {};
 
@@ -4333,6 +4395,9 @@ function toggleCtx(el) {
       isBottom: isBottom,
       sport: sportKey,
       situation: comp.situation || null,   // MLB: balls/strikes/outs/onFirst/onSecond/onThird
+      homeInnings: homeInnings, awayInnings: awayInnings,
+      homeHits: homeHits, awayHits: awayHits,
+      homeErrors: homeErrors, awayErrors: awayErrors,
     };
   }
 
@@ -4758,6 +4823,12 @@ function toggleCtx(el) {
                 probHtml(prob) +
               '</div>'
             );
+        // MLB sport-tab bet cards (.card) get the per-inning R/H/E line score
+        // appended. Today alloc cards (.alloc-card) are excluded — keeps them
+        // compact.
+        if (sport === "MLB" && !card.classList.contains("alloc-card")) {
+          centerLive += _mlbLineScore(ev);
+        }
         liveDiv.innerHTML = centerLive;
       }
     } else {
