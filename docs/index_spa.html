@@ -2851,7 +2851,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 01, 2026 at 08:05 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 01, 2026 at 08:39 PM PDT</div>
         </div>
         
       </div>
@@ -3915,6 +3915,61 @@ function toggleCtx(el) {
       '</table></div>';
   }
 
+  // ── Period line score for NBA / WNBA / NHL (per-period + Total) ───────────
+  // Same idea as _mlbLineScore but with period columns (quarters for hoops,
+  // periods for hockey) and a single Total column (no hits/errors). Labels
+  // overtime/shootout periods sensibly. Returns "" when no periods are present.
+  function _periodLineScore(ev, sport) {
+    if (!ev || !ev.awayInnings || !ev.homeInnings) return "";
+    var periods = {};
+    Object.keys(ev.awayInnings).forEach(function (p) { periods[p] = true; });
+    Object.keys(ev.homeInnings).forEach(function (p) { periods[p] = true; });
+    var nums = Object.keys(periods).map(Number).sort(function (a, b) { return a - b; });
+    if (!nums.length) return "";
+
+    // Column header label for a period number, by sport.
+    function _plabel(n) {
+      if (sport === "NHL") {
+        if (n <= 3) return String(n);
+        if (n === 4) return "OT";
+        if (n === 5) return "SO";
+        return (n - 3) + "OT";          // 6 → 3OT, etc.
+      }
+      // NBA / WNBA — 4 quarters then OT
+      if (n <= 4) return "Q" + n;
+      return (n === 5) ? "OT" : (n - 4) + "OT";
+    }
+
+    var cellCss = "padding:2px 5px;text-align:center;font-variant-numeric:tabular-nums;color:#cbd5e1;";
+    var headCss = "padding:2px 5px;text-align:center;color:#64748b;font-size:0.6rem;";
+    var totCss  = "padding:2px 5px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;";
+    var teamCss = "padding:2px 6px 2px 0;text-align:left;color:#94a3b8;white-space:nowrap;";
+
+    function _row(abbr, pmap, total, isHdr) {
+      var cells;
+      if (isHdr) {
+        cells = '<td style="' + teamCss + '"></td>';
+        nums.forEach(function (n) { cells += '<th style="' + headCss + '">' + _plabel(n) + '</th>'; });
+        cells += '<th style="' + headCss + 'border-left:1px solid #2d3148;">T</th>';
+        return '<tr>' + cells + '</tr>';
+      }
+      cells = '<td style="' + teamCss + '">' + abbr + '</td>';
+      nums.forEach(function (n) {
+        var v = pmap[n];
+        cells += '<td style="' + cellCss + '">' + (v != null ? v : "") + '</td>';
+      });
+      cells += '<td style="' + totCss + 'border-left:1px solid #2d3148;color:#14b8a6;">' + (total != null ? total : 0) + '</td>';
+      return '<tr>' + cells + '</tr>';
+    }
+
+    return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:6px;">' +
+      '<table style="border-collapse:collapse;font-size:0.66rem;margin:0 auto;">' +
+        _row("", null, null, true) +
+        _row(ev.awayAbbr, ev.awayInnings, ev.awayScore, false) +
+        _row(ev.homeAbbr, ev.homeInnings, ev.homeScore, false) +
+      '</table></div>';
+  }
+
   // ── MLB in-progress live section builder ─────────────────────────────────
   // Always renders the full scoreboard even when ESPN has no situation data.
   // Adds a pitcher + batter row below when ESPN provides those fields.
@@ -4823,11 +4878,15 @@ function toggleCtx(el) {
                 probHtml(prob) +
               '</div>'
             );
-        // MLB sport-tab bet cards (.card) get the per-inning R/H/E line score
-        // appended. Today alloc cards (.alloc-card) are excluded — keeps them
-        // compact.
-        if (sport === "MLB" && !card.classList.contains("alloc-card")) {
-          centerLive += _mlbLineScore(ev);
+        // Sport-tab bet cards (.card) get a per-period line score appended:
+        // MLB = inning R/H/E, NBA/WNBA/NHL = quarter/period + Total. Today alloc
+        // cards (.alloc-card) are excluded to keep them compact.
+        if (!card.classList.contains("alloc-card")) {
+          if (sport === "MLB") {
+            centerLive += _mlbLineScore(ev);
+          } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL") {
+            centerLive += _periodLineScore(ev, sport);
+          }
         }
         liveDiv.innerHTML = centerLive;
       }
