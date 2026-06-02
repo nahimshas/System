@@ -2852,7 +2852,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 01, 2026 at 06:41 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 01, 2026 at 06:47 PM PDT</div>
         </div>
         
       </div>
@@ -6053,6 +6053,18 @@ function toggleCtx(el) {
   }
 
   // ── Main refresh loop ────────────────────────────────────────────────────
+  // Scoreboard sources polled each tick. The completion gate (onFetch) waits for
+  // all of them before re-rendering cards / recomputing P&L, so every league's
+  // events — NHL included (now a budget sport) — are present when today's P&L,
+  // by-sport, and the heatmap are computed.
+  var SCOREBOARD_SOURCES = [
+    { url: ESPN.NBA,  sport: "NBA"  },
+    { url: ESPN.MLB,  sport: "MLB"  },
+    { url: ESPN.NHL,  sport: "NHL"  },
+    { url: ESPN.WNBA, sport: "WNBA" },
+    { url: ESPN.MLS,  sport: "MLS"  },
+  ];
+
   function refresh() {
     var allEvents = [];
     var done      = 0;
@@ -6439,7 +6451,7 @@ function toggleCtx(el) {
     function onFetch(events) {
       allEvents = allEvents.concat(events);
       done++;
-      if (done < 4) return;
+      if (done < SCOREBOARD_SOURCES.length) return;
 
       // Update all bet cards (singles, parlays, watchlist cards, and SPA alloc cards)
       document.querySelectorAll(".card[data-home-team], .card[data-parlay='true'], .wl-card[data-home-team], .alloc-card[data-home-team], .alloc-card[data-legs]").forEach(function (card) {
@@ -6462,13 +6474,7 @@ function toggleCtx(el) {
       checkPropLocks();
     }
 
-    [
-      { url: ESPN.NBA, sport: "NBA" },
-      { url: ESPN.MLB, sport: "MLB" },
-      { url: ESPN.NHL, sport: "NHL" },
-      { url: ESPN.WNBA, sport: "WNBA" },
-      { url: ESPN.MLS, sport: "MLS" },
-    ].forEach(function (item) {
+    SCOREBOARD_SOURCES.forEach(function (item) {
       fetch(item.url)
         .then(function (r) { return r.json(); })
         .then(function (data) {
