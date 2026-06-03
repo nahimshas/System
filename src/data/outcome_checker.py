@@ -835,11 +835,13 @@ def check_and_settle_props(today: date) -> int:
 
     if all_new:
         _append_to_prop_history(existing + all_new)
-        hits   = sum(1 for r in all_new if r["hit"])
-        misses = len(all_new) - hits
+        dnps   = sum(1 for r in all_new if r.get("dnp"))
+        hits   = sum(1 for r in all_new if r.get("hit") is True)
+        misses = len(all_new) - hits - dnps
+        dnp_str = f" / {dnps} DNP" if dnps else ""
         logger.info(
             f"Prop settlement: {len(all_new)} prop(s) settled — "
-            f"{hits} hit / {misses} miss"
+            f"{hits} hit / {misses} miss{dnp_str}"
         )
 
     return len(all_new)
@@ -861,6 +863,8 @@ def load_prop_accuracy() -> Dict:
         {**r, "prop_type": "Hits Over"} if r.get("prop_type") == "Hits Over (1+)" else r
         for r in records
     ]
+    # Exclude DNP records from accuracy stats — player didn't play, model not at fault
+    records = [r for r in records if not r.get("dnp")]
     if not records:
         return {}
 

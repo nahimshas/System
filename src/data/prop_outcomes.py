@@ -270,6 +270,10 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
             continue
 
         actual_stat: Optional[float] = None
+        # Tracks whether we reached a completed box score for this prop's game.
+        # True  → game was found AND final → missing stat = confirmed DNP
+        # False → game not found or not yet final → don't write a DNP record
+        game_found_and_final = False
 
         # ── NBA ──────────────────────────────────────────────────────────────
         if sport == "NBA":
@@ -288,6 +292,7 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
             summary = summary_cache[event_id]
             if not _is_completed(summary):
                 continue
+            game_found_and_final = True
             actual_stat = _get_nba_player_stat(summary, player, stat_key)
 
         # ── MLB ───────────────────────────────────────────────────────────────
@@ -309,13 +314,33 @@ def check_prop_outcomes(props: List[Dict], game_date: date) -> List[Dict]:
             summary = summary_cache[event_id]
             if not _is_completed(summary):
                 continue
+            game_found_and_final = True
             if prop_type == "Strikeouts Over":
                 actual_stat = _get_mlb_pitcher_ks(summary, player)
             else:
                 actual_stat = _get_mlb_batter_stat(summary, player, prop_type)
 
         if actual_stat is None:
-            logger.debug(f"Stat not found in box score: {player} ({prop_type})")
+            if game_found_and_final:
+                # Confirmed DNP: game completed but player not in ESPN box score.
+                # Write a record so the validator knows this was checked (not dropped),
+                # but mark hit=None so accuracy stats exclude it.
+                logger.info(f"DNP confirmed: {player} ({prop_type}) — not in ESPN box score")
+                results.append({
+                    "date":        game_date.isoformat(),
+                    "sport":       sport,
+                    "player":      player,
+                    "team":        team,
+                    "opponent":    opponent,
+                    "prop_type":   prop_type,
+                    "model_line":  model_line,
+                    "actual_stat": None,
+                    "hit":         None,   # excluded from accuracy stats
+                    "dnp":         True,   # explicit marker for reporting
+                    "confidence":  confidence,
+                })
+            else:
+                logger.debug(f"Stat not found in box score: {player} ({prop_type})")
             continue
 
         # Hit = actual stat beats the market (betting) line, not the model projection.
