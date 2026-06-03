@@ -172,6 +172,7 @@ class MLBModule:
             get_pitcher_stats, get_pitcher_recent_stats,
             get_team_batting_stats, get_bullpen_stats, get_team_schedule_load,
             get_pitcher_hand, get_team_splits_vs_hand,
+            get_team_recent_batting,
         )
         from src.data.umpire import get_umpire_tendency
         from src.data.weather import get_game_weather
@@ -212,6 +213,14 @@ class MLBModule:
                 away_bat  = get_team_batting_stats(game.get("away_team_id"))
                 home_bp   = get_bullpen_stats(game.get("home_team_id"))
                 away_bp   = get_bullpen_stats(game.get("away_team_id"))
+
+                # Merge recent form into batting dicts (recent_rpg, recent_wins, recent_games)
+                home_recent = get_team_recent_batting(game.get("home_team_id"), today_date)
+                away_recent = get_team_recent_batting(game.get("away_team_id"), today_date)
+                if home_recent:
+                    home_bat = {**home_bat, **home_recent}
+                if away_recent:
+                    away_bat = {**away_bat, **away_recent}
 
                 # Platoon splits: each lineup's OPS vs the OPPOSING starter's hand.
                 # home_off_split = home batters vs the away starter's throwing hand.

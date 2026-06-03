@@ -486,6 +486,70 @@ def get_batter_props_stats(team_id: int, player_names: List[str], min_pa: int = 
     return result
 
 
+def get_team_recent_batting(team_id: int, today: date, last_n: int = 10) -> Dict:
+    """
+    Returns runs-scored and wins over this team's last N completed games.
+
+    Keys returned:
+      recent_rpg    — runs scored per game (offensive form signal)
+      recent_wins   — wins in the window (for display only)
+      recent_games  — actual games found (may be < last_n early in season)
+
+    Falls back to {} on any failure or if fewer than 3 games are available
+    (too small a sample to be meaningful).
+
+    Note: runs ALLOWED is intentionally excluded — pitching quality is already
+    captured via xFIP/ERA blending, and mixing it in here would double-count.
+    """
+    if not team_id:
+        return {}
+    from datetime import timedelta
+    # 30-day lookback guarantees last_n games even with off-days and travel days
+    start = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    end   = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+    data  = _get("/schedule", {
+        "sportId":   1,
+        "teamId":    team_id,
+        "startDate": start,
+        "endDate":   end,
+        "hydrate":   "linescore",
+    })
+    if not data:
+        return {}
+
+    games: list[Dict] = []
+    for date_entry in data.get("dates", []):
+        for g in date_entry.get("games", []):
+            if g.get("status", {}).get("abstractGameState") != "Final":
+                continue
+            ls = g.get("linescore", {}).get("teams", {})
+            home_runs = ls.get("home", {}).get("runs")
+            away_runs = ls.get("away", {}).get("runs")
+            if home_runs is None or away_runs is None:
+                continue
+            is_home = (g.get("teams", {}).get("home", {})
+                         .get("team", {}).get("id")) == team_id
+            scored  = home_runs if is_home else away_runs
+            allowed = away_runs if is_home else home_runs
+            games.append({"scored": int(scored), "allowed": int(allowed),
+                           "won": int(scored) > int(allowed)})
+
+    if not games:
+        return {}
+
+    recent = games[-last_n:]
+    if len(recent) < 3:   # need at least 3 games for a meaningful signal
+        return {}
+
+    rpg  = sum(g["scored"] for g in recent) / len(recent)
+    wins = sum(1 for g in recent if g["won"])
+    return {
+        "recent_rpg":   round(rpg, 2),
+        "recent_wins":  wins,
+        "recent_games": len(recent),
+    }
+
+
 def get_mlb_team_records() -> Dict[int, Dict]:
     """
     Returns {team_id: {"wins": int, "losses": int}} for all MLB teams

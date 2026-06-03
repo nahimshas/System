@@ -19,7 +19,7 @@ from src.config import (
     NBA_PLAYOFF_SCORING_FACTOR, NBA_PLAYOFF_PACE_FACTOR,
     NBA_PLAYOFF_RECENT_WEIGHT, NBA_PLAYOFF_TOTAL_STD,
     MLB_PLAYOFF_SCORING_FACTOR, MLB_PLAYOFF_STARTER_IP,
-    MLB_PLAYOFF_RECENT_WEIGHT,
+    MLB_PLAYOFF_RECENT_WEIGHT, MLB_RECENT_FORM_WEIGHT,
     NHL_PLAYOFF_SCORING_FACTOR,
     SCHEDULE_LOAD_THRESHOLDS,
 )
@@ -1357,6 +1357,43 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             f"⚠ K matchup: {away} K% {away_k_pct:.1%} vs {home_pitcher_name} K/9 {home_sp_k9:.1f} "
             f"— run suppression ({away_k_penalty:.2f} runs)"
         )
+
+    # --- Recent offensive form nudge ---
+    # Blends each team's last-10-game runs-scored rate with their season R/G.
+    # Additive delta so the existing formula structure is preserved: a team
+    # scoring 30% more recently than their season avg nudges expected runs up
+    # by (recent_rpg - season_rpg) * MLB_RECENT_FORM_WEIGHT.
+    # Only emits a signal when the adjustment reaches ±0.10 runs.
+    home_season_rpg = home_batting.get("runs_per_game", league_avg_runs)
+    away_season_rpg = away_batting.get("runs_per_game", league_avg_runs)
+    home_recent_rpg = home_batting.get("recent_rpg")
+    away_recent_rpg = away_batting.get("recent_rpg")
+
+    if home_recent_rpg is not None and home_season_rpg > 0:
+        home_form_delta = (home_recent_rpg - home_season_rpg) * MLB_RECENT_FORM_WEIGHT
+        expected_home_runs = max(1.5, expected_home_runs + home_form_delta)
+        if abs(home_form_delta) >= 0.10:
+            hw = home_batting.get("recent_wins", "?")
+            hg = home_batting.get("recent_games", 10)
+            direction = "↑" if home_form_delta > 0 else "↓"
+            signals.append(
+                f"Recent form: {home} {hw}-{hg - (hw if isinstance(hw, int) else 0)} last {hg} "
+                f"| {home_recent_rpg:.1f} R/G vs {home_season_rpg:.1f} season "
+                f"({direction}{abs(home_form_delta):.2f} run adj)"
+            )
+
+    if away_recent_rpg is not None and away_season_rpg > 0:
+        away_form_delta = (away_recent_rpg - away_season_rpg) * MLB_RECENT_FORM_WEIGHT
+        expected_away_runs = max(1.5, expected_away_runs + away_form_delta)
+        if abs(away_form_delta) >= 0.10:
+            aw = away_batting.get("recent_wins", "?")
+            ag = away_batting.get("recent_games", 10)
+            direction = "↑" if away_form_delta > 0 else "↓"
+            signals.append(
+                f"Recent form: {away} {aw}-{ag - (aw if isinstance(aw, int) else 0)} last {ag} "
+                f"| {away_recent_rpg:.1f} R/G vs {away_season_rpg:.1f} season "
+                f"({direction}{abs(away_form_delta):.2f} run adj)"
+            )
 
     expected_home_runs *= park_factor
     expected_away_runs *= park_factor
