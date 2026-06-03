@@ -22,6 +22,8 @@ PROP_HISTORY_PATH = Path("state/prop_history.json")
 ESPN_SPORT_PATHS = {
     "NBA": "basketball/nba",
     "MLB": "baseball/mlb",
+    "NHL": "hockey/nhl",    # added when NHL graduated to budget (June 2026)
+    "NFL": "football/nfl",  # pre-added for NFL season (September+)
 }
 
 # Watchlist-only leagues (NHL, IPL, WNBA, MLS) — separate history file, no PnL tracking
