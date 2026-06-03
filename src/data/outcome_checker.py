@@ -568,7 +568,7 @@ def load_performance_summary() -> Dict:
     # Break down by sport. NHL added June 2026 when it graduated to a budget
     # sport; NFL listed so its tile appears once it has settled budget bets.
     by_sport: Dict[str, Dict] = {}
-    for sport in ("NBA", "MLB", "NHL", "NFL", "PARLAY"):
+    for sport in ("PARLAY", "MLB", "NHL", "NFL", "NBA"):
         subset = [r for r in settled if r.get("sport") == sport]
         if subset:
             by_sport[sport] = _stats(subset)
