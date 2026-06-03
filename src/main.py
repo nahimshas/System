@@ -492,10 +492,16 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         _seen_game_bet.add(_key)
         _deduped_raw.append(_r)
 
-    fresh_singles = [bet_to_dict(r) for r in _deduped_raw[:MAX_SINGLE_BETS]]
+    def _to_dict_with_eff(r) -> dict:
+        """bet_to_dict + stamp effective_edge while we still have the rec object."""
+        d = bet_to_dict(r)
+        d["effective_edge"] = round(_effective_edge_safe(r), 6)
+        return d
+
+    fresh_singles = [_to_dict_with_eff(r) for r in _deduped_raw[:MAX_SINGLE_BETS]]
     # Full uncapped list — passed to merge_picks so signal refresh works even for
     # bets that dropped out of the top-5 since the morning run.
-    fresh_singles_all = [bet_to_dict(r) for r in _deduped_raw]
+    fresh_singles_all = [_to_dict_with_eff(r) for r in _deduped_raw]
     fresh_parlays = [parlay_to_dict(p) for p in parlays_raw]
     # Cap props at MAX_PROPS_PER_SPORT per sport before saving to state.
     # Without this cap, when min_edge is explicitly passed to fetch_props() the
@@ -532,7 +538,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         if _dkey not in _display_seen:
             _display_seen.add(_dkey)
             _display_deduped.append(_r)
-    fresh_singles_display = [bet_to_dict(r) for r in _display_deduped]
+    fresh_singles_display = [_to_dict_with_eff(r) for r in _display_deduped]
 
     # Display props — all positive-EV props (no MIN_PROP_EDGE gate).
     fresh_props_display = [prop_to_dict(p) for p in props_display_raw]
@@ -542,7 +548,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # Cap non-IPL own-tile sports at MAX_SINGLE_BETS (top 5) — without this cap
     # WNBA/MLS can produce 40+ picks that clutter their tile sections.
     fresh_own_displays: dict[str, list] = {
-        slug: [bet_to_dict(r) for r in sorted(raw, key=_slot_sort_key)]
+        slug: [_to_dict_with_eff(r) for r in sorted(raw, key=_slot_sort_key)]
               [:MAX_SINGLE_BETS if slug != "ipl" else len(raw)]
         for slug, raw in own_display.items()
     }

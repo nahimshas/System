@@ -260,17 +260,20 @@ def build_report(
         # 1. Locked budget picks go first — they must always show in their section.
         locked_budget = sorted(
             [s for s in singles if s.get("sport") == sport and s.get("locked")],
-            key=lambda r: -r["edge"],
+            key=lambda r: -r.get("effective_edge", r["edge"]),
         )
         for s in locked_budget:
             k = (s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
             if k not in seen:
                 seen.add(k)
                 out.append(s)
-        # 2. Fill remaining slots with display pool (sorted by confidence + edge).
+        # 2. Fill remaining slots with display pool (sorted by confidence + effective edge).
+        # Uses effective_edge (calibration-adjusted) for consistency with slot selection —
+        # a MEDIUM MLB ML at 15% raw edge is only ~13% effective (MLB ratio ≈ 0.87).
         for s in sorted(
             [s for s in _display if s.get("sport") == sport],
-            key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+            key=lambda r: (0 if r["confidence"] == "HIGH" else 1,
+                           -r.get("effective_edge", r["edge"])),
         ):
             if len(out) >= MAX_SINGLE_BETS:
                 break
