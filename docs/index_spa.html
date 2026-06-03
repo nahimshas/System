@@ -2990,7 +2990,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 02, 2026 at 10:35 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 02, 2026 at 10:37 PM PDT</div>
         </div>
         
       </div>
@@ -5518,7 +5518,7 @@ function toggleCtx(el) {
 
       var recDiv = confCard.querySelector(".perf-conf-record");
       if (recDiv) recDiv.innerHTML = cw + "W–" + cl + "L" +
-        (cWinRate !== null ? '<span style="color:var(--muted);font-size:0.75rem;"> (' + cWinRate + '%)</span>' : "");
+        (cWinRate !== null ? '<span style="display:block;color:var(--muted);font-size:0.75rem;">(' + cWinRate + '%)</span>' : "");
       var pnlDiv = confCard.querySelector(".perf-conf-pnl");
       if (pnlDiv) {
         pnlDiv.textContent = fmt(cp);
