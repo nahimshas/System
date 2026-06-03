@@ -961,19 +961,59 @@ def _era_trap_severity(stats: Dict) -> float:
     return round(severity, 3)
 
 
+def _tbd_pitcher_cap(own_sp_score: float, own_win_pct: float,
+                     own_sp_tbd: bool, opp_sp_tbd: bool) -> tuple:
+    """
+    Returns (should_cap: bool, reason: str) for TBD-pitcher confidence adjustment.
+
+    Two anchors can sustain HIGH confidence when the opposing pitcher is unknown:
+      1. Strong own pitcher  — quality score ≥ 0.40 (roughly xFIP ≤ 3.60)
+      2. Strong own team     — season win rate ≥ .540
+
+    Rationale: a known ace gives a concrete run-suppression edge regardless of
+    who the opponent sends. A winning team indicates overall depth (offence +
+    bullpen) that can weather an unknown starter. Either anchor alone is not
+    enough — if the team is weak, even a good pitcher might not compensate for
+    the uncertainty; if the pitcher is average, a .560 team still faces a
+    meaningful unknown. Both together justify HIGH; anything less → MEDIUM.
+
+    Own pitcher TBD → always cap. We can't anchor the edge without knowing our
+    own main defensive weapon.
+    """
+    if own_sp_tbd:
+        return True, "own starter TBD"
+    if opp_sp_tbd:
+        strong_pitcher = own_sp_score >= 0.40   # xFIP roughly ≤ 3.60
+        strong_team    = own_win_pct  >= 0.540
+        if strong_pitcher and strong_team:
+            return False, ""   # both anchors present — HIGH still valid
+        parts = []
+        if not strong_pitcher:
+            parts.append("own pitcher not strong enough to anchor edge")
+        if not strong_team:
+            parts.append(f"team win rate ({own_win_pct:.0%}) below .540 threshold")
+        return True, "opposing starter TBD — " + "; ".join(parts)
+    return False, ""
+
+
 def _mlb_conf(edge: float, signal_count: int, stats_available: bool,
               own_trap_sev: float = 0.0, opp_trap_sev: float = 0.0,
-              injury_capped: bool = False) -> str:
+              injury_capped: bool = False,
+              tbd_capped: bool = False) -> str:
     """
-    MLB-specific confidence label that accounts for ERA trap severity.
+    MLB-specific confidence label that accounts for ERA trap severity and
+    TBD-pitcher uncertainty.
 
     own_trap_sev  — severity of the ERA trap on THIS team's starting pitcher.
                     High → cap at MEDIUM (market is not as wrong as raw edge suggests).
     opp_trap_sev  — severity of the ERA trap on the OPPONENT's starter.
-                    High → lower the edge threshold required for HIGH confidence
-                    (market is overvaluing the opponent; our edge is more reliable).
+                    High → lower the edge threshold required for HIGH confidence.
+    tbd_capped    — True when TBD-pitcher uncertainty is too high to warrant HIGH.
+                    See _tbd_pitcher_cap() for the two-anchor logic.
     """
     if injury_capped:
+        return "MEDIUM"
+    if tbd_capped:
         return "MEDIUM"
     # Our pitcher's trap: the market edge may partly be noise from sample-size luck
     if own_trap_sev >= 0.40:
@@ -1086,6 +1126,39 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     # the per-bet confidence logic below.
     home_trap_sev = _era_trap_severity(home_pitcher_stats) if home_pitcher_stats else 0.0
     away_trap_sev = _era_trap_severity(away_pitcher_stats) if away_pitcher_stats else 0.0
+
+    # --- TBD pitcher confidence caps ---
+    # Computed once here; passed to every _mlb_conf call below.
+    # home_sp_tbd / away_sp_tbd: True when we have no stats for that starter.
+    home_sp_tbd = not bool(home_pitcher_stats)
+    away_sp_tbd = not bool(away_pitcher_stats)
+
+    def _win_pct(season_stats: Optional[Dict]) -> float:
+        if not season_stats:
+            return 0.50  # unknown → assume average
+        w = season_stats.get("wins", 0)
+        l = season_stats.get("losses", 0)
+        return w / max(1, w + l)
+
+    home_win_pct = _win_pct(home_season_stats)
+    away_win_pct = _win_pct(away_season_stats)
+
+    # For a HOME pick: own = home side, opp = away side
+    home_tbd_cap, home_tbd_reason = _tbd_pitcher_cap(
+        own_sp_score=home_sp_score, own_win_pct=home_win_pct,
+        own_sp_tbd=home_sp_tbd,     opp_sp_tbd=away_sp_tbd,
+    )
+    # For an AWAY pick: own = away side, opp = home side
+    away_tbd_cap, away_tbd_reason = _tbd_pitcher_cap(
+        own_sp_score=away_sp_score, own_win_pct=away_win_pct,
+        own_sp_tbd=away_sp_tbd,     opp_sp_tbd=home_sp_tbd,
+    )
+
+    # Emit a research note when a TBD cap fires so it's visible on the card
+    if home_tbd_cap and home_tbd_reason:
+        research.append(f"⚠ {home} confidence capped at MEDIUM: {home_tbd_reason}")
+    if away_tbd_cap and away_tbd_reason:
+        research.append(f"⚠ {away} confidence capped at MEDIUM: {away_tbd_reason}")
 
     _TRAP_MILD = 0.15
     _TRAP_MOD  = 0.40
@@ -1513,7 +1586,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                 # opp_trap = away pitcher trap boosts home ML edge reliability
                 conf = _mlb_conf(home_edge, len(signals), stats_available,
                                  own_trap_sev=home_trap_sev, opp_trap_sev=away_trap_sev,
-                                 injury_capped=home_injury_capped)
+                                 injury_capped=home_injury_capped,
+                                 tbd_capped=home_tbd_cap)
                 recs.append(BetRecommendation(
                     sport="MLB", game=label, bet_type="Moneyline", pick=home,
                     market_prob=market_home_prob, model_prob=model_home_prob,
@@ -1531,7 +1605,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                 # opp_trap = home pitcher trap boosts away ML edge reliability
                 conf = _mlb_conf(away_edge, len(signals), stats_available,
                                  own_trap_sev=away_trap_sev, opp_trap_sev=home_trap_sev,
-                                 injury_capped=away_injury_capped)
+                                 injury_capped=away_injury_capped,
+                                 tbd_capped=away_tbd_cap)
                 recs.append(BetRecommendation(
                     sport="MLB", game=label, bet_type="Moneyline", pick=away,
                     market_prob=market_away_prob, model_prob=model_away_prob,
@@ -1583,7 +1658,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                 if sizing.num_contracts > 0:
                     conf = _mlb_conf(home_rl_edge, len(signals), stats_available,
                                      own_trap_sev=home_trap_sev, opp_trap_sev=away_trap_sev,
-                                     injury_capped=home_injury_capped)
+                                     injury_capped=home_injury_capped,
+                                     tbd_capped=home_tbd_cap)
                     _mlb_sp_rec = BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
@@ -1603,7 +1679,8 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                 if sizing.num_contracts > 0:
                     conf = _mlb_conf(away_rl_edge, len(signals), stats_available,
                                      own_trap_sev=away_trap_sev, opp_trap_sev=home_trap_sev,
-                                     injury_capped=away_injury_capped)
+                                     injury_capped=away_injury_capped,
+                                     tbd_capped=away_tbd_cap)
                     _mlb_sp_rec = BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",
