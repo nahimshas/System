@@ -1238,7 +1238,7 @@
             <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;">
               <span class="confidence-badge {{ conf }}" style="font-size:0.65rem;">{{ conf }}</span>
             </div>
-            <div class="perf-conf-record" style="font-size:0.82rem;">{{ cs.won }}W–{{ cs.lost }}L{% if cs.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ cs.win_rate_pct }}%)</span>{% endif %}</div>
+            <div class="perf-conf-record" style="font-size:0.82rem;">{{ cs.won }}W–{{ cs.lost }}L{% if cs.win_rate_pct is not none %}<span style="display:block;color:var(--muted);font-size:0.75rem;">({{ cs.win_rate_pct }}%)</span>{% endif %}</div>
             <div class="perf-conf-pnl" style="font-size:0.78rem;color:{% if cs.total_pnl > 0 %}var(--green){% elif cs.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">{{ '+' if cs.total_pnl >= 0 else '-' }}${{ "%.2f"|format(cs.total_pnl|abs) }}</div>
           </div>
           {% endfor %}
@@ -1257,7 +1257,7 @@
               {% elif sport == 'IPL' %}<span class="badge badge-ipl">🏏 IPL</span>
               {% else %}<span style="color:var(--muted);">PARLAYS</span>{% endif %}
             </div>
-            <div class="perf-sport-record" style="font-size:0.82rem;">{{ ss.won }}W–{{ ss.lost }}L{% if ss.win_rate_pct is not none %}<span style="color:var(--muted);font-size:0.75rem;"> ({{ ss.win_rate_pct }}%)</span>{% endif %}</div>
+            <div class="perf-sport-record" style="font-size:0.82rem;">{{ ss.won }}W–{{ ss.lost }}L{% if ss.win_rate_pct is not none %}<span style="display:block;color:var(--muted);font-size:0.75rem;">({{ ss.win_rate_pct }}%)</span>{% endif %}</div>
             <div class="perf-sport-pnl" style="font-size:0.78rem;color:{% if ss.total_pnl > 0 %}var(--green){% elif ss.total_pnl < 0 %}var(--red){% else %}var(--yellow){% endif %};">{{ '+' if ss.total_pnl >= 0 else '-' }}${{ "%.2f"|format(ss.total_pnl|abs) }}</div>
           </div>
           {% endfor %}

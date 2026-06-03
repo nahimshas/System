@@ -1813,7 +1813,7 @@
 
       var recDiv = sportCard.querySelector(".perf-sport-record");
       if (recDiv) recDiv.innerHTML = sw + "W–" + sl + "L" +
-        (sWinRate !== null ? '<span style="color:var(--muted);font-size:0.75rem;"> (' + sWinRate + '%)</span>' : "");
+        (sWinRate !== null ? '<span style="display:block;color:var(--muted);font-size:0.75rem;">(' + sWinRate + '%)</span>' : "");
       var pnlDiv = sportCard.querySelector(".perf-sport-pnl");
       if (pnlDiv) {
         pnlDiv.textContent = fmt(sp);

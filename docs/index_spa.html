@@ -2059,7 +2059,7 @@
             <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;">
               <span class="confidence-badge HIGH" style="font-size:0.65rem;">HIGH</span>
             </div>
-            <div class="perf-conf-record" style="font-size:0.82rem;">129W–119L<span style="color:var(--muted);font-size:0.75rem;"> (52.0%)</span></div>
+            <div class="perf-conf-record" style="font-size:0.82rem;">129W–119L<span style="display:block;color:var(--muted);font-size:0.75rem;">(52.0%)</span></div>
             <div class="perf-conf-pnl" style="font-size:0.78rem;color:var(--green);">+$180.24</div>
           </div>
           
@@ -2071,7 +2071,7 @@
             <div style="font-size:0.72rem;font-weight:700;margin-bottom:4px;">
               <span class="confidence-badge MEDIUM" style="font-size:0.65rem;">MEDIUM</span>
             </div>
-            <div class="perf-conf-record" style="font-size:0.82rem;">9W–3L<span style="color:var(--muted);font-size:0.75rem;"> (75.0%)</span></div>
+            <div class="perf-conf-record" style="font-size:0.82rem;">9W–3L<span style="display:block;color:var(--muted);font-size:0.75rem;">(75.0%)</span></div>
             <div class="perf-conf-pnl" style="font-size:0.78rem;color:var(--green);">+$12.49</div>
           </div>
           
@@ -2085,7 +2085,7 @@
             <div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;">
               <span style="color:var(--muted);">PARLAYS</span>
             </div>
-            <div class="perf-sport-record" style="font-size:0.82rem;">26W–47L<span style="color:var(--muted);font-size:0.75rem;"> (35.6%)</span></div>
+            <div class="perf-sport-record" style="font-size:0.82rem;">26W–47L<span style="display:block;color:var(--muted);font-size:0.75rem;">(35.6%)</span></div>
             <div class="perf-sport-pnl" style="font-size:0.78rem;color:var(--green);">+$53.91</div>
           </div>
           
@@ -2098,7 +2098,7 @@
               <span class="badge badge-mlb">⚾ MLB</span>
               
             </div>
-            <div class="perf-sport-record" style="font-size:0.82rem;">80W–55L<span style="color:var(--muted);font-size:0.75rem;"> (59.3%)</span></div>
+            <div class="perf-sport-record" style="font-size:0.82rem;">80W–55L<span style="display:block;color:var(--muted);font-size:0.75rem;">(59.3%)</span></div>
             <div class="perf-sport-pnl" style="font-size:0.78rem;color:var(--green);">+$37.42</div>
           </div>
           
@@ -2111,7 +2111,7 @@
               <span class="badge badge-nba">🏀 NBA</span>
               
             </div>
-            <div class="perf-sport-record" style="font-size:0.82rem;">32W–20L<span style="color:var(--muted);font-size:0.75rem;"> (61.5%)</span></div>
+            <div class="perf-sport-record" style="font-size:0.82rem;">32W–20L<span style="display:block;color:var(--muted);font-size:0.75rem;">(61.5%)</span></div>
             <div class="perf-sport-pnl" style="font-size:0.78rem;color:var(--green);">+$101.40</div>
           </div>
           
@@ -2990,7 +2990,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 02, 2026 at 10:32 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 02, 2026 at 10:35 PM PDT</div>
         </div>
         
       </div>
@@ -5566,7 +5566,7 @@ function toggleCtx(el) {
 
       var recDiv = sportCard.querySelector(".perf-sport-record");
       if (recDiv) recDiv.innerHTML = sw + "W–" + sl + "L" +
-        (sWinRate !== null ? '<span style="color:var(--muted);font-size:0.75rem;"> (' + sWinRate + '%)</span>' : "");
+        (sWinRate !== null ? '<span style="display:block;color:var(--muted);font-size:0.75rem;">(' + sWinRate + '%)</span>' : "");
       var pnlDiv = sportCard.querySelector(".perf-sport-pnl");
       if (pnlDiv) {
         pnlDiv.textContent = fmt(sp);
