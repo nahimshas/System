@@ -5766,5 +5766,141 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-06-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "San Francisco Giants @ Milwaukee Brewers",
+    "bet_type": "Spread",
+    "pick": "San Francisco Giants +1.5",
+    "home_team": "Milwaukee Brewers",
+    "away_team": "San Francisco Giants",
+    "edge_pct": 14.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 62.8,
+    "market_prob_pct": 48.5,
+    "cost": 6.06,
+    "profit_if_win": 5.94,
+    "result": "LOST",
+    "actual_pnl": -6.06,
+    "actual_home_score": 8.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-06-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ Arizona Diamondbacks",
+    "bet_type": "Moneyline",
+    "pick": "Arizona Diamondbacks",
+    "home_team": "Arizona Diamondbacks",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 12.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 60.6,
+    "market_prob_pct": 47.8,
+    "cost": 4.98,
+    "profit_if_win": 5.02,
+    "result": "LOST",
+    "actual_pnl": -4.98,
+    "actual_home_score": 5.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-06-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "New York Mets @ Seattle Mariners",
+    "bet_type": "Moneyline",
+    "pick": "Seattle Mariners",
+    "home_team": "Seattle Mariners",
+    "away_team": "New York Mets",
+    "edge_pct": 12.7,
+    "confidence": "HIGH",
+    "model_prob_pct": 70.1,
+    "market_prob_pct": 57.4,
+    "cost": 6.54,
+    "profit_if_win": 4.46,
+    "result": "WON",
+    "actual_pnl": 4.46,
+    "actual_home_score": 8.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-06-02",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Chicago White Sox @ Minnesota Twins",
+    "bet_type": "Moneyline",
+    "pick": "Chicago White Sox",
+    "home_team": "Minnesota Twins",
+    "away_team": "Chicago White Sox",
+    "edge_pct": 14.7,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 67.6,
+    "market_prob_pct": 52.8,
+    "cost": 6.58,
+    "profit_if_win": 5.42,
+    "result": "LOST",
+    "actual_pnl": -6.58,
+    "actual_home_score": 6.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-06-02",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Arizona Diamondbacks (ML) + Seattle Mariners (ML)",
+    "bet_type": "Parlay",
+    "pick": "Arizona Diamondbacks (ML) + Seattle Mariners (ML)",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 42.5,
+    "market_prob_pct": 0,
+    "cost": 2.06,
+    "profit_if_win": 4.94,
+    "result": "LOST",
+    "actual_pnl": -2.06,
+    "legs": [
+      {
+        "game": "Los Angeles Dodgers @ Arizona Diamondbacks",
+        "pick": "Arizona Diamondbacks",
+        "result": "LOST"
+      },
+      {
+        "game": "New York Mets @ Seattle Mariners",
+        "pick": "Seattle Mariners",
+        "result": "WON"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-02",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Chicago White Sox (ML) + San Francisco Giants (ML)",
+    "bet_type": "Parlay",
+    "pick": "Chicago White Sox (ML) + San Francisco Giants (ML)",
+    "edge_pct": 11.9,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 28.4,
+    "market_prob_pct": 0,
+    "cost": 1.48,
+    "profit_if_win": 6.52,
+    "result": "LOST",
+    "actual_pnl": -1.48,
+    "legs": [
+      {
+        "game": "Chicago White Sox @ Minnesota Twins",
+        "pick": "Chicago White Sox",
+        "result": "LOST"
+      },
+      {
+        "game": "San Francisco Giants @ Milwaukee Brewers",
+        "pick": "San Francisco Giants",
+        "result": "LOST"
+      }
+    ]
   }
 ]
