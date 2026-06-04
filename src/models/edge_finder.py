@@ -1121,6 +1121,20 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     else:
         research.append(f"🔴 {away_pitcher_name} ({away}): stats unavailable")
 
+    # --- xFIP blend + pitcher quality scores ---
+    # Must come before ERA trap severity (which reads xfip) and TBD cap (which
+    # reads sp_score). Was previously computed ~240 lines later, causing
+    # UnboundLocalError on every game when _tbd_pitcher_cap was called first.
+    if home_pitcher_stats:
+        home_blended_xfip = _blend_xfip(home_pitcher_stats)
+        home_pitcher_stats = {**home_pitcher_stats, "xfip": home_blended_xfip}
+    if away_pitcher_stats:
+        away_blended_xfip = _blend_xfip(away_pitcher_stats)
+        away_pitcher_stats = {**away_pitcher_stats, "xfip": away_blended_xfip}
+
+    home_sp_score = _pitcher_quality_score(home_pitcher_stats) if home_pitcher_stats else 0
+    away_sp_score = _pitcher_quality_score(away_pitcher_stats) if away_pitcher_stats else 0
+
     # --- ERA trap severity (continuous score) ---
     # Computed here so the same values feed BOTH signal generation and
     # the per-bet confidence logic below.
@@ -1355,16 +1369,6 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         season = stats.get("avg_ip_per_start")
         return float(recent or season or 5.0)
 
-    # Blend xFIP before computing quality scores so recent form affects projections
-    if home_pitcher_stats:
-        home_blended_xfip = _blend_xfip(home_pitcher_stats)
-        home_pitcher_stats = {**home_pitcher_stats, "xfip": home_blended_xfip}
-    if away_pitcher_stats:
-        away_blended_xfip = _blend_xfip(away_pitcher_stats)
-        away_pitcher_stats = {**away_pitcher_stats, "xfip": away_blended_xfip}
-
-    home_sp_score = _pitcher_quality_score(home_pitcher_stats) if home_pitcher_stats else 0
-    away_sp_score = _pitcher_quality_score(away_pitcher_stats) if away_pitcher_stats else 0
     # Bullpen quality score uses same scale as SP: (4.20 - ERA) / 1.50
     # Positive = better than average (suppresses opponent runs), negative = worse.
     home_bullpen_score = (4.20 - home_bp_era) / 1.50
