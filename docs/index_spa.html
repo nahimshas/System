@@ -2917,7 +2917,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 04, 2026 at 11:27 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 04, 2026 at 11:58 AM PDT</div>
         </div>
         
       </div>
@@ -2966,6 +2966,9 @@ window._tabDots = {
   mls:       false,
   analytics: false
 };
+// Sport tabs that have picks in today's report — used to auto-set visibility.
+window._srvTabsWithPicks = ["mlb","nhl","wnba",];
+window._reportDate = "2026-06-04";
 </script>
 
 </div><!-- /spa-wrap -->
@@ -3011,6 +3014,43 @@ window._tabDots = {
     TABS = TABS_META.map(function (m) { return m.key; });
   }
   rebuildVisibleTabs();
+
+  // ── Auto-set tab visibility from server picks data ────────────────────────
+  // New day  → apply server defaults (hide tabs with no picks, show tabs with picks).
+  // Same day → only auto-show tabs that gained picks since last render
+  //            (preserves any manual toggles the user made today).
+  (function applyServerTabDefaults() {
+    var srvPicks  = window._srvTabsWithPicks || [];
+    var srvDate   = window._reportDate || "";
+    if (!srvDate) return;
+
+    var SRV_DATE_KEY  = "spa-srv-tab-date";
+    var SRV_PICKS_KEY = "spa-srv-tab-picks";
+
+    var lastDate  = localStorage.getItem(SRV_DATE_KEY) || "";
+    var lastPicks = [];
+    try { lastPicks = JSON.parse(localStorage.getItem(SRV_PICKS_KEY) || "[]"); } catch (e) {}
+
+    var hidden = getHiddenTabs();
+
+    if (lastDate !== srvDate) {
+      // New day: reset to server defaults — hide every non-pinned tab with no picks.
+      hidden = TABS_META_ALL
+        .filter(function (m) { return !PINNED_TABS[m.key] && srvPicks.indexOf(m.key) < 0; })
+        .map(function (m) { return m.key; });
+    } else {
+      // Same day re-run: auto-show any tab that just gained picks.
+      var gained = srvPicks.filter(function (k) { return lastPicks.indexOf(k) < 0; });
+      if (gained.length) {
+        hidden = hidden.filter(function (k) { return gained.indexOf(k) < 0; });
+      }
+    }
+
+    setHiddenTabs(hidden);
+    localStorage.setItem(SRV_DATE_KEY,  srvDate);
+    localStorage.setItem(SRV_PICKS_KEY, JSON.stringify(srvPicks));
+    rebuildVisibleTabs();
+  })();
 
   var curIdx = 0;
 
