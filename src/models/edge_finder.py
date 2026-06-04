@@ -1123,8 +1123,9 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
 
     # --- xFIP blend + pitcher quality scores ---
     # Must come before ERA trap severity (which reads xfip) and TBD cap (which
-    # reads sp_score). Both _blend_xfip and _pitcher_quality_score are defined
-    # here so they exist before the calls below.
+    # reads sp_score). Definitions AND their closed-over locals all live here.
+    _LEAGUE_AVG_XFIP = 4.20
+    _RECENT_WEIGHT   = 0.35   # weight given to last-4-starts xFIP vs season xFIP
 
     def _blend_xfip(stats: Dict) -> float:
         """Blends season xFIP with recent-form xFIP; regresses small samples toward league avg."""
@@ -1357,8 +1358,6 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         home_ops = home_ops * _COORS_OPS_DEFLATOR
 
     league_avg_runs = 4.5
-    _LEAGUE_AVG_XFIP = 4.20
-    _RECENT_WEIGHT   = 0.35   # weight given to last-4-starts xFIP vs season xFIP
 
     # Bullpen quality score uses same scale as SP: (4.20 - ERA) / 1.50
     # Positive = better than average (suppresses opponent runs), negative = worse.
