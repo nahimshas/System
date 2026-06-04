@@ -212,6 +212,25 @@ async function subKey(endpoint) {
   return 'sub:' + b64url(hash).slice(0, 32);
 }
 
+// ─── Broadcast to ALL subscribers (no pref filtering) ────────────────────────
+
+async function broadcastAll(payload, env) {
+  const list = await env.SUBSCRIPTIONS.list({ limit: 1000 });
+  if (!list.keys.length) return 0;
+
+  const results = await Promise.allSettled(
+    list.keys.map(async ({ name }) => {
+      const raw = await env.SUBSCRIPTIONS.get(name);
+      if (!raw) return;
+      return sendPush(JSON.parse(raw), payload, env);
+    })
+  );
+
+  const sent = results.filter(r => r.status === 'fulfilled' && r.value).length;
+  console.log(`broadcastAll "${payload.title}": ${sent}/${list.keys.length}`);
+  return sent;
+}
+
 // ─── ESPN helpers ─────────────────────────────────────────────────────────────
 
 const ESPN_SPORT_PATH = {
@@ -378,6 +397,24 @@ async function runCron(env) {
     }, { isPicksReady: true }, env);
     await env.PICKS_STORE.put(broadcastKey, '1', { expirationTtl: 86400 });
     console.log(`picks-ready broadcast fired: ${pickCount} picks`);
+  }
+
+  // ── Debrief notification (fires once after nightly_debrief.yml writes KV) ───
+  const debriefKey = `debrief_notify:${isoDate}`;
+  const debriefRaw = await env.PICKS_STORE.get(debriefKey);
+  if (debriefRaw) {
+    const debrief = JSON.parse(debriefRaw);
+    if (!debrief.notified) {
+      await broadcastAll({
+        title: debrief.title || '📊 Nightly Debrief ready',
+        body:  debrief.body  || "Today's picks analyzed — tap to review",
+        tag:   `debrief-${isoDate}`,
+        url:   debrief.url  || '/debrief_latest.html',
+      }, env);
+      debrief.notified = true;
+      await env.PICKS_STORE.put(debriefKey, JSON.stringify(debrief), { expirationTtl: 86400 });
+      console.log(`Debrief notification fired for ${isoDate}`);
+    }
   }
 
   let storeModified = false;

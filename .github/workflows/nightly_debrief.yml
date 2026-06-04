@@ -1,0 +1,133 @@
+name: Nightly Debrief
+
+# Runs at 10 PM PDT (05:00 UTC) — covers all MLB evening games (7 PM starts
+# are done by ~10:30 PM PDT; if games run long we'll see PENDING, which
+# shows up in the debrief and can be moved later if needed).
+# Also fires via workflow_dispatch so you can trigger a manual debrief anytime.
+
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  debrief:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt anthropic
+
+      - name: Restore state from most recent commit
+        run: |
+          git fetch --unshallow 2>/dev/null || git fetch origin
+          LAST_SHA=$(git log --format="%H" -- state/ | head -1)
+          if [ -n "$LAST_SHA" ]; then
+            git checkout "$LAST_SHA" -- state/ 2>/dev/null || true
+            echo "Restored state/ from commit $LAST_SHA"
+          else
+            echo "No previous state/ commit found"
+          fi
+
+      - name: Run nightly debrief
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m src.scripts.nightly_debrief
+
+      - name: Commit debrief report
+        run: |
+          cp docs/debrief_latest.html /tmp/debrief_latest.html
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/debrief_latest.html docs/debrief_latest.html
+          git add docs/debrief_latest.html
+          git diff --cached --quiet || git commit -m "Debrief: $(TZ=America/Los_Angeles date +'%Y-%m-%d')"
+          git push
+
+      - name: Write debrief notify key to Cloudflare KV
+        # The cron worker checks this key and fires a push notification
+        # to all subscribers within ~3 minutes.
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PICKS_KV_NAMESPACE:   "673db77b785c4b4b8fd4d8b9d545b490"
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, urllib.request, urllib.parse, datetime, time
+
+          try:
+              from zoneinfo import ZoneInfo
+              today = datetime.datetime.now(ZoneInfo('America/Los_Angeles')).date().isoformat()
+          except Exception:
+              today = datetime.date.today().isoformat()
+
+          token      = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          ns_id      = os.environ.get('PICKS_KV_NAMESPACE', '')
+          account_id = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '').strip()
+
+          if not token or not ns_id:
+              print('Missing CLOUDFLARE_API_TOKEN or PICKS_KV_NAMESPACE — skipping notification')
+              exit(0)
+
+          if not account_id:
+              req = urllib.request.Request(
+                  'https://api.cloudflare.com/client/v4/accounts?per_page=1',
+                  headers={'Authorization': f'Bearer {token}'},
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      accounts = json.loads(r.read()).get('result', [])
+                  account_id = accounts[0]['id'] if accounts else ''
+              except Exception as e:
+                  print(f'Could not resolve account ID: {e}')
+                  exit(0)
+
+          payload = json.dumps({
+              'title':    '📊 Nightly Debrief ready',
+              'body':     f"Today's picks analyzed — tap to review",
+              'url':      '/debrief_latest.html',
+              'notified': False,
+          }).encode()
+
+          kv_key = urllib.parse.quote(f'debrief_notify:{today}', safe='')
+          kv_url = (f'https://api.cloudflare.com/client/v4/accounts/{account_id}'
+                    f'/storage/kv/namespaces/{ns_id}/values/{kv_key}')
+
+          for attempt in range(1, 4):
+              req = urllib.request.Request(
+                  kv_url, data=payload,
+                  headers={'Authorization': f'Bearer {token}',
+                           'Content-Type': 'application/json'},
+                  method='PUT',
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      result = json.loads(r.read())
+                  if result.get('success'):
+                      print(f'Debrief notify key written to KV for {today}')
+                      print('Push notification will fire on next cron tick (≤3 min)')
+                      break
+                  else:
+                      print(f'KV write attempt {attempt} failed: {result}')
+              except Exception as e:
+                  print(f'KV write attempt {attempt} error: {e}')
+              if attempt < 3:
+                  time.sleep(attempt * 4)
+          PYEOF
