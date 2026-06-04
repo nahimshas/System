@@ -1123,8 +1123,30 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
 
     # --- xFIP blend + pitcher quality scores ---
     # Must come before ERA trap severity (which reads xfip) and TBD cap (which
-    # reads sp_score). Was previously computed ~240 lines later, causing
-    # UnboundLocalError on every game when _tbd_pitcher_cap was called first.
+    # reads sp_score). Both _blend_xfip and _pitcher_quality_score are defined
+    # here so they exist before the calls below.
+
+    def _blend_xfip(stats: Dict) -> float:
+        """Blends season xFIP with recent-form xFIP; regresses small samples toward league avg."""
+        season_xfip = stats.get("xfip") or _LEAGUE_AVG_XFIP
+        season_ip   = stats.get("innings_pitched", 0) or 0
+        recent_xfip = stats.get("recent_xfip")
+        recent_ip   = stats.get("recent_ip", 0) or 0
+        if recent_xfip is not None and recent_ip >= 5:
+            blended = season_xfip * (1 - _RECENT_WEIGHT) + recent_xfip * _RECENT_WEIGHT
+        else:
+            blended = float(season_xfip)
+        if season_ip < 30:
+            regression = max(0.0, (30 - season_ip) / 30)
+            blended = blended * (1 - regression) + _LEAGUE_AVG_XFIP * regression
+        return round(blended, 3)
+
+    def _effective_avg_ip(stats: Dict) -> float:
+        """Returns best available avg IP per start — recent form preferred over season."""
+        recent = stats.get("recent_avg_ip_per_start")
+        season = stats.get("avg_ip_per_start")
+        return float(recent or season or 5.0)
+
     if home_pitcher_stats:
         home_blended_xfip = _blend_xfip(home_pitcher_stats)
         home_pitcher_stats = {**home_pitcher_stats, "xfip": home_blended_xfip}
@@ -1337,37 +1359,6 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     league_avg_runs = 4.5
     _LEAGUE_AVG_XFIP = 4.20
     _RECENT_WEIGHT   = 0.35   # weight given to last-4-starts xFIP vs season xFIP
-
-    def _blend_xfip(stats: Dict) -> float:
-        """
-        Blends season xFIP with recent-form xFIP (last 4 starts).
-        Also applies small-sample regression toward league average for
-        pitchers with fewer than 30 season IP — prevents extreme scores
-        from tiny samples like Imai (8 IP).
-        """
-        season_xfip = stats.get("xfip") or _LEAGUE_AVG_XFIP
-        season_ip   = stats.get("innings_pitched", 0) or 0
-        recent_xfip = stats.get("recent_xfip")
-        recent_ip   = stats.get("recent_ip", 0) or 0
-
-        if recent_xfip is not None and recent_ip >= 5:
-            blended = season_xfip * (1 - _RECENT_WEIGHT) + recent_xfip * _RECENT_WEIGHT
-        else:
-            blended = float(season_xfip)
-
-        # Regression toward league average for small-season samples.
-        # At 0 IP → 100% league avg; at 30+ IP → 0% regression.
-        if season_ip < 30:
-            regression = max(0.0, (30 - season_ip) / 30)
-            blended = blended * (1 - regression) + _LEAGUE_AVG_XFIP * regression
-
-        return round(blended, 3)
-
-    def _effective_avg_ip(stats: Dict) -> float:
-        """Returns best available avg IP per start — recent form preferred over season."""
-        recent = stats.get("recent_avg_ip_per_start")
-        season = stats.get("avg_ip_per_start")
-        return float(recent or season or 5.0)
 
     # Bullpen quality score uses same scale as SP: (4.20 - ERA) / 1.50
     # Positive = better than average (suppresses opponent runs), negative = worse.
