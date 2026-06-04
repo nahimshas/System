@@ -323,7 +323,10 @@
     var periods = {};
     Object.keys(ev.awayInnings).forEach(function (p) { periods[p] = true; });
     Object.keys(ev.homeInnings).forEach(function (p) { periods[p] = true; });
-    var nums = Object.keys(periods).map(Number).sort(function (a, b) { return a - b; });
+    var played = Object.keys(periods).map(Number);
+    var maxInning = Math.max(9, played.length ? Math.max.apply(null, played) : 0);
+    var nums = [];
+    for (var i = 1; i <= maxInning; i++) nums.push(i);
     if (!nums.length) return "";
 
     var cellCss  = "padding:2px 5px;text-align:center;font-variant-numeric:tabular-nums;color:#cbd5e1;";
@@ -344,7 +347,7 @@
       cells = '<td style="' + teamCss + '">' + abbr + '</td>';
       nums.forEach(function (n) {
         var v = innings[n];
-        cells += '<td style="' + cellCss + '">' + (v != null ? v : "") + '</td>';
+        cells += '<td style="' + cellCss + (v == null ? 'color:#374151;' : '') + '">' + (v != null ? v : "-") + '</td>';
       });
       cells += '<td style="' + totCss + 'border-left:1px solid #2d3148;color:#14b8a6;">' + (runs != null ? runs : 0) + '</td>'
              + '<td style="' + totCss + 'color:#cbd5e1;">' + (hits != null ? hits : 0) + '</td>'
@@ -369,7 +372,11 @@
     var periods = {};
     Object.keys(ev.awayInnings).forEach(function (p) { periods[p] = true; });
     Object.keys(ev.homeInnings).forEach(function (p) { periods[p] = true; });
-    var nums = Object.keys(periods).map(Number).sort(function (a, b) { return a - b; });
+    var played = Object.keys(periods).map(Number);
+    var minPeriods = (sport === "NHL") ? 3 : 4;
+    var maxPeriod = Math.max(minPeriods, played.length ? Math.max.apply(null, played) : 0);
+    var nums = [];
+    for (var i = 1; i <= maxPeriod; i++) nums.push(i);
     if (!nums.length) return "";
 
     // Column header label for a period number, by sport.
@@ -401,7 +408,7 @@
       cells = '<td style="' + teamCss + '">' + abbr + '</td>';
       nums.forEach(function (n) {
         var v = pmap[n];
-        cells += '<td style="' + cellCss + '">' + (v != null ? v : "") + '</td>';
+        cells += '<td style="' + cellCss + (v == null ? 'color:#374151;' : '') + '">' + (v != null ? v : "-") + '</td>';
       });
       cells += '<td style="' + totCss + 'border-left:1px solid #2d3148;color:#14b8a6;">' + (total != null ? total : 0) + '</td>';
       return '<tr>' + cells + '</tr>';
