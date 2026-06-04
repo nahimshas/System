@@ -1668,6 +1668,17 @@ window._tabDots = {
   mls:       {{ 'true' if report.mls_watchlist else 'false' }},
   analytics: false
 };
+// Sport tabs that have picks in today's report — used to auto-set visibility.
+window._srvTabsWithPicks = [{% for k,v in [
+  ('nba',  report.nba_top_singles or report.nba_props),
+  ('mlb',  report.mlb_top_singles or report.mlb_props),
+  ('ipl',  report.ipl_watchlist),
+  ('nhl',  report.nhl_top_singles),
+  ('wnba', report.wnba_watchlist),
+  ('nfl',  report.nfl_top_singles),
+  ('mls',  report.mls_watchlist)
+] if v %}"{{ k }}",{% endfor %}];
+window._reportDate = "{{ report.run_date_iso }}";
 </script>
 
 </div><!-- /spa-wrap -->
@@ -1713,6 +1724,43 @@ window._tabDots = {
     TABS = TABS_META.map(function (m) { return m.key; });
   }
   rebuildVisibleTabs();
+
+  // ── Auto-set tab visibility from server picks data ────────────────────────
+  // New day  → apply server defaults (hide tabs with no picks, show tabs with picks).
+  // Same day → only auto-show tabs that gained picks since last render
+  //            (preserves any manual toggles the user made today).
+  (function applyServerTabDefaults() {
+    var srvPicks  = window._srvTabsWithPicks || [];
+    var srvDate   = window._reportDate || "";
+    if (!srvDate) return;
+
+    var SRV_DATE_KEY  = "spa-srv-tab-date";
+    var SRV_PICKS_KEY = "spa-srv-tab-picks";
+
+    var lastDate  = localStorage.getItem(SRV_DATE_KEY) || "";
+    var lastPicks = [];
+    try { lastPicks = JSON.parse(localStorage.getItem(SRV_PICKS_KEY) || "[]"); } catch (e) {}
+
+    var hidden = getHiddenTabs();
+
+    if (lastDate !== srvDate) {
+      // New day: reset to server defaults — hide every non-pinned tab with no picks.
+      hidden = TABS_META_ALL
+        .filter(function (m) { return !PINNED_TABS[m.key] && srvPicks.indexOf(m.key) < 0; })
+        .map(function (m) { return m.key; });
+    } else {
+      // Same day re-run: auto-show any tab that just gained picks.
+      var gained = srvPicks.filter(function (k) { return lastPicks.indexOf(k) < 0; });
+      if (gained.length) {
+        hidden = hidden.filter(function (k) { return gained.indexOf(k) < 0; });
+      }
+    }
+
+    setHiddenTabs(hidden);
+    localStorage.setItem(SRV_DATE_KEY,  srvDate);
+    localStorage.setItem(SRV_PICKS_KEY, JSON.stringify(srvPicks));
+    rebuildVisibleTabs();
+  })();
 
   var curIdx = 0;
 
