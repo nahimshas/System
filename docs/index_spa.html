@@ -2917,7 +2917,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 04, 2026 at 11:21 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 04, 2026 at 11:27 AM PDT</div>
         </div>
         
       </div>
@@ -4979,14 +4979,11 @@ function toggleCtx(el) {
           (result ? outcomeHtml(result) : '') +
         '</div>'
       );
-      // Keep the per-period line score on FINAL sport-tab cards (.card) too —
-      // shows the completed box score. Today alloc cards (.alloc-card) excluded.
-      if (!card.classList.contains("alloc-card")) {
-        if (sport === "MLB") {
-          finalHtml += _mlbLineScore(ev);
-        } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
-          finalHtml += _periodLineScore(ev, sport);
-        }
+      // Per-period line score on final cards — sport tabs and Today's Card.
+      if (sport === "MLB") {
+        finalHtml += _mlbLineScore(ev);
+      } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
+        finalHtml += _periodLineScore(ev, sport);
       }
       liveDiv.innerHTML = finalHtml;
     } else if (ev.stateId === "2") {
@@ -5020,15 +5017,11 @@ function toggleCtx(el) {
                 probHtml(prob) +
               '</div>'
             );
-        // Sport-tab bet cards (.card) get a per-period line score appended:
-        // MLB = inning R/H/E, NBA/WNBA/NHL = quarter/period + Total. Today alloc
-        // cards (.alloc-card) are excluded to keep them compact.
-        if (!card.classList.contains("alloc-card")) {
-          if (sport === "MLB") {
-            centerLive += _mlbLineScore(ev);
-          } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
-            centerLive += _periodLineScore(ev, sport);
-          }
+        // Per-period line score on live cards — sport tabs and Today's Card.
+        if (sport === "MLB") {
+          centerLive += _mlbLineScore(ev);
+        } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
+          centerLive += _periodLineScore(ev, sport);
         }
         liveDiv.innerHTML = centerLive;
       }
