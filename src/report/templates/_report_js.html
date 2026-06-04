@@ -1299,14 +1299,11 @@
           (result ? outcomeHtml(result) : '') +
         '</div>'
       );
-      // Keep the per-period line score on FINAL sport-tab cards (.card) too —
-      // shows the completed box score. Today alloc cards (.alloc-card) excluded.
-      if (!card.classList.contains("alloc-card")) {
-        if (sport === "MLB") {
-          finalHtml += _mlbLineScore(ev);
-        } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
-          finalHtml += _periodLineScore(ev, sport);
-        }
+      // Per-period line score on final cards — sport tabs and Today's Card.
+      if (sport === "MLB") {
+        finalHtml += _mlbLineScore(ev);
+      } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
+        finalHtml += _periodLineScore(ev, sport);
       }
       liveDiv.innerHTML = finalHtml;
     } else if (ev.stateId === "2") {
@@ -1340,15 +1337,11 @@
                 probHtml(prob) +
               '</div>'
             );
-        // Sport-tab bet cards (.card) get a per-period line score appended:
-        // MLB = inning R/H/E, NBA/WNBA/NHL = quarter/period + Total. Today alloc
-        // cards (.alloc-card) are excluded to keep them compact.
-        if (!card.classList.contains("alloc-card")) {
-          if (sport === "MLB") {
-            centerLive += _mlbLineScore(ev);
-          } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
-            centerLive += _periodLineScore(ev, sport);
-          }
+        // Per-period line score on live cards — sport tabs and Today's Card.
+        if (sport === "MLB") {
+          centerLive += _mlbLineScore(ev);
+        } else if (sport === "NBA" || sport === "WNBA" || sport === "NHL" || sport === "NFL") {
+          centerLive += _periodLineScore(ev, sport);
         }
         liveDiv.innerHTML = centerLive;
       }
