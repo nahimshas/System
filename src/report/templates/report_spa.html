@@ -972,6 +972,19 @@
     </details>
     {% endif %}
 
+    <div id="debrief-today-wrap" style="display:none;margin-top:18px;">
+      <details id="sect-today-debrief" open>
+        <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:0;">
+          <span style="flex:1;">📓 Nightly Debrief
+            <span id="debrief-today-sub" style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;"></span>
+          </span>
+          <span style="font-size:0.7rem;color:var(--muted);margin-left:8px;">▾</span>
+        </summary>
+        <div id="debrief-content"></div>
+        <div id="debrief-scorecard" style="margin-top:18px;"></div>
+      </details>
+    </div>
+
     <div style="height:16px;"></div>
   </div><!-- /tab-today -->
 
@@ -1633,18 +1646,6 @@
     <div style="height:16px;"></div>
   </div><!-- /tab-analytics -->
 
-  <!-- ═══════════════ DEBRIEF TAB ══════════════════════════════════════════ -->
-  <div id="tab-debrief" class="spa-tab">
-    <div class="tab-header">
-      <div class="tab-header-text">
-        <div class="tab-header-title">📓 Nightly Debrief</div>
-        <div class="tab-header-sub" id="debrief-sub">Last night's analysis</div>
-      </div>
-    </div>
-    <div id="debrief-scorecard" style="margin-top:14px;"></div>
-    <div id="debrief-content" style="margin-top:6px;"></div>
-    <div style="height:16px;"></div>
-  </div><!-- /tab-debrief -->
 
 </div><!-- /spa-content -->
 
@@ -1679,7 +1680,6 @@ window._tabDots = {
   wnba:      {{ 'true' if report.wnba_watchlist else 'false' }},
   nfl:       {{ 'true' if report.nfl_top_singles else 'false' }},
   mls:       {{ 'true' if report.mls_watchlist else 'false' }},
-  debrief:   false,
   analytics: false
 };
 // Sport tabs that have picks in today's report — used to auto-set visibility.
@@ -1713,7 +1713,6 @@ window._reportDate = "{{ report.run_date_iso }}";
     { key:"wnba",      emoji:"🏀", label:"WNBA"      },
     { key:"nfl",       emoji:"🏈", label:"NFL"       },
     { key:"mls",       emoji:"⚽", label:"MLS"       },
-    { key:"debrief",   emoji:"📓", label:"Debrief"   },
     { key:"analytics", emoji:"📊", label:"Analytics" }
   ];
   var PINNED_TABS = { today: true, analytics: true };
@@ -1913,8 +1912,8 @@ window._reportDate = "{{ report.run_date_iso }}";
 
   // ── Debrief tab: load history, render scorecard + latest entry ────────────
   // debrief_history.json lives in docs/ so it's served from the same origin.
-  // Tab is hidden by default (not in srvPicks); un-hidden when a fresh entry
-  // (< 20 h old) is found. Hidden again on the next new-day applyServerTabDefaults.
+  // The latest debrief is injected into the Today tab's #debrief-today-wrap
+  // section (after Yesterday recap). Section is display:none until data loads.
 
   function _debriefPnlStr(pnl) {
     if (pnl == null) return '';
@@ -2081,41 +2080,34 @@ window._reportDate = "{{ report.run_date_iso }}";
     box.innerHTML = html;
   }
 
-  (function loadDebriefTab() {
-    // Ensure debrief is hidden until we confirm a fresh entry exists
-    var _h = getHiddenTabs();
-    if (_h.indexOf('debrief') < 0) { _h.push('debrief'); setHiddenTabs(_h); rebuildVisibleTabs(); }
-
+  (function loadDebriefToday() {
+    // Loads debrief_history.json and injects the latest debrief into the
+    // Today tab's #debrief-today-wrap section. The wrap is hidden by default
+    // and revealed once data is confirmed available. No tab visibility logic
+    // needed — the section lives permanently in the Today tab.
     fetch('debrief_history.json?_=' + Date.now())
       .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function(hist) {
         var entries = hist.entries || [];
         if (!entries.length) return;
 
-        // Always render scorecard — historical signal data is always useful
-        renderDebriefScorecard(entries);
-
-        // Un-hide tab only if the latest entry is fresh (< 20 h old)
         var last = entries[entries.length - 1];
-        var genAt = last.generated_at ? new Date(last.generated_at) : null;
-        var hoursSince = genAt ? (Date.now() - genAt.getTime()) / 3600000 : 999;
-        if (hoursSince > 20) return;
 
-        // Show the tab
-        var h = getHiddenTabs();
-        var i = h.indexOf('debrief');
-        if (i >= 0) { h.splice(i, 1); setHiddenTabs(h); rebuildVisibleTabs(); renderCarousel(curIdx); }
-
-        // Update sub-header
-        var sub = document.getElementById('debrief-sub');
+        // Update sub-header (date · record · P&L)
+        var sub = document.getElementById('debrief-today-sub');
         if (sub) sub.textContent = last.date +
           ' · ' + (last.budget_record || '?') + ' budget' +
           (last.budget_pnl != null ? ' · ' + _debriefPnlStr(last.budget_pnl) : '');
 
-        // Render latest entry content
+        // Render latest entry content and signal scorecard
         renderLatestDebrief(last);
+        renderDebriefScorecard(entries);
+
+        // Show the section
+        var wrap = document.getElementById('debrief-today-wrap');
+        if (wrap) wrap.style.display = '';
       })
-      .catch(function() { /* debrief_history.json not yet available — tab stays hidden */ });
+      .catch(function() { /* debrief_history.json not yet available — section stays hidden */ });
   })();
 
   // ── Morning-run validation banner ─────────────────────────────────────────
