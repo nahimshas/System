@@ -2917,7 +2917,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 04, 2026 at 05:52 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 04, 2026 at 05:56 PM PDT</div>
         </div>
         
       </div>
@@ -4925,6 +4925,12 @@ function toggleCtx(el) {
       ? '<div style="margin-top:3px;font-size:0.72rem;line-height:1.7;">' +
         legSummaryParts.join('<br>') + '</div>'
       : '';
+
+    // Stamp game state for Today's Card sort (same logic as single-bet applyCard)
+    card.setAttribute("data-game-state",
+      !anyStarted         ? "pre"   :
+      (anyLost || allFinal) ? "final" :
+      hasLiveLeg          ? "live"  : "pre");
 
     if (!anyStarted) { setPickLive(card, false); liveDiv.innerHTML = legSummary; return; }
 
