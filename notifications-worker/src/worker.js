@@ -14,6 +14,7 @@
  *
  * Notification routing:
  *   picks-ready notification  → prefs.today === true
+ *   debrief notification      → prefs.today === true  (Today's Card bell)
  *   parlay notification       → prefs.today === true
  *   single pick notification  → prefs[sport] === true
  *                               OR (prefs.today === true AND pick.inTodaysCard)
@@ -405,12 +406,12 @@ async function runCron(env) {
   if (debriefRaw) {
     const debrief = JSON.parse(debriefRaw);
     if (!debrief.notified) {
-      await broadcastAll({
+      await broadcastFiltered({
         title: debrief.title || '📊 Nightly Debrief ready',
         body:  debrief.body  || "Today's picks analyzed — tap to review",
         tag:   `debrief-${isoDate}`,
         url:   debrief.url  || '/debrief_latest.html',
-      }, env);
+      }, { isPicksReady: true }, env);
       debrief.notified = true;
       await env.PICKS_STORE.put(debriefKey, JSON.stringify(debrief), { expirationTtl: 86400 });
       console.log(`Debrief notification fired for ${isoDate}`);
