@@ -1206,6 +1206,12 @@
         legSummaryParts.join('<br>') + '</div>'
       : '';
 
+    // Stamp game state for Today's Card sort (same logic as single-bet applyCard)
+    card.setAttribute("data-game-state",
+      !anyStarted         ? "pre"   :
+      (anyLost || allFinal) ? "final" :
+      hasLiveLeg          ? "live"  : "pre");
+
     if (!anyStarted) { setPickLive(card, false); liveDiv.innerHTML = legSummary; return; }
 
     if (anyLost) {
