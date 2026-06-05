@@ -935,43 +935,6 @@
     {% endfor %}
     {% endif %}
 
-    {# ── YESTERDAY'S RESULTS (SECOND, COLLAPSIBLE) ── #}
-    {% if report.recap and report.recap.has_recap %}
-    <details id="sect-today-yesterday" style="margin-top:18px;" open>
-      <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:0;">
-        <span style="flex:1;">Yesterday — {{ report.recap.date }}
-          <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;">{{ report.recap.record_str }}</span>
-          <span style="font-weight:700;font-size:0.8rem;text-transform:none;letter-spacing:0;margin-left:8px;color:{% if report.recap.total_pnl >= 0 %}var(--green){% else %}var(--red){% endif %};">{{ report.recap.pnl_sign }}${{ "%.2f"|format(report.recap.total_pnl|abs) }}</span>
-        </span>
-        <span style="font-size:0.7rem;color:var(--muted);margin-left:8px;" class="recap-chevron">▾</span>
-      </summary>
-      {% for item in report.recap.results %}
-      <div class="result-card">
-        <div class="result-icon">{% if item.result == 'WON' %}✅{% elif item.result == 'LOST' %}❌{% else %}➡{% endif %}</div>
-        <div class="result-body">
-          <div class="result-pick">
-            {% if item.sport == 'NBA' %}<span class="badge badge-nba">NBA</span>
-            {% elif item.sport == 'MLB' %}<span class="badge badge-mlb">MLB</span>
-            {% elif item.sport == 'NFL' %}<span class="badge badge-nfl">NFL</span>
-            {% elif item.sport == 'NHL' %}<span class="badge badge-nhl">NHL</span>
-            {% elif item.sport == 'IPL' %}<span class="badge badge-ipl">IPL</span>
-            {% elif item.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
-            {% elif item.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
-            {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ item.sport }}</span>
-            {% endif %}
-            &nbsp;{{ item.pick }}
-          </div>
-          <div class="result-game short-game">{{ item.game }}{% if item.edge_pct %} &middot; +{{ item.edge_pct }}% edge{% endif %}</div>
-          {% if item.narrative %}<div style="font-size:0.75rem;color:var(--muted);margin-top:3px;line-height:1.4;">{{ item.narrative }}</div>{% endif %}
-        </div>
-        <div class="result-pnl {% if item.actual_pnl >= 0 %}green{% else %}red{% endif %}">
-          {% if item.actual_pnl >= 0 %}+{% endif %}${{ "%.2f"|format(item.actual_pnl|abs) }}
-        </div>
-      </div>
-      {% endfor %}
-    </details>
-    {% endif %}
-
     <div id="debrief-today-wrap" style="display:none;margin-top:18px;">
       <details id="sect-today-debrief" open>
         <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:0;">
@@ -2042,6 +2005,17 @@ window._reportDate = "{{ report.run_date_iso }}";
             '</div>' +
             (p.score ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:4px;">📊 ' + p.score + '</div>' : '') +
             (p.what_happened ? '<div style="font-size:0.76rem;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);line-height:1.5;">' + p.what_happened + '</div>' : '') +
+            ((p.legs && p.legs.length) ? (function() {
+              var lh = '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">';
+              p.legs.forEach(function(leg) {
+                var li = leg.result === 'WON' ? '✅' : leg.result === 'LOST' ? '❌' : '⏳';
+                lh += '<div style="font-size:0.7rem;color:var(--muted);display:flex;gap:6px;padding:2px 0;">' +
+                  '<span>' + li + '</span>' +
+                  '<span>' + (leg.sport ? '<span style="color:var(--teal);">' + leg.sport + '</span> · ' : '') + (leg.pick||'') + '</span>' +
+                '</div>';
+              });
+              return lh + '</div>';
+            })() : '') +
             (p.signal_verdict ? '<div style="font-size:0.72rem;margin-top:5px;color:' + vCol(p.signal_verdict) + ';">Signal: ' + p.signal_verdict + '</div>' : '') +
             (p.key_insight ? '<div style="font-size:0.72rem;margin-top:4px;color:var(--teal);font-style:italic;">' + p.key_insight + '</div>' : '') +
           '</div>';
