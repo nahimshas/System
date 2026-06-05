@@ -1260,6 +1260,12 @@
     var ev = findEvent(allEvents, homeTeam, awayTeam);
     if (!ev) return;
 
+    // Stamp game state so sortTodayCard() can re-order Today's Card live.
+    if (card.classList.contains("alloc-card")) {
+      card.setAttribute("data-game-state",
+        ev.stateId === "3" ? "final" : ev.stateId === "2" ? "live" : "pre");
+    }
+
     var liveDiv = card.querySelector(".live-status");
     if (!liveDiv) return;
 
@@ -3033,6 +3039,50 @@
       pollTimer = setInterval(pollIplLive, 30 * 1000);
     }());
 
+    // Re-orders Today's Card: live games first, pre-game middle, finished last.
+    // Bet labels (B1, B2, P1…) never change — only visual position shifts.
+    function sortTodayCard() {
+      var panel = document.getElementById("panel-today");
+      if (!panel) return;
+      var cards = Array.from(panel.querySelectorAll(".alloc-card"));
+      if (cards.length < 2) return;
+
+      var parent = cards[0].parentNode;
+
+      // Find anchor: first non-alloc-card element sibling that follows the card block
+      var cardSet = new Set(cards);
+      var seenCard = false, anchor = null;
+      var child = parent.firstChild;
+      while (child) {
+        if (cardSet.has(child))              { seenCard = true; }
+        else if (seenCard && child.nodeType === 1) { anchor = child; break; }
+        child = child.nextSibling;
+      }
+
+      function stateRank(card) {
+        var s = card.getAttribute("data-game-state") || "pre";
+        return s === "live" ? 0 : s === "final" ? 2 : 1;
+      }
+      function allocRank(card) {
+        var el = card.querySelector(".alloc-rank");
+        var t  = el ? el.textContent.trim() : "";
+        var m  = t.match(/^([A-Za-z])(\d+)$/);
+        if (!m) return 99;
+        var l = m[1].toUpperCase();
+        return (l === "B" ? 0 : l === "P" ? 20 : 40) + parseInt(m[2], 10);
+      }
+
+      cards.sort(function (a, b) {
+        var ds = stateRank(a) - stateRank(b);
+        return ds !== 0 ? ds : allocRank(a) - allocRank(b);
+      });
+
+      cards.forEach(function (c) {
+        if (anchor) parent.insertBefore(c, anchor);
+        else        parent.appendChild(c);
+      });
+    }
+
     function onFetch(events) {
       allEvents = allEvents.concat(events);
       done++;
@@ -3057,6 +3107,9 @@
 
       // Lock props whose commence_time has passed (no ESPN match needed)
       checkPropLocks();
+
+      // Re-sort Today's Card: live → pre → final, stable within each group
+      sortTodayCard();
     }
 
     SCOREBOARD_SOURCES.forEach(function (item) {
