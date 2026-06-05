@@ -2917,7 +2917,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 04, 2026 at 05:48 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 04, 2026 at 05:52 PM PDT</div>
         </div>
         
       </div>
@@ -6762,7 +6762,7 @@ function toggleCtx(el) {
     // Re-orders Today's Card: live games first, pre-game middle, finished last.
     // Bet labels (B1, B2, P1…) never change — only visual position shifts.
     function sortTodayCard() {
-      var panel = document.getElementById("panel-today");
+      var panel = document.getElementById("tab-today");
       if (!panel) return;
       var cards = Array.from(panel.querySelectorAll(".alloc-card"));
       if (cards.length < 2) return;
