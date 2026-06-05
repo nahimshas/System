@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-06-05T01:01:44.277741+00:00",
+  "generated_at": "2026-06-05T01:07:48.126724+00:00",
   "status": "FAIL",
-  "warn_count": 5,
+  "warn_count": 2,
   "info_count": 7,
   "findings": [
     {
@@ -14,28 +14,7 @@
     {
       "check": "dropped_bet",
       "severity": "warn",
-      "what": "Placed single 'Vegas Golden Knights +1.5' (NHL Spread, Vegas Golden Knights @ Carolina Hurricanes) from 2026-06-04's card has no settled record in history.json.",
-      "why": "A placed bet that never settled means yesterday's P&L is understated and the by-sport/confidence tiles are missing it.",
-      "fix": "Re-run the workflow (settlement retries). If it persists, the ESPN team-name match likely failed in _find_game_score \u2014 verify the game's team names."
-    },
-    {
-      "check": "dropped_bet",
-      "severity": "warn",
       "what": "Placed single 'Boston Red Sox' (MLB Moneyline, Baltimore Orioles @ Boston Red Sox) from 2026-06-04's card has no settled record in history.json.",
-      "why": "A placed bet that never settled means yesterday's P&L is understated and the by-sport/confidence tiles are missing it.",
-      "fix": "Re-run the workflow (settlement retries). If it persists, the ESPN team-name match likely failed in _find_game_score \u2014 verify the game's team names."
-    },
-    {
-      "check": "dropped_bet",
-      "severity": "warn",
-      "what": "Placed single 'Under 10.5' (MLB Total, Athletics @ Chicago Cubs) from 2026-06-04's card has no settled record in history.json.",
-      "why": "A placed bet that never settled means yesterday's P&L is understated and the by-sport/confidence tiles are missing it.",
-      "fix": "Re-run the workflow (settlement retries). If it persists, the ESPN team-name match likely failed in _find_game_score \u2014 verify the game's team names."
-    },
-    {
-      "check": "dropped_bet",
-      "severity": "warn",
-      "what": "Placed single 'Minnesota Twins +1.5' (MLB Spread, Kansas City Royals @ Minnesota Twins) from 2026-06-04's card has no settled record in history.json.",
       "why": "A placed bet that never settled means yesterday's P&L is understated and the by-sport/confidence tiles are missing it.",
       "fix": "Re-run the workflow (settlement retries). If it persists, the ESPN team-name match likely failed in _find_game_score \u2014 verify the game's team names."
     },
