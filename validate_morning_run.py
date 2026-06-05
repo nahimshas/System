@@ -49,9 +49,30 @@ def _picks_for(d: str):
 
 
 def run_checks(today: date):
-    """Return (findings, stats). findings = list of dicts; empty = all pass."""
+    """Return (findings, stats, meta). findings = list of dicts; empty = all pass."""
     findings = []
     y = _yesterday_iso(today)
+
+    # ── Determine first-run-of-day vs subsequent run ──────────────────────────
+    # Load the previous validation report. If it's already from today, this is
+    # a subsequent run and we only re-check items that were flagged this morning.
+    # If it's from a prior day (or missing), this IS the first run — full checks.
+    prev_report: dict = {}
+    if REPORT_OUT.exists():
+        try:
+            prev_report = json.loads(REPORT_OUT.read_text())
+        except Exception:
+            pass
+
+    is_first_run_today = prev_report.get("report_date", "") != str(today)
+
+    # Keys flagged as dropped in the morning report (used on subsequent runs).
+    prev_flagged_bets  = {tuple(k) for k in prev_report.get("flagged_dropped_bets",  [])}
+    prev_flagged_props = {tuple(k) for k in prev_report.get("flagged_dropped_props", [])}
+
+    # Collect still-unfixed keys so subsequent runs know what to re-check.
+    flagged_dropped_bets:  list = []
+    flagged_dropped_props: list = []
 
     def fail(check, severity, what, why, fix):
         findings.append({"check": check, "severity": severity,
@@ -81,17 +102,21 @@ def run_checks(today: date):
         for s in placed_singles:
             k = (s.get("game", ""), s.get("bet_type", ""), s.get("pick", ""))
             if k not in settled_keys:
-                # Only flag if the game has had enough time to finish.
-                # Games typically last ≤4 hours; skip if commence_time < 5h ago.
-                commence_str = s.get("commence_time", "")
-                if commence_str:
-                    try:
-                        from datetime import timedelta as _td
-                        ct = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
-                        if now_utc < ct + _td(hours=5):
-                            continue  # Game hasn't had time to finish — not a real drop
-                    except Exception:
-                        pass
+                # Subsequent run: only re-check bets flagged in the morning report.
+                if not is_first_run_today and k not in prev_flagged_bets:
+                    continue
+                # First run: skip if game hasn't had time to finish (5h guard).
+                if is_first_run_today:
+                    commence_str = s.get("commence_time", "")
+                    if commence_str:
+                        try:
+                            from datetime import timedelta as _td
+                            ct = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
+                            if now_utc < ct + _td(hours=5):
+                                continue
+                        except Exception:
+                            pass
+                flagged_dropped_bets.append(list(k))
                 fail("dropped_bet", "warn",
                      f"Placed single '{s.get('pick')}' ({s.get('sport')} {s.get('bet_type')}, "
                      f"{s.get('game')}) from {y}'s card has no settled record in history.json.",
@@ -109,16 +134,21 @@ def run_checks(today: date):
             # Only flag props that have NO record at all (truly dropped). A record
             # with result=None is simply pending settlement — not a problem.
             if k not in recorded_prop_keys:
-                # Skip if the game hasn't had time to finish yet (same 5h guard as singles)
-                commence_str = p.get("commence_time", "")
-                if commence_str:
-                    try:
-                        from datetime import timedelta as _td
-                        ct = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
-                        if now_utc < ct + _td(hours=5):
-                            continue
-                    except Exception:
-                        pass
+                # Subsequent run: only re-check props flagged in the morning report.
+                if not is_first_run_today and k not in prev_flagged_props:
+                    continue
+                # First run: 5h guard same as singles.
+                if is_first_run_today:
+                    commence_str = p.get("commence_time", "")
+                    if commence_str:
+                        try:
+                            from datetime import timedelta as _td
+                            ct = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
+                            if now_utc < ct + _td(hours=5):
+                                continue
+                        except Exception:
+                            pass
+                flagged_dropped_props.append(list(k))
                 fail("dropped_prop", "info",
                      f"Prop '{p.get('player')} {p.get('prop_type')}' from {y} has no record at all "
                      f"in prop_history.json (not even pending).",
@@ -268,13 +298,18 @@ def run_checks(today: date):
         "placed_singles": len(placed_singles),
         "placed_props": len(placed_props),
     }
-    return findings, stats
+    meta = {
+        "flagged_dropped_bets":  flagged_dropped_bets,
+        "flagged_dropped_props": flagged_dropped_props,
+        "is_first_run_today":    is_first_run_today,
+    }
+    return findings, stats, meta
 
 
 def main():
     today = date.today()
     try:
-        findings, stats = run_checks(today)
+        findings, stats, meta = run_checks(today)
     except Exception as e:
         # Never let validation break the run.
         findings = [{"check": "validator_error", "severity": "info",
@@ -282,18 +317,23 @@ def main():
                      "why": "The validation itself failed; checks did not complete.",
                      "fix": "Inspect validate_morning_run.py against current state-file shapes."}]
         stats = {}
+        meta  = {}
 
     warns = [f for f in findings if f["severity"] == "warn"]
     infos = [f for f in findings if f["severity"] == "info"]
     status = "FAIL" if warns else ("WARN" if infos else "PASS")
 
     report = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "status": status,
-        "warn_count": len(warns),
-        "info_count": len(infos),
-        "findings": findings,
-        "stats": stats,
+        "generated_at":         datetime.now(timezone.utc).isoformat(),
+        "report_date":          str(today),
+        "status":               status,
+        "warn_count":           len(warns),
+        "info_count":           len(infos),
+        "findings":             findings,
+        "stats":                stats,
+        # Persist flagged keys so subsequent runs know what to re-check.
+        "flagged_dropped_bets":  meta.get("flagged_dropped_bets",  []),
+        "flagged_dropped_props": meta.get("flagged_dropped_props", []),
     }
     try:
         REPORT_OUT.parent.mkdir(parents=True, exist_ok=True)
