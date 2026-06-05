@@ -1,0 +1,243 @@
+{
+  "entries": [
+    {
+      "date": "June 4, 2026",
+      "generated_at": "2026-06-05T05:38:00Z",
+      "headline": "2-3 on budget; totals went 1-3, NHL puck line saved the day — watchlist 8-6",
+      "budget_record": "2-3",
+      "watchlist_record": "8-6",
+      "budget_pnl": -0.95,
+      "picks": [
+        {
+          "in_budget": true,
+          "pick": "Giants ML",
+          "sport": "MLB",
+          "game": "SF Giants @ Milwaukee Brewers",
+          "bet_type": "Moneyline",
+          "result": "WON",
+          "pnl": "+$8.00",
+          "score": "Giants 12, Brewers 9",
+          "what_happened": "Giants blew it open early — Casey Schmitt homered on the first pitch and Eric Haase hit a grand slam, putting SF up by nine runs. Crow was exposed far beyond his ERA; the Giants coasted to a 12-9 final.",
+          "signals": ["ERA Trap", "Recent Form Surge", "FIP Analysis"],
+          "signal_verdict": "CORRECT — ERA trap fired on Crow exactly as modeled. Recent-form surge (5.1 R/G) validated: Giants scored 12. Houser's FIP accurately predicted his struggles.",
+          "key_insight": "ERA trap MILD (severity 0.26) still produced a dominant result — lower thresholds may still carry actionable edge."
+        },
+        {
+          "in_budget": true,
+          "pick": "VGK +1.5",
+          "sport": "NHL · Stanley Cup Final Game 2",
+          "game": "Vegas Golden Knights @ Carolina Hurricanes",
+          "bet_type": "Puck Line",
+          "result": "WON",
+          "pnl": "+$2.79",
+          "score": "Hurricanes 4, Golden Knights 3 (OT)",
+          "what_happened": "VGK led 2-0 after two periods before Carolina exploded for three unanswered goals in 5:05 in the third. VGK tied it late with the goalie pulled, then Seth Jarvis scored a PP OT winner for CAR 4-3. Series tied 1-1.",
+          "signals": ["NHL Playoff Model", "Even Game Projection", "Home Ice Analysis"],
+          "signal_verdict": "CORRECT — Model projected an extremely tight game; final was decided by one goal in OT. The 2.9–2.9 projection captured the competitive parity perfectly.",
+          "key_insight": "NHL playoff model is performing well — the even projection + puck line approach is a high-confidence repeatable play in tight series."
+        },
+        {
+          "in_budget": true,
+          "pick": "Red Sox ML",
+          "sport": "MLB",
+          "game": "Baltimore Orioles @ Boston Red Sox",
+          "bet_type": "Moneyline",
+          "result": "LOST",
+          "pnl": "−$4.33",
+          "score": "Orioles 8, Red Sox 2",
+          "what_happened": "Coby Mayo hit a bases-clearing double in a six-run Baltimore first inning. Baltimore's offense exploded before any of the model's structural advantages could materialize, handing Boston their worst loss of the series.",
+          "signals": ["Platoon Advantage", "Park Factor", "Umpire Signal", "FIP Analysis"],
+          "signal_verdict": "INCORRECT — All signals were structural advantages but a catastrophic first inning by Bello negated every positive RSox signal. The model had no first-inning explosion risk factor.",
+          "key_insight": "Brayan Bello's FIP 5.22 was the warning sign — the model may over-weight park/platoon when the starter profile itself is a liability."
+        },
+        {
+          "in_budget": true,
+          "pick": "Under 10.5",
+          "sport": "MLB",
+          "game": "Athletics @ Chicago Cubs",
+          "bet_type": "Total",
+          "result": "LOST",
+          "pnl": "−$4.36",
+          "score": "Cubs 7, Athletics 6 (total: 13)",
+          "what_happened": "Shea Langeliers went off with 2 HR and 3 RBI for the A's; Ian Happ and Pete Crow-Armstrong added HRs for Chicago. Four home runs inflated the total to 13 despite both starters pitching reasonably well into the middle innings.",
+          "signals": ["xFIP Projection", "ERA Trap", "Recent Form", "Park Factor"],
+          "signal_verdict": "INCORRECT — xFIP projections were accurate for starters but the model underestimated home-run variance at Wrigley. Park factor 1.03 was insufficiently weighted.",
+          "key_insight": "Wrigley HR rate may warrant a bespoke park adjustment for totals bets — xFIP alone doesn't capture wind/carry day-to-day variance at this park."
+        },
+        {
+          "in_budget": true,
+          "pick": "Twins +1.5",
+          "sport": "MLB",
+          "game": "Kansas City Royals @ Minnesota Twins",
+          "bet_type": "Run Line",
+          "result": "LOST",
+          "pnl": "−$3.05",
+          "score": "Royals 8, Twins 6 (lost by 2)",
+          "what_happened": "Both starters had trouble holding leads in a high-scoring 8-6 final. The Royals ran their offense to overcome a Minnesota lead. Twins' schedule load signal (7 games in 7 days) may have reflected fatigue in the bullpen late.",
+          "signals": ["FIP Analysis", "Park Factor", "Schedule Load", "xFIP Projection"],
+          "signal_verdict": "INCORRECT — Projected 4-4, actual 8-6. The model severely under-estimated total run output. Morris's xFIP 4.00 vs FIP 3.03 was the warning — FIP was potentially luck-inflated.",
+          "key_insight": "When FIP–xFIP gap is large on both starters in the same game, the model should widen its projection range and reduce +1.5 line confidence."
+        },
+        {
+          "in_budget": false,
+          "pick": "Cubs ML",
+          "sport": "MLB",
+          "game": "Athletics @ Chicago Cubs",
+          "result": "WON",
+          "score": "Cubs 7–6",
+          "signals": ["ERA Trap"],
+          "signal_verdict": "CORRECT — ERA trap SEVERE on Ginn correctly identified A's ML as overpriced; Cubs eked out a 1-run win."
+        },
+        {
+          "in_budget": false,
+          "pick": "Braves ML",
+          "sport": "MLB",
+          "game": "Toronto Blue Jays @ Atlanta Braves",
+          "result": "LOST",
+          "score": "Blue Jays 7–2",
+          "signals": ["FIP Analysis", "Starter Dominance"],
+          "signal_verdict": "INCORRECT — Chris Sale was projected as the dominant edge but Toronto's lineup lit up the Braves in the finale."
+        },
+        {
+          "in_budget": false,
+          "pick": "Padres +1.5",
+          "sport": "MLB",
+          "game": "San Diego Padres @ Philadelphia Phillies",
+          "result": "LOST",
+          "score": "Phillies 6–4 (Padres lost by 2)",
+          "signals": ["ERA Trap", "Recent Form"],
+          "signal_verdict": "INCORRECT — ERA trap SEVERE on Wheeler predicted over-priced Phillies, but Wheeler delivered 7 strong innings. Padres' 2-8 form was the real liability."
+        },
+        {
+          "in_budget": false,
+          "pick": "Diamondbacks +1.5",
+          "sport": "MLB",
+          "game": "LA Dodgers @ Arizona Diamondbacks",
+          "result": "WON",
+          "score": "Diamondbacks 3–2 (WON outright)",
+          "signals": ["ERA Trap", "Recent Form"],
+          "signal_verdict": "CORRECT — ERA trap SEVERE on Wrobleski correctly flagged LAD ML as overpriced; ARI won outright."
+        },
+        {
+          "in_budget": false,
+          "pick": "Under 9.5",
+          "sport": "MLB",
+          "game": "Kansas City Royals @ Minnesota Twins",
+          "result": "LOST",
+          "score": "Royals 8, Twins 6 (total: 14)",
+          "signals": ["xFIP Projection"],
+          "signal_verdict": "INCORRECT — Model projected 8.4 total vs 9.0 line; actual was 14. Both starters surrendered far more than xFIP suggested."
+        },
+        {
+          "in_budget": false,
+          "pick": "Pirates ML",
+          "sport": "MLB",
+          "game": "Pittsburgh Pirates @ Houston Astros",
+          "result": "WON",
+          "score": "Pirates 10–6",
+          "signals": ["ERA Trap", "Recent Form Surge"],
+          "signal_verdict": "CORRECT — ERA trap SEVERE on Teng correctly exposed Astros ML. Pirates' offense (6.8 R/G recent form) delivered emphatically."
+        },
+        {
+          "in_budget": false,
+          "pick": "Over 8.5",
+          "sport": "MLB",
+          "game": "Pittsburgh Pirates @ Houston Astros",
+          "result": "WON",
+          "score": "Total: 16 runs",
+          "signals": ["Recent Form Surge", "xFIP Projection"],
+          "signal_verdict": "CORRECT — Model projected 9.3 vs 8.5 line. Both teams' hot recent offense fully materialized in a high-scoring blowout."
+        },
+        {
+          "in_budget": false,
+          "pick": "Guardians +1.5",
+          "sport": "MLB",
+          "game": "Cleveland Guardians @ New York Yankees",
+          "result": "WON",
+          "score": "Yankees 2–1 (Guardians +1.5 covers)",
+          "signals": ["ERA Trap", "Park Factor"],
+          "signal_verdict": "CORRECT — Tight game as projected. Yankees won by 1; CLE +1.5 covered. Rodón ERA trap MILD appropriately muted the NYY edge."
+        },
+        {
+          "in_budget": false,
+          "pick": "Blue Jays +1.5",
+          "sport": "MLB",
+          "game": "Toronto Blue Jays @ Atlanta Braves",
+          "result": "WON",
+          "score": "Blue Jays 7–2 (WON outright)",
+          "signals": ["Platoon Advantage"],
+          "signal_verdict": "CORRECT — TOR +1.5 covered easily as Blue Jays won outright 7-2."
+        },
+        {
+          "in_budget": false,
+          "pick": "Dodgers ML",
+          "sport": "MLB",
+          "game": "LA Dodgers @ Arizona Diamondbacks",
+          "result": "LOST",
+          "score": "Diamondbacks 3–2",
+          "signals": ["Recent Form Surge"],
+          "signal_verdict": "INCORRECT — Dodgers' 8-2 recent form wasn't enough vs Ryne Nelson's solid outing."
+        },
+        {
+          "in_budget": false,
+          "pick": "Phillies ML",
+          "sport": "MLB",
+          "game": "San Diego Padres @ Philadelphia Phillies",
+          "result": "WON",
+          "score": "Phillies 6–4",
+          "signals": ["ERA Trap", "Recent Form"],
+          "signal_verdict": "CORRECT — Despite ERA trap SEVERE on Wheeler, he delivered 7 strong innings. Phillies' home advantage prevailed."
+        },
+        {
+          "in_budget": false,
+          "pick": "Under 8.5",
+          "sport": "MLB",
+          "game": "San Diego Padres @ Philadelphia Phillies",
+          "result": "LOST",
+          "score": "Total: 10 runs",
+          "signals": ["Umpire Signal", "xFIP Projection"],
+          "signal_verdict": "MIXED — Umpire Vic Carapazza (leans Over) was correctly identified; Over hit. Model's 7.9 projection was too low — Carapazza's impact was underweighted."
+        },
+        {
+          "in_budget": false,
+          "pick": "Valkyries ML",
+          "sport": "WNBA",
+          "game": "Golden State Valkyries @ Minnesota Lynx",
+          "result": "LOST",
+          "score": "Lynx 87–84",
+          "signals": ["Recent Form", "Model Edge"],
+          "signal_verdict": "INCORRECT — Minnesota rookie Olivia Miles scored a career-high 28 pts with a WNBA-record 8 three-pointers. An outlier performance overrode the model's edge."
+        },
+        {
+          "in_budget": false,
+          "pick": "Fever ML",
+          "sport": "WNBA",
+          "game": "Atlanta Dream @ Indiana Fever",
+          "result": "WON",
+          "score": "Fever 83–71",
+          "signals": ["Recent Form", "Model Edge"],
+          "signal_verdict": "CORRECT — Kelsey Mitchell scored 25 pts as Fever won their Commissioner's Cup opener comfortably."
+        }
+      ],
+      "patterns": [
+        "HIGH confidence budget: 2-2 (Giants ML ✓, VGK +1.5 ✓, Red Sox ML ✗, Under 10.5 ✗)",
+        "MEDIUM confidence budget: 0-1 (Twins +1.5 ✗)",
+        "MLB totals: 1-3 today — Under 10.5 LOST (13 runs), Under 9.5 LOST (14 runs), Over 8.5 WON (16 runs), Under 8.5 LOST (10 runs)",
+        "Run line/puck line +1.5 spreads: 4-2 (VGK ✓, ARI ✓, Guardians ✓, BJ ✓ | Twins ✗, Padres ✗)",
+        "ERA trap picks (directional): 3-1 — Giants ML ✓, Cubs ML ✓, ARI +1.5 ✓ | Padres +1.5 ✗ (Wheeler defied his trap)",
+        "Recent-form surge signal: 2-1 (Giants 5.1 R/G validated; Pirates 6.8 R/G validated; RSox 5.4 R/G failed vs BAL first inning)",
+        "Umpire signals: 1-1 — Carapazza Over correctly identified (game went Over); Hudson large-K zone did not prevent Orioles explosion",
+        "NHL playoff model: 1-0 — Very sharp projection (2.9-2.9) yielded exact 1-goal margin"
+      ],
+      "model_observations": [
+        "Run scoring was dramatically underestimated in 3 of 5 MLB games (A's/Cubs actual 13 vs 8.8 proj; Royals/Twins actual 14 vs 8.4 proj; BAL/BOS actual 10 vs ~10 proj). The model may need a calibration pass on its June run environment assumptions.",
+        "ERA trap SEVERE (severity >1.0) correctly identified value in Cubs ML, ARI +1.5, and Pirates ML. Strong signal — consider raising budget allocation for picks driven by SEVERE traps.",
+        "ERA trap SEVERE on Wheeler (Phillies) was a notable failure: Wheeler pitched 7 strong innings. This suggests SEVERE traps on elite pitchers with small sample (<50 IP) deserve a discount.",
+        "xFIP as a total predictor underperformed today — 3 games dramatically exceeded xFIP-based projections. Investigate whether home run rate is a missing variable for June total models.",
+        "NHL puck line model is razor-sharp in the playoffs — the 2.9-2.9 projection yielding a 1-goal OT result justifies the +1.5 line approach in tight playoff series.",
+        "Schedule load warning appeared on 8 of today's budget/watchlist teams. Games involving teams on 7-in-7 (Twins) or 6-in-7 showed elevated offensive variance.",
+        "First-inning explosion risk is not modeled: Orioles scored 6 in the first; model had no mechanism to flag early-inning collapse probability for Bello (FIP 5.22 — the signal was there but not weighted)."
+      ]
+    }
+  ]
+}
