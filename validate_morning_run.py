@@ -69,6 +69,9 @@ def run_checks(today: date):
     prop_y_all     = [r for r in props if r.get("date") == y]
     prop_y_settled = [r for r in prop_y_all if r.get("result") in ("WON", "LOST", "PUSH", "HIT", "MISS")]
 
+    # Shared timestamp for all commence_time guards below
+    now_utc = datetime.now(timezone.utc)
+
     # ── Check 1: no dropped budget bets ──────────────────────────────────────
     # Every placed single from yesterday's card should have a settled record.
     placed_singles = y_state.get("singles", []) if y_state else []
@@ -78,7 +81,17 @@ def run_checks(today: date):
         for s in placed_singles:
             k = (s.get("game", ""), s.get("bet_type", ""), s.get("pick", ""))
             if k not in settled_keys:
-                # Only flag if the game has actually finished (commence_time well past)
+                # Only flag if the game has had enough time to finish.
+                # Games typically last ≤4 hours; skip if commence_time < 5h ago.
+                commence_str = s.get("commence_time", "")
+                if commence_str:
+                    try:
+                        from datetime import timedelta as _td
+                        ct = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
+                        if now_utc < ct + _td(hours=5):
+                            continue  # Game hasn't had time to finish — not a real drop
+                    except Exception:
+                        pass
                 fail("dropped_bet", "warn",
                      f"Placed single '{s.get('pick')}' ({s.get('sport')} {s.get('bet_type')}, "
                      f"{s.get('game')}) from {y}'s card has no settled record in history.json.",
@@ -96,6 +109,16 @@ def run_checks(today: date):
             # Only flag props that have NO record at all (truly dropped). A record
             # with result=None is simply pending settlement — not a problem.
             if k not in recorded_prop_keys:
+                # Skip if the game hasn't had time to finish yet (same 5h guard as singles)
+                commence_str = p.get("commence_time", "")
+                if commence_str:
+                    try:
+                        from datetime import timedelta as _td
+                        ct = datetime.fromisoformat(commence_str.replace("Z", "+00:00"))
+                        if now_utc < ct + _td(hours=5):
+                            continue
+                    except Exception:
+                        pass
                 fail("dropped_prop", "info",
                      f"Prop '{p.get('player')} {p.get('prop_type')}' from {y} has no record at all "
                      f"in prop_history.json (not even pending).",
