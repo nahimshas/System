@@ -6078,5 +6078,161 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-06-04",
+    "type": "single",
+    "sport": "MLB",
+    "game": "San Francisco Giants @ Milwaukee Brewers",
+    "bet_type": "Moneyline",
+    "pick": "San Francisco Giants",
+    "home_team": "Milwaukee Brewers",
+    "away_team": "San Francisco Giants",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 51.5,
+    "market_prob_pct": 36.5,
+    "cost": 5.0,
+    "profit_if_win": 8.0,
+    "result": "WON",
+    "actual_pnl": 8.0,
+    "actual_home_score": 9.0,
+    "actual_away_score": 12.0
+  },
+  {
+    "date": "2026-06-04",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Vegas Golden Knights @ Carolina Hurricanes",
+    "bet_type": "Spread",
+    "pick": "Vegas Golden Knights +1.5",
+    "home_team": "Carolina Hurricanes",
+    "away_team": "Vegas Golden Knights",
+    "edge_pct": 9.4,
+    "confidence": "HIGH",
+    "model_prob_pct": 72.4,
+    "market_prob_pct": 63.1,
+    "cost": 5.21,
+    "profit_if_win": 2.79,
+    "result": "WON",
+    "actual_pnl": 2.79,
+    "actual_home_score": 4.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-06-04",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Baltimore Orioles @ Boston Red Sox",
+    "bet_type": "Moneyline",
+    "pick": "Boston Red Sox",
+    "home_team": "Boston Red Sox",
+    "away_team": "Baltimore Orioles",
+    "edge_pct": 10.7,
+    "confidence": "HIGH",
+    "model_prob_pct": 62.8,
+    "market_prob_pct": 52.2,
+    "cost": 4.33,
+    "profit_if_win": 3.67,
+    "result": "LOST",
+    "actual_pnl": -4.33,
+    "actual_home_score": 2.0,
+    "actual_away_score": 8.0
+  },
+  {
+    "date": "2026-06-04",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Athletics @ Chicago Cubs",
+    "bet_type": "Total",
+    "pick": "Under 10.5",
+    "home_team": "Chicago Cubs",
+    "away_team": "Athletics",
+    "edge_pct": 10.1,
+    "confidence": "HIGH",
+    "model_prob_pct": 62.6,
+    "market_prob_pct": 52.5,
+    "cost": 4.36,
+    "profit_if_win": 3.64,
+    "result": "LOST",
+    "actual_pnl": -4.36,
+    "actual_home_score": 7.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-06-04",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Kansas City Royals @ Minnesota Twins",
+    "bet_type": "Spread",
+    "pick": "Minnesota Twins +1.5",
+    "home_team": "Minnesota Twins",
+    "away_team": "Kansas City Royals",
+    "edge_pct": 7.6,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 66.7,
+    "market_prob_pct": 59.1,
+    "cost": 3.05,
+    "profit_if_win": 1.95,
+    "result": "LOST",
+    "actual_pnl": -3.05,
+    "actual_home_score": 6.0,
+    "actual_away_score": 8.0
+  },
+  {
+    "date": "2026-06-04",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Boston Red Sox (ML) + San Francisco Giants (ML)",
+    "bet_type": "Parlay",
+    "pick": "Boston Red Sox (ML) + San Francisco Giants (ML)",
+    "edge_pct": 13.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 32.3,
+    "market_prob_pct": 0,
+    "cost": 1.68,
+    "profit_if_win": 6.32,
+    "result": "LOST",
+    "actual_pnl": -1.68,
+    "legs": [
+      {
+        "game": "Baltimore Orioles @ Boston Red Sox",
+        "pick": "Boston Red Sox",
+        "result": "LOST"
+      },
+      {
+        "game": "San Francisco Giants @ Milwaukee Brewers",
+        "pick": "San Francisco Giants",
+        "result": "WON"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-04",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Chicago Cubs (ML) + Under 10.5",
+    "bet_type": "Parlay",
+    "pick": "Chicago Cubs (ML) + Under 10.5",
+    "edge_pct": 10.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 39.0,
+    "market_prob_pct": 0,
+    "cost": 1.24,
+    "profit_if_win": 2.76,
+    "result": "LOST",
+    "actual_pnl": -1.24,
+    "legs": [
+      {
+        "game": "Athletics @ Chicago Cubs",
+        "pick": "Chicago Cubs",
+        "result": "WON"
+      },
+      {
+        "game": "Athletics @ Chicago Cubs",
+        "pick": "Under 10.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]

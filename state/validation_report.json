@@ -1,118 +1,18 @@
 {
-  "generated_at": "2026-06-05T01:22:28.759747+00:00",
+  "generated_at": "2026-06-05T15:59:01.639019+00:00",
   "report_date": "2026-06-05",
-  "status": "FAIL",
-  "warn_count": 2,
-  "info_count": 7,
-  "findings": [
-    {
-      "check": "dropped_bet",
-      "severity": "warn",
-      "what": "Placed single 'San Francisco Giants' (MLB Moneyline, San Francisco Giants @ Milwaukee Brewers) from 2026-06-04's card has no settled record in history.json.",
-      "why": "A placed bet that never settled means yesterday's P&L is understated and the by-sport/confidence tiles are missing it.",
-      "fix": "Re-run the workflow (settlement retries). If it persists, the ESPN team-name match likely failed in _find_game_score \u2014 verify the game's team names."
-    },
-    {
-      "check": "dropped_bet",
-      "severity": "warn",
-      "what": "Placed single 'Boston Red Sox' (MLB Moneyline, Baltimore Orioles @ Boston Red Sox) from 2026-06-04's card has no settled record in history.json.",
-      "why": "A placed bet that never settled means yesterday's P&L is understated and the by-sport/confidence tiles are missing it.",
-      "fix": "Re-run the workflow (settlement retries). If it persists, the ESPN team-name match likely failed in _find_game_score \u2014 verify the game's team names."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Trea Turner Total Bases Over' from 2026-06-04 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Alec Bohm Hits Over' from 2026-06-04 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Alec Bohm Total Bases Over' from 2026-06-04 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Bryce Harper Hits Over' from 2026-06-04 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Bryce Harper Total Bases Over' from 2026-06-04 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Brandon Marsh Hits Over' from 2026-06-04 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "count_mismatch",
-      "severity": "info",
-      "what": "2026-06-04 had 5 placed single(s) but only 0 settled (5 unaccounted).",
-      "why": "A gap between placed and settled singles is the signature of the 'dropped bet' class (e.g. a graduated sport excluded from a hardcoded list).",
-      "fix": "See the dropped_bet findings above for specifics; if none, a game may be postponed/not yet final."
-    }
-  ],
+  "status": "PASS",
+  "warn_count": 0,
+  "info_count": 0,
+  "findings": [],
   "stats": {
     "date_checked": "2026-06-04",
-    "settled_singles": 0,
-    "settled_total_records": 0,
-    "yesterday_pnl": 0,
+    "settled_singles": 5,
+    "settled_total_records": 7,
+    "yesterday_pnl": -3.87,
     "placed_singles": 5,
     "placed_props": 6
   },
-  "flagged_dropped_bets": [
-    [
-      "San Francisco Giants @ Milwaukee Brewers",
-      "Moneyline",
-      "San Francisco Giants"
-    ],
-    [
-      "Baltimore Orioles @ Boston Red Sox",
-      "Moneyline",
-      "Boston Red Sox"
-    ]
-  ],
-  "flagged_dropped_props": [
-    [
-      "Trea Turner",
-      "Total Bases Over"
-    ],
-    [
-      "Alec Bohm",
-      "Hits Over"
-    ],
-    [
-      "Alec Bohm",
-      "Total Bases Over"
-    ],
-    [
-      "Bryce Harper",
-      "Hits Over"
-    ],
-    [
-      "Bryce Harper",
-      "Total Bases Over"
-    ],
-    [
-      "Brandon Marsh",
-      "Hits Over"
-    ]
-  ]
+  "flagged_dropped_bets": [],
+  "flagged_dropped_props": []
 }
