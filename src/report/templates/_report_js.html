@@ -3042,7 +3042,7 @@
     // Re-orders Today's Card: live games first, pre-game middle, finished last.
     // Bet labels (B1, B2, P1…) never change — only visual position shifts.
     function sortTodayCard() {
-      var panel = document.getElementById("panel-today");
+      var panel = document.getElementById("tab-today");
       if (!panel) return;
       var cards = Array.from(panel.querySelectorAll(".alloc-card"));
       if (cards.length < 2) return;
