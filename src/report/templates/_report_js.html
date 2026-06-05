@@ -3080,7 +3080,11 @@
 
       cards.sort(function (a, b) {
         var ds = stateRank(a) - stateRank(b);
-        return ds !== 0 ? ds : allocRank(a) - allocRank(b);
+        if (ds !== 0) return ds;
+        // Parlays always below singles within the same state group
+        var dp = (a.getAttribute("data-legs") ? 1 : 0) - (b.getAttribute("data-legs") ? 1 : 0);
+        if (dp !== 0) return dp;
+        return allocRank(a) - allocRank(b);
       });
 
       cards.forEach(function (c) {
