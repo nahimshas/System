@@ -64,7 +64,20 @@ def run_checks(today: date):
         except Exception:
             pass
 
-    is_first_run_today = prev_report.get("report_date", "") != str(today)
+    # Determine if the previous report is already from today.
+    # Prefer explicit report_date (new format); fall back to generated_at date (old format).
+    prev_date = prev_report.get("report_date", "")
+    if not prev_date:
+        gen_at = prev_report.get("generated_at", "")
+        if gen_at:
+            try:
+                from datetime import timedelta as _td2
+                gen_dt  = datetime.fromisoformat(gen_at.replace("Z", "+00:00"))
+                # Convert UTC → Pacific (PDT = UTC-7) to match the run date
+                prev_date = (gen_dt - _td2(hours=7)).date().isoformat()
+            except Exception:
+                pass
+    is_first_run_today = prev_date != str(today)
 
     # Keys flagged as dropped in the morning report (used on subsequent runs).
     prev_flagged_bets  = {tuple(k) for k in prev_report.get("flagged_dropped_bets",  [])}
