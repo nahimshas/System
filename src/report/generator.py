@@ -159,6 +159,8 @@ def build_report(
     wnba_display: Optional[List[Dict]] = None,
     mls_display: Optional[List[Dict]] = None,
     mls_game_count: int = 0,
+    wc_display: Optional[List[Dict]] = None,
+    wc_game_count: int = 0,
     fresh_odds: bool = False,   # True only when a full odds-fetch run generated this report
 ) -> Dict:
     change_warnings = change_warnings or []
@@ -188,6 +190,12 @@ def build_report(
     # MLS is watchlist-only — never enters budget allocation or parlays.
     mls_watchlist = sorted(
         [s for s in (mls_display or []) if s.get("sport") == "MLS"],
+        key=lambda s: (0 if s.get("confidence") == "HIGH" else 1, -s.get("edge", 0)),
+    )[:MAX_SINGLE_BETS]
+
+    # World Cup is watchlist-only — never enters budget allocation or parlays.
+    wc_watchlist = sorted(
+        [s for s in (wc_display or []) if s.get("sport") == "WC"],
         key=lambda s: (0 if s.get("confidence") == "HIGH" else 1, -s.get("edge", 0)),
     )[:MAX_SINGLE_BETS]
 
@@ -227,6 +235,7 @@ def build_report(
 
         wnba_watchlist = _mark_settled(wnba_watchlist, "WNBA")
         mls_watchlist  = _mark_settled(mls_watchlist,  "MLS")
+        wc_watchlist   = _mark_settled(wc_watchlist,   "WC")
         ipl_watchlist  = _mark_settled(ipl_watchlist,  "IPL")
     except Exception as _e:
         logger.debug(f"Watchlist settled decoration skipped: {_e}")
@@ -486,6 +495,7 @@ def build_report(
             "IPL":  {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
             "WNBA": {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
             "MLS":  {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
+            "WC":   {"won": 0, "lost": 0, "total": 0, "win_rate_pct": None},
         }
 
     try:
@@ -562,6 +572,9 @@ def build_report(
         "mls_watchlist":      mls_watchlist,
         "mls_game_count":     mls_game_count,
         "has_mls":            mls_game_count > 0,
+        "wc_watchlist":       wc_watchlist,
+        "wc_game_count":      wc_game_count,
+        "has_wc":             wc_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),

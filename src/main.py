@@ -29,13 +29,14 @@ from src.sports.nhl      import nhl
 from src.sports.ipl      import ipl
 from src.sports.wnba     import wnba
 from src.sports.mls      import mls
+from src.sports.wc       import wc
 from src.sports.registry import REGISTRY
 
 # Maps every registry slug to its module singleton — used by the analysis loop.
 # Add a new entry here when a new sport module is created.
 SPORT_MODULES: dict = {
     "nba": nba, "mlb": mlb, "nfl": nfl, "nhl": nhl,
-    "ipl": ipl, "wnba": wnba, "mls": mls,
+    "ipl": ipl, "wnba": wnba, "mls": mls, "wc": wc,
 }
 from src.state.manager import (
     load_state, save_state, merge_picks,
@@ -219,6 +220,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_ipl_display  = _own_displays_loaded.get("ipl",  [])
             final_wnba_display = _own_displays_loaded.get("wnba", [])
             final_mls_display  = _own_displays_loaded.get("mls",  [])
+            final_wc_display   = _own_displays_loaded.get("wc",   [])
 
             # Apply current lock flags — state was written before some games started,
             # so re-computing here ensures the re-rendered HTML shows correct badges.
@@ -235,6 +237,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_mls_display     = [_hydrate_bet(d) for d in final_mls_display]
             final_wnba_display    = [_hydrate_bet(d) for d in final_wnba_display]
             final_ipl_display     = [_hydrate_bet(d) for d in final_ipl_display]
+            final_wc_display      = [_hydrate_bet(d) for d in final_wc_display]
 
             report_data = build_report(
                 run_date=today,
@@ -254,6 +257,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 wnba_display=final_wnba_display,
                 mls_display=final_mls_display,
                 mls_game_count=state.get("mls_game_count", 0),
+                wc_display=final_wc_display,
+                wc_game_count=state.get("wc_game_count", 0),
                 errors=errors,
                 change_warnings=change_warnings,
                 odds_api_credits=saved_credits,
@@ -451,11 +456,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     ipl_game_count  = game_counts.get("ipl", 0)
     wnba_game_count = game_counts.get("wnba", 0)
     mls_game_count  = game_counts.get("mls", 0)
+    wc_game_count   = game_counts.get("wc", 0)
 
-    # Extract named display lists for own-tile sports (IPL / WNBA / MLS).
+    # Extract named display lists for own-tile sports (IPL / WNBA / MLS / WC).
     ipl_display_raw  = own_display.get("ipl",  [])
     wnba_display_raw = own_display.get("wnba", [])
     mls_display_raw  = own_display.get("mls",  [])
+    wc_display_raw   = own_display.get("wc",   [])
 
     # ------------------------------------------------------------------ #
     #  Build parlays — budget-qualifying picks only (edge >= MIN_EDGE).
@@ -557,6 +564,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     fresh_ipl_display  = fresh_own_displays.get("ipl",  [])
     fresh_wnba_display = fresh_own_displays.get("wnba", [])
     fresh_mls_display  = fresh_own_displays.get("mls",  [])
+    fresh_wc_display   = fresh_own_displays.get("wc",   [])
 
     # ------------------------------------------------------------------ #
     #  Shadow log — calibration data foundation.
@@ -811,6 +819,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         ipl_game_count  = game_counts.get("ipl",  ipl_game_count)
         wnba_game_count = game_counts.get("wnba", wnba_game_count)
         mls_game_count  = game_counts.get("mls",  mls_game_count)
+        wc_game_count   = game_counts.get("wc",   wc_game_count)
 
         # Carry forward locked picks for own-tile sports (WNBA, MLS, any future sport).
         # Reads from write-once morning backup — same pattern as budget singles.
@@ -923,6 +932,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         wnba_display=fresh_wnba_display,
         mls_display=fresh_mls_display,
         mls_game_count=mls_game_count,
+        wc_display=fresh_wc_display,
+        wc_game_count=wc_game_count,
         errors=errors,
         change_warnings=change_warnings,
         odds_api_credits=get_api_credits(),
@@ -962,7 +973,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
 def main():
     parser = argparse.ArgumentParser(description="Sports Betting Analysis System")
-    parser.add_argument("--league", choices=["nba", "mlb", "nfl", "nhl", "ipl", "wnba", "mls"], help="Run for one league only")
+    parser.add_argument("--league", choices=["nba", "mlb", "nfl", "nhl", "ipl", "wnba", "mls", "wc"], help="Run for one league only")
     parser.add_argument("--no-email", action="store_true", help="Skip email delivery")
     parser.add_argument("--reevaluate", action="store_true",
                         help="Re-evaluate unlocked picks and replace any no longer in the top options")

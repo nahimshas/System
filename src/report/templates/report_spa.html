@@ -523,6 +523,7 @@
     .badge-ipl   { background: #d97706; color: #fff; }
     .badge-wnba  { background: #f97316; color: #fff; }
     .badge-mls   { background: #14532d; color: #bbf7d0; }
+    .badge-wc    { background: #7c2d12; color: #fed7aa; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .lock-badge { font-size: 0.62rem; color: var(--muted); }
@@ -1161,6 +1162,32 @@
     <div style="height:16px;"></div>
   </div><!-- /tab-mls -->
 
+  <!-- ═══════════════ WORLD CUP TAB ══════════════════════════════════════ -->
+  <div id="tab-wc" class="spa-tab">
+    <div class="tab-header">
+      <div class="tab-header-text">
+        <div class="tab-header-title">🌍 World Cup</div>
+        <div class="tab-header-sub">
+          {% if not report.has_wc %}No matches today
+          {% elif report.wc_watchlist %}{{ report.wc_watchlist|length }} pick{% if report.wc_watchlist|length != 1 %}s{% endif %} &middot; watchlist
+          {% else %}No qualifying picks{% endif %}
+        </div>
+      </div>
+      <button class="tab-bell-btn" data-pref="WC" onclick="tabBellClick(this)" style="display:none">🔕</button>
+    </div>
+    {% if not report.has_wc %}
+    <div class="empty-state"><div class="icon">🌍</div>No World Cup matches scheduled today.</div>
+    {% elif not report.wc_watchlist %}
+    <div class="empty-state"><div class="icon">😕</div>No picks with edge &gt; 3% today.</div>
+    {% else %}
+    <div class="sec-label">Watchlist</div>
+    {% for bet in report.wc_watchlist %}
+    {{ watchlist_card(bet, "badge-wc", "🌍 World Cup", "wc-" + loop.index|string, "WC", "Watchlist only — Elo-driven model, not tracked in performance tables until World Cup testing is complete.", "wc-watchlist-card") }}
+    {% endfor %}
+    {% endif %}
+    <div style="height:16px;"></div>
+  </div><!-- /tab-wc -->
+
   <!-- ═══════════════ ANALYTICS TAB ══════════════════════════════════════ -->
   <div id="tab-analytics" class="spa-tab">
     <div class="tab-header">
@@ -1653,7 +1680,8 @@ window._srvTabsWithPicks = [{% for k,v in [
   ('nhl',  report.nhl_top_singles),
   ('wnba', report.wnba_watchlist),
   ('nfl',  report.nfl_top_singles),
-  ('mls',  report.mls_watchlist)
+  ('mls',  report.mls_watchlist),
+  ('wc',   report.wc_watchlist)
 ] if v %}"{{ k }}",{% endfor %}];
 window._reportDate = "{{ report.run_date_iso }}";
 </script>
@@ -1679,6 +1707,7 @@ window._reportDate = "{{ report.run_date_iso }}";
     { key:"wnba",      emoji:"🏀", label:"WNBA"      },
     { key:"nfl",       emoji:"🏈", label:"NFL"       },
     { key:"mls",       emoji:"⚽", label:"MLS"       },
+    { key:"wc",        emoji:"🌍", label:"World Cup" },
     { key:"analytics", emoji:"📊", label:"Analytics" }
   ];
   var PINNED_TABS = { today: true, analytics: true };

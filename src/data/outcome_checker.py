@@ -33,6 +33,7 @@ ESPN_WATCHLIST_PATHS = {
     "IPL": "cricket/ipl",
     "WNBA": "basketball/wnba",
     "MLS": "soccer/usa.1",
+    "WC": "soccer/fifa.world",
 }
 
 # Rolling pending list for leagues whose games finish AFTER the morning run.
@@ -1286,6 +1287,41 @@ def check_and_settle_watchlist(today: date) -> int:
         })
         logger.info(f"MLS watchlist settled: {pick.get('pick')} → {result}")
 
+    # ── World Cup ──────────────────────────────────────────────────────────────
+    wc_picks = [p for p in (state.get("wc_display") or []) if p.get("sport") == "WC"]
+    wc_scores = _fetch_watchlist_final_scores("WC", yesterday) if wc_picks else {}
+
+    for pick in wc_picks:
+        key = (yesterday.isoformat(), "WC", pick.get("pick", ""), pick.get("game", ""))
+        if key in settled_keys:
+            continue
+        score_data = _find_game_score(wc_scores, pick.get("home_team", ""), pick.get("away_team", ""))
+        if not score_data:
+            logger.debug(f"WC watchlist: score not found for {pick.get('game')} on {yesterday}")
+            continue
+        result = _determine_mls_outcome(
+            pick.get("pick", ""), pick.get("bet_type", ""),
+            pick.get("home_team", ""), pick.get("away_team", ""),
+            score_data["home_score"], score_data["away_score"],
+        )
+        if result not in ("WON", "LOST"):
+            continue
+        new_records.append({
+            "date":            yesterday.isoformat(),
+            "sport":           "WC",
+            "game":            pick.get("game", ""),
+            "pick":            pick.get("pick", ""),
+            "bet_type":        pick.get("bet_type", "Moneyline"),
+            "home_team":       pick.get("home_team", ""),
+            "away_team":       pick.get("away_team", ""),
+            "edge_pct":        pick.get("edge_pct", 0),
+            "confidence":      pick.get("confidence", "MEDIUM"),
+            "model_prob_pct":  pick.get("model_prob_pct", 0),
+            "market_prob_pct": pick.get("market_prob_pct", 0),
+            "result":          result,
+        })
+        logger.info(f"WC watchlist settled: {pick.get('pick')} → {result}")
+
     if new_records:
         _save_watchlist_history(existing + new_records)
 
@@ -1607,7 +1643,7 @@ def load_watchlist_performance() -> Dict[str, Dict]:
     """
     records = _load_watchlist_history()
     result: Dict[str, Dict] = {}
-    for sport in ("NHL", "IPL", "WNBA", "MLS"):
+    for sport in ("NHL", "IPL", "WNBA", "MLS", "WC"):
         subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
         # Deduplicate: one entry per (date, game, pick) so that multiple
         # legitimate picks for the same game (ML + spread + total) are all

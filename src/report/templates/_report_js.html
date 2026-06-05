@@ -14,7 +14,8 @@
     NHL: "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=" + _espnDate,
     NFL: "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=" + _espnDate,
     WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate,
-    MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _espnDate
+    MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _espnDate,
+    WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _espnDate
   };
 
   // ── Local timezone formatting ────────────────────────────────────────────
@@ -653,9 +654,9 @@
       remUnits = periRem2 * 20 + clockMin2 + otMin2;
       _v = 0.12;  _T = 60;
 
-    } else if (sport === "MLS") {
-      // Soccer: 2 × 45-min halves (≈90 min). ESPN displayClock is count-up
-      // (elapsed minutes in the current half), unlike basketball which counts down.
+    } else if (sport === "MLS" || sport === "WC") {
+      // Soccer (MLS / World Cup): 2 × 45-min halves (≈90 min). ESPN displayClock
+      // is count-up (elapsed minutes in the current half), unlike basketball.
       var elapsedMLS = Math.max(0, clock / 60);
       // Remaining = (full halves not yet started) × 45 + (time left in current half)
       // period=1: (2-1)*45 + (45-elapsed) = 90-elapsed; period=2: 0*45 + (45-elapsed)
@@ -711,7 +712,7 @@
               : (sport === "WNBA") ? 3.5
               : (sport === "NFL")  ? 6.0
               : (sport === "NHL")  ? 0.097
-              : (sport === "MLS")  ? 0.042
+              : (sport === "MLS" || sport === "WC") ? 0.042
               : 0.9;  // MLB — proportionally scaled with moneyline v
 
       var mu_tot  = lineVal + normalPPF(_mp) * Math.sqrt(_T * _vT);
@@ -760,7 +761,7 @@
       var oppFinal  = weAreHome ? as : hs;
       if (ourFinal === oppFinal) {
         // Soccer ML: a draw is a loss on a team pick (no push in soccer ML)
-        return sp === "MLS" ? "LOST" : "PUSH";
+        return (sp === "MLS" || sp === "WC") ? "LOST" : "PUSH";
       }
       return ourFinal > oppFinal ? "WON" : "LOST";
     }
@@ -1641,10 +1642,10 @@
     // polling loop resolves a pick (the initial call runs at page load when
     // no results are live yet; subsequent calls update the tile in real-time).
     function updateWatchlistTiles() {
-      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 } };
+      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 }, WC: { won: 0, lost: 0 } };
 
       document.querySelectorAll(
-        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result]"
+        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result], .wc-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
         // Skip picks already counted server-side in data-hist-won / data-hist-lost:
         //   data-in-history="1" — server-side flag: pick is in watchlist_history,
@@ -1662,7 +1663,7 @@
         else if (result === "LOST") wlLive[sport].lost++;
       });
 
-      ["NHL", "IPL", "WNBA", "MLS"].forEach(function (sp) {
+      ["NHL", "IPL", "WNBA", "MLS", "WC"].forEach(function (sp) {
         var lw = wlLive[sp].won;
         var ll = wlLive[sp].lost;
         if (lw + ll === 0) return;   // nothing settled live for this sport
@@ -1806,7 +1807,8 @@
           NHL: '<span class="badge badge-nhl">🏒 NHL</span>',
           IPL: '<span class="badge badge-ipl">🏏 IPL</span>',
           WNBA: '<span class="badge badge-wnba">🏀 WNBA</span>',
-          MLS: '<span class="badge badge-mls">⚽ MLS</span>'
+          MLS: '<span class="badge badge-mls">⚽ MLS</span>',
+          WC: '<span class="badge badge-wc">🌍 World Cup</span>'
         }[sport] || '<span style="color:var(--muted);">PARLAYS</span>';
         sportCard.innerHTML =
           '<div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;">' + sportBadgeHtml + '</div>' +
@@ -2660,6 +2662,7 @@
     { url: ESPN.NFL,  sport: "NFL"  },
     { url: ESPN.WNBA, sport: "WNBA" },
     { url: ESPN.MLS,  sport: "MLS"  },
+    { url: ESPN.WC,   sport: "WC"   },
   ];
 
   function refresh() {

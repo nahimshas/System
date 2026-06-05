@@ -193,6 +193,24 @@ REGISTRY: dict[str, SportEntry] = {
             hours_lookahead=24,
         ),
     ),
+
+    # FIFA World Cup 2026 — watchlist-only own tile. June 11 – July 19, 2026.
+    # Elo-driven model (national teams, no club xG). Neutral venues → home edge
+    # only for host nations. Settles date-based via check_and_settle_watchlist().
+    "wc": SportEntry(
+        slug="wc",
+        key="soccer_fifa_world_cup",
+        label="World Cup",
+        caps=SportCapabilities(
+            enters_budget=False,
+            enters_parlays=False,
+            track_in_main_history=False,
+            uses_pending_file=False,
+            in_main_display_pool=False,
+            active_months=frozenset({6, 7}),
+            hours_lookahead=24,
+        ),
+    ),
 }
 
 

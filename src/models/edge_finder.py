@@ -3566,3 +3566,209 @@ def analyze_mls_game(
         stats_avail=stats_available,
     )
     return recs
+
+
+def analyze_wc_game(
+    game: Dict,
+    wc_ctx: Dict,
+    wc_injuries: Dict,
+    min_edge: float = None,
+) -> List[BetRecommendation]:
+    """
+    Elo-driven edge finder for the FIFA World Cup (watchlist, no budget).
+
+    International teams have little usable group-stage form, so strength comes
+    from Elo ratings (seed + self-updated from results) rather than club xG.
+    Elo supremacy → Poisson goal expectations → Dixon-Coles scoreline grid →
+    Moneyline / Draw / Total / Spread probabilities, compared to the market.
+    """
+    from src.data.wc_stats import normalize as wc_normalize
+    from src.config import (
+        WC_ELO_DEFAULT, WC_BASE_TOTAL, WC_ELO_PER_GOAL, WC_MAX_SUPREMACY,
+        WC_DC_RHO, WC_HOST_NATIONS, WC_HOST_ELO_BONUS, WC_CRED_CAP,
+    )
+
+    _zero_sizing = BetSizing(
+        dollar_allocation=0, num_contracts=0, contract_price=0,
+        total_cost=0, profit_if_win=0, loss_if_lose=0,
+        expected_value=0, kelly_fraction=0,
+    )
+
+    home_raw = game["home_team"]
+    away_raw = game["away_team"]
+    label    = f"{away_raw} @ {home_raw}"
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
+    _min = min_edge if min_edge is not None else MIN_EDGE
+    recs = []
+
+    ml = game.get("moneyline")
+    if not ml or "draw_prob" not in ml:
+        return recs  # soccer moneyline must have 3-way probs
+
+    market_home_prob = ml["home_prob"]
+    market_draw_prob = ml["draw_prob"]
+    market_away_prob = ml["away_prob"]
+
+    elo_map = wc_ctx.get("elo", {}) or {}
+    home_key = wc_normalize(home_raw, elo_map)
+    away_key = wc_normalize(away_raw, elo_map)
+    r_home = elo_map.get(home_key, WC_ELO_DEFAULT)
+    r_away = elo_map.get(away_key, WC_ELO_DEFAULT)
+    stats_available = bool(elo_map) and (home_key in elo_map or away_key in elo_map)
+
+    signals  = []
+    research = []
+
+    # Host-nation advantage: World Cup venues are neutral, so a real home edge is
+    # granted only when the designated home side is one of the three hosts.
+    host_bonus = 0.0
+    if any(h.lower() in home_raw.lower() or home_raw.lower() in h.lower() for h in WC_HOST_NATIONS):
+        host_bonus = WC_HOST_ELO_BONUS
+        signals.append(f"Host nation advantage: {home_raw} (+{WC_HOST_ELO_BONUS:.0f} Elo)")
+
+    elo_diff = (r_home + host_bonus) - r_away
+    # Expected goal supremacy from Elo difference, clamped.
+    supremacy = max(-WC_MAX_SUPREMACY, min(WC_MAX_SUPREMACY, elo_diff / WC_ELO_PER_GOAL))
+
+    lam_home = max(0.2, (WC_BASE_TOTAL + supremacy) / 2.0)
+    lam_away = max(0.2, (WC_BASE_TOTAL - supremacy) / 2.0)
+
+    research.append(f"Elo: {home_raw} {r_home:.0f} vs {away_raw} {r_away:.0f} ({elo_diff:+.0f})")
+    if abs(elo_diff) >= 60:
+        stronger = home_raw if elo_diff > 0 else away_raw
+        signals.append(f"Elo edge: {stronger} ({abs(elo_diff):.0f} pts → {abs(supremacy):.2f} goal supremacy)")
+
+    # Probability matrix (Dixon-Coles low-score correction)
+    matrix = _mls_prob_matrix(lam_home, lam_away, rho=WC_DC_RHO)
+    p_home_win = sum(v for (i, j), v in matrix.items() if i > j)
+    p_draw     = sum(v for (i, j), v in matrix.items() if i == j)
+    p_away_win = sum(v for (i, j), v in matrix.items() if i < j)
+
+    total_p = p_home_win + p_draw + p_away_win
+    if total_p > 0:
+        p_home_win /= total_p
+        p_draw     /= total_p
+        p_away_win /= total_p
+
+    research.append(f"Goal projection: {home_raw} {lam_home:.2f} – {away_raw} {lam_away:.2f}")
+    research.append(f"Win probs: H {p_home_win:.1%} | D {p_draw:.1%} | A {p_away_win:.1%}")
+    signals.append(f"Goal projection: {lam_home:.2f} – {lam_away:.2f}")
+
+    # Calibration capture: raw 3-way probabilities (pre-cred-cap).
+    _wc_raw_home = p_home_win
+    _wc_raw_away = p_away_win
+
+    # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
+    p_home_win, _wc_cred_home_fired = _apply_credibility_cap_dispatched(
+        p_home_win, market_home_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_moneyline"), "wc", "credibility_moneyline"
+    )
+    p_draw, _wc_cred_draw_fired = _apply_credibility_cap_dispatched(
+        p_draw, market_draw_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_draw"), "wc", "credibility_draw"
+    )
+    p_away_win = 1.0 - p_home_win - p_draw
+    p_away_win, _wc_cred_away_fired = _apply_credibility_cap_dispatched(
+        p_away_win, market_away_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_moneyline"), "wc", "credibility_moneyline"
+    )
+    _wc_cred_fired = _wc_cred_home_fired or _wc_cred_draw_fired or _wc_cred_away_fired
+
+    # Build BetRecommendations
+    def _make_rec(pick_str, bet_type, model_prob, market_prob):
+        edge = model_prob - market_prob
+        if edge < _min:
+            return None
+        conf = _confidence_label(edge, len(signals), stats_available)
+        return BetRecommendation(
+            sport="WC", game=label,
+            home_team=home_raw, away_team=away_raw,
+            pick=pick_str, bet_type=bet_type,
+            model_prob=model_prob, market_prob=market_prob, edge=edge,
+            contract_price=market_prob,
+            sizing=_zero_sizing, confidence=conf,
+            signals=signals[:], research=research[:],
+            game_time=game_time, commence_time=commence_time,
+        )
+
+    # Moneyline
+    for pick_str, model_p, market_p in [
+        (home_raw, p_home_win, market_home_prob),
+        (away_raw, p_away_win, market_away_prob),
+    ]:
+        r = _make_rec(pick_str, "Moneyline", model_p, market_p)
+        if r:
+            recs.append(r)
+
+    # Draw
+    r = _make_rec("Draw", "Draw", p_draw, market_draw_prob)
+    if r:
+        recs.append(r)
+
+    # Totals
+    tot = game.get("total")
+    if tot:
+        line = tot.get("point") or tot.get("line", 2.5)
+        market_over_prob  = tot.get("over_prob", 0.5)
+        market_under_prob = tot.get("under_prob", 0.5)
+        model_over  = sum(v for (i, j), v in matrix.items() if i + j > line)
+        model_under = sum(v for (i, j), v in matrix.items() if i + j < line)
+        _wc_total_raw_over  = model_over
+        _wc_total_raw_under = model_under
+        model_over,  _wc_total_cred_over  = _apply_credibility_cap_dispatched(
+            model_over, market_over_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_total"), "wc", "credibility_total"
+        )
+        model_under, _wc_total_cred_under = _apply_credibility_cap_dispatched(
+            model_under, market_under_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_total"), "wc", "credibility_total"
+        )
+        for pick_str, model_p, market_p, raw_p, cap_fired in [
+            (f"Over {line}",  model_over,  market_over_prob,  _wc_total_raw_over,  _wc_total_cred_over),
+            (f"Under {line}", model_under, market_under_prob, _wc_total_raw_under, _wc_total_cred_under),
+        ]:
+            r = _make_rec(pick_str, "Total", model_p, market_p)
+            if r:
+                r.model_prob_raw = raw_p
+                r.credibility_cap_fired = cap_fired
+                recs.append(r)
+
+    # Spread (Asian handicap)
+    sp = game.get("spread")
+    if sp:
+        home_point     = sp.get("home_spread") or sp.get("home_point", 0)
+        market_home_sp = sp.get("home_prob", 0.5)
+        market_away_sp = sp.get("away_prob", 0.5)
+        if home_point % 1 == 0 and home_point != 0:
+            home_point = (home_point - 0.5) if home_point > 0 else (home_point + 0.5)
+        model_home_sp = sum(
+            v for (i, j), v in matrix.items() if (i - j) > -home_point
+        )
+        model_away_sp = 1.0 - model_home_sp
+        _wc_sp_raw_home = model_home_sp
+        _wc_sp_raw_away = model_away_sp
+        model_home_sp, _wc_sp_cred_home = _apply_credibility_cap_dispatched(
+            model_home_sp, market_home_sp, _cred_cap("wc", WC_CRED_CAP, "credibility_spread"), "wc", "credibility_spread"
+        )
+        model_away_sp, _wc_sp_cred_away = _apply_credibility_cap_dispatched(
+            model_away_sp, market_away_sp, _cred_cap("wc", WC_CRED_CAP, "credibility_spread"), "wc", "credibility_spread"
+        )
+        away_point = -home_point
+        for pick_str, model_p, market_p, raw_p, cap_fired in [
+            (f"{home_raw} {home_point:+.1f}", model_home_sp, market_home_sp, _wc_sp_raw_home, _wc_sp_cred_home),
+            (f"{away_raw} {away_point:+.1f}", model_away_sp, market_away_sp, _wc_sp_raw_away, _wc_sp_cred_away),
+        ]:
+            r = _make_rec(pick_str, "Spread", model_p, market_p)
+            if r:
+                r.model_prob_raw = raw_p
+                r.credibility_cap_fired = cap_fired
+                recs.append(r)
+
+    # Stamp per-game calibration metadata onto every rec.
+    _lv = locals()
+    _stamp_recs_calibration(
+        recs,
+        home_team=home_raw, away_team=away_raw,
+        home_raw=_lv.get("_wc_raw_home"),
+        away_raw=_lv.get("_wc_raw_away"),
+        cred_fired=_lv.get("_wc_cred_fired", False),
+        hardcap_fired=False,  # WC uses Poisson — no hard prob cap
+        stats_avail=stats_available,
+    )
+    return recs
