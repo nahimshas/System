@@ -247,7 +247,8 @@ def build_report(
     _deduped_pool = []
     for s in sorted(
         singles,
-        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"]),
+        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"],
+                       -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
     ):
         _key = (s.get("sport", ""), s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
         if _key not in _seen_game_bets:
@@ -269,7 +270,8 @@ def build_report(
         # 1. Locked budget picks go first — they must always show in their section.
         locked_budget = sorted(
             [s for s in singles if s.get("sport") == sport and s.get("locked")],
-            key=lambda r: -r.get("effective_edge", r["edge"]),
+            key=lambda r: (-r.get("effective_edge", r["edge"]),
+                           -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
         )
         for s in locked_budget:
             k = (s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
@@ -282,7 +284,8 @@ def build_report(
         for s in sorted(
             [s for s in _display if s.get("sport") == sport],
             key=lambda r: (0 if r["confidence"] == "HIGH" else 1,
-                           -r.get("effective_edge", r["edge"])),
+                           -r.get("effective_edge", r["edge"]),
+                           -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
         ):
             if len(out) >= MAX_SINGLE_BETS:
                 break
@@ -296,7 +299,8 @@ def build_report(
         # would jump ahead of a HIGH-confidence pick once games begin — which is
         # exactly what made the evening MLB tab look mis-sorted vs the morning one.
         out.sort(key=lambda r: (0 if r.get("confidence") == "HIGH" else 1,
-                                -r.get("effective_edge", r["edge"])))
+                                -r.get("effective_edge", r["edge"]),
+                                -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)))
         return out
 
     nba_top_singles_raw = _top_singles_for_sport("NBA")

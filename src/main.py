@@ -78,7 +78,11 @@ def _slot_sort_key(rec):
     other code changes.
     """
     eff = _effective_edge_safe(rec)
-    return (0 if rec.confidence == "HIGH" else 1, -eff)
+    # When the credibility cap fires, multiple picks share the same capped edge.
+    # Break ties using the raw (pre-cap) model probability so higher-conviction
+    # picks rank first even when their display edge is identical.
+    raw_prob = getattr(rec, "model_prob_raw", None) or getattr(rec, "model_prob", 0.5)
+    return (0 if rec.confidence == "HIGH" else 1, -eff, -raw_prob)
 
 
 # HIGH-confidence edge threshold — mirrors _confidence_label / _mlb_conf in

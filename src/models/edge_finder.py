@@ -1462,8 +1462,11 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                 f"({direction}{abs(away_form_delta):.2f} run adj)"
             )
 
-    expected_home_runs *= park_factor
-    expected_away_runs *= park_factor
+    # Park factor is intentionally NOT applied to individual run totals here.
+    # Multiplying both teams equally inflates run_diff by park_factor, producing
+    # a spurious win-probability boost at hitter-friendly parks (e.g. Coors +~3pp).
+    # Park factor is applied to expected_total in the Totals section below,
+    # where it correctly widens Over/Under projections without touching ML/Spread.
 
     # Apply umpire run factor (scales both teams equally)
     if abs(ump_run_factor - 1.0) >= 0.02:
@@ -1692,7 +1695,10 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     # --- Total ---
     total = game.get("total")
     if total:
-        expected_total = expected_home_runs + expected_away_runs
+        # Apply park factor here (totals only) — both teams score more at hitter-friendly
+        # parks, so the combined total is correctly inflated. Park factor is NOT applied
+        # to run_diff (see ML/Spread section above) to avoid inflating win probability.
+        expected_total = (expected_home_runs + expected_away_runs) * park_factor
         market_line = total["line"]
         blended_total = (1 - _TOTAL_MARKET_ANCHOR) * expected_total + _TOTAL_MARKET_ANCHOR * market_line
         # Stamp onto game dict so props_analyzer can use the same projection

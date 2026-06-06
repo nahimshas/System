@@ -103,6 +103,10 @@ def bet_to_dict(rec) -> Dict:
         "edge": rec.edge,        # raw float for sorting / comparison
         "locked": False,
         "game_pk": getattr(rec, "game_pk", ""),
+        # Pre-cap model probability — used as a tiebreaker when the credibility cap
+        # fires and multiple picks all show the same capped edge_pct. None when not set.
+        "model_prob_raw": getattr(rec, "model_prob_raw", None),
+        "credibility_cap_fired": getattr(rec, "credibility_cap_fired", False),
     }
 
 
