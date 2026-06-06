@@ -260,6 +260,29 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
     severe_traps = [t for t in era_traps if t.group(1) in ("SEVERE", "MODERATE")]
     big_injuries = [(team, pct) for team, pct in injuries if abs(pct) >= 2.5]
 
+    # The team we're actually backing (strip any spread suffix like " +1.5").
+    picked_team = re.sub(r"\s[+-]?\d+(?:\.\d+)?$", "", pick).strip()
+
+    def _same_team(a: str, b: str) -> bool:
+        a, b = (a or "").lower(), (b or "").lower()
+        return bool(a) and bool(b) and (a in b or b in a)
+
+    # A driver must support the pick's DIRECTION, or the narrative contradicts itself
+    # ("edge against <the very team we picked>"). Two guards:
+    #  • An ERA trap supports the pick only when it's on the OPPONENT's pitcher
+    #    (their team is overpriced → we fade them). A trap on our own pitcher
+    #    argues against the pick, so it can't be the stated driver.
+    supporting_traps = [t for t in severe_traps if not _same_team(picked_team, t.group(6))]
+    #  • A pitching xFIP mismatch supports the pick only when the BETTER pitcher is
+    #    on the team we're backing; otherwise it favours the opponent.
+    mismatch_better = None
+    if home_p and away_p and abs(float(home_p.group(2)) - float(away_p.group(2))) >= 0.6:
+        _hx, _ax = float(home_p.group(2)), float(away_p.group(2))
+        _better = home_p.group(1) if _hx < _ax else away_p.group(1)
+        _worse  = away_p.group(1) if _hx < _ax else home_p.group(1)
+        if _same_team(picked_team, _better):
+            mismatch_better = (_better, min(_hx, _ax), _worse, max(_hx, _ax))
+
     if bet_type == "Total":
         if total_m:
             proj = float(total_m.group(1))
@@ -280,8 +303,8 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
                 f"over {t.group(5)} IP is an ERA trap signal that may affect run distribution."
             )
 
-    elif severe_traps:
-        t = severe_traps[0]
+    elif supporting_traps:
+        t = supporting_traps[0]
         sev = "significant" if t.group(1) == "SEVERE" else "moderate"
         parts.append(
             f"The model finds a {ew} edge against {t.group(6)}, driven by a {sev} "
@@ -297,12 +320,8 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
             diff = abs(float(r1) - float(r2))
             parts.append(f"Model projects {leader} by {diff:.1f} runs ({t1} {r1} — {t2} {r2}).")
 
-    elif home_p and away_p and abs(float(home_p.group(2)) - float(away_p.group(2))) >= 0.6:
-        h_xfip, a_xfip = float(home_p.group(2)), float(away_p.group(2))
-        better = home_p.group(1) if h_xfip < a_xfip else away_p.group(1)
-        b_xfip = min(h_xfip, a_xfip)
-        worse = away_p.group(1) if h_xfip < a_xfip else home_p.group(1)
-        w_xfip = max(h_xfip, a_xfip)
+    elif mismatch_better:
+        better, b_xfip, worse, w_xfip = mismatch_better
         parts.append(
             f"A {ew} pitching mismatch drives this pick — {better} ({b_xfip:.2f} xFIP) "
             f"holds a meaningful advantage over {worse} ({w_xfip:.2f} xFIP)."
