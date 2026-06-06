@@ -63,10 +63,22 @@ WC_GROUP_STAGE_END      = "2026-06-27"  # last group-stage date (ISO); dead-rubb
 WC_LOWCONF_CAP_FACTOR = 0.5     # multiplies the credibility cap when a side is unseeded
 
 # ── Venue: altitude / climate ────────────────────────────────────────────────
-# Static per-venue effects on total goals (joined from wc_venue_config.json).
-# High altitude → ball travels further + faster fatigue → slightly more goals.
-# Hot/humid open-air → cagier, tired legs late → slightly fewer goals.
-# Climate-controlled domes → neutral.
-WC_ALT_HIGH_M        = 2000.0   # metres above which the altitude bump applies
-WC_ALT_TOTAL_MULT    = 1.05     # total-goals multiplier at high altitude
+# Altitude does NOT reliably inflate total goals. A study of Estadio Azteca
+# (~2,200 m) found no relation between altitude and goals for/against, and the
+# ball-physics effect ("ball flies further") and the fatigue effect ("thin air
+# tires legs") roughly cancel. The robust, documented altitude effect is an
+# ADVANTAGE to the ACCLIMATISED side (McSharry, BMJ 2007: ~0.5 goal of goal
+# *difference* per 1,000 m of altitude gap — the highland team scores more AND
+# concedes fewer). So altitude is modeled as a STRENGTH edge for highland nations
+# vs lowland opponents at high-altitude venues — never as a total-goals multiplier.
+WC_ALT_HIGH_M        = 2000.0   # metres above which the acclimatisation edge applies
+WC_ALT_ACCLIM_ELO    = 50.0     # Elo edge for an altitude-native team facing a
+                                # lowland opponent at a high-altitude venue.
+                                # Deliberately conservative — Azteca is only moderate
+                                # altitude and WC teams usually acclimatise beforehand.
+WC_ALTITUDE_NATIONS  = {        # nations whose players are altitude-acclimatised
+    "Mexico", "Ecuador", "Colombia", "Bolivia", "Peru",
+}
+# Heat/humidity: hot open-air venues modestly suppress scoring (cooling breaks,
+# less high-intensity running late). Smaller effect, but directionally supported.
 WC_HOT_TOTAL_MULT    = 0.95     # total-goals multiplier for hot/humid open venues

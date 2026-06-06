@@ -3588,7 +3588,7 @@ def analyze_wc_game(
         WC_DC_RHO, WC_HOST_NATIONS, WC_HOST_ELO_BONUS, WC_CRED_CAP,
         WC_REST_ELO_PER_DAY, WC_MAX_REST_ELO, WC_DEAD_RUBBER_MIN_PTS,
         WC_DEAD_RUBBER_ELO_DAMP, WC_GROUP_STAGE_END, WC_LOWCONF_CAP_FACTOR,
-        WC_ALT_HIGH_M, WC_ALT_TOTAL_MULT, WC_HOT_TOTAL_MULT,
+        WC_ALT_HIGH_M, WC_ALT_ACCLIM_ELO, WC_ALTITUDE_NATIONS, WC_HOT_TOTAL_MULT,
     )
 
     _zero_sizing = BetSizing(
@@ -3675,22 +3675,34 @@ def analyze_wc_game(
             dr_away = WC_DEAD_RUBBER_ELO_DAMP
             signals.append(f"Dead rubber: {away_raw} likely qualified — rotation risk (-{dr_away:.0f} Elo)")
 
-    # ── Effective Elo difference (host + rest + dead-rubber) ──────────────────
-    elo_diff = (r_home + host_bonus - dr_home) - (r_away - dr_away) + rest_elo
-    # Expected goal supremacy from Elo difference, clamped.
-    supremacy = max(-WC_MAX_SUPREMACY, min(WC_MAX_SUPREMACY, elo_diff / WC_ELO_PER_GOAL))
-
-    # ── Venue altitude / climate → total goals ───────────────────────────────
+    # ── Venue: altitude acclimatisation (strength edge) + heat (totals) ──────
+    # Altitude is NOT a totals effect (Azteca data shows no goals relation; ball-
+    # physics and fatigue cancel). The real effect is an advantage to the
+    # ACCLIMATISED side vs a lowland opponent (McSharry, BMJ 2007). Heat modestly
+    # suppresses totals.
     base_total = WC_BASE_TOTAL
+    alt_home = alt_away = 0.0
     fixtures = wc_ctx.get("fixtures", {}) or {}
     venue_info = fixtures.get((home_raw.lower(), away_raw.lower()))
     if venue_info:
         if venue_info.get("altitude_m", 0) >= WC_ALT_HIGH_M:
-            base_total *= WC_ALT_TOTAL_MULT
-            signals.append(f"Altitude venue ({venue_info.get('name')}, {venue_info.get('altitude_m')}m): higher totals")
+            def _is_native(team):
+                return any(n.lower() in team.lower() or team.lower() in n.lower() for n in WC_ALTITUDE_NATIONS)
+            home_native, away_native = _is_native(home_raw), _is_native(away_raw)
+            if home_native and not away_native:
+                alt_home = WC_ALT_ACCLIM_ELO
+                signals.append(f"Altitude edge: {home_raw} acclimatised at {venue_info.get('name')} ({venue_info.get('altitude_m')}m) vs lowland {away_raw} (+{alt_home:.0f} Elo)")
+            elif away_native and not home_native:
+                alt_away = WC_ALT_ACCLIM_ELO
+                signals.append(f"Altitude edge: {away_raw} acclimatised at {venue_info.get('name')} ({venue_info.get('altitude_m')}m) vs lowland {home_raw} (+{alt_away:.0f} Elo)")
         elif venue_info.get("climate") == "hot":
             base_total *= WC_HOT_TOTAL_MULT
             signals.append(f"Hot venue ({venue_info.get('name')}): lower totals")
+
+    # ── Effective Elo difference (host + rest + dead-rubber + altitude) ───────
+    elo_diff = (r_home + host_bonus - dr_home + alt_home) - (r_away - dr_away + alt_away) + rest_elo
+    # Expected goal supremacy from Elo difference, clamped.
+    supremacy = max(-WC_MAX_SUPREMACY, min(WC_MAX_SUPREMACY, elo_diff / WC_ELO_PER_GOAL))
 
     lam_home = max(0.2, (base_total + supremacy) / 2.0)
     lam_away = max(0.2, (base_total - supremacy) / 2.0)
