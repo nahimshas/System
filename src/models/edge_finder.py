@@ -3586,6 +3586,9 @@ def analyze_wc_game(
     from src.config import (
         WC_ELO_DEFAULT, WC_BASE_TOTAL, WC_ELO_PER_GOAL, WC_MAX_SUPREMACY,
         WC_DC_RHO, WC_HOST_NATIONS, WC_HOST_ELO_BONUS, WC_CRED_CAP,
+        WC_REST_ELO_PER_DAY, WC_MAX_REST_ELO, WC_DEAD_RUBBER_MIN_PTS,
+        WC_DEAD_RUBBER_ELO_DAMP, WC_GROUP_STAGE_END, WC_LOWCONF_CAP_FACTOR,
+        WC_ALT_HIGH_M, WC_ALT_TOTAL_MULT, WC_HOT_TOTAL_MULT,
     )
 
     _zero_sizing = BetSizing(
@@ -3627,12 +3630,80 @@ def analyze_wc_game(
         host_bonus = WC_HOST_ELO_BONUS
         signals.append(f"Host nation advantage: {home_raw} (+{WC_HOST_ELO_BONUS:.0f} Elo)")
 
-    elo_diff = (r_home + host_bonus) - r_away
+    # Match date (for rest + group-stage gating), parsed from commence_time.
+    try:
+        from datetime import date as _date_cls
+        _match_date = _date_cls.fromisoformat(commence_time[:10]) if commence_time else None
+    except Exception:
+        _match_date = None
+
+    # ── Rest / fatigue differential ──────────────────────────────────────────
+    # The better-rested side gets a small Elo nudge (uneven rest in a
+    # geographically huge tournament). No signal for first matches (no prior game).
+    rest_elo = 0.0
+    last_played = wc_ctx.get("last_played", {}) or {}
+    if _match_date and last_played:
+        hp = last_played.get(home_key)
+        ap = last_played.get(away_key)
+        if hp and ap:
+            rest_diff = (_match_date - hp).days - (_match_date - ap).days
+            rest_elo = max(-WC_MAX_REST_ELO, min(WC_MAX_REST_ELO, rest_diff * WC_REST_ELO_PER_DAY))
+            if abs(rest_diff) >= 1:
+                better = home_raw if rest_diff > 0 else away_raw
+                signals.append(f"Rest edge: {better} (+{abs(rest_diff)}d rest → {abs(rest_elo):.0f} Elo)")
+
+    # ── Dead-rubber damping (group stage only) ───────────────────────────────
+    # 2026's best-third-placed rule makes elimination ambiguous after 2 games, so
+    # we damp ONLY the clearly-safe side: ≥6 pts heading into its 3rd group game
+    # (likely qualified → may rotate). Asymmetric case only (one safe, one fighting).
+    dr_home = dr_away = 0.0
+    standings = wc_ctx.get("standings", {}) or {}
+    _in_group_stage = False
+    try:
+        _in_group_stage = bool(_match_date) and _match_date <= _date_cls.fromisoformat(WC_GROUP_STAGE_END)
+    except Exception:
+        _in_group_stage = False
+    if _in_group_stage and standings:
+        sh = standings.get(home_key)
+        sa = standings.get(away_key)
+        home_q = bool(sh and sh.get("gp", 0) >= 2 and sh.get("pts", 0) >= WC_DEAD_RUBBER_MIN_PTS)
+        away_q = bool(sa and sa.get("gp", 0) >= 2 and sa.get("pts", 0) >= WC_DEAD_RUBBER_MIN_PTS)
+        if home_q and not away_q:
+            dr_home = WC_DEAD_RUBBER_ELO_DAMP
+            signals.append(f"Dead rubber: {home_raw} likely qualified — rotation risk (-{dr_home:.0f} Elo)")
+        elif away_q and not home_q:
+            dr_away = WC_DEAD_RUBBER_ELO_DAMP
+            signals.append(f"Dead rubber: {away_raw} likely qualified — rotation risk (-{dr_away:.0f} Elo)")
+
+    # ── Effective Elo difference (host + rest + dead-rubber) ──────────────────
+    elo_diff = (r_home + host_bonus - dr_home) - (r_away - dr_away) + rest_elo
     # Expected goal supremacy from Elo difference, clamped.
     supremacy = max(-WC_MAX_SUPREMACY, min(WC_MAX_SUPREMACY, elo_diff / WC_ELO_PER_GOAL))
 
-    lam_home = max(0.2, (WC_BASE_TOTAL + supremacy) / 2.0)
-    lam_away = max(0.2, (WC_BASE_TOTAL - supremacy) / 2.0)
+    # ── Venue altitude / climate → total goals ───────────────────────────────
+    base_total = WC_BASE_TOTAL
+    fixtures = wc_ctx.get("fixtures", {}) or {}
+    venue_info = fixtures.get((home_raw.lower(), away_raw.lower()))
+    if venue_info:
+        if venue_info.get("altitude_m", 0) >= WC_ALT_HIGH_M:
+            base_total *= WC_ALT_TOTAL_MULT
+            signals.append(f"Altitude venue ({venue_info.get('name')}, {venue_info.get('altitude_m')}m): higher totals")
+        elif venue_info.get("climate") == "hot":
+            base_total *= WC_HOT_TOTAL_MULT
+            signals.append(f"Hot venue ({venue_info.get('name')}): lower totals")
+
+    lam_home = max(0.2, (base_total + supremacy) / 2.0)
+    lam_away = max(0.2, (base_total - supremacy) / 2.0)
+
+    # ── Low-confidence shrinkage ─────────────────────────────────────────────
+    # If a side's Elo is a guess (unseeded → fell back to default), tighten the
+    # credibility cap so the model is pulled harder toward the market.
+    home_known = home_key in elo_map
+    away_known = away_key in elo_map
+    lowconf_factor = WC_LOWCONF_CAP_FACTOR if not (home_known and away_known) else 1.0
+    wc_cap = WC_CRED_CAP * lowconf_factor
+    if lowconf_factor < 1.0:
+        research.append("Low-confidence Elo (unseeded side) — model pulled toward market")
 
     research.append(f"Elo: {home_raw} {r_home:.0f} vs {away_raw} {r_away:.0f} ({elo_diff:+.0f})")
     if abs(elo_diff) >= 60:
@@ -3661,14 +3732,14 @@ def analyze_wc_game(
 
     # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
     p_home_win, _wc_cred_home_fired = _apply_credibility_cap_dispatched(
-        p_home_win, market_home_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_moneyline"), "wc", "credibility_moneyline"
+        p_home_win, market_home_prob, _cred_cap("wc", wc_cap, "credibility_moneyline"), "wc", "credibility_moneyline"
     )
     p_draw, _wc_cred_draw_fired = _apply_credibility_cap_dispatched(
-        p_draw, market_draw_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_draw"), "wc", "credibility_draw"
+        p_draw, market_draw_prob, _cred_cap("wc", wc_cap, "credibility_draw"), "wc", "credibility_draw"
     )
     p_away_win = 1.0 - p_home_win - p_draw
     p_away_win, _wc_cred_away_fired = _apply_credibility_cap_dispatched(
-        p_away_win, market_away_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_moneyline"), "wc", "credibility_moneyline"
+        p_away_win, market_away_prob, _cred_cap("wc", wc_cap, "credibility_moneyline"), "wc", "credibility_moneyline"
     )
     _wc_cred_fired = _wc_cred_home_fired or _wc_cred_draw_fired or _wc_cred_away_fired
 
@@ -3714,10 +3785,10 @@ def analyze_wc_game(
         _wc_total_raw_over  = model_over
         _wc_total_raw_under = model_under
         model_over,  _wc_total_cred_over  = _apply_credibility_cap_dispatched(
-            model_over, market_over_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_total"), "wc", "credibility_total"
+            model_over, market_over_prob, _cred_cap("wc", wc_cap, "credibility_total"), "wc", "credibility_total"
         )
         model_under, _wc_total_cred_under = _apply_credibility_cap_dispatched(
-            model_under, market_under_prob, _cred_cap("wc", WC_CRED_CAP, "credibility_total"), "wc", "credibility_total"
+            model_under, market_under_prob, _cred_cap("wc", wc_cap, "credibility_total"), "wc", "credibility_total"
         )
         for pick_str, model_p, market_p, raw_p, cap_fired in [
             (f"Over {line}",  model_over,  market_over_prob,  _wc_total_raw_over,  _wc_total_cred_over),
@@ -3744,10 +3815,10 @@ def analyze_wc_game(
         _wc_sp_raw_home = model_home_sp
         _wc_sp_raw_away = model_away_sp
         model_home_sp, _wc_sp_cred_home = _apply_credibility_cap_dispatched(
-            model_home_sp, market_home_sp, _cred_cap("wc", WC_CRED_CAP, "credibility_spread"), "wc", "credibility_spread"
+            model_home_sp, market_home_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
         )
         model_away_sp, _wc_sp_cred_away = _apply_credibility_cap_dispatched(
-            model_away_sp, market_away_sp, _cred_cap("wc", WC_CRED_CAP, "credibility_spread"), "wc", "credibility_spread"
+            model_away_sp, market_away_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
         )
         away_point = -home_point
         for pick_str, model_p, market_p, raw_p, cap_fired in [

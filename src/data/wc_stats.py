@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 ESPN_WC_SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard"
 _SEED_PATH  = Path(__file__).parent / "wc_elo_seed.json"
+_VENUE_PATH = Path(__file__).parent / "wc_venue_config.json"
 _STATE_PATH = Path("state/wc_elo.json")
 _TOURNAMENT_START = date(2026, 6, 11)
 _REQUEST_TIMEOUT = 15
@@ -98,17 +99,13 @@ def _goal_multiplier(goal_diff: int) -> float:
     return (11.0 + gd) / 8.0
 
 
-def _update_elo_from_results(elo: Dict[str, float], processed: set, upto: date) -> int:
+def _scan_completed_matches(upto: date) -> List[Dict]:
     """
-    Fetch completed ESPN matches from the tournament start through *upto* and
-    apply Elo updates for any event not already in *processed*. Returns the
-    number of newly-processed matches. Mutates elo and processed in place.
+    Fetch all COMPLETED World Cup matches from the tournament start through *upto*
+    (bounded window). Returns a list of {eid, date, home, away, hs, as_}.
+    Best-effort: days that fail to fetch are skipped.
     """
-    from src.config import (
-        WC_ELO_K, WC_HOST_NATIONS, WC_HOST_ELO_BONUS, WC_ELO_DEFAULT,
-    )
-
-    new_count = 0
+    matches: List[Dict] = []
     day = max(_TOURNAMENT_START, upto - timedelta(days=45))  # bound the scan window
     while day <= upto:
         date_str = day.strftime("%Y%m%d")
@@ -118,16 +115,14 @@ def _update_elo_from_results(elo: Dict[str, float], processed: set, upto: date) 
             r.raise_for_status()
             data = r.json()
         except Exception as e:
-            logger.debug(f"WC Elo: ESPN fetch failed for {day}: {e}")
+            logger.debug(f"WC: ESPN fetch failed for {day}: {e}")
             day += timedelta(days=1)
             continue
 
         for event in data.get("events", []):
             eid = str(event.get("id", ""))
-            if not eid or eid in processed:
-                continue
             comps = event.get("competitions", [])
-            if not comps:
+            if not eid or not comps:
                 continue
             comp = comps[0]
             if not comp.get("status", {}).get("type", {}).get("completed", False):
@@ -146,37 +141,139 @@ def _update_elo_from_results(elo: Dict[str, float], processed: set, upto: date) 
                 continue
             if not home or not away:
                 continue
-
-            r_home = elo.get(normalize(home, elo), WC_ELO_DEFAULT)
-            r_away = elo.get(normalize(away, elo), WC_ELO_DEFAULT)
-            host_bonus = WC_HOST_ELO_BONUS if any(
-                h.lower() in home.lower() or home.lower() in h.lower() for h in WC_HOST_NATIONS
-            ) else 0.0
-
-            we_home = _expected(r_home + host_bonus, r_away)
-            w_home = 1.0 if hs > as_ else (0.5 if hs == as_ else 0.0)
-            mult = _goal_multiplier(hs - as_)
-            delta = WC_ELO_K * mult * (w_home - we_home)
-
-            elo[normalize(home, elo)] = round(r_home + delta, 1)
-            elo[normalize(away, elo)] = round(r_away - delta, 1)
-            processed.add(eid)
-            new_count += 1
-            logger.info(f"WC Elo updated from {home} {hs}-{as_} {away} (Δ{delta:+.1f})")
+            matches.append({"eid": eid, "date": day, "home": home, "away": away, "hs": hs, "as_": as_})
 
         day += timedelta(days=1)
 
+    return matches
+
+
+def _apply_elo(elo: Dict[str, float], processed: set, matches: List[Dict]) -> int:
+    """Apply Elo updates for any match not already in *processed* (mutates both)."""
+    from src.config import WC_ELO_K, WC_HOST_NATIONS, WC_HOST_ELO_BONUS, WC_ELO_DEFAULT
+
+    new_count = 0
+    for m in matches:
+        if m["eid"] in processed:
+            continue
+        home, away, hs, as_ = m["home"], m["away"], m["hs"], m["as_"]
+        r_home = elo.get(normalize(home, elo), WC_ELO_DEFAULT)
+        r_away = elo.get(normalize(away, elo), WC_ELO_DEFAULT)
+        host_bonus = WC_HOST_ELO_BONUS if any(
+            h.lower() in home.lower() or home.lower() in h.lower() for h in WC_HOST_NATIONS
+        ) else 0.0
+        we_home = _expected(r_home + host_bonus, r_away)
+        w_home = 1.0 if hs > as_ else (0.5 if hs == as_ else 0.0)
+        mult = _goal_multiplier(hs - as_)
+        delta = WC_ELO_K * mult * (w_home - we_home)
+        elo[normalize(home, elo)] = round(r_home + delta, 1)
+        elo[normalize(away, elo)] = round(r_away - delta, 1)
+        processed.add(m["eid"])
+        new_count += 1
+        logger.info(f"WC Elo updated from {home} {hs}-{as_} {away} (Δ{delta:+.1f})")
     return new_count
+
+
+def _build_rest_and_standings(matches: List[Dict], group_end: date):
+    """
+    From completed matches, compute:
+      - last_played: {team: date of most recent match}        (rest signal)
+      - standings:   {team: {"pts", "gp"}} for group-stage games only (dead-rubber)
+    """
+    last_played: Dict[str, date] = {}
+    standings: Dict[str, Dict] = {}
+    for m in matches:
+        d, home, away, hs, as_ = m["date"], m["home"], m["away"], m["hs"], m["as_"]
+        for t in (home, away):
+            if t not in last_played or d > last_played[t]:
+                last_played[t] = d
+        if d <= group_end:
+            for t in (home, away):
+                standings.setdefault(t, {"pts": 0, "gp": 0})
+            standings[home]["gp"] += 1
+            standings[away]["gp"] += 1
+            if hs > as_:
+                standings[home]["pts"] += 3
+            elif hs < as_:
+                standings[away]["pts"] += 3
+            else:
+                standings[home]["pts"] += 1
+                standings[away]["pts"] += 1
+    return last_played, standings
+
+
+def _load_venues() -> List[Dict]:
+    try:
+        data = json.loads(_VENUE_PATH.read_text(encoding="utf-8"))
+        return data.get("venues", [])
+    except Exception as e:
+        logger.warning(f"WC venue config load failed: {e}")
+        return []
+
+
+def _match_venue(venue_name: str, city: str, venues: List[Dict]) -> Optional[Dict]:
+    """Loose match of an ESPN venue/city string to a configured venue."""
+    hay = f"{venue_name} {city}".lower()
+    if not hay.strip():
+        return None
+    for v in venues:
+        for alias in v.get("aliases", []):
+            if alias.lower() in hay:
+                return {"name": v["name"], "altitude_m": v["altitude_m"], "climate": v["climate"]}
+    return None
+
+
+def _fetch_fixtures_with_venues(target_date: date, venues: List[Dict]) -> Dict:
+    """
+    Fetch the ESPN scoreboard for *target_date* and map each fixture
+    (lowercased home, away) → matched venue info (or None). Best-effort.
+    """
+    fixtures: Dict = {}
+    if not venues:
+        return fixtures
+    date_str = target_date.strftime("%Y%m%d")
+    try:
+        r = requests.get(ESPN_WC_SCOREBOARD, params={"dates": date_str}, timeout=_REQUEST_TIMEOUT)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        logger.debug(f"WC: fixture/venue fetch failed for {target_date}: {e}")
+        return fixtures
+
+    for event in data.get("events", []):
+        comps = event.get("competitions", [])
+        if not comps:
+            continue
+        comp = comps[0]
+        competitors = comp.get("competitors", [])
+        if len(competitors) < 2:
+            continue
+        home_c = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
+        away_c = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
+        home = home_c.get("team", {}).get("displayName", "")
+        away = away_c.get("team", {}).get("displayName", "")
+        venue = comp.get("venue", {}) or {}
+        vname = venue.get("fullName", "")
+        city = (venue.get("address", {}) or {}).get("city", "")
+        if home and away:
+            fixtures[(home.lower(), away.lower())] = _match_venue(vname, city, venues)
+    return fixtures
 
 
 def get_wc_context(today_date: date, team_names: Optional[List[str]] = None) -> Dict:
     """
-    Build the World Cup model context: current Elo ratings (seed merged with
-    learned values, then updated from results through yesterday).
+    Build the World Cup model context:
+      - elo:         seed merged with learned ratings, updated from results
+      - league_avg:  mean Elo
+      - last_played: {team: date of most recent completed match}  (rest signal)
+      - standings:   {team: {"pts", "gp"}} from group-stage results (dead-rubber)
+      - fixtures:    {(home_lc, away_lc): venue_info|None}          (altitude/heat)
 
-    Returns:
-        {"elo": {team: rating}, "league_avg": float}
+    All network access is best-effort; any missing piece degrades to "no signal"
+    so the model silently falls back to pure Elo. Watchlist-only — never risks money.
     """
+    from src.config import WC_GROUP_STAGE_END
+
     elo = _load_seed()
     state = _load_state()
     # Merge any learned ratings on top of the seed.
@@ -184,17 +281,35 @@ def get_wc_context(today_date: date, team_names: Optional[List[str]] = None) -> 
         elo[team] = float(rating)
     processed = set(state.get("processed_ids") or [])
 
+    last_played: Dict[str, date] = {}
+    standings: Dict[str, Dict] = {}
+    fixtures: Dict = {}
+    venues = _load_venues()
+
     try:
         yesterday = today_date - timedelta(days=1)
-        if yesterday >= _TOURNAMENT_START:
-            n = _update_elo_from_results(elo, processed, yesterday)
-            if n:
+        matches = _scan_completed_matches(yesterday) if yesterday >= _TOURNAMENT_START else []
+        if matches:
+            if _apply_elo(elo, processed, matches):
                 _save_state({"elo": elo, "processed_ids": sorted(processed)})
+            group_end = date.fromisoformat(WC_GROUP_STAGE_END)
+            last_played, standings = _build_rest_and_standings(matches, group_end)
     except Exception as e:
-        logger.warning(f"WC Elo update skipped: {e}")
+        logger.warning(f"WC results scan skipped: {e}")
+
+    try:
+        fixtures = _fetch_fixtures_with_venues(today_date, venues)
+    except Exception as e:
+        logger.debug(f"WC fixture/venue map skipped: {e}")
 
     league_avg = (sum(elo.values()) / len(elo)) if elo else 1620.0
-    return {"elo": elo, "league_avg": league_avg}
+    return {
+        "elo": elo,
+        "league_avg": league_avg,
+        "last_played": last_played,
+        "standings": standings,
+        "fixtures": fixtures,
+    }
 
 
 def get_wc_injuries() -> Dict:

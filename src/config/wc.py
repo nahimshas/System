@@ -40,3 +40,33 @@ WC_ELO_GOAL_MULT     = True     # scale K by goal-difference (eloratings.net sty
 # ── Edge-finding safety ──────────────────────────────────────────────────────
 WC_CRED_CAP          = 0.10     # max model-vs-market divergence before the credibility
                                 # cap pulls the model back (auto-relaxed by calibration)
+
+# ── Rest / fatigue differential ──────────────────────────────────────────────
+# 2026 spans a huge geography with uneven rest between matchdays. The better-
+# rested side gets a small Elo nudge proportional to the rest-day differential.
+WC_REST_ELO_PER_DAY  = 10.0     # Elo per extra day of rest vs the opponent
+WC_MAX_REST_ELO      = 40.0     # cap on the rest adjustment (≈ ¼ goal)
+
+# ── Dead-rubber / match-stakes damping ───────────────────────────────────────
+# 2026 format = 12 groups of 4, top 2 + 8 best third-placed teams advance, so
+# almost nobody is mathematically safe/out after 2 games. We therefore damp ONLY
+# the clearly-safe case: a team on ≥6 points heading into its 3rd group game may
+# rotate its squad. Applied only during the group stage.
+WC_DEAD_RUBBER_MIN_PTS  = 6     # points after 2 games that imply likely qualification
+WC_DEAD_RUBBER_ELO_DAMP = 60.0  # Elo removed from a likely-qualified (rotating) side
+WC_GROUP_STAGE_END      = "2026-06-27"  # last group-stage date (ISO); dead-rubber only before this
+
+# ── Low-confidence shrinkage ─────────────────────────────────────────────────
+# When a side's Elo is a guess (unseeded minnow → WC_ELO_DEFAULT), pull the model
+# harder toward the market by tightening the credibility cap, so we don't make
+# overconfident picks on teams we barely know.
+WC_LOWCONF_CAP_FACTOR = 0.5     # multiplies the credibility cap when a side is unseeded
+
+# ── Venue: altitude / climate ────────────────────────────────────────────────
+# Static per-venue effects on total goals (joined from wc_venue_config.json).
+# High altitude → ball travels further + faster fatigue → slightly more goals.
+# Hot/humid open-air → cagier, tired legs late → slightly fewer goals.
+# Climate-controlled domes → neutral.
+WC_ALT_HIGH_M        = 2000.0   # metres above which the altitude bump applies
+WC_ALT_TOTAL_MULT    = 1.05     # total-goals multiplier at high altitude
+WC_HOT_TOTAL_MULT    = 0.95     # total-goals multiplier for hot/humid open venues

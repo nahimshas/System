@@ -1,0 +1,21 @@
+{
+  "_comment": "FIFA World Cup 2026 venues — static altitude (metres) + climate used to nudge total-goals expectations. climate one of: altitude | hot | temperate | dome. Matched loosely (case-insensitive substring) against ESPN venue.fullName via any string in 'aliases'. altitude_m >= WC_ALT_HIGH_M triggers the altitude bump regardless of climate label; otherwise climate=='hot' lowers totals, dome/temperate are neutral.",
+  "venues": [
+    { "name": "Estadio Azteca",        "city": "Mexico City",   "country": "MEX", "altitude_m": 2240, "climate": "altitude",  "aliases": ["azteca", "mexico city", "ciudad de mexico", "estadio ciudad"] },
+    { "name": "Estadio Akron",         "city": "Guadalajara",   "country": "MEX", "altitude_m": 1560, "climate": "temperate", "aliases": ["akron", "guadalajara", "zapopan"] },
+    { "name": "Estadio BBVA",          "city": "Monterrey",     "country": "MEX", "altitude_m": 500,  "climate": "hot",       "aliases": ["bbva", "monterrey", "guadalupe"] },
+    { "name": "Mercedes-Benz Stadium", "city": "Atlanta",       "country": "USA", "altitude_m": 320,  "climate": "dome",      "aliases": ["mercedes-benz", "mercedes benz", "atlanta"] },
+    { "name": "Gillette Stadium",      "city": "Boston",        "country": "USA", "altitude_m": 30,   "climate": "temperate", "aliases": ["gillette", "foxborough", "foxboro", "boston", "new england"] },
+    { "name": "AT&T Stadium",          "city": "Dallas",        "country": "USA", "altitude_m": 180,  "climate": "dome",      "aliases": ["at&t stadium", "at and t", "arlington", "dallas"] },
+    { "name": "NRG Stadium",           "city": "Houston",       "country": "USA", "altitude_m": 15,   "climate": "dome",      "aliases": ["nrg", "houston"] },
+    { "name": "Arrowhead Stadium",     "city": "Kansas City",   "country": "USA", "altitude_m": 270,  "climate": "hot",       "aliases": ["arrowhead", "kansas city", "geha"] },
+    { "name": "SoFi Stadium",          "city": "Los Angeles",   "country": "USA", "altitude_m": 30,   "climate": "temperate", "aliases": ["sofi", "inglewood", "los angeles"] },
+    { "name": "Hard Rock Stadium",     "city": "Miami",         "country": "USA", "altitude_m": 2,    "climate": "hot",       "aliases": ["hard rock", "miami", "miami gardens"] },
+    { "name": "MetLife Stadium",       "city": "New York",      "country": "USA", "altitude_m": 5,    "climate": "temperate", "aliases": ["metlife", "east rutherford", "new york", "new jersey"] },
+    { "name": "Lincoln Financial Field","city": "Philadelphia", "country": "USA", "altitude_m": 10,   "climate": "temperate", "aliases": ["lincoln financial", "philadelphia", "philly"] },
+    { "name": "Levi's Stadium",        "city": "San Francisco", "country": "USA", "altitude_m": 7,    "climate": "temperate", "aliases": ["levi's", "levis stadium", "santa clara", "san francisco", "bay area"] },
+    { "name": "Lumen Field",           "city": "Seattle",       "country": "USA", "altitude_m": 5,    "climate": "temperate", "aliases": ["lumen", "seattle"] },
+    { "name": "BMO Field",             "city": "Toronto",       "country": "CAN", "altitude_m": 80,   "climate": "temperate", "aliases": ["bmo field", "toronto"] },
+    { "name": "BC Place",              "city": "Vancouver",     "country": "CAN", "altitude_m": 0,    "climate": "dome",      "aliases": ["bc place", "vancouver"] }
+  ]
+}
