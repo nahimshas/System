@@ -290,6 +290,13 @@ def build_report(
             if k not in seen:
                 seen.add(k)
                 out.append(s)
+        # Final display order: confidence-first, then effective edge. Step 1 pins
+        # locked (game-started) picks first ONLY to guarantee they keep a slot
+        # (the odds API drops started games); without this re-sort a locked MEDIUM
+        # would jump ahead of a HIGH-confidence pick once games begin — which is
+        # exactly what made the evening MLB tab look mis-sorted vs the morning one.
+        out.sort(key=lambda r: (0 if r.get("confidence") == "HIGH" else 1,
+                                -r.get("effective_edge", r["edge"])))
         return out
 
     nba_top_singles_raw = _top_singles_for_sport("NBA")
