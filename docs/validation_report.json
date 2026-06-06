@@ -1,18 +1,73 @@
 {
-  "generated_at": "2026-06-05T15:59:01.639019+00:00",
-  "report_date": "2026-06-05",
-  "status": "PASS",
-  "warn_count": 0,
-  "info_count": 0,
-  "findings": [],
+  "generated_at": "2026-06-06T00:14:04.626892+00:00",
+  "report_date": "2026-06-06",
+  "status": "FAIL",
+  "warn_count": 1,
+  "info_count": 4,
+  "findings": [
+    {
+      "check": "dropped_bet",
+      "severity": "warn",
+      "what": "Placed single 'San Francisco Giants' (MLB Moneyline, San Francisco Giants @ Chicago Cubs) from 2026-06-05's card has no settled record in history.json.",
+      "why": "A placed bet that never settled means yesterday's P&L is understated and the by-sport/confidence tiles are missing it.",
+      "fix": "Re-run the workflow (settlement retries). If it persists, the ESPN team-name match likely failed in _find_game_score \u2014 verify the game's team names."
+    },
+    {
+      "check": "dropped_prop",
+      "severity": "info",
+      "what": "Prop 'Ian Happ Total Bases Over' from 2026-06-05 has no record at all in prop_history.json (not even pending).",
+      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
+      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
+    },
+    {
+      "check": "dropped_prop",
+      "severity": "info",
+      "what": "Prop 'Matt Chapman Hits Over' from 2026-06-05 has no record at all in prop_history.json (not even pending).",
+      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
+      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
+    },
+    {
+      "check": "dropped_prop",
+      "severity": "info",
+      "what": "Prop 'Michael Busch Hits Over' from 2026-06-05 has no record at all in prop_history.json (not even pending).",
+      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
+      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
+    },
+    {
+      "check": "count_mismatch",
+      "severity": "info",
+      "what": "2026-06-05 had 5 placed single(s) but only 0 settled (5 unaccounted).",
+      "why": "A gap between placed and settled singles is the signature of the 'dropped bet' class (e.g. a graduated sport excluded from a hardcoded list).",
+      "fix": "See the dropped_bet findings above for specifics; if none, a game may be postponed/not yet final."
+    }
+  ],
   "stats": {
-    "date_checked": "2026-06-04",
-    "settled_singles": 5,
-    "settled_total_records": 7,
-    "yesterday_pnl": -3.87,
+    "date_checked": "2026-06-05",
+    "settled_singles": 0,
+    "settled_total_records": 0,
+    "yesterday_pnl": 0,
     "placed_singles": 5,
-    "placed_props": 6
+    "placed_props": 12
   },
-  "flagged_dropped_bets": [],
-  "flagged_dropped_props": []
+  "flagged_dropped_bets": [
+    [
+      "San Francisco Giants @ Chicago Cubs",
+      "Moneyline",
+      "San Francisco Giants"
+    ]
+  ],
+  "flagged_dropped_props": [
+    [
+      "Ian Happ",
+      "Total Bases Over"
+    ],
+    [
+      "Matt Chapman",
+      "Hits Over"
+    ],
+    [
+      "Michael Busch",
+      "Hits Over"
+    ]
+  ]
 }
