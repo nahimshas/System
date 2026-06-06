@@ -1,0 +1,66 @@
+name: Notify — Debrief ready
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/debrief_latest.html'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write debrief_notify key to Cloudflare KV
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PICKS_KV_NAMESPACE: "673db77b785c4b4b8fd4d8b9d545b490"
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, urllib.request, urllib.parse, datetime
+
+          try:
+              from zoneinfo import ZoneInfo
+              today = datetime.datetime.now(ZoneInfo('America/Los_Angeles')).date().isoformat()
+          except Exception:
+              today = datetime.date.today().isoformat()
+
+          token      = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          account_id = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '').strip()
+          ns_id      = os.environ.get('PICKS_KV_NAMESPACE', '')
+
+          if not token or not account_id or not ns_id:
+              print('Missing Cloudflare credentials — skipping')
+              exit(0)
+
+          kv_key = urllib.parse.quote(f'debrief_notify:{today}', safe='')
+          kv_url = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/storage/kv/namespaces/{ns_id}/values/{kv_key}'
+
+          payload = {
+              'title':    '📊 Nightly Debrief ready',
+              'body':     "Today's picks analyzed — tap to review",
+              'url':      '/debrief_latest.html',
+              'notified': False,
+          }
+
+          req = urllib.request.Request(
+              kv_url,
+              data=json.dumps(payload).encode(),
+              headers={
+                  'Authorization': f'Bearer {token}',
+                  'Content-Type':  'application/json',
+              },
+              method='PUT',
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  result = json.loads(r.read())
+                  if result.get('success'):
+                      print(f'debrief_notify:{today} written to KV — push notification fires on next cron tick (≤3 min)')
+                  else:
+                      print(f'KV write failed: {result}')
+                      exit(1)
+          except Exception as e:
+              print(f'KV write error: {e}')
+              exit(1)
+          PYEOF
