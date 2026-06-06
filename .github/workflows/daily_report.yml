@@ -121,6 +121,12 @@ jobs:
         # tiles add up, no duplicate settlement, self-tuning state sane. Writes
         # state/validation_report.json (surfaced as a banner in the report) and
         # prints a PASS/WARN/FAIL summary to this log. Always exits 0.
+        #
+        # Skipped on code-only re-renders: they perform NO settlement (zero API
+        # calls, re-render from saved state), so the post-settlement checks would
+        # raise false positives (e.g. "placed bets not settled") and overwrite the
+        # banner from the last real run. The next real run re-validates correctly.
+        if: ${{ github.event.inputs.code_only != 'true' }}
         run: python validate_morning_run.py
 
       - name: Notify subscribers — picks ready
