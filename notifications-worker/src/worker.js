@@ -299,9 +299,18 @@ function gameScores(event) {
 }
 
 function gameStatus(event) {
-  const state = event.status?.type?.state;
-  if (state === 'post') return 'final';
-  if (state === 'in')   return 'live';
+  const state  = event.status?.type?.state;
+  const name   = (event.status?.type?.name        || '').toUpperCase();
+  const detail = (event.status?.type?.shortDetail  || '').toLowerCase();
+  if (state === 'post') {
+    // ESPN marks postponed/canceled games as state='post' but with a distinct name/detail.
+    if (
+      name.includes('POSTPONED') || name.includes('CANCELED') || name.includes('CANCELLED') ||
+      detail.includes('postponed') || detail.includes('canceled') || detail.includes('cancelled')
+    ) return 'postponed';
+    return 'final';
+  }
+  if (state === 'in') return 'live';
   return 'pre';
 }
 
@@ -491,6 +500,23 @@ async function runCron(env) {
         prev.seenLive = true;
       }
 
+      // ── Game postponed / canceled ─────────────────────────────────────────
+      if (status === 'postponed' && !prev.seenFinal) {
+        for (const pick of gamePicks) {
+          if (pick.isParlay) continue; // handled via updateParlayOnLegFinal below
+          await broadcastFiltered({
+            title: `🔄 ${pickLabel(pick)} — PUSH`,
+            body:  `Game postponed · Bet refunded`,
+            tag:   `end-${pick.id}`, url: '/',
+          }, { sport, inTodaysCard: !!pick.inTodaysCard }, env);
+        }
+        // Mark any parlay legs for this game as PUSH so they don't kill the parlay
+        if (await updateParlayOnLegFinal(parlays, espnId, null, null, env, 'PUSH')) {
+          storeModified = true;
+        }
+        prev.seenFinal = true;
+      }
+
       // ── Game ended ────────────────────────────────────────────────────────
       if (status === 'final' && !prev.seenFinal) {
         const scoreStr = `Final: ${awayAbbr} ${scores.away} · ${homeAbbr} ${scores.home}`;
@@ -570,7 +596,9 @@ async function runCron(env) {
 // Leg outcomes are persisted on the leg object itself (leg.outcome = 'WON'/'LOST'/null)
 // so state survives across cron ticks. Returns true if the store was modified.
 
-async function updateParlayOnLegFinal(parlays, resolvedEspnId, resolvedScores, resolvedHomeFull, env) {
+// forcedOutcome: pass 'PUSH' for postponed/canceled games so legs are not evaluated
+// against scores (which are 0-0 and meaningless) and don't kill the parlay.
+async function updateParlayOnLegFinal(parlays, resolvedEspnId, resolvedScores, resolvedHomeFull, env, forcedOutcome = null) {
   let modified = false;
 
   for (const parlay of parlays) {
@@ -585,18 +613,27 @@ async function updateParlayOnLegFinal(parlays, resolvedEspnId, resolvedScores, r
     // Resolve outcomes for all legs from this game
     for (const leg of thisGameLegs) {
       if (leg.outcome != null) continue; // already resolved in a previous cron tick
-      leg.outcome = determineOutcome(leg, resolvedHomeFull, resolvedScores.home, resolvedScores.away);
-      // null outcome = push/tie → treat as LOST (conservative)
-      if (leg.outcome === null) leg.outcome = 'LOST';
+      if (forcedOutcome) {
+        leg.outcome = forcedOutcome; // postponed/canceled — skip score evaluation
+      } else {
+        leg.outcome = determineOutcome(leg, resolvedHomeFull, resolvedScores.home, resolvedScores.away);
+        // null = exact push (spread/total exactly on the line) → treat as PUSH, not LOST.
+        // A pushed leg is removed from the effective parlay; it doesn't kill it.
+        if (leg.outcome === null) leg.outcome = 'PUSH';
+      }
       modified = true;
     }
 
     // Are ALL legs of this parlay from the same game?
     const allSameGame = legs.every(leg => leg.espnEventId === resolvedEspnId);
 
-    const anyLost    = legs.some(leg => leg.outcome === 'LOST');
-    const wonLegs    = legs.filter(leg => leg.outcome === 'WON');
+    // PUSH legs are resolved but neither won nor lost — exclude from active counts.
+    const anyLost     = legs.some(leg => leg.outcome === 'LOST');
+    const wonLegs     = legs.filter(leg => leg.outcome === 'WON');
+    const pushedLegs  = legs.filter(leg => leg.outcome === 'PUSH');
     const pendingLegs = legs.filter(leg => leg.outcome == null);
+    // Active leg count: legs that actually determine the outcome (not pushed)
+    const activeCount = legs.length - pushedLegs.length;
 
     if (anyLost) {
       // ── Parlay dead — fire immediately, no more notifications for this parlay ──
@@ -609,11 +646,23 @@ async function updateParlayOnLegFinal(parlays, resolvedEspnId, resolvedScores, r
       parlay.notifiedFinal = true;
       modified = true;
 
-    } else if (pendingLegs.length === 0) {
-      // ── All legs resolved and all WON ────────────────────────────────────────
+    } else if (pendingLegs.length === 0 && wonLegs.length > 0) {
+      // ── All active legs resolved and at least one WON (pushed legs don't count) ──
+      const legWord = activeCount === 1 ? '1 leg' : `${activeCount} legs`;
+      const pushNote = pushedLegs.length > 0 ? ` · ${pushedLegs.length} pushed` : '';
       await broadcastFiltered({
         title: `🏆 ${parlay.label} — WON`,
-        body:  `All ${legs.length} legs hit · +$${Number(parlay.profitIfWin || 0).toFixed(2)}`,
+        body:  `${legWord} hit${pushNote} · +$${Number(parlay.profitIfWin || 0).toFixed(2)}`,
+        tag:   `parlay-final-${parlay.id}`, url: '/',
+      }, { isParlay: true }, env);
+      parlay.notifiedFinal = true;
+      modified = true;
+
+    } else if (pendingLegs.length === 0 && wonLegs.length === 0) {
+      // ── All legs pushed (e.g. full-game postponement) — full refund ──────────
+      await broadcastFiltered({
+        title: `🔄 ${parlay.label} — PUSH`,
+        body:  `All legs pushed · Bet refunded`,
         tag:   `parlay-final-${parlay.id}`, url: '/',
       }, { isParlay: true }, env);
       parlay.notifiedFinal = true;
@@ -623,9 +672,10 @@ async function updateParlayOnLegFinal(parlays, resolvedEspnId, resolvedScores, r
       // ── Intermediate: some legs WON, more games still pending ────────────────
       const remaining  = pendingLegs.length;
       const legNames   = thisGameLegs.filter(l => l.outcome === 'WON').map(l => pickLabel(l)).join(' + ');
+      const pushNote   = pushedLegs.length > 0 ? ` · ${pushedLegs.length} pushed` : '';
       await broadcastFiltered({
-        title: `✅ ${parlay.label} — Leg ${wonLegs.length}/${legs.length} hit`,
-        body:  `${legNames} · ${remaining} leg${remaining !== 1 ? 's' : ''} remaining`,
+        title: `✅ ${parlay.label} — Leg ${wonLegs.length}/${activeCount} hit`,
+        body:  `${legNames}${pushNote} · ${remaining} leg${remaining !== 1 ? 's' : ''} remaining`,
         tag:   `parlay-progress-${parlay.id}-${wonLegs.length}`, url: '/',
       }, { isParlay: true }, env);
       // notifiedFinal stays false — waiting for remaining legs
