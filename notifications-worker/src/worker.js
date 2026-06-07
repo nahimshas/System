@@ -464,7 +464,7 @@ async function runCron(env) {
       const gsKey  = `gs:${sport}:${espnId}`;
       const prevRaw = await env.GAME_STATE.get(gsKey);
       const prev   = prevRaw ? JSON.parse(prevRaw) : {
-        status: 'pre', homeScore: 0, awayScore: 0, seenLive: false, seenFinal: false,
+        status: 'pre', homeScore: 0, awayScore: 0, seenLive: false, seenFinal: false, seenPostponed: false,
       };
 
       const homeAbbr = getCompAbbr(event, 'home');
@@ -473,7 +473,9 @@ async function runCron(env) {
         .find(c => c.homeAway === 'home')?.team?.displayName || gamePicks[0]?.homeTeam || '';
 
       // ── Skip entirely if already fully settled (no more state changes possible) ──
-      // This avoids a GAME_STATE write every cron tick after a game is final.
+      // Only seenFinal (completed game) triggers the skip — NOT seenPostponed.
+      // A postponed game can still be played later that day (makeup/doubleheader),
+      // so we must not lock out the live/final notifications when that happens.
       if (prev.seenFinal) continue;
 
       // ── Game started ──────────────────────────────────────────────────────
@@ -501,7 +503,9 @@ async function runCron(env) {
       }
 
       // ── Game postponed / canceled ─────────────────────────────────────────
-      if (status === 'postponed' && !prev.seenFinal) {
+      // Uses seenPostponed (not seenFinal) so that if ESPN reverses a postponement
+      // and the game is played later that day, live/final notifications still fire.
+      if (status === 'postponed' && !prev.seenPostponed) {
         for (const pick of gamePicks) {
           if (pick.isParlay) continue; // handled via updateParlayOnLegFinal below
           await broadcastFiltered({
@@ -514,7 +518,7 @@ async function runCron(env) {
         if (await updateParlayOnLegFinal(parlays, espnId, null, null, env, 'PUSH')) {
           storeModified = true;
         }
-        prev.seenFinal = true;
+        prev.seenPostponed = true;
       }
 
       // ── Game ended ────────────────────────────────────────────────────────
@@ -562,16 +566,18 @@ async function runCron(env) {
       const nextState = {
         status,
         homeScore: scores.home, awayScore: scores.away,
-        seenLive:  prev.seenLive,
-        seenFinal: prev.seenFinal,
+        seenLive:      prev.seenLive,
+        seenFinal:     prev.seenFinal,
+        seenPostponed: prev.seenPostponed,
         detail,
       };
       const stateChanged = (
-        nextState.status    !== prev.status    ||
-        nextState.homeScore !== prev.homeScore ||
-        nextState.awayScore !== prev.awayScore ||
-        nextState.seenLive  !== prev.seenLive  ||
-        nextState.seenFinal !== prev.seenFinal
+        nextState.status        !== prev.status        ||
+        nextState.homeScore     !== prev.homeScore      ||
+        nextState.awayScore     !== prev.awayScore      ||
+        nextState.seenLive      !== prev.seenLive       ||
+        nextState.seenFinal     !== prev.seenFinal      ||
+        nextState.seenPostponed !== prev.seenPostponed
       );
       if (stateChanged) {
         await env.GAME_STATE.put(gsKey, JSON.stringify(nextState), { expirationTtl: 172800 });
