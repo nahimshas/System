@@ -86,8 +86,24 @@ def check_and_settle(today: date) -> int:
             sports_needed.add(leg.get("sport", "").upper())
 
     score_cache: Dict[str, Dict] = {}
+    postponed_cache: Dict[str, set] = {}
     for sport in sports_needed & ESPN_SPORT_PATHS.keys():
         score_cache[sport] = _fetch_espn_final_scores(sport, yesterday)
+        postponed_cache[sport] = _fetch_espn_postponed_games(sport, yesterday)
+
+    # Build a (home_team, away_team, pick, bet_type) → market_prob lookup from
+    # singles so we can compute reduced parlay profit when a leg is voided.
+    _single_market_probs: Dict[tuple, float] = {}
+    for _s in state.get("singles", []) + state.get("singles_display", []):
+        _key = (
+            _s.get("home_team", "").lower(),
+            _s.get("away_team", "").lower(),
+            _s.get("pick", "").lower(),
+            _s.get("bet_type", "").lower(),
+        )
+        _prob = _s.get("market_prob_pct", 0)
+        if _prob and _prob not in _single_market_probs:
+            _single_market_probs[_key] = _prob / 100.0
 
     new_records: List[Dict] = []
 
@@ -104,7 +120,33 @@ def check_and_settle(today: date) -> int:
             pick.get("away_team", ""),
         )
         if not score_data:
-            logger.debug(f"Score not found for {pick.get('game')} on {yesterday}")
+            if _is_postponed(pick.get("home_team", ""), pick.get("away_team", ""),
+                             postponed_cache.get(sport, set())):
+                logger.info(f"Postponed (PUSH): {pick.get('game')} on {yesterday}")
+                cost = pick.get("total_cost", 0) or 0
+                new_records.append({
+                    "date":             yesterday.isoformat(),
+                    "type":             "single",
+                    "sport":            sport,
+                    "game":             pick.get("game", ""),
+                    "bet_type":         pick.get("bet_type", ""),
+                    "pick":             pick.get("pick", ""),
+                    "home_team":        pick.get("home_team", ""),
+                    "away_team":        pick.get("away_team", ""),
+                    "edge_pct":         pick.get("edge_pct", 0),
+                    "confidence":       pick.get("confidence", "MEDIUM"),
+                    "model_prob_pct":   pick.get("model_prob_pct", 0),
+                    "market_prob_pct":  pick.get("market_prob_pct", 0),
+                    "cost":             cost,
+                    "profit_if_win":    pick.get("profit_if_win", 0),
+                    "result":           "PUSH",
+                    "actual_pnl":       0.0,
+                    "actual_home_score": None,
+                    "actual_away_score": None,
+                    "note":             "postponed",
+                })
+            else:
+                logger.debug(f"Score not found for {pick.get('game')} on {yesterday}")
             continue
 
         result = _determine_outcome(
@@ -164,7 +206,11 @@ def check_and_settle(today: date) -> int:
                 leg.get("away_team", ""),
             )
             if not score_data:
-                leg_results.append("UNKNOWN")
+                if _is_postponed(leg.get("home_team", ""), leg.get("away_team", ""),
+                                 postponed_cache.get(sport, set())):
+                    leg_results.append("VOID")
+                else:
+                    leg_results.append("UNKNOWN")
                 continue
             r = _determine_outcome(
                 leg.get("pick", ""),
@@ -177,18 +223,48 @@ def check_and_settle(today: date) -> int:
             leg_results.append(r)
 
         if "UNKNOWN" in leg_results:
-            continue  # Can't settle until all legs have final scores
+            continue  # genuinely pending — come back tomorrow
 
-        if any(r == "LOST" for r in leg_results):
+        # Settle parlay treating VOID legs as neutral (leg pushed out)
+        active_results = [r for r in leg_results if r != "VOID"]
+        if not active_results:
+            result = "PUSH"  # every leg was postponed
+        elif any(r == "LOST" for r in active_results):
             result = "LOST"
-        elif all(r == "WON" for r in leg_results):
+        elif all(r == "WON" for r in active_results):
             result = "WON"
         else:
-            result = "PUSH"  # one or more legs pushed, no leg lost
+            result = "PUSH"  # remaining active legs all pushed
 
-        cost        = par.get("total_cost", 0) or 0
-        profit      = par.get("profit_if_win", 0) or 0
-        actual_pnl  = profit if result == "WON" else (0.0 if result == "PUSH" else -cost)
+        cost   = par.get("total_cost", 0) or 0
+        profit = par.get("profit_if_win", 0) or 0
+
+        # When a void leg reduces the parlay, recompute profit at surviving-leg odds.
+        # Stake stays the same; combined market probability is the product of
+        # surviving legs' market probs (looked up from today's singles list).
+        void_count = leg_results.count("VOID")
+        if result == "WON" and void_count > 0:
+            combined_prob = 1.0
+            ok = True
+            for leg, lr in zip(legs, leg_results):
+                if lr != "WON":
+                    continue
+                mk = (
+                    leg.get("home_team", "").lower(),
+                    leg.get("away_team", "").lower(),
+                    leg.get("pick", "").lower(),
+                    leg.get("bet_type", "").lower(),
+                )
+                p = _single_market_probs.get(mk, 0)
+                if p <= 0 or p >= 1:
+                    ok = False
+                    break
+                combined_prob *= p
+            if ok and combined_prob > 0:
+                profit = round(cost / combined_prob - cost, 2)
+            # if we couldn't find odds, fall back to original profit_if_win
+
+        actual_pnl = profit if result == "WON" else (0.0 if result == "PUSH" else -cost)
 
         new_records.append({
             "date":             yesterday.isoformat(),
@@ -206,9 +282,11 @@ def check_and_settle(today: date) -> int:
             "result":           result,
             "actual_pnl":       round(actual_pnl, 2),
             "legs":             [
-                {"game": l.get("game"), "pick": l.get("pick"), "result": leg_results[i]}
+                {"game": l.get("game"), "pick": l.get("pick"), "result": leg_results[i],
+                 **({"note": "postponed"} if leg_results[i] == "VOID" else {})}
                 for i, l in enumerate(legs)
             ],
+            **({"note": "reduced_parlay"} if void_count > 0 else {}),
         })
 
     if new_records:
@@ -230,6 +308,67 @@ def check_and_settle(today: date) -> int:
 # ---------------------------------------------------------------------------
 # ESPN score fetching
 # ---------------------------------------------------------------------------
+
+def _fetch_espn_postponed_games(sport: str, game_date: date) -> set:
+    """
+    Returns a set of frozenset({home_name_lower, away_name_lower}) for games
+    on game_date that ESPN marks as postponed (not completed, status=postponed).
+    Used to distinguish 'postponed' from 'genuinely still in progress'.
+    """
+    path = ESPN_SPORT_PATHS.get(sport)
+    if not path:
+        return set()
+    date_str = game_date.strftime("%Y%m%d")
+    url = f"{ESPN_BASE}/{path}/scoreboard"
+    try:
+        r = requests.get(url, params={"dates": date_str}, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        logger.error(f"ESPN postponed fetch failed ({sport}, {game_date}): {e}")
+        return set()
+
+    postponed = set()
+    for event in data.get("events", []):
+        comps = event.get("competitions", [])
+        if not comps:
+            continue
+        comp = comps[0]
+        status = comp.get("status", {}).get("type", {})
+        if status.get("completed", False):
+            continue
+        # ESPN uses name="STATUS_POSTPONED" or description="Postponed"
+        status_name = status.get("name", "").lower()
+        status_desc = status.get("description", "").lower()
+        if "postponed" not in status_name and "postponed" not in status_desc:
+            continue
+        competitors = comp.get("competitors", [])
+        if len(competitors) < 2:
+            continue
+        home_comp = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
+        away_comp = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
+        home_name = home_comp.get("team", {}).get("displayName", "").lower()
+        away_name = away_comp.get("team", {}).get("displayName", "").lower()
+        if home_name and away_name:
+            postponed.add(frozenset({home_name, away_name}))
+    logger.debug(f"ESPN {sport} {game_date}: {len(postponed)} postponed game(s)")
+    return postponed
+
+
+def _is_postponed(home_team: str, away_team: str, postponed_set: set) -> bool:
+    """Check whether a game is in the postponed set (substring-tolerant)."""
+    home_l = home_team.lower()
+    away_l = away_team.lower()
+    for pair in postponed_set:
+        pair_list = list(pair)
+        if len(pair_list) < 2:
+            continue
+        a, b = pair_list[0], pair_list[1]
+        if ((a in home_l or home_l in a) and (b in away_l or away_l in b) or
+                (b in home_l or home_l in b) and (a in away_l or away_l in a)):
+            return True
+    return False
+
 
 def _fetch_espn_final_scores(sport: str, game_date: date) -> Dict:
     """
