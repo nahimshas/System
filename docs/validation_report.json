@@ -1,18 +1,39 @@
 {
-  "generated_at": "2026-06-06T15:58:42.346207+00:00",
-  "report_date": "2026-06-06",
-  "status": "PASS",
-  "warn_count": 0,
-  "info_count": 0,
-  "findings": [],
+  "generated_at": "2026-06-07T15:58:45.488150+00:00",
+  "report_date": "2026-06-07",
+  "status": "FAIL",
+  "warn_count": 1,
+  "info_count": 1,
+  "findings": [
+    {
+      "check": "dropped_bet",
+      "severity": "warn",
+      "what": "Placed single 'New York Yankees' (MLB Moneyline, Boston Red Sox @ New York Yankees) from 2026-06-06's card has no settled record in history.json.",
+      "why": "A placed bet that never settled means yesterday's P&L is understated and the by-sport/confidence tiles are missing it.",
+      "fix": "Re-run the workflow (settlement retries). If it persists, the ESPN team-name match likely failed in _find_game_score \u2014 verify the game's team names."
+    },
+    {
+      "check": "count_mismatch",
+      "severity": "info",
+      "what": "2026-06-06 had 5 placed single(s) but only 4 settled (1 unaccounted).",
+      "why": "A gap between placed and settled singles is the signature of the 'dropped bet' class (e.g. a graduated sport excluded from a hardcoded list).",
+      "fix": "See the dropped_bet findings above for specifics; if none, a game may be postponed/not yet final."
+    }
+  ],
   "stats": {
-    "date_checked": "2026-06-05",
-    "settled_singles": 5,
-    "settled_total_records": 7,
-    "yesterday_pnl": 5.58,
+    "date_checked": "2026-06-06",
+    "settled_singles": 4,
+    "settled_total_records": 5,
+    "yesterday_pnl": 10.33,
     "placed_singles": 5,
-    "placed_props": 12
+    "placed_props": 6
   },
-  "flagged_dropped_bets": [],
+  "flagged_dropped_bets": [
+    [
+      "Boston Red Sox @ New York Yankees",
+      "Moneyline",
+      "New York Yankees"
+    ]
+  ],
   "flagged_dropped_props": []
 }
