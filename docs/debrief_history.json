@@ -1207,6 +1207,392 @@
         "Ben Brown xFIP caveat: over 51 IP, Ben Brown continues to outperform xFIP \u2014 may warrant a pitcher-specific adjustment to ERA trap threshold",
         "Recent form (R/G last 10) correlated well: CWS 6-4 L10 \u2192 WON, SD 1-9 L10 \u2192 LOST as expected; this signal is consistently predictive"
       ]
+    },
+    {
+      "date": "2026-06-07",
+      "generated_at": "2026-06-08T05:08:43Z",
+      "headline": "2-5 on budget picks; ERA traps backfired across the board",
+      "budget_record": "2-5",
+      "watchlist_record": "10-5",
+      "budget_pnl": -8.81,
+      "picks": [
+        {
+          "game": "Milwaukee Brewers @ Colorado Rockies",
+          "sport": "MLB",
+          "pick": "Colorado Rockies +1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "MIL 12, COL 4",
+          "pnl": "-$6.31",
+          "why_picked": "ERA trap SEVERE on Shane Drohan (ERA 2.87 vs xFIP 3.91 over 31 IP) suggested MIL ML was overpriced; Coors Field park factor 1.30 expected to keep Rockies in it.",
+          "what_happened": "Brewers blew the Rockies out 12-4. Drohan pitched efficiently into the 7th, allowing just 3 runs \u2014 the ERA trap did NOT fire. Kyle Freeland (COL SP, ERA 8.06) was crushed, and Gary S\u00e1nchez homered during a 7-run 6th inning for Milwaukee.",
+          "signals": [
+            "ERA trap [SEVERE] \u2014 Shane Drohan: ERA 2.87 vs xFIP 3.91 over 31 IP",
+            "Park factor 1.30 (Coors Field)",
+            "Model projected COL 5.5 \u2014 MIL 5.1"
+          ],
+          "signal_verdict": "INCORRECT \u2014 Drohan held up; COL's own ERA 8.06 starter (Freeland) was the real liability and got shelled. ERA trap was on the wrong pitcher.",
+          "key_insight": "ERA trap in 31 IP is a small sample for LHPs; Coors context may inflate xFIP, making the trap less reliable. COL's own starter ERA 8.06 was the dominant risk factor the model underweighted.",
+          "in_budget": true
+        },
+        {
+          "game": "Pittsburgh Pirates @ Atlanta Braves",
+          "sport": "MLB",
+          "pick": "Pittsburgh Pirates",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "ATL 3, PIT 2",
+          "pnl": "-$5.66",
+          "why_picked": "ERA trap SEVERE on Bryce Elder (ERA 2.63 vs xFIP 3.79 over 78 IP) pointed to Atlanta ML being overpriced; PIT strong vs RHP (0.764 OPS).",
+          "what_happened": "Braves won 3-2 to sweep the series. Michael Harris II \u2014 listed DAY-TO-DAY with injury \u2014 came off the bench in the 7th inning as a pinch-hitter and delivered a walk-off 3-run double. Braves bullpen (ERA 2.86) held firm.",
+          "signals": [
+            "ERA trap [SEVERE] \u2014 Bryce Elder: ERA 2.63 vs xFIP 3.79 over 78 IP",
+            "Platoon: PIT vs RHP \u2014 0.764 OPS",
+            "Model projected ATL 4.2 \u2014 PIT 4.5"
+          ],
+          "signal_verdict": "INCORRECT \u2014 Elder gave up 2 runs but Braves won via bench piece; the DAY-TO-DAY injury status for Harris II was misleading \u2014 he was fully available to pinch hit and delivered the decisive blow.",
+          "key_insight": "DAY-TO-DAY injury flags don't prevent bench contributions. The model's -2.0% injury impact for PIT (with 4 DTD players) is the wrong direction to adjust when the opponent's key bat is still available off the bench.",
+          "in_budget": true
+        },
+        {
+          "game": "Athletics @ Houston Astros",
+          "sport": "MLB",
+          "pick": "Houston Astros",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "ATH 5, HOU 0",
+          "pnl": "-$6.83",
+          "why_picked": "HOU strong platoon advantage vs LHP (0.782 OPS), Athletics on bad 3-7 skid, HOU recent form 6-4. Model projected HOU by 0.9 runs.",
+          "what_happened": "Athletics shut out the Astros 5-0 in a stunning upset. Gage Jump (Athletics LHP, FIP 2.03 / xFIP 3.88 in just 12 IP) was dominant rather than regressing. Mike Burrows (HOU SP, ERA 5.66) gave up runs early and HOU's lineup went cold.",
+          "signals": [
+            "Platoon: HOU vs LHP \u2014 0.782 OPS (season edge)",
+            "Recent form: ATH 3-7 last 10",
+            "Gage Jump FIP 2.03 / xFIP 3.88 | K/9: 7.5 (12 IP only)"
+          ],
+          "signal_verdict": "INCORRECT \u2014 Jump dominated in an impossibly small 12 IP sample; FIP 2.03 flagged as potential ERA trap but the model still backed HOU. Burrows' high ERA caught up badly (0 run support to absorb).",
+          "key_insight": "Gage Jump had only 12 IP \u2014 FIP at this sample is essentially noise. The model should down-weight pitcher metrics below ~25 IP threshold and rely on team-level signals instead.",
+          "in_budget": true
+        },
+        {
+          "game": "San Francisco Giants @ Chicago Cubs",
+          "sport": "MLB",
+          "pick": "San Francisco Giants",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "SF 2, CHC 1 (10 inn)",
+          "pnl": "+$6.75",
+          "why_picked": "xFIP mismatch \u2014 McDonald (SF) 3.09 vs Taillon (CHC) 4.10; pitching edge drove the projected SF win by 0.9 runs.",
+          "what_happened": "Giants edged the Cubs 2-1 in 10 innings. Matt Chapman singled in automatic runner Jonah Cox for the walk-off. McDonald and Taillon both pitched competitively, with the pitching mismatch tight as the model projected.",
+          "signals": [
+            "Trevor McDonald xFIP 3.09 vs Jameson Taillon xFIP 4.10",
+            "Model projected SF 5.1 \u2014 CHC 4.2",
+            "74% rain risk at Wrigley (no postponement)"
+          ],
+          "signal_verdict": "CORRECT \u2014 pitching edge materialized; SF won a close game exactly as the model's narrow run-diff projection suggested. Rain did not cause postponement.",
+          "key_insight": "Extra-inning format validates close-game edge picks \u2014 the model's 0.9-run projected margin led to a one-run victory. The SF win proved ERA-trap discipline works when pointing the right direction.",
+          "in_budget": true
+        },
+        {
+          "game": "Chicago White Sox @ Philadelphia Phillies",
+          "sport": "MLB",
+          "pick": "Chicago White Sox",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "CWS 5, PHI 4",
+          "pnl": "+$7.60",
+          "why_picked": "PHI struggles vs LHP (0.667 OPS); CWS on a 7-3 run (6.4 R/G); Tyler Gilbert flagged with a massive ERA trap (2 IP sample \u2014 essentially meaningless). Model projected CWS by 0.4 runs.",
+          "what_happened": "White Sox won 5-4 in a tight game, riding their hot recent form and Phillies' offensive struggles vs LHP. Gilbert's tiny 2-IP ERA sample made him unpredictable but he held up enough.",
+          "signals": [
+            "Platoon: PHI vs LHP \u2014 0.667 OPS (below season 0.682)",
+            "Recent form: CWS 7-3 last 10",
+            "Tyler Gilbert xFIP 7.84 (2 IP \u2014 extreme noise)"
+          ],
+          "signal_verdict": "CORRECT \u2014 PHI offensive struggles vs LHP and CWS momentum drove the win; Gilbert's ERA trap in 2 IP is too noisy to trade on, but team-level signal (PHI vs LHP) was the real edge.",
+          "key_insight": "The CWS win was more about team momentum and PHI platoon weakness than pitcher ERA trap \u2014 when the pitcher sample is 2 IP, strip that signal and rely on team-level factors only.",
+          "in_budget": true
+        },
+        {
+          "pick": "Parlay: Houston Astros ML + San Francisco Giants ML",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "LOST",
+          "pnl": "-$2.28",
+          "legs": [
+            {
+              "pick": "Houston Astros ML",
+              "sport": "MLB",
+              "game": "Athletics @ Houston Astros",
+              "result": "LOST"
+            },
+            {
+              "pick": "San Francisco Giants ML",
+              "sport": "MLB",
+              "game": "SF Giants @ Chicago Cubs",
+              "result": "WON"
+            }
+          ],
+          "signal_verdict": "INCORRECT \u2014 HOU leg collapsed (Athletics 5-0 upset); SF leg hit but couldn't save the ticket.",
+          "key_insight": "This parlay correlated two ERA-trap-based plays. When one leg is built on a 12-IP pitcher sample (Gage Jump), the leg is inherently fragile. Avoid pairing uncertain ERA-trap reads in the same parlay.",
+          "in_budget": true
+        },
+        {
+          "pick": "Parlay: Pittsburgh Pirates ML + Washington Nationals ML",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "LOST",
+          "pnl": "-$2.08",
+          "legs": [
+            {
+              "pick": "Pittsburgh Pirates ML",
+              "sport": "MLB",
+              "game": "Pittsburgh Pirates @ Atlanta Braves",
+              "result": "LOST"
+            },
+            {
+              "pick": "Washington Nationals ML",
+              "sport": "MLB",
+              "game": "Washington Nationals @ Arizona Diamondbacks",
+              "result": "LOST"
+            }
+          ],
+          "signal_verdict": "INCORRECT \u2014 both legs lost; WSH was not close (ARI 5-1). Double ERA trap via Elder + WSH value pick both failed.",
+          "key_insight": "Two independently weak picks don't become stronger as a parlay. WSH @ ARI (Under 8.5 at 5+1=6 total was profitable as watchlist) \u2014 the ML leg was the wrong side.",
+          "in_budget": true
+        },
+        {
+          "game": "Washington Nationals @ Arizona Diamondbacks",
+          "sport": "MLB",
+          "pick": "Washington Nationals",
+          "bet_type": "Moneyline",
+          "result": "LOST",
+          "score": "ARI 5, WSH 1",
+          "signals": [
+            "WSH value play \u2014 ARI overpriced"
+          ],
+          "signal_verdict": "INCORRECT \u2014 ARI dominated; this was also the parlay leg that cost Parlay 2.",
+          "key_insight": "WSH ML was a poor selection; the Under 8.5 (total 6) was the profitable side of this game.",
+          "in_budget": false
+        },
+        {
+          "game": "Washington Nationals @ Arizona Diamondbacks",
+          "sport": "MLB",
+          "pick": "Under 8.5",
+          "bet_type": "Total",
+          "result": "WON",
+          "score": "ARI 5, WSH 1 (total: 6)",
+          "signals": [
+            "Low-scoring projection for both offenses"
+          ],
+          "signal_verdict": "CORRECT \u2014 combined 6 runs, well under the 8.5 line.",
+          "key_insight": "This game's Under hit while the ML lost \u2014 confirms the total read was better than the side read.",
+          "in_budget": false
+        },
+        {
+          "game": "Seattle Mariners @ Detroit Tigers",
+          "sport": "MLB",
+          "pick": "Seattle Mariners",
+          "bet_type": "Moneyline",
+          "result": "WON",
+          "score": "SEA 3, DET 1",
+          "signals": [
+            "SEA pitching edge, DET offense below average"
+          ],
+          "signal_verdict": "CORRECT \u2014 Mariners controlled the game from start.",
+          "key_insight": "Low-run game (4 total) validates both SEA ML and Under signal alignment.",
+          "in_budget": false
+        },
+        {
+          "game": "Seattle Mariners @ Detroit Tigers",
+          "sport": "MLB",
+          "pick": "Under 8.5",
+          "bet_type": "Total",
+          "result": "WON",
+          "score": "SEA 3, DET 1 (total: 4)",
+          "signals": [
+            "Low-scoring matchup \u2014 both offenses below league average"
+          ],
+          "signal_verdict": "CORRECT \u2014 Only 4 combined runs, crushed the under.",
+          "key_insight": "SEA Under + SEA ML double-hit \u2014 good double-value when picks align.",
+          "in_budget": false
+        },
+        {
+          "game": "Baltimore Orioles @ Toronto Blue Jays",
+          "sport": "MLB",
+          "pick": "Baltimore Orioles",
+          "bet_type": "Moneyline",
+          "result": "LOST",
+          "score": "BAL 4, TOR 5",
+          "signals": [
+            "BAL recent form edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 Blue Jays held on by one run.",
+          "key_insight": "Razor-thin loss \u2014 model was directionally close but couldn't convert.",
+          "in_budget": false
+        },
+        {
+          "game": "New York Mets @ San Diego Padres",
+          "sport": "MLB",
+          "pick": "New York Mets",
+          "bet_type": "Moneyline",
+          "result": "WON",
+          "score": "NYM 7, SD 3",
+          "signals": [
+            "NYM offense vs SD pitching edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 Mets won convincingly.",
+          "key_insight": "NYM win by 4 runs despite Under 7.5 being on watchlist \u2014 the ML was the right call, total was overshot.",
+          "in_budget": false
+        },
+        {
+          "game": "New York Mets @ San Diego Padres",
+          "sport": "MLB",
+          "pick": "Under 7.5",
+          "bet_type": "Total",
+          "result": "LOST",
+          "score": "NYM 7, SD 3 (total: 10)",
+          "signals": [
+            "Low-run projection for both teams"
+          ],
+          "signal_verdict": "INCORRECT \u2014 10 combined runs smashed the over.",
+          "key_insight": "When the ML is picked (NYM), pairing an Under for the same game is directionally inconsistent if the projected win is high-scoring.",
+          "in_budget": false
+        },
+        {
+          "game": "Boston Red Sox @ New York Yankees",
+          "sport": "MLB",
+          "pick": "New York Yankees",
+          "bet_type": "Moneyline",
+          "result": "WON",
+          "score": "NYY 5, BOS 1",
+          "signals": [
+            "NYY home advantage, BOS road struggles"
+          ],
+          "signal_verdict": "CORRECT \u2014 Yankees dominated at home.",
+          "key_insight": "NYY low total (6 runs) \u2014 Over 7.5 on the same game was a miss; ML was the right side.",
+          "in_budget": false
+        },
+        {
+          "game": "Cleveland Guardians @ Texas Rangers",
+          "sport": "MLB",
+          "pick": "Cleveland Guardians",
+          "bet_type": "Moneyline",
+          "result": "LOST",
+          "score": "TEX 10, CLE 0",
+          "signals": [
+            "CLE recent form advantage"
+          ],
+          "signal_verdict": "INCORRECT \u2014 Rangers blew out the Guardians 10-0; complete reversal from day prior (CLE won 6-0 on June 6).",
+          "key_insight": "Back-to-back series ender often favors the home team; also, day-prior blowout winner (CLE 6-0 on June 6) suffered a regression blowout in the rubber game.",
+          "in_budget": false
+        },
+        {
+          "game": "Cincinnati Reds @ St. Louis Cardinals",
+          "sport": "MLB",
+          "pick": "St. Louis Cardinals",
+          "bet_type": "Moneyline",
+          "result": "WON",
+          "score": "STL 5, CIN 3",
+          "signals": [
+            "STL home edge, CIN road struggles"
+          ],
+          "signal_verdict": "CORRECT \u2014 Cardinals held on at Busch Stadium.",
+          "key_insight": "STL ML + Under 9.5 both hit \u2014 combined 8 runs fits under the line cleanly.",
+          "in_budget": false
+        },
+        {
+          "game": "Cincinnati Reds @ St. Louis Cardinals",
+          "sport": "MLB",
+          "pick": "Under 9.5",
+          "bet_type": "Total",
+          "result": "WON",
+          "score": "STL 5, CIN 3 (total: 8)",
+          "signals": [
+            "Both offenses projected below average"
+          ],
+          "signal_verdict": "CORRECT \u2014 8 combined runs under the 9.5 line.",
+          "key_insight": "STL/CIN low-run game fits the model's projection well.",
+          "in_budget": false
+        },
+        {
+          "game": "Los Angeles Angels @ Los Angeles Dodgers",
+          "sport": "MLB",
+          "pick": "Los Angeles Angels +1.5",
+          "bet_type": "Spread",
+          "result": "WON",
+          "score": "LAA 13, LAD 5",
+          "signals": [
+            "LAA upset potential on run line"
+          ],
+          "signal_verdict": "CORRECT \u2014 Angels won outright 13-5, a massive upset. Sebasti\u00e1n Rivero went 5-for-5 with 6 RBI.",
+          "key_insight": "LAA +1.5 as watchlist showed the model identified something (LAA value) even if the upset magnitude was unexpected. Rivero's historic outing was unforeseeable.",
+          "in_budget": false
+        },
+        {
+          "game": "Tampa Bay Rays @ Miami Marlins",
+          "sport": "MLB",
+          "pick": "Tampa Bay Rays",
+          "bet_type": "Moneyline",
+          "result": "LOST",
+          "score": "MIA 2, TB 1",
+          "signals": [
+            "TB pitching edge vs MIA offense"
+          ],
+          "signal_verdict": "INCORRECT \u2014 Marlins won a low-scoring game 2-1.",
+          "key_insight": "Close loss; 3-run total was very low \u2014 the model may have been right directionally but MIA squeaked it.",
+          "in_budget": false
+        },
+        {
+          "game": "Kansas City Royals @ Minnesota Twins",
+          "sport": "MLB",
+          "pick": "Kansas City Royals",
+          "bet_type": "Moneyline",
+          "result": "WON",
+          "score": "KC 2, MIN 1",
+          "signals": [
+            "KC value underdog pick"
+          ],
+          "signal_verdict": "CORRECT \u2014 Royals edged Twins in a tight game.",
+          "key_insight": "Underdog ML picks (KC at market underdog) contributed a watchlist win.",
+          "in_budget": false
+        },
+        {
+          "game": "Chicago Sky @ Toronto Tempo",
+          "sport": "WNBA",
+          "pick": "Toronto Tempo",
+          "bet_type": "Moneyline",
+          "result": "WON",
+          "score": "TOR 85, CHI 68",
+          "signals": [
+            "TOR home court, Brittney Sykes form"
+          ],
+          "signal_verdict": "CORRECT \u2014 Tempo dominated; Sykes 25 pts, Sabally 15 pts.",
+          "key_insight": "WNBA watchlist pick hit cleanly \u2014 Tempo's home court advantage was decisive.",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "HIGH confidence (all 5 singles): 2-3 on moneylines, 0-1 on spread",
+        "ERA trap signal: 0-for-3 on budget today \u2014 all three traps (Drohan, Elder, Jump) failed to fire",
+        "Parlays: 0-2 \u2014 both legs of each parlay included a loss",
+        "Watchlist MLB totals: 3-2 (Unders dominated: SEA/DET U8.5 \u2713, CIN/STL U9.5 \u2713, WSH/ARI U8.5 \u2713)",
+        "Watchlist moneylines: 6-4 (solid spread across the board)",
+        "WNBA watchlist: 1-0 (Toronto Tempo covered convincingly)",
+        "Late-game SF ML won in 10 innings via walk-off \u2014 validates close-game model edge"
+      ],
+      "model_observations": [
+        "Gage Jump (ATH) had only 12 IP \u2014 FIP 2.03 is meaningless at that sample; xFIP 3.88 was closer to truth but HOU still lost. Tiny-sample FIP (<30 IP) should be down-weighted in model.",
+        "Tyler Gilbert (CWS) had only 2 IP \u2014 both FIP and xFIP are noise at that level; the CWS win was driven by team momentum, not pitcher edge.",
+        "Michael Harris II was listed DAY-TO-DAY but delivered as a pinch-hitter in the 7th vs PIT. Model's injury impact score doesn't distinguish 'limited availability' from 'fully playable off bench'.",
+        "All 5 budget singles were HIGH confidence \u2014 the model is not differentiating tiers well; a wider spread (MEDIUM/LOW) would be informative for bankroll sizing.",
+        "Shane Drohan (MIL) pitched efficiently into the 7th with 31 IP ERA trap flagged SEVERE; ERA trap didn't regress, suggesting the trap severity threshold needs calibration for LHPs in Coors.",
+        "Parlays amplified individual pick failures \u2014 both parlays shared legs with the losing singles; revisit correlated parlay leg selection to avoid doubling exposure on same-direction misses.",
+        "Watchlist totals were profitable (3-2) \u2014 MLB under picks showing promise as a standalone signal worth promoting."
+      ]
     }
   ]
 }
