@@ -176,27 +176,32 @@ def build_report(
     # _top_singles_for_sport + _tag_alloc path). No separate watchlist routing.
 
     # IPL is watchlist-only — never enters budget allocation or parlays.
+    def _wl_sort_key(r):
+        return (0 if r.get("confidence") == "HIGH" else 1,
+                -r.get("edge", 0),
+                -r.get("model_prob_pct", 0))
+
     ipl_watchlist = sorted(
         ipl_display or [],
-        key=lambda r: (0 if r.get("confidence") == "HIGH" else 1, -r.get("edge", 0)),
+        key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
     # WNBA is watchlist-only — never enters budget allocation or parlays.
     wnba_watchlist = sorted(
         [s for s in (wnba_display or []) if s.get("sport") == "WNBA"],
-        key=lambda r: (0 if r.get("confidence") == "HIGH" else 1, -r.get("edge", 0)),
+        key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
     # MLS is watchlist-only — never enters budget allocation or parlays.
     mls_watchlist = sorted(
         [s for s in (mls_display or []) if s.get("sport") == "MLS"],
-        key=lambda s: (0 if s.get("confidence") == "HIGH" else 1, -s.get("edge", 0)),
+        key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
     # World Cup is watchlist-only — never enters budget allocation or parlays.
     wc_watchlist = sorted(
         [s for s in (wc_display or []) if s.get("sport") == "WC"],
-        key=lambda s: (0 if s.get("confidence") == "HIGH" else 1, -s.get("edge", 0)),
+        key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
     # Decorate settled NHL / WNBA / MLS watchlist cards with status='settled'

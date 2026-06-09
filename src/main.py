@@ -433,7 +433,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             if caps.enters_budget:
                 all_singles_raw.extend(qualifying)
         else:
-            own_display[slug] = display_raw   # IPL / WNBA / MLS → own tile
+            own_display[slug] = qualifying    # IPL / WNBA / MLS → own tile (same MIN_EDGE gate)
 
         # Collect props (only if sport has them)
         _sport_props_raw = []
