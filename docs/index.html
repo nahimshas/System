@@ -163,18 +163,26 @@
 
   <div class="header">
     <h1>Daily Betting Report</h1>
-    <div class="subtitle">Wednesday, June 10, 2026 &middot; Generated June 10, 2026 at 07:39 AM PDT</div>
+    <div class="subtitle">Wednesday, June 10, 2026 &middot; Generated June 10, 2026 at 08:39 AM PDT</div>
     <div class="subtitle" style="margin-top:6px;">
-      NBA: 0 games &nbsp;|&nbsp;
-      MLB: 0 games &nbsp;|&nbsp;
+      NBA: 1 game &nbsp;|&nbsp;
+      MLB: 15 games &nbsp;|&nbsp;
       NFL: 0 games &nbsp;|&nbsp;
       NHL: 0 games &nbsp;|&nbsp;
       IPL: 0 matches &nbsp;|&nbsp;
-      WNBA: 0 games &nbsp;|&nbsp;
+      WNBA: 2 games &nbsp;|&nbsp;
       MLS: 0 games &nbsp;|&nbsp;
       Budget: $100
     </div>
     
+    
+    <div class="subtitle" style="margin-top:4px;font-size:0.75rem;">
+      🔑 Odds API &mdash;
+      1,159 used &middot; 
+      <span style="color:var(--green);">
+        18,841 remaining
+      </span>
+    </div>
     
   </div>
 
@@ -477,21 +485,9 @@
   
 
   
-  <div class="section">
-    <div class="error-card">⚠ ODDS_API_KEY missing — odds data unavailable. Set the secret in GitHub.</div>
-  </div>
-  
 
   
 
-  
-  <div class="card">
-    <div class="empty-state">
-      <div class="icon">🔍</div>
-      No bets meeting the minimum edge threshold (3%) found today.<br>
-      <span style="font-size:0.78rem;margin-top:6px;display:block;">This is correct — only bet when there's real edge.</span>
-    </div>
-  </div>
   
 
   
@@ -499,34 +495,1224 @@
   <div class="section" id="sec-nba">
     <div class="section-title">🏀 NBA
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        no games today
+        1 pick &middot; 6 props
       </span>
     </div>
     
-    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
-      🏀 No NBA games scheduled today.
+
+    
+    <div class="sub-section" id="sub-nba-singles">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-nba-singles')">
+      <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
+    
+    <div class="card budget-single"
+         id="bet-4"
+         data-home-team="New York Knicks"
+         data-away-team="San Antonio Spurs"
+         data-bet-type="Spread"
+         data-pick="San Antonio Spurs +2.5"
+         data-sport="NBA"
+         data-cost="5.2"
+         data-profit="4.8"
+         data-confidence="HIGH"
+         data-edge-pct="12.6"
+         data-model-prob-pct="62.6"
+         data-market-prob-pct="50.0"
+         data-commence-time="2026-06-11T00:40:00Z"
+         data-in-budget="true">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <a href="#alloc-4" class="nav-link" title="Jump to allocation table">San Antonio Spurs +2.5 <span class="nav-arrow">↓</span></a>
+            </div>
+            <div class="card-subtitle">
+              <span class="badge badge-nba">NBA</span>
+              San Antonio Spurs @ New York Knicks
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 50.0% → Model <b style="color:var(--blue)">62.6%</b></span>
+          <span class="edge-chip green">+12.6% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">50.0%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">62.6%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+12.6%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model finds a strong edge based on net rating differential and situational adjustments. Projected San Antonio Spurs by 0 points (New York Knicks 109 — San Antonio Spurs 109).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Model projected score: New York Knicks 109 — San Antonio Spurs 109</div><div class="context-item">New York Knicks: 53W-29L | OffRtg 116.5 | DefRtg 110.1 | NetRtg 6.3</div><div class="context-item">San Antonio Spurs: 62W-20L | OffRtg 119.8 | DefRtg 111.5 | NetRtg 8.3</div><div class="context-item">🏆 Playoffs: defensive intensity higher, recent form weighted 55%</div><div class="context-item">New York Knicks last 14 days: NetRtg 2.3 | Win% 67%</div><div class="context-item">San Antonio Spurs last 14 days: NetRtg 5.6 | Win% 60%</div><div class="context-item">Rest days — New York Knicks: 1 | San Antonio Spurs: 1</div><div class="context-item">⚕ San Antonio Spurs — David Jones Garcia (F): OUT</div><div class="context-item">Home court advantage: New York Knicks (+2%)</div><div class="context-item">San Antonio Spurs injuries benefit New York Knicks (+1.9%)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-4" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #4 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
+        </div>
+        
+      </div>
     </div>
     
-
+    </div><!-- sub-body nba-singles -->
+    </div><!-- sub-section nba-singles -->
     
 
+    
+    <div class="sub-section" id="sub-nba-props" style="margin-top:14px;">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-nba-props')">
+      <div class="league-sub-label">Props</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
+    
+    
+    <div class="card prop-card"
+         data-home-team="New York Knicks"
+         data-away-team="San Antonio Spurs"
+         data-bet-type="Prop"
+         data-sport="NBA"
+         data-player="Karl-Anthony Towns"
+         data-prop-type="Blocks Over"
+         data-model-line="1.42"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-11T00:40:00Z"
+         data-market-line="0.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Karl-Anthony Towns</div>
+            <div class="card-subtitle">
+              <span class="badge badge-nba">NBA</span>
+              &nbsp;New York Knicks vs San Antonio Spurs &middot; Blocks Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>0.5</b> <span style="color:#94a3b8;font-size:0.8em;">61.1%</span> &middot; Model <b style="color:var(--blue)">1.42</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 0.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">61.1%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">1.42</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 0.5 at 61.1%. Model projects 1.42.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">Model projects Karl-Anthony Towns at 1.4 blocks vs the market line of 0.5 (+0.9 edge).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 0.5 at 61.1% (draftkings)</div><div class="context-item">Model projects 1.42 → edge +15.0%</div><div class="context-item">San Antonio Spurs scores 119.8 PPG (above avg → more block opportunities)</div><div class="context-item">New York Knicks: Net RTG +6.3 | PPG 116.5 | OPPG 110.1</div><div class="context-item">San Antonio Spurs: Net RTG +8.3 | PPG 119.8 | OPPG 111.5</div><div class="context-item">Karl-Anthony Towns: 0.0 PPG / 10.6 RPG / 0.0 APG / 0.00 SPG / 1.35 BPG / 0.0 3PM (40 games)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="San Antonio Spurs"
+         data-away-team="New York Knicks"
+         data-bet-type="Prop"
+         data-sport="NBA"
+         data-player="De'Aaron Fox"
+         data-prop-type="Points Over"
+         data-model-line="17.1"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-11T00:40:00Z"
+         data-market-line="14.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">De'Aaron Fox</div>
+            <div class="card-subtitle">
+              <span class="badge badge-nba">NBA</span>
+              &nbsp;San Antonio Spurs vs New York Knicks &middot; Points Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>14.5</b> <span style="color:#94a3b8;font-size:0.8em;">54.5%</span> &middot; Model <b style="color:var(--blue)">17.1</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 14.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">54.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">17.1</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 14.5 at 54.5%. Model projects 17.1.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">Model projects De'Aaron Fox at 17.1 points vs the market line of 14.5 (+2.6 edge).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 14.5 at 54.5% (draftkings)</div><div class="context-item">Model projects 17.1 → edge +15.0%</div><div class="context-item">New York Knicks allows 110.1 PPG (below avg)</div><div class="context-item">🏆 Playoffs: starter adjustment applied (-4%)</div><div class="context-item">San Antonio Spurs: Net RTG +8.3 | PPG 119.8 | OPPG 111.5</div><div class="context-item">New York Knicks: Net RTG +6.3 | PPG 116.5 | OPPG 110.1</div><div class="context-item">De'Aaron Fox: 18.6 PPG / 3.8 RPG / 6.2 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="San Antonio Spurs"
+         data-away-team="New York Knicks"
+         data-bet-type="Prop"
+         data-sport="NBA"
+         data-player="Keldon Johnson"
+         data-prop-type="Rebounds Over"
+         data-model-line="5.0"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-11T00:40:00Z"
+         data-market-line="2.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Keldon Johnson</div>
+            <div class="card-subtitle">
+              <span class="badge badge-nba">NBA</span>
+              &nbsp;San Antonio Spurs vs New York Knicks &middot; Rebounds Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>2.5</b> <span style="color:#94a3b8;font-size:0.8em;">53.9%</span> &middot; Model <b style="color:var(--blue)">5.0</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 2.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">53.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">5.0</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 2.5 at 53.9%. Model projects 5.0.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">Model projects Keldon Johnson at 5.0 rebounds vs the market line of 2.5 (+2.5 edge).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 2.5 at 53.9% (draftkings)</div><div class="context-item">Model projects 5.0 → edge +15.0%</div><div class="context-item">Avg game pace: 118.1 combined PPG (above avg → more board opportunities)</div><div class="context-item">San Antonio Spurs: Net RTG +8.3 | PPG 119.8 | OPPG 111.5</div><div class="context-item">New York Knicks: Net RTG +6.3 | PPG 116.5 | OPPG 110.1</div><div class="context-item">Keldon Johnson: 13.2 PPG / 5.4 RPG / 1.4 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="New York Knicks"
+         data-away-team="San Antonio Spurs"
+         data-bet-type="Prop"
+         data-sport="NBA"
+         data-player="Mitchell Robinson"
+         data-prop-type="Rebounds Over"
+         data-model-line="8.8"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-11T00:40:00Z"
+         data-market-line="4.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Mitchell Robinson</div>
+            <div class="card-subtitle">
+              <span class="badge badge-nba">NBA</span>
+              &nbsp;New York Knicks vs San Antonio Spurs &middot; Rebounds Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>4.5</b> <span style="color:#94a3b8;font-size:0.8em;">53.5%</span> &middot; Model <b style="color:var(--blue)">8.8</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 4.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">53.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">8.8</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 4.5 at 53.5%. Model projects 8.8.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">Model projects Mitchell Robinson at 8.8 rebounds vs the market line of 4.5 (+4.3 edge).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 4.5 at 53.5% (draftkings)</div><div class="context-item">Model projects 8.8 → edge +15.0%</div><div class="context-item">Avg game pace: 118.1 combined PPG (above avg → more board opportunities)</div><div class="context-item">New York Knicks: Net RTG +6.3 | PPG 116.5 | OPPG 110.1</div><div class="context-item">San Antonio Spurs: Net RTG +8.3 | PPG 119.8 | OPPG 111.5</div><div class="context-item">Mitchell Robinson: 5.7 PPG / 8.8 RPG / 0.9 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="San Antonio Spurs"
+         data-away-team="New York Knicks"
+         data-bet-type="Prop"
+         data-sport="NBA"
+         data-player="Luke Kornet"
+         data-prop-type="Rebounds Over"
+         data-model-line="5.7"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-11T00:40:00Z"
+         data-market-line="2.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Luke Kornet</div>
+            <div class="card-subtitle">
+              <span class="badge badge-nba">NBA</span>
+              &nbsp;San Antonio Spurs vs New York Knicks &middot; Rebounds Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>2.5</b> <span style="color:#94a3b8;font-size:0.8em;">42.7%</span> &middot; Model <b style="color:var(--blue)">5.7</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 2.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">42.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">5.7</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 2.5 at 42.7%. Model projects 5.7.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">Model projects Luke Kornet at 5.7 rebounds vs the market line of 2.5 (+3.2 edge).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 2.5 at 42.7% (draftkings)</div><div class="context-item">Model projects 5.7 → edge +15.0%</div><div class="context-item">Avg game pace: 118.1 combined PPG (above avg → more board opportunities)</div><div class="context-item">San Antonio Spurs: Net RTG +8.3 | PPG 119.8 | OPPG 111.5</div><div class="context-item">New York Knicks: Net RTG +6.3 | PPG 116.5 | OPPG 110.1</div><div class="context-item">Luke Kornet: 6.5 PPG / 6.1 RPG / 1.9 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="San Antonio Spurs"
+         data-away-team="New York Knicks"
+         data-bet-type="Prop"
+         data-sport="NBA"
+         data-player="Julian Champagnie"
+         data-prop-type="Rebounds Over"
+         data-model-line="5.4"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-11T00:40:00Z"
+         data-market-line="4.5"
+         data-edge-pct="11.9">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Julian Champagnie</div>
+            <div class="card-subtitle">
+              <span class="badge badge-nba">NBA</span>
+              &nbsp;San Antonio Spurs vs New York Knicks &middot; Rebounds Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>4.5</b> <span style="color:#94a3b8;font-size:0.8em;">57.1%</span> &middot; Model <b style="color:var(--blue)">5.4</b> &middot; <b style="color:var(--green)">+11.9%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 4.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">57.1%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">5.4</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+11.9%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 4.5 at 57.1%. Model projects 5.4.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">Model projects Julian Champagnie at 5.4 rebounds vs the market line of 4.5 (+0.9 edge).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 4.5 at 57.1% (draftkings)</div><div class="context-item">Model projects 5.4 → edge +11.9%</div><div class="context-item">Avg game pace: 118.1 combined PPG (above avg → more board opportunities)</div><div class="context-item">San Antonio Spurs: Net RTG +8.3 | PPG 119.8 | OPPG 111.5</div><div class="context-item">New York Knicks: Net RTG +6.3 | PPG 116.5 | OPPG 110.1</div><div class="context-item">Julian Champagnie: 11.1 PPG / 5.8 RPG / 1.5 APG / 0.00 SPG / 0.00 BPG / 0.0 3PM (1 games)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    </div><!-- sub-body nba-props -->
+    </div><!-- sub-section nba-props -->
     
   </div>
 
   <div class="section" id="sec-mlb">
     <div class="section-title">⚾ MLB
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        no games today
+        5 picks &middot; 6 props
       </span>
     </div>
     
-    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
-      ⚾ No MLB games scheduled today.
+
+    
+    <div class="sub-section" id="sub-mlb-singles">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-mlb-singles')">
+      <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
+    
+    <div class="card budget-single"
+         id="bet-2"
+         data-home-team="Colorado Rockies"
+         data-away-team="Chicago Cubs"
+         data-bet-type="Spread"
+         data-pick="Colorado Rockies +1.5"
+         data-sport="MLB"
+         data-cost="6.08"
+         data-profit="5.92"
+         data-confidence="HIGH"
+         data-edge-pct="15.0"
+         data-model-prob-pct="63.7"
+         data-market-prob-pct="48.7"
+         data-commence-time="2026-06-11T00:41:00Z"
+         data-in-budget="true">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <a href="#alloc-2" class="nav-link" title="Jump to allocation table">Colorado Rockies +1.5 <span class="nav-arrow">↓</span></a>
+            </div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              Chicago Cubs @ Colorado Rockies
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 48.7% → Model <b style="color:var(--blue)">63.7%</b></span>
+          <span class="edge-chip green">+15.0% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">48.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">63.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model builds a strong edge from a combination of pitching quality, roster health, and situational factors. Model projects Chicago Cubs by 0.0 runs (Colorado Rockies 4.0 — Chicago Cubs 4.0).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Model projected score: Colorado Rockies 4.0 — Chicago Cubs 4.0</div><div class="context-item">Colorado Rockies offense: 25W-42L | OPS 0.711 | AVG 0.247 | R/G 4.34</div><div class="context-item">Chicago Cubs offense: 34W-33L | OPS 0.721 | AVG 0.239 | R/G 4.57</div><div class="context-item">Platoon: Colorado Rockies vs LHP — 0.653 OPS (632 PA), season 0.711 → model 0.653</div><div class="context-item">Platoon: Chicago Cubs vs RHP — 0.722 OPS (1872 PA), season 0.721 → model 0.722</div><div class="context-item">Bullpen ERA — Colorado Rockies: 4.56 (WHIP 1.49) | Chicago Cubs: 3.55 (WHIP 1.30)</div><div class="context-item">🔵 Michael Lorenzen (Colorado Rockies) · RHP: ERA 8.01 | FIP 5.08 / xFIP 4.02 | K/9 7.2 | BB/9 3.3 | IP 60</div><div class="context-item">🔴 Shota Imanaga (Chicago Cubs) · LHP: ERA 4.74 | FIP 4.91 / xFIP 3.42 | K/9 8.8 | BB/9 2.2 | IP 76</div><div class="context-item">Venue: Coors Field — park factor 1.30 (hitter-friendly)</div><div class="context-item">🌤 Weather (Denver): 66°F | Wind 5 mph ESE (cross wind) | Precip 0%</div><div class="context-item">⚠ Colorado Rockies schedule load: 5 games in 7 days</div><div class="context-item">⚠ Chicago Cubs schedule load: 6 games in 7 days</div><div class="context-item">Colorado Rockies injury impact (-1.3%)</div><div class="context-item">Chicago Cubs injury impact (-1.2%)</div><div class="context-item">⚕ Colorado Rockies — Brayan Castillo (RP): DAY-TO-DAY</div><div class="context-item">⚕ Colorado Rockies — Case Williams (SP): DAY-TO-DAY</div><div class="context-item">⚕ Colorado Rockies — Jared Thomas (CF): DAY-TO-DAY</div><div class="context-item">⚕ Chicago Cubs — Brandon Birdsell (RP): DAY-TO-DAY</div><div class="context-item">⚕ Chicago Cubs — Jeff Brigham (RP): DAY-TO-DAY</div><div class="context-item">⚕ Chicago Cubs — Jaxon Wiggins (SP): DAY-TO-DAY</div><div class="context-item">Recent form: Colorado Rockies 5-5 last 10 | 6.2 R/G vs 4.3 season (↑0.56 run adj)</div><div class="context-item">Recent form: Chicago Cubs 3-7 last 10 | 3.4 R/G vs 4.6 season (↓0.35 run adj)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-2" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #2 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
+        </div>
+        
+      </div>
     </div>
     
-
+    <div class="card budget-single"
+         id="bet-1"
+         data-home-team="Miami Marlins"
+         data-away-team="Arizona Diamondbacks"
+         data-bet-type="Moneyline"
+         data-pick="Miami Marlins"
+         data-sport="MLB"
+         data-cost="6.09"
+         data-profit="5.91"
+         data-confidence="HIGH"
+         data-edge-pct="15.0"
+         data-model-prob-pct="63.8"
+         data-market-prob-pct="48.8"
+         data-commence-time="2026-06-10T22:41:00Z"
+         data-in-budget="true">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <a href="#alloc-1" class="nav-link" title="Jump to allocation table">Miami Marlins <span class="nav-arrow">↓</span></a>
+            </div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;ML &nbsp;&middot;&nbsp; Arizona Diamondbacks @ Miami Marlins
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 48.8% → Model <b style="color:var(--blue)">63.8%</b></span>
+          <span class="edge-chip green">+15.0% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">48.8%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">63.8%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">A strong pitching mismatch drives this pick — Ryan Gusto (Miami Marlins) · RHP (2.58 xFIP) holds a meaningful advantage over Ryne Nelson (Arizona Diamondbacks) · RHP (4.50 xFIP). Model projects Miami Marlins by 0.9 runs (Miami Marlins 4.3 — Arizona Diamondbacks 3.4).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Model projected score: Miami Marlins 4.3 — Arizona Diamondbacks 3.4</div><div class="context-item">Miami Marlins offense: 32W-35L | OPS 0.703 | AVG 0.245 | R/G 4.27</div><div class="context-item">Arizona Diamondbacks offense: 34W-32L | OPS 0.700 | AVG 0.241 | R/G 4.38</div><div class="context-item">Platoon: Miami Marlins vs RHP — 0.700 OPS (1822 PA), season 0.703 → model 0.700</div><div class="context-item">Platoon: Arizona Diamondbacks vs RHP — 0.672 OPS (1769 PA), season 0.700 → model 0.672</div><div class="context-item">Bullpen ERA — Miami Marlins: 3.81 (WHIP 1.30) | Arizona Diamondbacks: 4.09 (WHIP 1.20)</div><div class="context-item">🔵 Ryan Gusto (Miami Marlins) · RHP: ERA 10.8 | FIP 1.8 / xFIP 2.58 | K/9 9.0 | BB/9 1.8 | IP 5</div><div class="context-item">🔴 Ryne Nelson (Arizona Diamondbacks) · RHP: ERA 4.6 | FIP 5.25 / xFIP 4.50 | K/9 6.9 | BB/9 2.6 | IP 72</div><div class="context-item">Venue: loanDepot park — park factor 0.94 (pitcher-friendly)</div><div class="context-item">🌤 Weather (Miami): 83°F | Wind 11 mph ESE (cross wind) | Precip 6%</div><div class="context-item">⚠ Miami Marlins schedule load: 5 games in 7 days</div><div class="context-item">⚠ Arizona Diamondbacks schedule load: 6 games in 7 days</div><div class="context-item">Miami Marlins injury impact (-2.0%)</div><div class="context-item">⚕ Miami Marlins — Thomas White (SP): DAY-TO-DAY</div><div class="context-item">⚕ Miami Marlins — Kemp Alderman (RF): DAY-TO-DAY</div><div class="context-item">⚕ Miami Marlins — Jesus Tinoco (RP): OUT</div><div class="context-item">⚕ Arizona Diamondbacks — A.J. Vukovich (CF): DAY-TO-DAY</div><div class="context-item">⚕ Arizona Diamondbacks — Derek Law (RP): DAY-TO-DAY</div><div class="context-item">⚕ Arizona Diamondbacks — Kyle Amendt (RP): DAY-TO-DAY</div><div class="context-item">Recent form: Arizona Diamondbacks 3-7 last 10 | 2.8 R/G vs 4.4 season (↓0.47 run adj)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-1" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #1 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="card budget-single"
+         id="bet-3"
+         data-home-team="Pittsburgh Pirates"
+         data-away-team="Los Angeles Dodgers"
+         data-bet-type="Spread"
+         data-pick="Pittsburgh Pirates +1.5"
+         data-sport="MLB"
+         data-cost="5.84"
+         data-profit="6.16"
+         data-confidence="HIGH"
+         data-edge-pct="14.1"
+         data-model-prob-pct="60.7"
+         data-market-prob-pct="46.7"
+         data-commence-time="2026-06-10T22:41:00Z"
+         data-in-budget="true">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <a href="#alloc-3" class="nav-link" title="Jump to allocation table">Pittsburgh Pirates +1.5 <span class="nav-arrow">↓</span></a>
+            </div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              Los Angeles Dodgers @ Pittsburgh Pirates
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 46.7% → Model <b style="color:var(--blue)">60.7%</b></span>
+          <span class="edge-chip green">+14.1% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">46.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">60.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+14.1%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model finds a strong edge against Los Angeles Dodgers, driven by a moderate ERA trap on Shohei Ohtani — 0.74 ERA vs 3.11 xFIP in 61 innings suggests regression risk the market hasn't fully priced. Pittsburgh Pirates is depleted (2.5% impact) and Los Angeles Dodgers is depleted (2.5% impact). Model projects Los Angeles Dodgers by 0.5 runs (Pittsburgh Pirates 4.3 — Los Angeles Dodgers 4.8). Pittsburgh Pirates also profiles well against RHP this year (0.756 OPS vs 0.732 overall), which the model folds into its run projection.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Model projected score: Pittsburgh Pirates 4.3 — Los Angeles Dodgers 4.8</div><div class="context-item">Pittsburgh Pirates offense: 34W-33L | OPS 0.732 | AVG 0.252 | R/G 5.01</div><div class="context-item">Los Angeles Dodgers offense: 43W-24L | OPS 0.788 | AVG 0.264 | R/G 5.33</div><div class="context-item">Platoon: Pittsburgh Pirates vs RHP — 0.756 OPS (1886 PA), season 0.732 → model 0.756</div><div class="context-item">Platoon: Los Angeles Dodgers vs RHP — 0.805 OPS (1905 PA), season 0.788 → model 0.805</div><div class="context-item">Bullpen ERA — Pittsburgh Pirates: 4.50 (WHIP 1.42) | Los Angeles Dodgers: 3.81 (WHIP 1.19)</div><div class="context-item">🔵 Jared Jones (Pittsburgh Pirates) · RHP: ERA 4.82 | FIP 5.18 / xFIP 4.04 | K/9 9.9 | BB/9 4.0 | IP 9</div><div class="context-item">🔴 Shohei Ohtani (Los Angeles Dodgers) · RHP: ERA 0.74 | FIP 2.31 / xFIP 3.02 | K/9 9.9 | BB/9 2.7 | IP 61</div><div class="context-item">Venue: PNC Park — park factor 0.96 (pitcher-friendly)</div><div class="context-item">🌤 Weather (Pittsburgh): 74°F | Wind 7 mph SW (cross wind) | Precip 1%</div><div class="context-item">⚠ Pittsburgh Pirates schedule load: 6 games in 7 days</div><div class="context-item">⚠ Los Angeles Dodgers schedule load: 6 games in 7 days</div><div class="context-item">Pittsburgh Pirates injury impact (-2.5%)</div><div class="context-item">Los Angeles Dodgers injury impact (-2.5%)</div><div class="context-item">⚕ Pittsburgh Pirates — Oneil Cruz (CF): DAY-TO-DAY</div><div class="context-item">⚕ Pittsburgh Pirates — Anthony Solometo (SP): DAY-TO-DAY</div><div class="context-item">⚕ Pittsburgh Pirates — Mitch Jebb (LF): DAY-TO-DAY</div><div class="context-item">⚕ Pittsburgh Pirates — Oddanier Mosqueda (RP): DAY-TO-DAY</div><div class="context-item">⚕ Pittsburgh Pirates — Mike Clevinger (RP): DAY-TO-DAY</div><div class="context-item">⚕ Pittsburgh Pirates — Sean Sullivan (SP): DAY-TO-DAY</div><div class="context-item">⚕ Los Angeles Dodgers — Will Smith (C): DAY-TO-DAY</div><div class="context-item">⚕ Los Angeles Dodgers — Kendall George (CF): OUT</div><div class="context-item">⚕ Los Angeles Dodgers — Chris Campos (SP): DAY-TO-DAY</div><div class="context-item">⚠ ERA trap [MODERATE] — Shohei Ohtani: ERA 0.74 vs xFIP 3.11 over 61 IP (severity 0.61) — Los Angeles Dodgers ML may be overpriced by market</div><div class="context-item">Recent form: Pittsburgh Pirates 5-5 last 10 | 6.0 R/G vs 5.0 season (↑0.30 run adj)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-3" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #3 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="card budget-single"
+         id="bet-5"
+         data-home-team="Baltimore Orioles"
+         data-away-team="Seattle Mariners"
+         data-bet-type="Moneyline"
+         data-pick="Seattle Mariners"
+         data-sport="MLB"
+         data-cost="4.68"
+         data-profit="4.32"
+         data-confidence="HIGH"
+         data-edge-pct="11.7"
+         data-model-prob-pct="61.7"
+         data-market-prob-pct="50.0"
+         data-commence-time="2026-06-10T22:36:00Z"
+         data-in-budget="true">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <a href="#alloc-5" class="nav-link" title="Jump to allocation table">Seattle Mariners <span class="nav-arrow">↓</span></a>
+            </div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;ML &nbsp;&middot;&nbsp; Seattle Mariners @ Baltimore Orioles
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 50.0% → Model <b style="color:var(--blue)">61.7%</b></span>
+          <span class="edge-chip green">+11.7% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">50.0%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">61.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+11.7%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model finds a solid edge against Baltimore Orioles, driven by a significant ERA trap on Brandon Young — 3.47 ERA vs 4.28 xFIP in 49 innings suggests regression risk the market hasn't fully priced. Model projects Seattle Mariners by 0.6 runs (Baltimore Orioles 4.1 — Seattle Mariners 4.7). Seattle Mariners also profiles well against RHP this year (0.759 OPS vs 0.718 overall), which the model folds into its run projection.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Model projected score: Baltimore Orioles 4.1 — Seattle Mariners 4.7</div><div class="context-item">Baltimore Orioles offense: 31W-37L | OPS 0.718 | AVG 0.240 | R/G 4.66</div><div class="context-item">Seattle Mariners offense: 36W-32L | OPS 0.718 | AVG 0.238 | R/G 4.26</div><div class="context-item">Platoon: Baltimore Orioles vs RHP — 0.737 OPS (1826 PA), season 0.718 → model 0.737</div><div class="context-item">Platoon: Seattle Mariners vs RHP — 0.759 OPS (1810 PA), season 0.718 → model 0.759</div><div class="context-item">Bullpen ERA — Baltimore Orioles: 4.44 (WHIP 1.33) | Seattle Mariners: 3.24 (WHIP 1.37)</div><div class="context-item">🔵 Brandon Young (Baltimore Orioles) · RHP: ERA 3.47 | FIP 4.32 / xFIP 4.43 | K/9 6.8 | BB/9 3.1 | IP 49</div><div class="context-item">🔴 George Kirby (Seattle Mariners) · RHP: ERA 4.04 | FIP 3.42 / xFIP 3.32 | K/9 7.4 | BB/9 2.1 | IP 78</div><div class="context-item">Venue: Oriole Park at Camden Yards — park factor 1.01 (pitcher-friendly)</div><div class="context-item">🌤 Weather (Baltimore): 78°F | Wind 9 mph SW (blowing out) | Precip 40%</div><div class="context-item">⚠ Baltimore Orioles schedule load: 7 games in 7 days</div><div class="context-item">⚠ Seattle Mariners schedule load: 6 games in 7 days</div><div class="context-item">Baltimore Orioles injury impact (-1.9%)</div><div class="context-item">⚕ Baltimore Orioles — Adley Rutschman (C): DAY-TO-DAY</div><div class="context-item">⚕ Baltimore Orioles — Samuel Basallo (C): DAY-TO-DAY</div><div class="context-item">⚕ Baltimore Orioles — Jhonkensy Noel (RF): DAY-TO-DAY</div><div class="context-item">⚕ Baltimore Orioles — Levi Wells (P): DAY-TO-DAY</div><div class="context-item">⚕ Baltimore Orioles — Richard Guasch (SP): DAY-TO-DAY</div><div class="context-item">⚕ Baltimore Orioles — Will Robertson (LF): DAY-TO-DAY</div><div class="context-item">⚕ Seattle Mariners — Brock Rodden (2B): DAY-TO-DAY</div><div class="context-item">⚕ Seattle Mariners — Colt Emerson (3B): DAY-TO-DAY</div><div class="context-item">⚠ ERA trap [SEVERE] — Brandon Young: ERA 3.47 vs xFIP 4.28 over 49 IP (severity 0.81) — Baltimore Orioles ML may be overpriced by market</div><div class="context-item">🌧️ 40% precipitation chance at Baltimore (rain possible) — monitor for delays/postponement</div><div class="context-item">Recent form: Baltimore Orioles 5-5 last 10 | 5.7 R/G vs 4.7 season (↑0.31 run adj)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+        
+        <div style="margin-top:10px;font-size:0.75rem;">
+          <a href="#alloc-5" class="nav-link" style="color:#14b8a6;" title="Jump to allocation table">
+            📋 Slot #5 in Budget Allocation <span class="nav-arrow">↓</span>
+          </a>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="card"
+         id="mlb-5"
+         data-home-team="Toronto Blue Jays"
+         data-away-team="Philadelphia Phillies"
+         data-bet-type="Moneyline"
+         data-pick="Philadelphia Phillies"
+         data-sport="MLB"
+         data-cost="5.17"
+         data-profit="3.83"
+         data-confidence="HIGH"
+         data-edge-pct="11.1"
+         data-model-prob-pct="66.5"
+         data-market-prob-pct="55.5"
+         data-commence-time="2026-06-10T23:08:00Z"
+         >
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              Philadelphia Phillies
+            </div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;ML &nbsp;&middot;&nbsp; Philadelphia Phillies @ Toronto Blue Jays
+            </div>
+            <div class="card-time" style="color:#14b8a6;font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 55.5% → Model <b style="color:var(--blue)">66.5%</b></span>
+          <span class="edge-chip green">+11.1% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">55.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">66.5%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+11.1%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">A solid pitching mismatch drives this pick — Jesús Luzardo (Philadelphia Phillies) · LHP (2.80 xFIP) holds a meaningful advantage over Max Scherzer (Toronto Blue Jays) · RHP (5.56 xFIP). Model projects Philadelphia Phillies by 0.8 runs (Toronto Blue Jays 3.4 — Philadelphia Phillies 4.2).</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Model projected score: Toronto Blue Jays 3.4 — Philadelphia Phillies 4.2</div><div class="context-item">Toronto Blue Jays offense: 33W-35L | OPS 0.699 | AVG 0.249 | R/G 4.07</div><div class="context-item">Philadelphia Phillies offense: 36W-31L | OPS 0.684 | AVG 0.227 | R/G 4.01</div><div class="context-item">Platoon: Toronto Blue Jays vs LHP — 0.649 OPS (670 PA), season 0.699 → model 0.649</div><div class="context-item">Platoon: Philadelphia Phillies vs RHP — 0.685 OPS (1714 PA), season 0.684 → model 0.685</div><div class="context-item">Bullpen ERA — Toronto Blue Jays: 4.22 (WHIP 1.38) | Philadelphia Phillies: 3.74 (WHIP 1.36)</div><div class="context-item">🔵 Max Scherzer (Toronto Blue Jays) · RHP: ERA 9.64 | FIP 8.42 / xFIP 5.56 | K/9 4.9 | BB/9 4.0 | IP 18</div><div class="context-item">🔴 Jesús Luzardo (Philadelphia Phillies) · LHP: ERA 4.56 | FIP 3.3 / xFIP 2.80 | K/9 9.9 | BB/9 2.6 | IP 73</div><div class="context-item">Venue: Rogers Centre — park factor 1.05 (hitter-friendly)</div><div class="context-item">⚠ Toronto Blue Jays schedule load: 7 games in 7 days</div><div class="context-item">⚠ Philadelphia Phillies schedule load: 7 games in 7 days</div><div class="context-item">Toronto Blue Jays injury impact (-1.2%)</div><div class="context-item">Philadelphia Phillies injury impact (-1.2%)</div><div class="context-item">⚕ Toronto Blue Jays — Daulton Varsho (CF): DAY-TO-DAY</div><div class="context-item">⚕ Toronto Blue Jays — Geovanny Jesus Planchart (C): DAY-TO-DAY</div><div class="context-item">⚕ Toronto Blue Jays — Chay Yeager (RP): DAY-TO-DAY</div><div class="context-item">⚕ Toronto Blue Jays — CJ Stubbs (C): DAY-TO-DAY</div><div class="context-item">⚕ Toronto Blue Jays — Javen Coleman (P): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Andrew Walling (RP): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Carson DeMartini (SS): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Rene Pinto (C): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Daniel Robert (RP): DAY-TO-DAY</div><div class="context-item">⚕ Philadelphia Phillies — Mark Kolozsvary (C): DAY-TO-DAY</div><div class="context-item">Recent form: Philadelphia Phillies 7-3 last 10 | 4.4 R/G vs 4.0 season (↑0.12 run adj)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+        
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
+          📊 Not in today's top 5 budget allocation
+        </div>
+        
+      </div>
+    </div>
+    
+    </div><!-- sub-body mlb-singles -->
+    </div><!-- sub-section mlb-singles -->
     
 
+    
+    <div class="sub-section" id="sub-mlb-props" style="margin-top:14px;">
+    <div class="sub-section-header" style="margin-bottom:6px;" onclick="toggleSubSection('sub-mlb-props')">
+      <div class="league-sub-label">Props</div><span class="sub-chevron">▾</span>
+    </div>
+    <div class="sub-body">
+    
+    
+    <div class="card prop-card"
+         data-home-team="Tampa Bay Rays"
+         data-away-team="Boston Red Sox"
+         data-bet-type="Prop"
+         data-sport="MLB"
+         data-player="Chandler Simpson"
+         data-prop-type="Hits Over"
+         data-model-line="1.12"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-10T17:11:00Z"
+         data-market-line="0.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Chandler Simpson</div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;Tampa Bay Rays vs Boston Red Sox &middot; Hits Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>0.5</b> <span style="color:#94a3b8;font-size:0.8em;">70.9%</span> &middot; Model <b style="color:var(--blue)">1.12</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 0.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">70.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">1.12</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 0.5 at 70.9%. Model: 1.12.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model projects Chandler Simpson at 1.12 Hits vs the line of 0.5 — a strong +0.62 edge.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 0.5 at 70.9% (draftkings)</div><div class="context-item">Model projects 1.12 → edge +15.0%</div><div class="context-item">Chandler Simpson: AVG 0.271 | OBP 0.307 | H/G 1.03 | TB/G 1.23 | HR/G 0.000 | HRR/G 1.71 | K% 11.4% (254 PA)</div><div class="context-item">Facing Jake Bennett: FIP 4.88 / xFIP 4.50 | WHIP 1.49 | K/9 3.6</div><div class="context-item">Park factor 0.96 at Tropicana Field</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="Tampa Bay Rays"
+         data-away-team="Boston Red Sox"
+         data-bet-type="Prop"
+         data-sport="MLB"
+         data-player="Junior Caminero"
+         data-prop-type="Hits Over"
+         data-model-line="1.14"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-10T17:11:00Z"
+         data-market-line="0.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Junior Caminero</div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;Tampa Bay Rays vs Boston Red Sox &middot; Hits Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>0.5</b> <span style="color:#94a3b8;font-size:0.8em;">69.6%</span> &middot; Model <b style="color:var(--blue)">1.14</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 0.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">69.6%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">1.14</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 0.5 at 69.6%. Model: 1.14.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model projects Junior Caminero at 1.14 Hits vs the line of 0.5 — a strong +0.64 edge.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 0.5 at 69.6% (draftkings)</div><div class="context-item">Model projects 1.14 → edge +15.0%</div><div class="context-item">Junior Caminero: AVG 0.277 | OBP 0.376 | H/G 1.05 | TB/G 1.88 | HR/G 0.219 | HRR/G 2.16 | K% 15.6% (282 PA)</div><div class="context-item">Facing Jake Bennett: FIP 4.88 / xFIP 4.50 | WHIP 1.49 | K/9 3.6</div><div class="context-item">Park factor 0.96 at Tropicana Field</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="Tampa Bay Rays"
+         data-away-team="Boston Red Sox"
+         data-bet-type="Prop"
+         data-sport="MLB"
+         data-player="Junior Caminero"
+         data-prop-type="Total Bases Over"
+         data-model-line="1.84"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-10T17:11:00Z"
+         data-market-line="1.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Junior Caminero</div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;Tampa Bay Rays vs Boston Red Sox &middot; Total Bases Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>1.5</b> <span style="color:#94a3b8;font-size:0.8em;">43.3%</span> &middot; Model <b style="color:var(--blue)">1.84</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 1.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">43.3%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">1.84</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 43.3%. Model: 1.84.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model projects Junior Caminero at 1.84 Total Bases vs the line of 1.5 — a strong +0.34 edge.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 1.5 at 43.3% (draftkings)</div><div class="context-item">Model projects 1.84 → edge +15.0%</div><div class="context-item">Junior Caminero: AVG 0.277 | OBP 0.376 | H/G 1.05 | TB/G 1.88 | HR/G 0.219 | HRR/G 2.16 | K% 15.6% (282 PA)</div><div class="context-item">Facing Jake Bennett: FIP 4.88 / xFIP 4.50 | WHIP 1.49 | K/9 3.6</div><div class="context-item">Park factor 0.96 at Tropicana Field</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="Tampa Bay Rays"
+         data-away-team="Boston Red Sox"
+         data-bet-type="Prop"
+         data-sport="MLB"
+         data-player="Jonathan Aranda"
+         data-prop-type="Hits Over"
+         data-model-line="1.05"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-10T17:11:00Z"
+         data-market-line="0.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Jonathan Aranda</div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;Tampa Bay Rays vs Boston Red Sox &middot; Hits Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>0.5</b> <span style="color:#94a3b8;font-size:0.8em;">63.0%</span> &middot; Model <b style="color:var(--blue)">1.05</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 0.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">63.0%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">1.05</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 0.5 at 63.0%. Model: 1.05.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model projects Jonathan Aranda at 1.05 Hits vs the line of 0.5 — a strong +0.55 edge.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 0.5 at 63.0% (draftkings)</div><div class="context-item">Model projects 1.05 → edge +15.0%</div><div class="context-item">Jonathan Aranda: AVG 0.270 | OBP 0.378 | H/G 0.97 | TB/G 1.64 | HR/G 0.175 | HRR/G 2.22 | K% 24.7% (275 PA)</div><div class="context-item">Facing Jake Bennett: FIP 4.88 / xFIP 4.50 | WHIP 1.49 | K/9 3.6</div><div class="context-item">Park factor 0.96 at Tropicana Field</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="New York Yankees"
+         data-away-team="Cleveland Guardians"
+         data-bet-type="Prop"
+         data-sport="MLB"
+         data-player="Ben Rice"
+         data-prop-type="Hits Over"
+         data-model-line="0.9"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-10T17:11:00Z"
+         data-market-line="0.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Ben Rice</div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;New York Yankees vs Cleveland Guardians &middot; Hits Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>0.5</b> <span style="color:#94a3b8;font-size:0.8em;">64.7%</span> &middot; Model <b style="color:var(--blue)">0.9</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 0.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">64.7%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">0.9</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 0.5 at 64.7%. Model: 0.90.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model projects Ben Rice at 0.90 Hits vs the line of 0.5 — a strong +0.40 edge.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 0.5 at 64.7% (draftkings)</div><div class="context-item">Model projects 0.90 → edge +15.0%</div><div class="context-item">Game total: model 7.9 vs market 7.5 (high-scoring environment, scale 1.05x)</div><div class="context-item">Ben Rice: AVG 0.297 | OBP 0.392 | H/G 1.08 | TB/G 2.28 | HR/G 0.295 | HRR/G 2.62 | K% 23.5% (260 PA)</div><div class="context-item">Facing Parker Messick: FIP 3.39 / xFIP 3.30 | WHIP 1.07 | K/9 9.4</div><div class="context-item">Park factor 0.96 at Progressive Field</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    
+    <div class="card prop-card"
+         data-home-team="New York Yankees"
+         data-away-team="Cleveland Guardians"
+         data-bet-type="Prop"
+         data-sport="MLB"
+         data-player="Ben Rice"
+         data-prop-type="Total Bases Over"
+         data-model-line="2.05"
+         data-confidence="HIGH"
+         data-commence-time="2026-06-10T17:11:00Z"
+         data-market-line="1.5"
+         data-edge-pct="15.0">
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Ben Rice</div>
+            <div class="card-subtitle">
+              <span class="badge badge-mlb">MLB</span>
+              &nbsp;New York Yankees vs Cleveland Guardians &middot; Total Bases Over
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            
+            <span class="confidence-badge HIGH">HIGH</span>
+            <div class="prop-live-badge"></div>
+          </div>
+        </div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Over <b>1.5</b> <span style="color:#94a3b8;font-size:0.8em;">42.9%</span> &middot; Model <b style="color:var(--blue)">2.05</b> &middot; <b style="color:var(--green)">+15.0%</b></span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market Line</div><div class="stat-value blue">Over 1.5</div></div>
+          <div class="stat-box"><div class="stat-label">Book Odds</div><div class="stat-value">42.9%</div></div>
+          <div class="stat-box"><div class="stat-label">Model Proj</div><div class="stat-value blue">2.05</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+15.0%</div></div>
+        </div>
+        <div class="prop-note" style="margin-top:6px;">Draftkings: Over 1.5 at 42.9%. Model: 2.05.</div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">The model projects Ben Rice at 2.05 Total Bases vs the line of 1.5 — a strong +0.55 edge.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Market: Over 1.5 at 42.9% (draftkings)</div><div class="context-item">Model projects 2.05 → edge +15.0%</div><div class="context-item">Game total: model 7.9 vs market 7.5 (high-scoring environment, scale 1.05x)</div><div class="context-item">Ben Rice: AVG 0.297 | OBP 0.392 | H/G 1.08 | TB/G 2.28 | HR/G 0.295 | HRR/G 2.62 | K% 23.5% (260 PA)</div><div class="context-item">Facing Parker Messick: FIP 3.39 / xFIP 3.30 | WHIP 1.07 | K/9 9.4</div><div class="context-item">Park factor 0.96 at Progressive Field</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    </div><!-- sub-body mlb-props -->
+    </div><!-- sub-section mlb-props -->
     
   </div>
 
@@ -575,12 +1761,8 @@
   <div class="section" id="sec-wnba">
     <div class="section-title">🏀 WNBA
       <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
-        no games today
+        2 picks &middot; watchlist only
       </span>
-    </div>
-    
-    <div style="text-align:center;padding:18px 12px;color:var(--muted);font-size:0.85rem;">
-      📅 No WNBA games scheduled today.
     </div>
     
     <div class="sub-section" id="sub-wnba-singles">
@@ -588,6 +1770,124 @@
       <div class="league-sub-label">Singles</div><span class="sub-chevron">▾</span>
     </div>
     <div class="sub-body">
+    
+    <div class="card wnba-watchlist-card"
+         id="wnba-1"
+         data-home-team="Seattle Storm"
+         data-away-team="Los Angeles Sparks"
+         data-bet-type="Moneyline"
+         data-pick="Los Angeles Sparks"
+         data-sport="WNBA"
+         data-edge-pct="11.2"
+         data-model-prob-pct="82.3"
+         data-market-prob-pct="71.1"
+         data-commence-time="2026-06-11T02:00:00Z"
+         >
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Los Angeles Sparks</div>
+            <div class="card-subtitle">
+              <span class="badge badge-wnba">🏀 WNBA</span>
+              &nbsp;ML &nbsp;&middot;&nbsp; Los Angeles Sparks @ Seattle Storm
+            </div>
+            <div class="card-time" style="font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <span class="confidence-badge HIGH">HIGH</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 71.1% → Model <b style="color:var(--blue)">82.3%</b></span>
+          <span class="edge-chip green">+11.2% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">71.1%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">82.3%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+11.2%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">Key absences for Seattle Storm (16% pts-share missing) shift win probability toward Los Angeles Sparks.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Model projected score: Seattle Storm 85 — Los Angeles Sparks 88</div><div class="context-item">Seattle Storm: 3W-10L | 77.2 PPG | FG 40.2% | AST/TO 1.19 | NetRtg -5.6</div><div class="context-item">Los Angeles Sparks: 5W-6L | 88.5 PPG | FG 47.2% | AST/TO 1.28 | NetRtg +0.8</div><div class="context-item">Strength of schedule — Seattle Storm: opp avg net -1.1 | Los Angeles Sparks: opp avg net -0.5 (×0.5 applied)</div><div class="context-item">Seattle Storm struggling recently (last 8 games: -7.8 net)</div><div class="context-item">Seattle Storm last 8 games: 74.1 PPG | 25% W</div><div class="context-item">Los Angeles Sparks last 8 games: 90.1 PPG | 50% W</div><div class="context-item">Rest — Seattle Storm: 0 day(s) | Los Angeles Sparks: 2 day(s)</div><div class="context-item">⚕ Seattle Storm — Taina Mair: OUT</div><div class="context-item">⚕ Seattle Storm — Ezi Magbegor (9.7 PPG, 13% pts share): OUT</div><div class="context-item">Seattle Storm lineup impact (-16.4%)</div><div class="context-item">Home court: Seattle Storm (+2%)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="card wnba-watchlist-card"
+         id="wnba-2"
+         data-home-team="Toronto Tempo"
+         data-away-team="Connecticut Sun"
+         data-bet-type="Moneyline"
+         data-pick="Toronto Tempo"
+         data-sport="WNBA"
+         data-edge-pct="7.8"
+         data-model-prob-pct="81.6"
+         data-market-prob-pct="73.8"
+         data-commence-time="2026-06-10T23:00:00Z"
+         >
+      <div class="card-toggle-header">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Toronto Tempo</div>
+            <div class="card-subtitle">
+              <span class="badge badge-wnba">🏀 WNBA</span>
+              &nbsp;ML &nbsp;&middot;&nbsp; Connecticut Sun @ Toronto Tempo
+            </div>
+            <div class="card-time" style="font-size:0.78rem;font-weight:600;margin-top:3px;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <span class="confidence-badge MEDIUM">MEDIUM</span>
+          </div>
+        </div>
+        <div class="live-status" style="font-size:0.78rem;margin-bottom:4px;min-height:1em;"></div>
+        <div class="card-compact">
+          <span class="mkt-mdl">Mkt 73.8% → Model <b style="color:var(--blue)">81.6%</b></span>
+          <span class="edge-chip green">+7.8% edge</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-details">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Market</div><div class="stat-value">73.8%</div></div>
+          <div class="stat-box"><div class="stat-label">Model</div><div class="stat-value blue">81.6%</div></div>
+          <div class="stat-box"><div class="stat-label">Edge</div><div class="stat-value green">+7.8%</div></div>
+        </div>
+        
+        <div class="card-insight">
+          <div class="card-insight-header" onclick="this.parentElement.classList.toggle('ins-collapsed')">
+            <span class="card-insight-label">Why this pick</span>
+            <span class="card-insight-chevron">▾</span>
+          </div>
+          <div class="card-insight-body">
+            <div class="card-narrative">Key absences for Connecticut Sun (25% of their scoring output) shift win probability toward Toronto Tempo.</div>
+            
+            <div class="context-section">
+              <div class="context-title">Context &amp; Stats</div>
+              <div class="context-item">Model projected score: Toronto Tempo 88 — Connecticut Sun 85</div><div class="context-item">Toronto Tempo: 6W-5L | 85.9 PPG | FG 42.9% | AST/TO 1.44 | NetRtg -0.4</div><div class="context-item">Connecticut Sun: 2W-11L | 76.1 PPG | FG 41.6% | AST/TO 1.26 | NetRtg -10.8</div><div class="context-item">Strength of schedule — Toronto Tempo: opp avg net -1.7 | Connecticut Sun: opp avg net -0.0 (×0.5 applied)</div><div class="context-item">Connecticut Sun struggling recently (last 8 games: -10.0 net)</div><div class="context-item">Toronto Tempo last 8 games: 90.9 PPG | 62% W</div><div class="context-item">Connecticut Sun last 8 games: 73.6 PPG | 25% W</div><div class="context-item">Connecticut Sun on back-to-back — favors Toronto Tempo (+4%)</div><div class="context-item">Rest — Toronto Tempo: 2 day(s) | Connecticut Sun: 1 day(s)</div><div class="context-item">⚕ Connecticut Sun — Hailey Van Lith (4.6 PPG, 6% pts share): OUT</div><div class="context-item">⚕ Connecticut Sun — Brittney Griner (16.8 PPG, 22% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Connecticut Sun — Aneesah Morrow (8.7 PPG, 11% pts share): OUT</div><div class="context-item">⚕ Toronto Tempo — Kiki Rice (12.7 PPG, 14% pts share): OUT</div><div class="context-item">⚕ Toronto Tempo — Temi Fagbenle (4.9 PPG, 6% pts share): OUT</div><div class="context-item">Toronto Tempo lineup impact (-23.8%)</div><div class="context-item">Connecticut Sun injuries benefit Toronto Tempo (+24.7%)</div><div class="context-item">Home court: Toronto Tempo (+2%)</div>
+            </div>
+            
+          </div>
+        </div>
+        
+      </div>
+    </div>
     
     </div><!-- sub-body wnba-singles -->
     </div><!-- sub-section wnba-singles -->
@@ -635,6 +1935,458 @@
     </div><!-- sub-section ipl-singles -->
   </div>
 
+  
+  <div class="section" id="sec-allocation">
+    <div class="section-title">Today's Card
+      <span style="font-weight:400;font-size:0.8rem;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:6px;">
+        top 5 picks &middot; 2 parlays
+      </span>
+    </div>
+    <div class="card">
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Bet &amp; Game</th>
+            <th style="text-align:center;">Edge<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Score</span></th>
+            <th style="text-align:center;">Qty</th>
+            <th style="text-align:right;">Cost<br><span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--border);">Profit</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr id="alloc-1"
+              class="alloc-main-row"
+              data-home-team="Miami Marlins"
+              data-away-team="Arizona Diamondbacks"
+              data-bet-type="Moneyline"
+              data-pick="Miami Marlins"
+              data-sport="MLB"
+              data-market-prob-pct="48.8"
+              data-commence-time="2026-06-10T22:41:00Z"
+              >
+            <td style="color:var(--muted);font-size:0.78rem;">1</td>
+            <td>
+              
+              <a href="#bet-1" class="nav-link" title="Jump to bet card">
+                <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Miami Marlins (ML) <span class="nav-arrow">↑</span></div>
+              </a>
+              
+              <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
+              <div style="color:var(--muted);font-size:0.7rem;">Arizona Diamondbacks @ Miami Marlins</div>
+              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+            </td>
+            <td style="vertical-align:top;text-align:center;">
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+15.0%</div>
+              <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
+            </td>
+            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
+              12<br>
+              <span style="color:var(--muted);font-size:0.7rem;">6.1%</span>
+            </td>
+            <td style="vertical-align:top;text-align:right;">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div style="font-size:0.8rem;">$6.09</div>
+                <div style="color:#16a34a;font-size:0.75rem;">+$5.91</div>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
+                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-1">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Miami Marlins (ML)</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢48.8</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">12</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$6.09</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$5.91</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$6.09</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$1.56
+                  </span>
+                </div>
+                
+              </div>
+            </td>
+          </tr>
+          
+          <tr id="alloc-2"
+              class="alloc-main-row"
+              data-home-team="Colorado Rockies"
+              data-away-team="Chicago Cubs"
+              data-bet-type="Spread"
+              data-pick="Colorado Rockies +1.5"
+              data-sport="MLB"
+              data-market-prob-pct="48.7"
+              data-commence-time="2026-06-11T00:41:00Z"
+              >
+            <td style="color:var(--muted);font-size:0.78rem;">2</td>
+            <td>
+              
+              <a href="#bet-2" class="nav-link" title="Jump to bet card">
+                <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Colorado Rockies +1.5 <span class="nav-arrow">↑</span></div>
+              </a>
+              
+              <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
+              <div style="color:var(--muted);font-size:0.7rem;">Chicago Cubs @ Colorado Rockies</div>
+              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+            </td>
+            <td style="vertical-align:top;text-align:center;">
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+15.0%</div>
+              <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
+            </td>
+            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
+              12<br>
+              <span style="color:var(--muted);font-size:0.7rem;">6.1%</span>
+            </td>
+            <td style="vertical-align:top;text-align:right;">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div style="font-size:0.8rem;">$6.08</div>
+                <div style="color:#16a34a;font-size:0.75rem;">+$5.92</div>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
+                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-2">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Colorado Rockies +1.5</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢48.7</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">12</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$6.08</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$5.92</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$6.08</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$1.56
+                  </span>
+                </div>
+                
+              </div>
+            </td>
+          </tr>
+          
+          <tr id="alloc-3"
+              class="alloc-main-row"
+              data-home-team="Pittsburgh Pirates"
+              data-away-team="Los Angeles Dodgers"
+              data-bet-type="Spread"
+              data-pick="Pittsburgh Pirates +1.5"
+              data-sport="MLB"
+              data-market-prob-pct="46.7"
+              data-commence-time="2026-06-10T22:41:00Z"
+              >
+            <td style="color:var(--muted);font-size:0.78rem;">3</td>
+            <td>
+              
+              <a href="#bet-3" class="nav-link" title="Jump to bet card">
+                <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Pittsburgh Pirates +1.5 <span class="nav-arrow">↑</span></div>
+              </a>
+              
+              <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
+              <div style="color:var(--muted);font-size:0.7rem;">Los Angeles Dodgers @ Pittsburgh Pirates</div>
+              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+            </td>
+            <td style="vertical-align:top;text-align:center;">
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+14.1%</div>
+              <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
+            </td>
+            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
+              12<br>
+              <span style="color:var(--muted);font-size:0.7rem;">5.8%</span>
+            </td>
+            <td style="vertical-align:top;text-align:right;">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div style="font-size:0.8rem;">$5.84</div>
+                <div style="color:#16a34a;font-size:0.75rem;">+$6.16</div>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
+                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-3">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Pittsburgh Pirates +1.5</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢46.7</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">12</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$5.84</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$6.16</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$5.84</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$1.45
+                  </span>
+                </div>
+                
+              </div>
+            </td>
+          </tr>
+          
+          <tr id="alloc-4"
+              class="alloc-main-row"
+              data-home-team="New York Knicks"
+              data-away-team="San Antonio Spurs"
+              data-bet-type="Spread"
+              data-pick="San Antonio Spurs +2.5"
+              data-sport="NBA"
+              data-market-prob-pct="50.0"
+              data-commence-time="2026-06-11T00:40:00Z"
+              >
+            <td style="color:var(--muted);font-size:0.78rem;">4</td>
+            <td>
+              
+              <a href="#bet-4" class="nav-link" title="Jump to bet card">
+                <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">San Antonio Spurs +2.5 <span class="nav-arrow">↑</span></div>
+              </a>
+              
+              <div style="color:var(--muted);font-size:0.7rem;">NBA</div>
+              <div style="color:var(--muted);font-size:0.7rem;">San Antonio Spurs @ New York Knicks</div>
+              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+            </td>
+            <td style="vertical-align:top;text-align:center;">
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+12.6%</div>
+              <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
+            </td>
+            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
+              10<br>
+              <span style="color:var(--muted);font-size:0.7rem;">5.2%</span>
+            </td>
+            <td style="vertical-align:top;text-align:right;">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div style="font-size:0.8rem;">$5.20</div>
+                <div style="color:#16a34a;font-size:0.75rem;">+$4.80</div>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
+                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-4">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — San Antonio Spurs +2.5</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢50.0</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">10</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$5.20</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$4.80</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$5.20</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$1.06
+                  </span>
+                </div>
+                
+              </div>
+            </td>
+          </tr>
+          
+          <tr id="alloc-5"
+              class="alloc-main-row"
+              data-home-team="Baltimore Orioles"
+              data-away-team="Seattle Mariners"
+              data-bet-type="Moneyline"
+              data-pick="Seattle Mariners"
+              data-sport="MLB"
+              data-market-prob-pct="50.0"
+              data-commence-time="2026-06-10T22:36:00Z"
+              >
+            <td style="color:var(--muted);font-size:0.78rem;">5</td>
+            <td>
+              
+              <a href="#bet-5" class="nav-link" title="Jump to bet card">
+                <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Seattle Mariners (ML) <span class="nav-arrow">↑</span></div>
+              </a>
+              
+              <div style="color:var(--muted);font-size:0.7rem;">MLB</div>
+              <div style="color:var(--muted);font-size:0.7rem;">Seattle Mariners @ Baltimore Orioles</div>
+              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+            </td>
+            <td style="vertical-align:top;text-align:center;">
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+11.7%</div>
+              <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
+            </td>
+            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
+              9<br>
+              <span style="color:var(--muted);font-size:0.7rem;">4.7%</span>
+            </td>
+            <td style="vertical-align:top;text-align:right;">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div style="font-size:0.8rem;">$4.68</div>
+                <div style="color:#16a34a;font-size:0.75rem;">+$4.32</div>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
+                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-5">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Seattle Mariners (ML)</div>
+                
+                <div class="action-row"><span class="label">Contract price (est.)</span><span class="value">¢50.0</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">9</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$4.68</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$4.32</span></div>
+                
+                <div class="action-row"><span class="label">Loss if lose</span><span class="value" style="color:var(--red)">-$4.68</span></div>
+                <div class="action-row"><span class="label">Expected value</span>
+                  <span class="value" style="color:#16a34a">
+                    +$0.87
+                  </span>
+                </div>
+                
+              </div>
+            </td>
+          </tr>
+          
+          <tr id="alloc-p1"
+              class="alloc-main-row"
+              data-home-team=""
+              data-away-team=""
+              data-bet-type="Parlay"
+              data-pick="Miami Marlins (ML) + Philadelphia Phillies (ML)"
+              data-sport="Parlay"
+              data-market-prob-pct="50"
+              data-commence-time="2026-06-10T22:41:00Z"
+              data-legs="[{&#34;home_team&#34;: &#34;Miami Marlins&#34;, &#34;away_team&#34;: &#34;Arizona Diamondbacks&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Miami Marlins&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 63.8, &#34;commence_time&#34;: &#34;2026-06-10T22:41:00Z&#34;}, {&#34;home_team&#34;: &#34;Toronto Blue Jays&#34;, &#34;away_team&#34;: &#34;Philadelphia Phillies&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Philadelphia Phillies&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 66.5, &#34;commence_time&#34;: &#34;2026-06-10T23:08:00Z&#34;}]" data-cost="2.32" data-profit="5.68" data-confidence="HIGH">
+            <td style="color:var(--muted);font-size:0.78rem;">P1</td>
+            <td>
+              
+              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Miami Marlins (ML) + Philadelphia Phillies (ML)</div>
+              
+              <div style="color:var(--muted);font-size:0.7rem;">Parlay</div>
+              
+              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+            </td>
+            <td style="vertical-align:top;text-align:center;">
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+15.4%</div>
+              <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
+            </td>
+            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
+              8<br>
+              <span style="color:var(--muted);font-size:0.7rem;">2.3%</span>
+            </td>
+            <td style="vertical-align:top;text-align:right;">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div style="font-size:0.8rem;">$2.32</div>
+                <div style="color:#16a34a;font-size:0.75rem;">+$5.68</div>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
+                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-p1">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Miami Marlins (ML) + Philadelphia Phillies (ML)</div>
+                
+                <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢27.1</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">8</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$2.32</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$5.68</span></div>
+                
+              </div>
+            </td>
+          </tr>
+          
+          <tr id="alloc-p2"
+              class="alloc-main-row"
+              data-home-team=""
+              data-away-team=""
+              data-bet-type="Parlay"
+              data-pick="Seattle Mariners (ML) + Los Angeles Angels (ML)"
+              data-sport="Parlay"
+              data-market-prob-pct="50"
+              data-commence-time="2026-06-10T22:36:00Z"
+              data-legs="[{&#34;home_team&#34;: &#34;Baltimore Orioles&#34;, &#34;away_team&#34;: &#34;Seattle Mariners&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Seattle Mariners&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 61.7, &#34;commence_time&#34;: &#34;2026-06-10T22:36:00Z&#34;}, {&#34;home_team&#34;: &#34;Los Angeles Angels&#34;, &#34;away_team&#34;: &#34;Houston Astros&#34;, &#34;bet_type&#34;: &#34;Moneyline&#34;, &#34;pick&#34;: &#34;Los Angeles Angels&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 62.4, &#34;commence_time&#34;: &#34;2026-06-11T01:39:00Z&#34;}]" data-cost="1.67" data-profit="4.33" data-confidence="HIGH">
+            <td style="color:var(--muted);font-size:0.78rem;">P2</td>
+            <td>
+              
+              <div style="font-weight:600;font-size:0.8rem;line-height:1.3;">Seattle Mariners (ML) + Los Angeles Angels (ML)</div>
+              
+              <div style="color:var(--muted);font-size:0.7rem;">Parlay</div>
+              
+              <div class="row-time-local" style="color:#14b8a6;font-size:0.7rem;"></div>
+            </td>
+            <td style="vertical-align:top;text-align:center;">
+              <div style="color:#16a34a;font-weight:700;font-size:0.8rem;">+12.6%</div>
+              <div class="score-cell" style="font-size:0.7rem;color:var(--muted);margin-top:3px;white-space:nowrap;">—</div>
+            </td>
+            <td style="font-size:0.8rem;vertical-align:top;text-align:center;">
+              6<br>
+              <span style="color:var(--muted);font-size:0.7rem;">1.7%</span>
+            </td>
+            <td style="vertical-align:top;text-align:right;">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                <div style="font-size:0.8rem;">$1.67</div>
+                <div style="color:#16a34a;font-size:0.75rem;">+$4.33</div>
+                <div style="display:flex;flex-direction:row;align-items:center;gap:4px;">
+                  <span class="alloc-lock-emoji" style="font-size:0.7rem;color:#94a3b8;display:none;">🔒</span>
+                  <button class="alloc-expand-btn" title="Show Robinhood action" aria-label="Expand">▸</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr class="alloc-detail-row" id="alloc-detail-p2">
+            <td colspan="5" style="padding:0 6px 10px 6px;">
+              <div class="action-box" style="margin-top:0;">
+                <div class="action-title">Robinhood Action — Seattle Mariners (ML) + Los Angeles Angels (ML)</div>
+                
+                <div class="action-row"><span class="label">Parlay contract price (est.)</span><span class="value">¢25.9</span></div>
+                
+                <div class="action-row"><span class="label">Buy contracts</span><span class="value">6</span></div>
+                <div class="action-row"><span class="label">Total cost (incl. commission)</span><span class="value">$1.67</span></div>
+                <div class="action-row"><span class="label">Profit if win</span><span class="value" style="color:#16a34a">+$4.33</span></div>
+                
+              </div>
+            </td>
+          </tr>
+          
+        </tbody>
+      </table>
+      <div class="budget-total">
+        <span>Deployed</span>
+        <span>$31.88 / $100</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
+        <span style="color:var(--muted);">Today's Profit</span>
+        <span id="today-pnl" style="color:var(--muted);">—</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 6px 0;font-size:0.85rem;">
+        <span style="color:var(--muted);">Reserve (do not force bets)</span>
+        <span style="color:#16a34a;">$68.12</span>
+      </div>
+    </div>
+  </div>
   
 
   
@@ -1483,7 +3235,7 @@
       <span>Model Calibration Status</span>
       
       <span style="font-size:0.7rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">
-        auto-updated &middot; 2026-06-10 14:39:29 UTC
+        auto-updated &middot; 2026-06-10 15:39:22 UTC
       </span>
       
     </div>
@@ -2075,7 +3827,7 @@
       <span>Credibility Cap Auto-Adjustment</span>
       
       <span style="font-size:0.7rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">
-        auto-updated &middot; 2026-06-10 14:39:29 UTC
+        auto-updated &middot; 2026-06-10 15:38:37 UTC
       </span>
       
     </div>
