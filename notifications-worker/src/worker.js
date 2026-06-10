@@ -391,9 +391,21 @@ async function runCron(env) {
     const propCount  = 0;   // props not stored in KV (display-only)
     const pickWord   = pickCount === 1 ? '1 pick' : `${pickCount} picks`;
     const propPart   = propCount > 0 ? ` · ${propCount} props` : '';
+    // Earliest start across Today's Card: budget singles + every parlay leg
+    const cardTimes = [...singles.filter(s => s.inTodaysCard), ...parlayLegs]
+      .map(p => p.commenceTime).filter(Boolean)
+      .map(t => new Date(t)).filter(d => !isNaN(d));
+    let firstGamePart = '';
+    if (cardTimes.length) {
+      const first = new Date(Math.min(...cardTimes));
+      const timeStr = first.toLocaleTimeString('en-US', {
+        timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit',
+      });
+      firstGamePart = ` · ⏰ First game ${timeStr}`;
+    }
     await broadcastFiltered({
       title: "🎯 Today's picks are ready",
-      body:  `${pickWord}${propPart} · Tap to view`,
+      body:  `${pickWord}${propPart}${firstGamePart} · Tap to view`,
       tag:   `picks-ready-${isoDate}`, url: '/',
     }, { isPicksReady: true }, env);
     await env.PICKS_STORE.put(broadcastKey, '1', { expirationTtl: 86400 });
