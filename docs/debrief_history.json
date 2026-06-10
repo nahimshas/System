@@ -1229,7 +1229,13 @@
           "what_happened": "Drohan was dominant (6.1 scoreless IP), contradicting the ERA trap. Brewers erupted for a 7-run 6th inning with Gary S\u00e1nchez homering and 10 extra-base hits to complete a sweep.",
           "signal_verdict": "INCORRECT \u2014 Drohan's ERA trap never materialized; Brewers offense overwhelmed Coors even on the road.",
           "key_insight": "ERA trap warning was on the Brewers starter (favoring Rockies), yet Drohan outpitched his xFIP; Coors run-environment signal alone is insufficient when facing elite pitching.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Pittsburgh Pirates @ Atlanta Braves",
@@ -1244,7 +1250,13 @@
           "what_happened": "Michael Harris II (listed Day-to-Day) came off the bench in the 7th and delivered a decisive 3-run double; Braves bullpen ERA 2.86 locked down the Pirates over the final innings.",
           "signal_verdict": "INCORRECT \u2014 Harris II's injury tag didn't bench him; Braves elite bullpen (2.86 ERA) negated the Pirates' edge projection.",
           "key_insight": "Day-to-Day injury signal shouldn't count as absent \u2014 Braves' elite bullpen ERA (2.86) deserved more weight when the model projected a close game.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Athletics @ Houston Astros",
@@ -1259,7 +1271,13 @@
           "what_happened": "Gage Jump delivered 6.1 scoreless innings (career-best) despite his ERA trap; Nick Kurtz (12th HR) and Brent Rooker homered; Burrows allowed all 5 runs in 5 IP as the A's offense came alive.",
           "signal_verdict": "INCORRECT \u2014 Jump's FIP 2.03 (significantly better than ERA 3.75) suggested superior performance than the model credited; Athletics' road struggles masked their ability to score against Burrows.",
           "key_insight": "Jump's FIP/ERA divergence (2.03 vs 3.75) was available but underweighted \u2014 model trusted recent form over predictive metrics.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "Weather",
+            "Platoon Edge",
+            "Recent Form"
+          ]
         },
         {
           "game": "San Francisco Giants @ Chicago Cubs",
@@ -1274,7 +1292,13 @@
           "what_happened": "Matt Chapman delivered a walk-off RBI single in the 10th inning on Sunday Night Baseball. Keaton Winn and Dylan Smith combined for a stellar bullpen effort, preserving the 2-1 win after a tight, low-scoring affair.",
           "signal_verdict": "CORRECT \u2014 Taillon's FIP divergence was real; Giants' pitching edge held; walk-off proved the model right on team quality.",
           "key_insight": "Taillon injury/FIP signal was the model's strongest edge today \u2014 the one pick that hit validates ERA-trap analysis when the FIP gap is extreme (FIP 6.36 vs ERA 5.13).",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Weather"
+          ]
         },
         {
           "game": "Chicago White Sox @ Philadelphia Phillies",
@@ -1289,7 +1313,13 @@
           "what_happened": "Phillies turned a 5-inning lead change battle into a 9-5 final via Alec Bohm's go-ahead double in the 5th. Phillies bullpen allowed 0 runs over final 4.2 IP (Alvarado, 3-1). Gilbert was effectively irrelevant \u2014 the Phillies' depth took over.",
           "signal_verdict": "INCORRECT \u2014 Gilbert's tiny 2-IP sample was a data-quality issue not a real signal edge; Phillies' bullpen strength (3.81 ERA) dominated the late innings.",
           "key_insight": "Never trust a FIP/xFIP signal based on 2 IP \u2014 Gilbert's near-meaningless sample size created false edge; Phillies bullpen ERA (3.81) should have reduced White Sox confidence.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ]
         },
         {
           "game": "Parlay 1: Houston Astros (ML) + San Francisco Giants (ML)",
@@ -1318,7 +1348,8 @@
               "pick": "San Francisco Giants ML",
               "result": "WON"
             }
-          ]
+          ],
+          "signals": []
         },
         {
           "game": "Parlay 2: Pittsburgh Pirates (ML) + Washington Nationals (ML)",
@@ -1347,7 +1378,8 @@
               "pick": "Washington Nationals ML",
               "result": "LOST"
             }
-          ]
+          ],
+          "signals": []
         },
         {
           "game": "Washington Nationals @ Arizona Diamondbacks",
@@ -1359,7 +1391,13 @@
           "score": "Arizona Diamondbacks 5, Washington Nationals 1",
           "pnl": "",
           "signal_verdict": "INCORRECT \u2014 Diamondbacks' Moreno HR and Soroka 7 IP dominated.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ]
         },
         {
           "game": "Seattle Mariners @ Detroit Tigers",
@@ -1371,7 +1409,13 @@
           "score": "Seattle Mariners 3, Detroit Tigers 1",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Mariners road win confirmed pitching advantage signal.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Umpire"
+          ]
         },
         {
           "game": "Baltimore Orioles @ Toronto Blue Jays",
@@ -1383,7 +1427,13 @@
           "score": "Toronto Blue Jays 5, Baltimore Orioles 4",
           "pnl": "",
           "signal_verdict": "INCORRECT \u2014 Blue Jays won a close one at home.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Umpire"
+          ]
         },
         {
           "game": "New York Mets @ San Diego Padres",
@@ -1395,7 +1445,13 @@
           "score": "New York Mets 7, San Diego Padres 3",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Mets dominant 7-3 win on the road.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Boston Red Sox @ New York Yankees",
@@ -1407,7 +1463,13 @@
           "score": "New York Yankees 5, Boston Red Sox 1",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Yankees home dominance; 5-1 comfortable win.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Cleveland Guardians @ Texas Rangers",
@@ -1419,7 +1481,13 @@
           "score": "Texas Rangers 10, Cleveland Guardians 0",
           "pnl": "",
           "signal_verdict": "INCORRECT \u2014 Blowout; Rangers dominated 10-0, completely invalidating the pick.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Cincinnati Reds @ St. Louis Cardinals",
@@ -1431,7 +1499,13 @@
           "score": "St. Louis Cardinals 5, Cincinnati Reds 3",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Cardinals home win; 5-3 final aligns with model projection.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Los Angeles Angels @ Los Angeles Dodgers",
@@ -1443,7 +1517,13 @@
           "score": "Los Angeles Angels 13, Los Angeles Dodgers 5",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Angels won outright 13-5; massive win for +1.5 coverage.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Boston Red Sox @ New York Yankees",
@@ -1455,7 +1535,13 @@
           "score": "Yankees 5, Red Sox 1 \u2014 Total: 6",
           "pnl": "",
           "signal_verdict": "INCORRECT \u2014 Low-scoring game; total 6 missed Over 7.5.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Tampa Bay Rays @ Miami Marlins",
@@ -1467,7 +1553,13 @@
           "score": "Miami Marlins 2, Tampa Bay Rays 1",
           "pnl": "",
           "signal_verdict": "INCORRECT \u2014 Marlins edged Rays 2-1 at home.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Umpire"
+          ]
         },
         {
           "game": "Seattle Mariners @ Detroit Tigers",
@@ -1479,7 +1571,13 @@
           "score": "Mariners 3, Tigers 1 \u2014 Total: 4",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Low-scoring 3-1 game hit Under 8.5 comfortably.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Umpire"
+          ]
         },
         {
           "game": "Cincinnati Reds @ St. Louis Cardinals",
@@ -1491,7 +1589,13 @@
           "score": "Cardinals 5, Reds 3 \u2014 Total: 8",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Total 8 cleared Under 9.5.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Washington Nationals @ Arizona Diamondbacks",
@@ -1503,7 +1607,13 @@
           "score": "Nationals 1, Diamondbacks 5 \u2014 Total: 6",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Total 6 well under 8.5; Soroka shutdown start contributed.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ]
         },
         {
           "game": "Portland Fire @ Los Angeles Sparks",
@@ -1515,7 +1625,10 @@
           "score": "Los Angeles Sparks 89, Portland Fire 72",
           "pnl": "",
           "signal_verdict": "INCORRECT \u2014 Sparks dominated with Hamby 22 pts/12 reb and Ogwumike 20 pts/17 reb.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Home Advantage"
+          ]
         },
         {
           "game": "Chicago Sky @ Toronto Tempo",
@@ -1527,7 +1640,10 @@
           "score": "Toronto Tempo 85, Chicago Sky 68",
           "pnl": "",
           "signal_verdict": "CORRECT \u2014 Tempo home win; Brittney Sykes 25 pts led Tempo's dominant performance.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Home Advantage"
+          ]
         }
       ],
       "patterns": [
@@ -1570,7 +1686,12 @@
           "what_happened": "Victor Wembanyama erupted for 32 pts/8 reb/6 ast in the Spurs' first NBA Finals road win, cutting the series to 2-1. The Knicks went cold in the 4th quarter despite being up 2-0 in the series.",
           "signal_verdict": "INCORRECT \u2014 recent form and home court overridden by Wembanyama's individual brilliance",
           "key_insight": "NBA Finals: transcendent peak performances override aggregate metrics; playoff model needs a star-performance multiplier for 30+ pt games.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Home Advantage",
+            "Rating Edge",
+            "Recent Form"
+          ]
         },
         {
           "game": "New York Yankees @ Cleveland Guardians",
@@ -1585,7 +1706,13 @@
           "what_happened": "Yankees won 7-5 in 10 innings on Cody Bellinger's bases-loaded 2-run single. Goldschmidt and McMahon homered. Yankees clawed back from 5-4 deficit in the 8th.",
           "signal_verdict": "CORRECT \u2014 hot lineup overcame a mild ERA-trap flag on Will Warren",
           "key_insight": "MILD ERA traps (severity <0.5) do not override strong team form; model correctly valued the hot Yankees offense.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Washington Nationals @ San Francisco Giants",
@@ -1600,7 +1727,13 @@
           "what_happened": "Giants were blown out 8-0 \u2014 Logan Webb got lit up. The Nationals (R/G 5.33 season avg) proved their potent offense, and a 47% precipitation chance may have affected Webb's grip. Complete model miss.",
           "signal_verdict": "INCORRECT \u2014 pitching metrics failed to capture Webb's vulnerability; Nationals offense (OPS .741) underweighted",
           "key_insight": "High-confidence pitcher picks need a floor check on offense vs. offense, not just ERA matchup. Giants' weak batting (.256 avg) was a warning sign ignored. Rain probability was also flagged; should carry model discount.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Weather"
+          ]
         },
         {
           "game": "Boston Red Sox @ Tampa Bay Rays",
@@ -1615,7 +1748,13 @@
           "what_happened": "Red Sox won 2-1 in a tight pitcher's duel. Connelly Early held Tampa Bay to 1 run despite mild ERA-trap flag. Clean win by the model.",
           "signal_verdict": "CORRECT \u2014 hot Rays cold streak and platoon edge carried the day",
           "key_insight": "Mild ERA trap on Connelly Early did not hurt; the Rays' collapsed R/G (3.9 vs 4.6 season) was more predictive than the pitcher ERA flag.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Houston Astros @ Los Angeles Angels",
@@ -1630,7 +1769,13 @@
           "what_happened": "Astros won 6-2; Arrighetti was dominant again, defying regression expectations. Angels failed to cover. The SEVERE ERA trap warned but the model went contrarian anyway.",
           "signal_verdict": "INCORRECT \u2014 SEVERE ERA trap correctly identified but model took the bet regardless; Arrighetti's true skill may genuinely exceed xFIP projection",
           "key_insight": "SEVERE ERA trap picks (severity >2.0) should be hard-avoided, not used as contrarian signals. When Arrighetti's ERA is 1.94 over 51 IP vs xFIP 4.41, the divergence may reflect elite sequencing, not luck.",
-          "in_budget": true
+          "in_budget": true,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Platoon Edge"
+          ]
         },
         {
           "game": "New York Knicks (ML) + San Francisco Giants (ML)",
@@ -1661,6 +1806,12 @@
               "result": "LOST",
               "score": "Washington Nationals 8, San Francisco Giants 0"
             }
+          ],
+          "signals": [
+            "Home Advantage",
+            "Rating Edge",
+            "Recent Form",
+            "Pitching Edge"
           ]
         },
         {
@@ -1692,6 +1843,12 @@
               "result": "WON",
               "score": "New York Yankees 7, Cleveland Guardians 5"
             }
+          ],
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
           ]
         },
         {
@@ -1707,7 +1864,13 @@
           "what_happened": "Reds won 8-1 for a 9-total game \u2014 just over 8.5. Abbott's SEVERE ERA trap (ERA 4.06 vs xFIP 5.12) materially underperformed. Offense exploded.",
           "signal_verdict": "INCORRECT \u2014 Abbott's SEVERE ERA trap should have flagged 'avoid totals' in this game",
           "key_insight": "Under bets with a SEVERE ERA trap on one arm carry hidden over-risk; Abbott's real ERA was masking his tendency to give up big innings.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Milwaukee Brewers @ Athletics",
@@ -1722,7 +1885,13 @@
           "what_happened": "PENDING \u2014 Brewers vs Athletics game (10:05 PM PT) score not yet available at debrief time.",
           "signal_verdict": "PENDING",
           "key_insight": "",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Platoon Edge",
+            "Recent Form"
+          ]
         },
         {
           "game": "Milwaukee Brewers @ Athletics",
@@ -1737,7 +1906,13 @@
           "what_happened": "PENDING \u2014 Brewers vs Athletics game (10:05 PM PT) score not yet available at debrief time.",
           "signal_verdict": "PENDING",
           "key_insight": "",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Platoon Edge",
+            "Recent Form"
+          ]
         },
         {
           "game": "Philadelphia Phillies @ Toronto Blue Jays",
@@ -1752,7 +1927,13 @@
           "what_happened": "Phillies won 5-2; Cristopher S\u00e1nchez was sharp (10 K, 7 IP). Blue Jays +1.5 failed to cover by 1.5 runs. S\u00e1nchez continued beating his ERA trap expectations.",
           "signal_verdict": "INCORRECT \u2014 S\u00e1nchez's ERA trap (severity 0.42) may reflect genuine elite command, not luck",
           "key_insight": "Moderate ERA traps on elite pitchers (K/9 10.8) in good form should be viewed as genuine outliers, not regression candidates.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Seattle Mariners @ Baltimore Orioles",
@@ -1767,7 +1948,13 @@
           "what_happened": "Mariners won 6-3 on Josh Naylor grand slam in 5-run 5th inning. Orioles couldn't cover +1.5 despite the cushion.",
           "signal_verdict": "INCORRECT \u2014 Mariners' big inning (grand slam) negated any run-line protection",
           "key_insight": "A single grand slam can defeat run-line bets; run-line edges narrow significantly when opposing lineup has a power hitter (Naylor) capable of a 4-run swing.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Milwaukee Brewers @ Athletics",
@@ -1782,7 +1969,13 @@
           "what_happened": "Score retrieved via web search.",
           "signal_verdict": "MIXED",
           "key_insight": "",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Platoon Edge",
+            "Recent Form"
+          ]
         },
         {
           "game": "Philadelphia Phillies @ Toronto Blue Jays",
@@ -1797,7 +1990,13 @@
           "what_happened": "Score retrieved via web search.",
           "signal_verdict": "MIXED",
           "key_insight": "",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "New York Liberty @ Connecticut Sun",
@@ -1812,7 +2011,10 @@
           "what_happened": "Liberty won 84-77. Despite Liberty playing a back-to-back, Breanna Stewart and the Liberty pulled away late. Sun's recent -9.0 net rating proved to be the dominant signal.",
           "signal_verdict": "INCORRECT \u2014 back-to-back fatigue didn't manifest; Liberty's offensive firepower prevailed",
           "key_insight": "Back-to-back fatigue signal for WNBA is weaker when the fatigued team has elite star players. Liberty's depth overcame the schedule disadvantage.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Home Advantage"
+          ]
         },
         {
           "game": "Seattle Storm @ Las Vegas Aces",
@@ -1827,7 +2029,10 @@
           "what_happened": "Aces dominated 89-77 with A'ja Wilson near her 6,000 career points milestone. Storm (3-9) are genuinely poor this season \u2014 this was not a close game.",
           "signal_verdict": "INCORRECT \u2014 0.9% edge was noise, not signal; Storm 3-9 record was warning enough",
           "key_insight": "Sub-1% edge picks should be filtered out \u2014 the model correctly showed near-zero confidence here. Model improvement: add a minimum edge threshold (\u22653%) for watchlist action.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Home Advantage"
+          ]
         },
         {
           "game": "Indiana Fever @ Washington Mystics",
@@ -1842,7 +2047,10 @@
           "what_happened": "Caitlin Clark hit a buzzer-beater 31-foot three-pointer with 1.2 seconds left for a 78-76 Fever win at CareFirst Arena. Heart-stopper but the model was right.",
           "signal_verdict": "CORRECT \u2014 back-to-back fatigue for Mystics and poor recent form was decisive",
           "key_insight": "Clutch players (Clark) can manufacture WNBA wins in ways ratings don't capture; the model happened to be right here, but this was closer than 0.9% edge implies.",
-          "in_budget": false
+          "in_budget": false,
+          "signals": [
+            "Home Advantage"
+          ]
         }
       ],
       "patterns": [
@@ -1889,7 +2097,12 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 10.5% validated; signals aligned with outcome.",
           "key_insight": "",
           "in_budget": true,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Home Advantage",
+            "Rating Edge",
+            "Recent Form"
+          ]
         },
         {
           "game": "Seattle Mariners @ Baltimore Orioles",
@@ -1905,7 +2118,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 11.3% validated; signals aligned with outcome.",
           "key_insight": "Run-line spread value confirmed; team showed resilience.",
           "in_budget": true,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ]
         },
         {
           "game": "Atlanta Braves @ Chicago White Sox",
@@ -1921,7 +2140,13 @@
           "signal_verdict": "INCORRECT \u2014 Model edge of 10.3% did not hold; check signal reliability.",
           "key_insight": "Moneyline favorite upset \u2014 revisit chalk pricing for MLB.",
           "in_budget": true,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Texas Rangers @ Kansas City Royals",
@@ -1937,7 +2162,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 10.4% validated; signals aligned with outcome.",
           "key_insight": "Under model performing well \u2014 pitching/defense edge confirmed.",
           "in_budget": true,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Injury Impact",
+            "Weather"
+          ]
         },
         {
           "game": "Milwaukee Brewers @ Athletics",
@@ -1953,7 +2184,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 10.3% validated; signals aligned with outcome.",
           "key_insight": "Under model performing well \u2014 pitching/defense edge confirmed.",
           "in_budget": true,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Platoon Edge",
+            "Recent Form"
+          ]
         },
         {
           "label": "Baltimore Orioles (ML) + Atlanta Braves (ML)",
@@ -1984,7 +2221,13 @@
             }
           ],
           "in_budget": true,
-          "is_parlay": true
+          "is_parlay": true,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "label": "Toronto Blue Jays (ML) + Carolina Hurricanes (ML)",
@@ -2015,7 +2258,13 @@
             }
           ],
           "in_budget": true,
-          "is_parlay": true
+          "is_parlay": true,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Atlanta Dream @ Chicago Sky",
@@ -2031,7 +2280,10 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 14.9% validated; signals aligned with outcome.",
           "key_insight": "",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Home Advantage"
+          ]
         },
         {
           "game": "Dallas Wings @ Minnesota Lynx",
@@ -2047,7 +2299,10 @@
           "signal_verdict": "INCORRECT \u2014 Model edge of 7.6% did not hold; check signal reliability.",
           "key_insight": "Moneyline favorite upset \u2014 revisit chalk pricing for WNBA.",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Home Advantage"
+          ]
         },
         {
           "game": "Phoenix Mercury @ Golden State Valkyries",
@@ -2063,7 +2318,10 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 4.1% validated; signals aligned with outcome.",
           "key_insight": "",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Home Advantage"
+          ]
         },
         {
           "game": "Chicago Cubs @ Colorado Rockies",
@@ -2079,7 +2337,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 15.0% validated; signals aligned with outcome.",
           "key_insight": "Run-line spread value confirmed; team showed resilience.",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Houston Astros @ Los Angeles Angels",
@@ -2095,7 +2359,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 9.4% validated; signals aligned with outcome.",
           "key_insight": "Run-line spread value confirmed; team showed resilience.",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Platoon Edge"
+          ]
         },
         {
           "game": "Philadelphia Phillies @ Toronto Blue Jays",
@@ -2111,7 +2381,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 9.1% validated; signals aligned with outcome.",
           "key_insight": "",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Washington Nationals @ San Francisco Giants",
@@ -2127,7 +2403,13 @@
           "signal_verdict": "INCORRECT \u2014 Model edge of 8.7% did not hold; check signal reliability.",
           "key_insight": "Moneyline favorite upset \u2014 revisit chalk pricing for MLB.",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ]
         },
         {
           "game": "New York Yankees @ Cleveland Guardians",
@@ -2143,7 +2425,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 8.3% validated; signals aligned with outcome.",
           "key_insight": "",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Texas Rangers @ Kansas City Royals",
@@ -2159,7 +2447,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 8.0% validated; signals aligned with outcome.",
           "key_insight": "Run-line spread value confirmed; team showed resilience.",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Injury Impact",
+            "Weather"
+          ]
         },
         {
           "game": "Minnesota Twins @ Detroit Tigers",
@@ -2175,7 +2469,13 @@
           "signal_verdict": "INCORRECT \u2014 Model edge of 7.4% did not hold; check signal reliability.",
           "key_insight": "Moneyline favorite upset \u2014 revisit chalk pricing for MLB.",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Milwaukee Brewers @ Athletics",
@@ -2191,7 +2491,13 @@
           "signal_verdict": "INCORRECT \u2014 Model edge of 6.9% did not hold; check signal reliability.",
           "key_insight": "Moneyline favorite upset \u2014 revisit chalk pricing for MLB.",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Platoon Edge",
+            "Recent Form"
+          ]
         },
         {
           "game": "Arizona Diamondbacks @ Miami Marlins",
@@ -2207,7 +2513,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 6.1% validated; signals aligned with outcome.",
           "key_insight": "",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Chicago Cubs @ Colorado Rockies",
@@ -2223,7 +2535,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 5.9% validated; signals aligned with outcome.",
           "key_insight": "Under model performing well \u2014 pitching/defense edge confirmed.",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         },
         {
           "game": "Carolina Hurricanes @ Vegas Golden Knights",
@@ -2239,7 +2557,8 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 5.5% validated; signals aligned with outcome.",
           "key_insight": "",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": []
         },
         {
           "game": "Cincinnati Reds @ San Diego Padres",
@@ -2255,7 +2574,13 @@
           "signal_verdict": "CORRECT \u2014 Model edge of 5.2% validated; signals aligned with outcome.",
           "key_insight": "",
           "in_budget": false,
-          "is_parlay": false
+          "is_parlay": false,
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ]
         }
       ],
       "patterns": [
