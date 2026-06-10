@@ -2,430 +2,395 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nightly Debrief — 2026-06-09</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#050507;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:16px;max-width:600px;margin:0 auto}
-  h2{color:#e2e8f0;font-size:16px;font-weight:700;margin:20px 0 10px;letter-spacing:0.5px;text-transform:uppercase}
-  h3{color:#64748b;font-size:11px;font-weight:600;margin:16px 0 8px;text-transform:uppercase;letter-spacing:1px}
-  a{color:#38bdf8;text-decoration:none}
-  a:hover{text-decoration:underline}
-  ul{list-style:disc;padding-left:20px}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #050507; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 16px; line-height: 1.5; }
+  .container { max-width: 600px; margin: 0 auto; }
+  h2 { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: #64748b; text-transform: uppercase; margin: 24px 0 12px; }
+  a { color: #38bdf8; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul { padding-left: 18px; }
 </style>
 </head>
 <body>
+<div class="container">
 
 <!-- HEADER -->
-<div style="background:#1a1d27;border-radius:10px;padding:20px;margin-bottom:20px;border:1px solid #1e293b">
-  <div style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">2026-06-09 &bull; Nightly Debrief</div>
-  <div style="font-size:16px;font-weight:700;color:#e2e8f0;line-height:1.4;margin-bottom:14px">4-3 budget (+$3.45) — CAR ML & TOR+CAR parlay hit; Under 13.5 was a 29-run disaster; 0 pending</div>
-  <div style="display:flex;flex-wrap:wrap;gap:8px">
-    <div style="background:#0f172a;border-radius:6px;padding:8px 14px;text-align:center">
-      <div style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Budget</div>
-      <div style="color:#e2e8f0;font-size:18px;font-weight:800">4-3</div>
+<div style="background:#1a1d27;border-radius:10px;padding:18px 20px;margin-bottom:20px;border:1px solid #2d3148">
+  <div style="font-size:0.7rem;color:#64748b;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Nightly Debrief</div>
+  <div style="font-size:1.4rem;font-weight:700;color:#38bdf8;margin-top:4px">2026-06-09</div>
+  <div style="margin-top:8px;font-size:0.9rem;color:#cbd5e1">5-2 budget (+$11.45); 11-4 watchlist — Under model 2-for-2; ATL Braves ML the lone budget loss</div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
+    <div style="background:#0f1117;border-radius:6px;padding:8px 14px;text-align:center">
+      <div style="font-size:0.65rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Today's Card</div>
+      <div style="font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:2px">5-2</div>
     </div>
-    <div style="background:#0f172a;border-radius:6px;padding:8px 14px;text-align:center">
-      <div style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Watchlist</div>
-      <div style="color:#e2e8f0;font-size:18px;font-weight:800">11-4</div>
+    <div style="background:#0f1117;border-radius:6px;padding:8px 14px;text-align:center">
+      <div style="font-size:0.65rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Watchlist</div>
+      <div style="font-size:1.1rem;font-weight:700;color:#e2e8f0;margin-top:2px">11-4</div>
     </div>
-    <div style="background:#0f172a;border-radius:6px;padding:8px 14px;text-align:center">
-      <div style="color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">P&L</div>
-      <div style="color:#22c55e;font-size:18px;font-weight:800">+$3.45</div>
+    <div style="background:#0f1117;border-radius:6px;padding:8px 14px;text-align:center">
+      <div style="font-size:0.65rem;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Budget P&amp;L</div>
+      <div style="font-size:1.1rem;font-weight:700;color:#22c55e;margin-top:2px">+$11.45</div>
     </div>
   </div>
 </div>
 
 <!-- TODAY'S CARD -->
-<h2>&#128197; Today's Card — Budget Picks</h2>
-<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-      <div>
-        <span style="color:#38bdf8;font-weight:700;font-size:14px">Carolina Hurricanes</span>
-        <span style="color:#64748b;font-size:12px;margin-left:8px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 6px;border-radius:3px;font-size:11px;margin-left:6px">HIGH</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:700;font-size:14px">+$3.75</span>
-      </div>
+<h2>&#128181; Today's Card — Budget Picks</h2>
+
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+    <div>
+      <span style="background:#818cf822;color:#818cf8;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #818cf855">NHL</span><span style="color:#38bdf8;font-weight:700;font-size:1rem;margin-left:6px">Carolina Hurricanes</span> <span style="font-weight:700;color:#22c55e">+$3.75</span>
+      <div style="color:#94a3b8;font-size:0.8rem;margin-top:3px">Carolina Hurricanes @ Vegas Golden Knights · Moneyline</div>
+      <div style="margin-top:2px"><span style="color:#94a3b8;font-size:0.7rem">HIGH</span> <span style="color:#94a3b8;font-size:0.7rem">edge 10.5%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:4px">Carolina Hurricanes @ Vegas Golden Knights &bull; NHL</div>
-    <div style="color:#e2e8f0;font-size:13px;margin-top:8px;padding:6px 10px;background:#0f172a;border-radius:4px">Carolina Hurricanes 5, Vegas Golden Knights 3</div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Why Picked</span><ul style="margin:6px 0 0 16px;padding:0"><li style="color:#94a3b8;font-size:12px;margin:2px 0">Home ice advantage: Vegas Golden Knights (+2%)</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Rating edge: Carolina Hurricanes (blended goal-diff -0.83)</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">🏆 Playoffs: recent form weighted 55%, tighter defence expected</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Model projected score: Vegas Golden Knights 2.9 — Carolina Hurricanes 3.3</li></ul></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">What Happened</span><div style="color:#cbd5e1;font-size:13px;margin-top:4px">Jordan Staal scored twice, including the go-ahead goal with 13:28 left in the 3rd period. The Hurricanes evened the Stanley Cup Final at 2-2.</div></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Signal Verdict</span><div style="color:#22c55e;font-size:13px;margin-top:4px">CORRECT — Model's goal-diff edge (+10.5%) delivered — Hurricanes were the better team throughout Game 4.</div></div>
-    <div style="margin-top:8px;padding:6px 10px;background:#1e2435;border-radius:4px"><span style="color:#64748b;font-size:11px">&#128161; Key Insight: </span><span style="color:#cbd5e1;font-size:12px">Playoff-weighted recent form model continues to add value for NHL elimination games.</span></div>
-    <div style="color:#94a3b8;font-size:11px;margin-top:6px">Model: 61.6% &bull; Market: 51.1% &bull; Edge: +10.5%</div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-      <div>
-        <span style="color:#38bdf8;font-weight:700;font-size:14px">Baltimore Orioles +1.5</span>
-        <span style="color:#64748b;font-size:12px;margin-left:8px">Spread</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 6px;border-radius:3px;font-size:11px;margin-left:6px">HIGH</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:700;font-size:14px">+$3.50</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#e2e8f0;font-size:0.8rem;font-weight:600;margin-top:5px">Carolina Hurricanes 5, Vegas Golden Knights 3</div></div>
+  </div>
+  
+  <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem">
+    <div><span style="color:#64748b">WHY PICKED</span><div style="color:#cbd5e1;margin-top:2px">Home ice advantage: Vegas Golden Knights (+2%); Rating edge: Carolina Hurricanes (blended goal-diff -0.83); 🏆 Playoffs: recent form weighted 55%, tighter defence expected</div></div>
+    <div><span style="color:#64748b">WHAT HAPPENED</span><div style="color:#cbd5e1;margin-top:2px">Carolina Hurricanes won outright. Final: Carolina Hurricanes 5, Vegas Golden Knights 3.</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem">
+    <span style="color:#64748b">SIGNAL VERDICT</span>
+    <span style="color:#22c55e;margin-left:6px">CORRECT — Model edge of 10.5% validated; signals aligned with outcome.</span>
+  </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span><span style="color:#38bdf8;font-weight:700;font-size:1rem;margin-left:6px">Baltimore Orioles +1.5</span> <span style="font-weight:700;color:#22c55e">+$3.50</span>
+      <div style="color:#94a3b8;font-size:0.8rem;margin-top:3px">Seattle Mariners @ Baltimore Orioles · Spread</div>
+      <div style="margin-top:2px"><span style="color:#94a3b8;font-size:0.7rem">HIGH</span> <span style="color:#94a3b8;font-size:0.7rem">edge 11.3%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:4px">Seattle Mariners @ Baltimore Orioles &bull; MLB</div>
-    <div style="color:#e2e8f0;font-size:13px;margin-top:8px;padding:6px 10px;background:#0f172a;border-radius:4px">Seattle Mariners 6, Baltimore Orioles 5 (10)</div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Why Picked</span><ul style="margin:6px 0 0 16px;padding:0"><li style="color:#94a3b8;font-size:12px;margin:2px 0">Trevor Rogers FIP 4.66 / xFIP 4.42 | K/9: 6.8</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Logan Gilbert FIP 4.1 / xFIP 3.21 | K/9: 9.5</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Park factor 1.01 (pitcher-friendly: Oriole Park at Camden Yards)</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Baltimore Orioles injury impact (-1.4%)</li></ul></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">What Happened</span><div style="color:#cbd5e1;font-size:13px;margin-top:4px">Randy Arozarena hit a two-run homer in the top of the 10th to give Seattle the lead for good. Baltimore's bullpen couldn't hold despite the late-game effort.</div></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Signal Verdict</span><div style="color:#22c55e;font-size:13px;margin-top:4px">CORRECT — Spread cover despite ML loss — Baltimore kept it close (5-6 in 10 innings), exactly what the +1.5 was designed to handle.</div></div>
-    <div style="margin-top:8px;padding:6px 10px;background:#1e2435;border-radius:4px"><span style="color:#64748b;font-size:11px">&#128161; Key Insight: </span><span style="color:#cbd5e1;font-size:12px">Spread bet on weaker team at +1.5 is robust when model shows pitcher matchup advantage (Gilbert xFIP 3.21 vs Rogers 4.42).</span></div>
-    <div style="color:#94a3b8;font-size:11px;margin-top:6px">Model: 70.4% &bull; Market: 59.1% &bull; Edge: +11.3%</div>
-    </div><div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-      <div>
-        <span style="color:#38bdf8;font-weight:700;font-size:14px">Atlanta Braves</span>
-        <span style="color:#64748b;font-size:12px;margin-left:8px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 6px;border-radius:3px;font-size:11px;margin-left:6px">HIGH</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#ef4444;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">LOST</span>
-        <span style="color:#ef4444;font-weight:700;font-size:14px">-$4.82</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#e2e8f0;font-size:0.8rem;font-weight:600;margin-top:5px">Seattle Mariners 6, Baltimore Orioles 5</div></div>
+  </div>
+  
+  <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem">
+    <div><span style="color:#64748b">WHY PICKED</span><div style="color:#cbd5e1;margin-top:2px">Trevor Rogers FIP 4.66 / xFIP 4.42 | K/9: 6.8; Logan Gilbert FIP 4.1 / xFIP 3.21 | K/9: 9.5; Park factor 1.01 (pitcher-friendly: Oriole Park at Camden Yards)</div></div>
+    <div><span style="color:#64748b">WHAT HAPPENED</span><div style="color:#cbd5e1;margin-top:2px">The spread covered. Final: Seattle Mariners 6, Baltimore Orioles 5.</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem">
+    <span style="color:#64748b">SIGNAL VERDICT</span>
+    <span style="color:#22c55e;margin-left:6px">CORRECT — Model edge of 11.3% validated; signals aligned with outcome.</span>
+  </div>
+  <div style="margin-top:5px;font-size:0.75rem;color:#64748b;border-top:1px solid #2d3148;padding-top:6px"><span style="color:#94a3b8">KEY INSIGHT: </span>Run-line spread value confirmed; team showed resilience.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span><span style="color:#38bdf8;font-weight:700;font-size:1rem;margin-left:6px">Atlanta Braves</span> <span style="font-weight:700;color:#ef4444">-$4.82</span>
+      <div style="color:#94a3b8;font-size:0.8rem;margin-top:3px">Atlanta Braves @ Chicago White Sox · Moneyline</div>
+      <div style="margin-top:2px"><span style="color:#94a3b8;font-size:0.7rem">HIGH</span> <span style="color:#94a3b8;font-size:0.7rem">edge 10.3%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:4px">Atlanta Braves @ Chicago White Sox &bull; MLB</div>
-    <div style="color:#e2e8f0;font-size:13px;margin-top:8px;padding:6px 10px;background:#0f172a;border-radius:4px">Chicago White Sox 6, Atlanta Braves 5 (10)</div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Why Picked</span><ul style="margin:6px 0 0 16px;padding:0"><li style="color:#94a3b8;font-size:12px;margin:2px 0">Erick Fedde FIP 6.11 / xFIP 4.92 | K/9: 5.6</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Grant Holmes FIP 5.15 / xFIP 4.10 | K/9: 8.1</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">⚠ ERA trap [MILD] — Erick Fedde: ERA 4.94 vs xFIP 5.22 over 58 IP (severity 0.28) — Chicago White Sox ML may be overpriced by market</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Park factor 0.95 (pitcher-friendly: Rate Field)</li></ul></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">What Happened</span><div style="color:#cbd5e1;font-size:13px;margin-top:4px">Braden Montgomery hit a two-run homer in the 10th on his MLB debut, stunning the Braves after ATL led most of the game. Atlanta's strong rotation start wasn't enough.</div></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Signal Verdict</span><div style="color:#22c55e;font-size:13px;margin-top:4px">INCORRECT — Model projected ATL 5.1 vs CHW 4.2 but extras punished the call — CHW's bullpen and Montgomery's debut HR ended it.</div></div>
-    <div style="margin-top:8px;padding:6px 10px;background:#1e2435;border-radius:4px"><span style="color:#64748b;font-size:11px">&#128161; Key Insight: </span><span style="color:#cbd5e1;font-size:12px">Extras are model blind spots — ATL bullpen was strong (2.85 ERA) but CHW had rookie HR power. Consider penalizing close-margin picks in weather-delayed games.</span></div>
-    <div style="color:#94a3b8;font-size:11px;margin-top:6px">Model: 68.5% &bull; Market: 58.3% &bull; Edge: +10.3%</div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-      <div>
-        <span style="color:#38bdf8;font-weight:700;font-size:14px">Under 9.5</span>
-        <span style="color:#64748b;font-size:12px;margin-left:8px">Total</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 6px;border-radius:3px;font-size:11px;margin-left:6px">HIGH</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:700;font-size:14px">+$3.59</span>
-      </div>
+    <div style="text-align:right"><span style="background:#ef4444;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">LOST</span><div style="color:#e2e8f0;font-size:0.8rem;font-weight:600;margin-top:5px">Atlanta Braves 5, Chicago White Sox 6</div></div>
+  </div>
+  
+  <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem">
+    <div><span style="color:#64748b">WHY PICKED</span><div style="color:#cbd5e1;margin-top:2px">Erick Fedde FIP 6.11 / xFIP 4.92 | K/9: 5.6; Grant Holmes FIP 5.15 / xFIP 4.10 | K/9: 8.1; ⚠ ERA trap [MILD] — Erick Fedde: ERA 4.94 vs xFIP 5.22 over 58 IP (severity 0.28) — Chicago White Sox ML may be overpriced by market</div></div>
+    <div><span style="color:#64748b">WHAT HAPPENED</span><div style="color:#cbd5e1;margin-top:2px">Atlanta Braves could not get the win. Final: Atlanta Braves 5, Chicago White Sox 6.</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem">
+    <span style="color:#64748b">SIGNAL VERDICT</span>
+    <span style="color:#ef4444;margin-left:6px">INCORRECT — Model edge of 10.3% did not hold; check signal reliability.</span>
+  </div>
+  <div style="margin-top:5px;font-size:0.75rem;color:#64748b;border-top:1px solid #2d3148;padding-top:6px"><span style="color:#94a3b8">KEY INSIGHT: </span>Moneyline favorite upset — revisit chalk pricing for MLB.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span><span style="color:#38bdf8;font-weight:700;font-size:1rem;margin-left:6px">Under 9.5</span> <span style="font-weight:700;color:#22c55e">+$3.59</span>
+      <div style="color:#94a3b8;font-size:0.8rem;margin-top:3px">Texas Rangers @ Kansas City Royals · Total</div>
+      <div style="margin-top:2px"><span style="color:#94a3b8;font-size:0.7rem">HIGH</span> <span style="color:#94a3b8;font-size:0.7rem">edge 10.4%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:4px">Texas Rangers @ Kansas City Royals &bull; MLB</div>
-    <div style="color:#e2e8f0;font-size:13px;margin-top:8px;padding:6px 10px;background:#0f172a;border-radius:4px">Kansas City Royals 5, Texas Rangers 3</div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Why Picked</span><ul style="margin:6px 0 0 16px;padding:0"><li style="color:#94a3b8;font-size:12px;margin:2px 0">Stephen Kolek FIP 4.12 / xFIP 3.61 | K/9: 6.4</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Nathan Eovaldi FIP 4.35 / xFIP 3.05 | K/9: 9.0</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">⚠ ERA trap [MILD] — Stephen Kolek: ERA 3.32 vs xFIP 3.56 over 38 IP (severity 0.24) — Kansas City Royals ML may be overpriced by market</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Kansas City Royals injury impact (-2.0%)</li></ul></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">What Happened</span><div style="color:#cbd5e1;font-size:13px;margin-top:4px">Jac Caglianone went 3-for-3 with two HRs and three RBI as KC's lineup executed. Wind blowing in held the total to 8, right in line with the model's projection.</div></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Signal Verdict</span><div style="color:#22c55e;font-size:13px;margin-top:4px">CORRECT — Model projected 8.2 total; actual 8 runs. Wind-in lean confirmed. Perfect read.</div></div>
-    <div style="margin-top:8px;padding:6px 10px;background:#1e2435;border-radius:4px"><span style="color:#64748b;font-size:11px">&#128161; Key Insight: </span><span style="color:#cbd5e1;font-size:12px">Wind-in data integration working. This was a clean under at 8 runs in a pitcher-heavy matchup.</span></div>
-    <div style="color:#94a3b8;font-size:11px;margin-top:6px">Model: 63.5% &bull; Market: 53.1% &bull; Edge: +10.4%</div>
-    </div><div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-      <div>
-        <span style="color:#38bdf8;font-weight:700;font-size:14px">Under 13.5</span>
-        <span style="color:#64748b;font-size:12px;margin-left:8px">Total</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 6px;border-radius:3px;font-size:11px;margin-left:6px">HIGH</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#ef4444;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">LOST</span>
-        <span style="color:#ef4444;font-weight:700;font-size:14px">-$4.41</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#e2e8f0;font-size:0.8rem;font-weight:600;margin-top:5px">Texas Rangers 3, Kansas City Royals 5</div></div>
+  </div>
+  
+  <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem">
+    <div><span style="color:#64748b">WHY PICKED</span><div style="color:#cbd5e1;margin-top:2px">Stephen Kolek FIP 4.12 / xFIP 3.61 | K/9: 6.4; Nathan Eovaldi FIP 4.35 / xFIP 3.05 | K/9: 9.0; ⚠ ERA trap [MILD] — Stephen Kolek: ERA 3.32 vs xFIP 3.56 over 38 IP (severity 0.24) — Kansas City Royals ML may be overpriced by market</div></div>
+    <div><span style="color:#64748b">WHAT HAPPENED</span><div style="color:#cbd5e1;margin-top:2px">The total stayed under the line. Final: Texas Rangers 3, Kansas City Royals 5.</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem">
+    <span style="color:#64748b">SIGNAL VERDICT</span>
+    <span style="color:#22c55e;margin-left:6px">CORRECT — Model edge of 10.4% validated; signals aligned with outcome.</span>
+  </div>
+  <div style="margin-top:5px;font-size:0.75rem;color:#64748b;border-top:1px solid #2d3148;padding-top:6px"><span style="color:#94a3b8">KEY INSIGHT: </span>Under model performing well — pitching/defense edge confirmed.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span><span style="color:#38bdf8;font-weight:700;font-size:1rem;margin-left:6px">Under 13.5</span> <span style="font-weight:700;color:#22c55e">+$3.59</span>
+      <div style="color:#94a3b8;font-size:0.8rem;margin-top:3px">Milwaukee Brewers @ Athletics · Total</div>
+      <div style="margin-top:2px"><span style="color:#94a3b8;font-size:0.7rem">HIGH</span> <span style="color:#94a3b8;font-size:0.7rem">edge 10.3%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:4px">Milwaukee Brewers @ Athletics &bull; MLB</div>
-    <div style="color:#e2e8f0;font-size:13px;margin-top:8px;padding:6px 10px;background:#0f172a;border-radius:4px">Milwaukee Brewers 15, Athletics 14</div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Why Picked</span><ul style="margin:6px 0 0 16px;padding:0"><li style="color:#94a3b8;font-size:12px;margin:2px 0">J.T. Ginn FIP 4.0 / xFIP 3.76 | K/9: 8.3</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Robert Gasser FIP 4.96 / xFIP 5.15 | K/9: 8.2</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">⚠ ERA trap [SEVERE] — J.T. Ginn: ERA 2.74 vs xFIP 3.65 over 65 IP (severity 0.92) — Athletics ML may be overpriced by market</li><li style="color:#94a3b8;font-size:12px;margin:2px 0">Platoon: Athletics vs LHP — 0.743 OPS (723 PA), season 0.727 → model 0.743</li></ul></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">What Happened</span><div style="color:#cbd5e1;font-size:13px;margin-top:4px">A combined 29-run slugfest blew past the 13.5 total. Brewers' hot bat (8.0 R/G last 10) was a warning the model's 11.2-run projection failed to capture.</div></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Signal Verdict</span><div style="color:#22c55e;font-size:13px;margin-top:4px">INCORRECT — Severe miscalibration: model predicted 11.2 runs, actual 29. Brewers' recent 8.0 R/G should have overridden ERA-based starters projection.</div></div>
-    <div style="margin-top:8px;padding:6px 10px;background:#1e2435;border-radius:4px"><span style="color:#64748b;font-size:11px">&#128161; Key Insight: </span><span style="color:#cbd5e1;font-size:12px">Brewers' 7-3 last 10 with 8.0 R/G should trigger a hot-bat override flag for under bets. Model's starting-pitcher projection was undermined by bullpen/lineup form.</span></div>
-    <div style="color:#94a3b8;font-size:11px;margin-top:6px">Model: 63.4% &bull; Market: 53.1% &bull; Edge: +10.3%</div>
-    </div><div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-      <div>
-        <span style="color:#a78bfa;font-weight:700;font-size:14px">&#127928; Baltimore Orioles (ML) + Atlanta Braves (ML)</span>
-        <span style="background:#2d1f63;color:#a78bfa;padding:1px 6px;border-radius:3px;font-size:11px;margin-left:8px">PARLAY</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#ef4444;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">LOST</span>
-        <span style="color:#ef4444;font-weight:700;font-size:14px">-$1.77</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#e2e8f0;font-size:0.8rem;font-weight:600;margin-top:5px">Milwaukee Brewers 5, Athletics 7</div></div>
+  </div>
+  
+  <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem">
+    <div><span style="color:#64748b">WHY PICKED</span><div style="color:#cbd5e1;margin-top:2px">J.T. Ginn FIP 4.0 / xFIP 3.76 | K/9: 8.3; Robert Gasser FIP 4.96 / xFIP 5.15 | K/9: 8.2; ⚠ ERA trap [SEVERE] — J.T. Ginn: ERA 2.74 vs xFIP 3.65 over 65 IP (severity 0.92) — Athletics ML may be overpriced by market</div></div>
+    <div><span style="color:#64748b">WHAT HAPPENED</span><div style="color:#cbd5e1;margin-top:2px">The total stayed under the line. Final: Milwaukee Brewers 5, Athletics 7.</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem">
+    <span style="color:#64748b">SIGNAL VERDICT</span>
+    <span style="color:#22c55e;margin-left:6px">CORRECT — Model edge of 10.3% validated; signals aligned with outcome.</span>
+  </div>
+  <div style="margin-top:5px;font-size:0.75rem;color:#64748b;border-top:1px solid #2d3148;padding-top:6px"><span style="color:#94a3b8">KEY INSIGHT: </span>Under model performing well — pitching/defense edge confirmed.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+    <div>
+      <span style="color:#38bdf8;font-weight:700;font-size:1rem;margin-left:6px">Baltimore Orioles (ML) + Atlanta Braves (ML)</span> <span style="font-weight:700;color:#ef4444">-$1.77</span>
+      <div style="color:#94a3b8;font-size:0.8rem;margin-top:3px"> · </div>
+      <div style="margin-top:2px"></div>
     </div>
-    <div style="margin-top:10px"><div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #1e293b"><span style="color:#64748b;font-size:11px;min-width:40px">MLB</span><span style="color:#e2e8f0;font-size:13px;flex:1">Baltimore Orioles</span><span style="background:#ef4444;color:#0f172a;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:700">LOST</span><span style="color:#64748b;font-size:12px">Seattle Mariners 6, Baltimore Orioles 5 (10)</span></div><div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #1e293b"><span style="color:#64748b;font-size:11px;min-width:40px">MLB</span><span style="color:#e2e8f0;font-size:13px;flex:1">Atlanta Braves</span><span style="background:#ef4444;color:#0f172a;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:700">LOST</span><span style="color:#64748b;font-size:12px">Chicago White Sox 6, Atlanta Braves 5 (10)</span></div></div>
-    
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Signal Verdict</span><div style="color:#22c55e;font-size:13px;margin-top:4px">INCORRECT — Both ML legs lost in extras, both games going to OT is rare bad luck</div></div>
-    <div style="margin-top:8px;padding:6px 10px;background:#1e2435;border-radius:4px"><span style="color:#64748b;font-size:11px">&#128161; Key Insight: </span><span style="color:#cbd5e1;font-size:12px">Stacking two ML legs that both play close games amplifies single-game variance. Consider spread parlays for resilience.</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-      <div>
-        <span style="color:#a78bfa;font-weight:700;font-size:14px">&#127928; Toronto Blue Jays (ML) + Carolina Hurricanes (ML)</span>
-        <span style="background:#2d1f63;color:#a78bfa;padding:1px 6px;border-radius:3px;font-size:11px;margin-left:8px">PARLAY</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:700;font-size:14px">+$3.61</span>
-      </div>
+    <div style="text-align:right"><span style="background:#ef4444;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">LOST</span><div style="color:#e2e8f0;font-size:0.8rem;font-weight:600;margin-top:5px">—</div></div>
+  </div>
+  <table style="width:100%;border-collapse:collapse;margin:8px 0"><tr><td style="padding:3px 6px;color:#e2e8f0">Baltimore Orioles</td><td style="padding:3px 6px;color:#94a3b8;font-size:0.75rem">Seattle Mariners @ Baltimore Orioles</td><td style="padding:3px 6px"><span style="background:#ef4444;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">LOST</span></td></tr><tr><td style="padding:3px 6px;color:#e2e8f0">Atlanta Braves</td><td style="padding:3px 6px;color:#94a3b8;font-size:0.75rem">Atlanta Braves @ Chicago White Sox</td><td style="padding:3px 6px"><span style="background:#ef4444;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">LOST</span></td></tr></table>
+  <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem">
+    <div><span style="color:#64748b">WHY PICKED</span><div style="color:#cbd5e1;margin-top:2px"></div></div>
+    <div><span style="color:#64748b">WHAT HAPPENED</span><div style="color:#cbd5e1;margin-top:2px">Parlay lost due to: Baltimore Orioles, Atlanta Braves.</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem">
+    <span style="color:#64748b">SIGNAL VERDICT</span>
+    <span style="color:#ef4444;margin-left:6px">INCORRECT — leg(s) failed: Baltimore Orioles, Atlanta Braves.</span>
+  </div>
+  <div style="margin-top:5px;font-size:0.75rem;color:#64748b;border-top:1px solid #2d3148;padding-top:6px"><span style="color:#94a3b8">KEY INSIGHT: </span>Review leg selection criteria — single failure can sink the parlay.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+    <div>
+      <span style="color:#38bdf8;font-weight:700;font-size:1rem;margin-left:6px">Toronto Blue Jays (ML) + Carolina Hurricanes (ML)</span> <span style="font-weight:700;color:#22c55e">+$3.61</span>
+      <div style="color:#94a3b8;font-size:0.8rem;margin-top:3px"> · </div>
+      <div style="margin-top:2px"></div>
     </div>
-    <div style="margin-top:10px"><div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #1e293b"><span style="color:#64748b;font-size:11px;min-width:40px">MLB</span><span style="color:#e2e8f0;font-size:13px;flex:1">Toronto Blue Jays</span><span style="background:#22c55e;color:#0f172a;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:700">WON</span><span style="color:#64748b;font-size:12px">Toronto Blue Jays 3, Philadelphia Phillies 2</span></div><div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #1e293b"><span style="color:#64748b;font-size:11px;min-width:40px">NHL</span><span style="color:#e2e8f0;font-size:13px;flex:1">Carolina Hurricanes</span><span style="background:#22c55e;color:#0f172a;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:700">WON</span><span style="color:#64748b;font-size:12px">Carolina Hurricanes 5, Vegas Golden Knights 3</span></div></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">What Happened</span><div style="color:#cbd5e1;font-size:13px;margin-top:4px">Both legs hit: TOR won in walk-off fashion, CAR won Game 4 to even the series.</div></div>
-    <div style="margin-top:8px"><span style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px">Signal Verdict</span><div style="color:#22c55e;font-size:13px;margin-top:4px">CORRECT — Both favorites covered as the model expected</div></div>
-    <div style="margin-top:8px;padding:6px 10px;background:#1e2435;border-radius:4px"><span style="color:#64748b;font-size:11px">&#128161; Key Insight: </span><span style="color:#cbd5e1;font-size:12px">Cross-sport parlays (MLB + NHL) can diversify variance — this one paid off cleanly.</span></div>
-    </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#e2e8f0;font-size:0.8rem;font-weight:600;margin-top:5px">—</div></div>
+  </div>
+  <table style="width:100%;border-collapse:collapse;margin:8px 0"><tr><td style="padding:3px 6px;color:#e2e8f0">Toronto Blue Jays</td><td style="padding:3px 6px;color:#94a3b8;font-size:0.75rem">Philadelphia Phillies @ Toronto Blue Jays</td><td style="padding:3px 6px"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span></td></tr><tr><td style="padding:3px 6px;color:#e2e8f0">Carolina Hurricanes</td><td style="padding:3px 6px;color:#94a3b8;font-size:0.75rem">Carolina Hurricanes @ Vegas Golden Knights</td><td style="padding:3px 6px"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span></td></tr></table>
+  <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.78rem">
+    <div><span style="color:#64748b">WHY PICKED</span><div style="color:#cbd5e1;margin-top:2px"></div></div>
+    <div><span style="color:#64748b">WHAT HAPPENED</span><div style="color:#cbd5e1;margin-top:2px">Both legs connected. Parlay cashed.</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem">
+    <span style="color:#64748b">SIGNAL VERDICT</span>
+    <span style="color:#22c55e;margin-left:6px">CORRECT — all legs won.</span>
+  </div>
+  <div style="margin-top:5px;font-size:0.75rem;color:#64748b;border-top:1px solid #2d3148;padding-top:6px"><span style="color:#94a3b8">KEY INSIGHT: </span>Correlated parlay strategy paid off.</div>
+</div>
 
 <!-- WATCHLIST -->
-<h2>&#128269; Watchlist — All Sport Tabs</h2>
-<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Toronto Blue Jays</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">HIGH</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$3.32</span>
-      </div>
+<h2>&#128202; Watchlist — All Sport Tabs</h2>
+
+<div style="margin-bottom:18px">
+  <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:#64748b;margin-bottom:8px;text-transform:uppercase">MLB / NHL <span style="color:#94a3b8">(9-3)</span></div>
+  
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Colorado Rockies +1.5</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Chicago Cubs @ Colorado Rockies · Spread <span style="color:#94a3b8;font-size:0.7rem">edge 15.0%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Philadelphia Phillies @ Toronto Blue Jays</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Toronto Blue Jays 3, Philadelphia Phillies 2</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">San Francisco Giants</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">HIGH</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#ef4444;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">LOST</span>
-        <span style="color:#ef4444;font-weight:600;font-size:13px">-$3.15</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Chicago Cubs 3, Colorado Rockies 7</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 15.0% validated; signals aligned with outcome.</div>
+  <div style="margin-top:4px;font-size:0.76rem;color:#64748b;font-style:italic">Run-line spread value confirmed; team showed resilience.</div>
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Los Angeles Angels +1.5</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Houston Astros @ Los Angeles Angels · Spread <span style="color:#94a3b8;font-size:0.7rem">edge 9.4%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Washington Nationals @ San Francisco Giants</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Washington Nationals 4, San Francisco Giants 3</div>
-    <div style="margin-top:6px"><span style="color:#ef4444;font-size:12px;font-weight:600">INCORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Atlanta Dream</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">WNBA</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">HIGH</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$0.00</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Houston Astros 1, Los Angeles Angels 10</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 9.4% validated; signals aligned with outcome.</div>
+  <div style="margin-top:4px;font-size:0.76rem;color:#64748b;font-style:italic">Run-line spread value confirmed; team showed resilience.</div>
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Toronto Blue Jays</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Philadelphia Phillies @ Toronto Blue Jays · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 9.1%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Atlanta Dream @ Chicago Sky</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Atlanta Dream 82, Chicago Sky 75</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Colorado Rockies +1.5</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Spread</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$6.07</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Philadelphia Phillies 2, Toronto Blue Jays 3</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 9.1% validated; signals aligned with outcome.</div>
+  
+</div>
+<div style="background:#1a1d27;border-left:3px solid #ef4444;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">San Francisco Giants</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Washington Nationals @ San Francisco Giants · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 8.7%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Chicago Cubs @ Colorado Rockies</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Colorado Rockies 7, Chicago Cubs 3</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Los Angeles Angels +1.5</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Spread</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$2.75</span>
-      </div>
+    <div style="text-align:right"><span style="background:#ef4444;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">LOST</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Washington Nationals 6, San Francisco Giants 3</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#ef4444">INCORRECT — Model edge of 8.7% did not hold; check signal reliability.</div>
+  <div style="margin-top:4px;font-size:0.76rem;color:#64748b;font-style:italic">Moneyline favorite upset — revisit chalk pricing for MLB.</div>
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">New York Yankees</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">New York Yankees @ Cleveland Guardians · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 8.3%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Houston Astros @ Los Angeles Angels</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Houston Astros 5, Los Angeles Angels 4 (10)</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">New York Yankees</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$2.74</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">New York Yankees 3, Cleveland Guardians 2</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 8.3% validated; signals aligned with outcome.</div>
+  
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Kansas City Royals +1.5</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Texas Rangers @ Kansas City Royals · Spread <span style="color:#94a3b8;font-size:0.7rem">edge 8.0%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">New York Yankees @ Cleveland Guardians</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">New York Yankees 3, Cleveland Guardians 2</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Kansas City Royals +1.5</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Spread</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$2.41</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Texas Rangers 3, Kansas City Royals 5</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 8.0% validated; signals aligned with outcome.</div>
+  <div style="margin-top:4px;font-size:0.76rem;color:#64748b;font-style:italic">Run-line spread value confirmed; team showed resilience.</div>
+</div>
+<div style="background:#1a1d27;border-left:3px solid #ef4444;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Minnesota Twins</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Minnesota Twins @ Detroit Tigers · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 7.4%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Texas Rangers @ Kansas City Royals</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Kansas City Royals 5, Texas Rangers 3</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Minnesota Twins</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#ef4444;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">LOST</span>
-        <span style="color:#ef4444;font-weight:600;font-size:13px">-$2.40</span>
-      </div>
+    <div style="text-align:right"><span style="background:#ef4444;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">LOST</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Minnesota Twins 4, Detroit Tigers 10</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#ef4444">INCORRECT — Model edge of 7.4% did not hold; check signal reliability.</div>
+  <div style="margin-top:4px;font-size:0.76rem;color:#64748b;font-style:italic">Moneyline favorite upset — revisit chalk pricing for MLB.</div>
+</div>
+<div style="background:#1a1d27;border-left:3px solid #ef4444;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Milwaukee Brewers</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Milwaukee Brewers @ Athletics · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 6.9%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Minnesota Twins @ Detroit Tigers</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Detroit Tigers 10, Minnesota Twins 4</div>
-    <div style="margin-top:6px"><span style="color:#ef4444;font-size:12px;font-weight:600">INCORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Milwaukee Brewers</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$1.92</span>
-      </div>
+    <div style="text-align:right"><span style="background:#ef4444;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">LOST</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Milwaukee Brewers 5, Athletics 7</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#ef4444">INCORRECT — Model edge of 6.9% did not hold; check signal reliability.</div>
+  <div style="margin-top:4px;font-size:0.76rem;color:#64748b;font-style:italic">Moneyline favorite upset — revisit chalk pricing for MLB.</div>
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Miami Marlins</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Arizona Diamondbacks @ Miami Marlins · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 6.1%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Milwaukee Brewers @ Athletics</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Milwaukee Brewers 15, Athletics 14</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Over 5.5</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">NHL</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Total</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$1.35</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Arizona Diamondbacks 6, Miami Marlins 10</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 6.1% validated; signals aligned with outcome.</div>
+  
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Under 12.5</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Chicago Cubs @ Colorado Rockies · Total <span style="color:#94a3b8;font-size:0.7rem">edge 5.9%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Carolina Hurricanes @ Vegas Golden Knights</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Carolina Hurricanes 5, Vegas Golden Knights 3</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Miami Marlins</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$1.60</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Chicago Cubs 3, Colorado Rockies 7</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 5.9% validated; signals aligned with outcome.</div>
+  <div style="margin-top:4px;font-size:0.76rem;color:#64748b;font-style:italic">Under model performing well — pitching/defense edge confirmed.</div>
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#818cf822;color:#818cf8;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #818cf855">NHL</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Over 5.5</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Carolina Hurricanes @ Vegas Golden Knights · Total <span style="color:#94a3b8;font-size:0.7rem">edge 5.5%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Arizona Diamondbacks @ Miami Marlins</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Miami Marlins 10, Arizona Diamondbacks 6</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Under 12.5</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Total</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$1.34</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Carolina Hurricanes 5, Vegas Golden Knights 3</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 5.5% validated; signals aligned with outcome.</div>
+  
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#3b82f622;color:#3b82f6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #3b82f655">MLB</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Cincinnati Reds</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Cincinnati Reds @ San Diego Padres · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 5.2%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Chicago Cubs @ Colorado Rockies</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Colorado Rockies 7, Chicago Cubs 3</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Cincinnati Reds</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Moneyline</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#ef4444;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">LOST</span>
-        <span style="color:#ef4444;font-weight:600;font-size:13px">-$1.64</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Cincinnati Reds 5, San Diego Padres 3</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 5.2% validated; signals aligned with outcome.</div>
+  
+</div>
+</div>
+<div style="margin-bottom:18px">
+  <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;color:#64748b;margin-bottom:8px;text-transform:uppercase">WNBA <span style="color:#94a3b8">(2-1)</span></div>
+  
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#f472b622;color:#f472b6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #f472b655">WNBA</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Atlanta Dream</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Atlanta Dream @ Chicago Sky · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 14.9%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Cincinnati Reds @ San Diego Padres</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">San Diego Padres 6, Cincinnati Reds 2</div>
-    <div style="margin-top:6px"><span style="color:#ef4444;font-size:12px;font-weight:600">INCORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Under 7.5</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Total</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#ef4444;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">LOST</span>
-        <span style="color:#ef4444;font-weight:600;font-size:13px">-$1.07</span>
-      </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Atlanta Dream 82, Chicago Sky 75</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 14.9% validated; signals aligned with outcome.</div>
+  
+</div>
+<div style="background:#1a1d27;border-left:3px solid #ef4444;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#f472b622;color:#f472b6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #f472b655">WNBA</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Dallas Wings</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Dallas Wings @ Minnesota Lynx · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 7.6%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Arizona Diamondbacks @ Miami Marlins</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Miami Marlins 10, Arizona Diamondbacks 6</div>
-    <div style="margin-top:6px"><span style="color:#ef4444;font-size:12px;font-weight:600">INCORRECT</span></div>
-    </div><div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
-      <div>
-        <span style="color:#38bdf8;font-weight:600;font-size:13px">Chicago White Sox +1.5</span>
-        <span style="background:#1e293b;color:#64748b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:6px">MLB</span>
-        <span style="color:#64748b;font-size:12px;margin-left:6px">Spread</span>
-        <span style="background:#334155;color:#94a3b8;padding:1px 5px;border-radius:3px;font-size:10px;margin-left:4px">MEDIUM</span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="background:#22c55e;color:#0f172a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.5px">WON</span>
-        <span style="color:#22c55e;font-weight:600;font-size:13px">+$0.91</span>
-      </div>
+    <div style="text-align:right"><span style="background:#ef4444;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">LOST</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Dallas Wings 76, Minnesota Lynx 100</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#ef4444">INCORRECT — Model edge of 7.6% did not hold; check signal reliability.</div>
+  <div style="margin-top:4px;font-size:0.76rem;color:#64748b;font-style:italic">Moneyline favorite upset — revisit chalk pricing for WNBA.</div>
+</div>
+<div style="background:#1a1d27;border-left:3px solid #22c55e;border-radius:6px;padding:12px 14px;margin-bottom:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">
+    <div>
+      <span style="background:#f472b622;color:#f472b6;font-size:0.65rem;font-weight:700;padding:1px 7px;border-radius:3px;border:1px solid #f472b655">WNBA</span>
+      <span style="color:#38bdf8;font-weight:600;font-size:0.9rem;margin-left:6px">Golden State Valkyries</span>
+      <div style="color:#94a3b8;font-size:0.75rem;margin-top:2px">Phoenix Mercury @ Golden State Valkyries · Moneyline <span style="color:#94a3b8;font-size:0.7rem">edge 4.1%</span></div>
     </div>
-    <div style="color:#64748b;font-size:12px;margin-top:3px">Atlanta Braves @ Chicago White Sox</div>
-    <div style="color:#94a3b8;font-size:12px;margin-top:6px;padding:4px 8px;background:#0f172a;border-radius:4px">Chicago White Sox 6, Atlanta Braves 5 (10)</div>
-    <div style="margin-top:6px"><span style="color:#22c55e;font-size:12px;font-weight:600">CORRECT</span></div>
-    </div>
+    <div style="text-align:right"><span style="background:#22c55e;color:#000;font-weight:700;font-size:0.7rem;padding:2px 8px;border-radius:4px;letter-spacing:0.05em">WON</span><div style="color:#94a3b8;font-size:0.72rem;margin-top:4px">Phoenix Mercury 81, Golden State Valkyries 87</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:0.78rem;color:#22c55e">CORRECT — Model edge of 4.1% validated; signals aligned with outcome.</div>
+  
+</div>
+</div>
 
 <!-- PATTERNS -->
-<h2>&#128200; Patterns Today</h2>
-<div style="background:#1a1d27;border-radius:8px;padding:16px;margin-bottom:12px">
-  <ul><li style="color:#cbd5e1;font-size:13px;margin:6px 0;padding-left:4px">HIGH confidence (budget): 3-2 (singles only)</li><li style="color:#cbd5e1;font-size:13px;margin:6px 0;padding-left:4px">Totals: 1 WON (Under 9.5), 1 LOST (Under 13.5) — hot-bat lineups crushed the 13.5 under</li><li style="color:#cbd5e1;font-size:13px;margin:6px 0;padding-left:4px">Spread picks: 1 WON (BAL +1.5) — spread bets outperformed ML bets today</li><li style="color:#cbd5e1;font-size:13px;margin:6px 0;padding-left:4px">NHL playoffs: model nailed the CAR ML and the parlay leg — playoff weighting working</li><li style="color:#cbd5e1;font-size:13px;margin:6px 0;padding-left:4px">Both extras-loss games (BAL, ATL) were within 1 run — model was right on talent, wrong on outcome</li><li style="color:#cbd5e1;font-size:13px;margin:6px 0;padding-left:4px">Parlay 2 (TOR + CAR) hit clean; Parlay 1 (BAL ML + ATL ML) lost both legs</li><li style="color:#cbd5e1;font-size:13px;margin:6px 0;padding-left:4px">WNBA: Dream ML hit (82-75) — model correctly read CHI Sky's poor home form</li></ul>
+<h2>&#128270; Patterns Today</h2>
+<div style="background:#1a1d27;border-radius:8px;padding:14px 16px;margin-bottom:14px;border:1px solid #2d3148">
+  <ul><li style="margin-bottom:6px;color:#cbd5e1">HIGH confidence budget: 4-1 (5 picks)</li><li style="margin-bottom:6px;color:#cbd5e1">MLB/NHL Totals (Under): 2-0 on budget — low-scoring games delivered</li><li style="margin-bottom:6px;color:#cbd5e1">MLB Moneyline budget: 1-1 (CWS upset spoiled otherwise clean card)</li><li style="margin-bottom:6px;color:#cbd5e1">Run-line spreads: 1-0 on budget (BAL covered despite losing the game)</li><li style="margin-bottom:6px;color:#cbd5e1">Top edge watchlist picks (≥12% edge): 2-0</li><li style="margin-bottom:6px;color:#cbd5e1">WNBA: 2-1 (Dream and GSV both delivered)</li></ul>
 </div>
 
 <!-- MODEL OBSERVATIONS -->
-<h2>&#129302; Model Observations</h2>
-<div style="background:#1a1d27;border-radius:8px;padding:16px;margin-bottom:20px">
-  <ul><li style="color:#cbd5e1;font-size:13px;margin:8px 0;padding-left:4px">Brewers Under 13.5 is the sharpest miss: recent 8.0 R/G team form was a clear red flag. Implement a 'hot-bat override' that widens expected totals when a team's last-10 R/G exceeds season R/G by >40%.</li><li style="color:#cbd5e1;font-size:13px;margin:8px 0;padding-left:4px">ATL Braves ML: model projection (ATL 5.1) was directionally right but extras are a coin flip. Consider reducing ML stake when projected margin is <1.5 runs and weather involves rain risk.</li><li style="color:#cbd5e1;font-size:13px;margin:8px 0;padding-left:4px">BAL +1.5 WON even though BAL ML would have lost — spread bets on close pitcher matchups provide good insurance. More spread allocation when FIP edge > 1.0 between starters.</li><li style="color:#cbd5e1;font-size:13px;margin:8px 0;padding-left:4px">Under 9.5 KC/TEX: near-perfect call. Wind-in data continues to be a reliable modifier. Model projected 8.2, actual 8. Signal accuracy: 100%.</li><li style="color:#cbd5e1;font-size:13px;margin:8px 0;padding-left:4px">CAR ML: playoff weighting (55% recent form) and goal-diff edge (+0.68 NetRtg vs VGK) correctly identified Carolina as the value side at +EV.</li><li style="color:#cbd5e1;font-size:13px;margin:8px 0;padding-left:4px">TOR ML parlay leg: Brandon Valenzuela's walk-off single indicates clutch performance isn't yet modeled — worth tracking late-inning leverage metrics.</li><li style="color:#cbd5e1;font-size:13px;margin:8px 0;padding-left:4px">WNBA model: Dream correctly identified over Sky (Angel Reese: 17/17 performance). WNBA edge signals showing consistent positive results.</li></ul>
+<h2>&#129504; Model Observations</h2>
+<div style="background:#1a1d27;border-radius:8px;padding:14px 16px;margin-bottom:24px;border:1px solid #2d3148">
+  <ul><li style="margin-bottom:6px;color:#cbd5e1">ATL Braves ML miss: White Sox (+146 dogs) won 6-5 — model underweighted CWS home-field resilience late in game</li><li style="margin-bottom:6px;color:#cbd5e1">BAL run-line (+1.5) shine: Orioles lost game but budget spread pick WON — run-line value outperformed ML selection in parlay</li><li style="margin-bottom:6px;color:#cbd5e1">Under model performing: Both budget under picks hit comfortably (TEX/KC: 8 total vs 9.5; MIL/OAK: 12 vs 13.5)</li><li style="margin-bottom:6px;color:#cbd5e1">Parlay split: BAL+ATL ML parlay LOST; TOR+CAR parlay WON — ML-to-spread mismatch in BAL pick worth reviewing</li><li style="margin-bottom:6px;color:#cbd5e1">Large-edge watchlist picks reliable: CHC@COL +1.5 at 15.0% edge cashed as Rockies won outright 7-3</li><li style="margin-bottom:6px;color:#cbd5e1">Detroit Tigers blew out Twins 10-4 — heavy favorite MIN underperformed; model overrated MIN in this spot</li><li style="margin-bottom:6px;color:#cbd5e1">LAA 10-1 win vs HOU — extreme blowout suggests weather/pitching factor model may not have fully captured</li></ul>
 </div>
 
 <!-- FOOTER -->
-<div style="text-align:center;padding:16px 0;color:#334155;font-size:12px;border-top:1px solid #1e293b;margin-top:8px">
-  Generated 2026-06-10 14:30 UTC &bull;
-  <a href="/index_spa.html" style="color:#38bdf8">&#8592; Back to Picks</a>
+<div style="text-align:center;font-size:0.75rem;color:#64748b;padding-bottom:24px;border-top:1px solid #1a1d27;padding-top:16px">
+  Generated 2026-06-10T14:58:08Z &nbsp;·&nbsp; <a href="/index_spa.html">← Back to Picks</a>
 </div>
 
+</div>
 </body>
 </html>
