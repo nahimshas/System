@@ -1,0 +1,39 @@
+name: Results Snapshot
+
+# Resolves TODAY's picks against ESPN and commits state/results_snapshot.json.
+# Triggered via workflow_dispatch by the nightly debrief routine right before
+# it builds the report — score resolution runs as deterministic Python on
+# GitHub's runners (which ESPN doesn't block) instead of inside the LLM agent.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Resolve today's picks against ESPN
+        run: python -m src.data.results_snapshot
+
+      - name: Commit snapshot
+        run: |
+          git config user.name "results-snapshot-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase
+          git add state/results_snapshot.json
+          git diff --cached --quiet || git commit -m "Results snapshot: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
