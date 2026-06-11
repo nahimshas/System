@@ -60,11 +60,14 @@ You NEVER compute, fetch, or search for scores OR closing lines yourself. WebSea
 
 ## Step 5a — Generate analysis
 
-As before, for each single pick produce: `result`, `score`, `pnl`, `why_picked`, `what_happened`, `signal_verdict`, `key_insight`, `signals` (REQUIRED short names for the Signal Scorecard). Plus these CLV additions:
+As before, for each single pick produce: `result`, `score`, `pnl`, `why_picked`, `what_happened`, `signal_verdict`, `key_insight`, `signals` (REQUIRED short names for the Signal Scorecard). Plus these CLV additions and hardened requirements (June 11 revision — the first CLV run skipped narratives):
 
+- **`what_happened` is REQUIRED (non-empty) for every settled budget pick**: one WebSearch per settled game, 1-2 sentences of narrative. WebSearch never overrides snapshot numbers, but it IS mandatory for narrative.
+- `why_picked` must come from the pick's OWN signals array — never generic, never cross-sport.
 - `clv_pct`: copied from the snapshot entry if present, else omit.
-- Fold CLV into `signal_verdict` reasoning where available. CLV outranks the result as evidence: a LOST pick with positive CLV was a good bet that lost ("CORRECT — beat the close +2.4%, lost on variance"); a WON pick with clearly negative CLV deserves skepticism ("MIXED — won, but the close moved 3.1% against us; market disagreed with this signal").
-- In `model_observations`, aggregate per-signal CLV when ≥2 picks share a signal name tonight (e.g. "ERA Trap picks tonight: 2-0 with avg CLV +2.8% — signal confirmed by both results and line movement").
+- `signal_verdict` uses fixed templates keyed on (result, CLV band) — e.g. LOST + CLV ≥ +1% → "CORRECT — beat the close (+X.X%), lost on variance"; WON + CLV ≤ −1% → "MIXED — won, but the market moved X.X% against this pick". Never repeat the word CLV twice.
+- Parlays: `game` = leg games joined with " / " (never null).
+- In `model_observations`, aggregate per-signal CLV when ≥2 picks share a signal name tonight.
 
 Compute records/P&L in Python exactly as before, and additionally:
 
