@@ -1595,6 +1595,61 @@
     </details>
     {% endif %}
 
+    {% if report.clv %}
+    {% set clv = report.clv %}
+    <details id="sect-clv">
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Closing Line Value</summary>
+    <div class="card">
+      <details>
+        <summary style="cursor:pointer;list-style:none;font-size:0.85rem;color:var(--teal);padding:4px 0;">▶ What CLV means</summary>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;margin:8px 0 4px;padding-left:6px;border-left:2px solid var(--border);">
+          CLV = the market's <em>closing</em> probability minus the probability when the model picked.
+          <span style="color:var(--green);">Positive</span> = the line moved toward our pick after we took it — we beat the close, the strongest known predictor of long-term edge, win or lose.
+          <span style="color:var(--red);">Negative</span> = the market moved against us; a market that does this consistently loses long-term even while winning bets.
+          Between &minus;1% and +1% is noise.
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li><strong>Phase 0</strong> — &lt; {{ clv.thresholds.phase1_min_n or 30 }} graded picks: observe only.</li>
+            <li><strong>Phase 1</strong> — {{ clv.thresholds.phase1_min_n or 30 }}+: avg CLV &le; &minus;2% is pulled from the budget pool.</li>
+            <li><strong>Phase 2</strong> — {{ clv.thresholds.phase2_min_n or 50 }}+: avg CLV &le; &minus;1% is pulled.</li>
+          </ul>
+          Gated markets keep being analyzed and graded — only real-money allocation pauses, so an improving market un-gates itself automatically.
+        </div>
+      </details>
+      {% if not clv.has_data %}
+      <div style="font-size:0.82rem;color:var(--muted);margin-top:8px;">
+        No closing-line data yet — CLV capture grades each pick's closing price nightly. This table activates as graded picks accumulate.
+      </div>
+      {% else %}
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.78rem;min-width:340px;">
+          <thead><tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
+            <th style="text-align:left;padding:8px 6px;">Market</th>
+            <th style="text-align:right;padding:8px 6px;">Picks</th>
+            <th style="text-align:right;padding:8px 6px;">Avg CLV</th>
+            <th style="text-align:left;padding:8px 6px;">Status</th>
+          </tr></thead>
+          <tbody>
+            {% for m in clv.markets %}
+            <tr style="border-bottom:1px solid var(--border);{% if m.gated %}background:rgba(239,68,68,0.06);{% endif %}">
+              <td style="padding:7px 6px;"><strong>{{ m.sport }}</strong> <span style="color:var(--muted);">{{ m.market_type }}</span></td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">{{ m.n }}</td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;font-weight:700;color:{% if m.avg_clv_pct >= 1.0 %}var(--green){% elif m.avg_clv_pct <= -1.0 %}var(--red){% else %}var(--text){% endif %};">{{ m.clv_display }}</td>
+              <td style="padding:7px 6px;font-size:0.7rem;color:{% if m.gated %}var(--red){% else %}var(--muted){% endif %};">
+                {% if m.gated %}GATED — out of budget{% elif m.phase == 0 %}Observing ({{ (clv.thresholds.phase1_min_n or 30) - m.n }} to go){% elif m.phase == 1 %}Active — extreme gate{% else %}Active — full gate{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;font-size:0.7rem;color:var(--muted);line-height:1.5;">
+        Sustained <span style="color:var(--green);">+1%+</span> = proven edge — the model sees it before the market. Below <span style="color:var(--red);">&minus;1%</span> over 50+ picks, the governor pulls that market from the budget automatically.
+      </div>
+      {% endif %}
+    </div>
+    </details>
+    {% endif %}
+
     <details id="sect-tab-visibility">
     <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Show / Hide League Tabs</summary>
     <div class="card">
