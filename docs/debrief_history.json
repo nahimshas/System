@@ -2603,11 +2603,13 @@
     },
     {
       "date": "2026-06-10",
-      "generated_at": "2026-06-11T06:14:50Z",
-      "headline": "28 picks PENDING \u2014 Results Snapshot workflow commit failed; all 7 budget + 21 watchlist picks settle tomorrow morning",
-      "budget_record": "0-0",
-      "watchlist_record": "0-0",
-      "budget_pnl": 0.0,
+      "generated_at": "2026-06-11T10:17:35Z",
+      "headline": "5-2 on Today's Card (+$22.12), avg single CLV -0.18%; ERA trap signal 7-4 on the night; WNBA 2-for-2 with avg CLV +1.6%; watchlist 14-7 overall",
+      "budget_record": "5-2",
+      "watchlist_record": "14-7",
+      "budget_pnl": 22.12,
+      "avg_budget_clv": -0.18,
+      "snapshot_timeout": false,
       "picks": [
         {
           "game": "Chicago Cubs @ Colorado Rockies",
@@ -2615,28 +2617,25 @@
           "pick": "Colorado Rockies +1.5",
           "bet_type": "Spread",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "Michael Lorenzen FIP 5.08 / xFIP 4.02 | K/9: 7.2",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
-          "signals": [
-            "Starter Edge \u2014 Lorenzen",
-            "Starter Edge \u2014 Imanaga",
-            "Park Factor (Hitter)",
-            "Injury Impact"
-          ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
-          "in_budget": true,
+          "result": "WON",
+          "score": "Chicago Cubs 2, Colorado Rockies 3",
+          "pnl": "+$5.92",
+          "clv_pct": -0.9,
           "model_prob_pct": 63.7,
           "market_prob_pct": 48.7,
           "edge_pct": 15.0,
           "profit_if_win": 5.92,
           "total_cost": 6.08,
-          "commence_time": "2026-06-11T00:41:00Z",
-          "home_team": "Colorado Rockies",
-          "away_team": "Chicago Cubs"
+          "why_picked": "Model edge: Park Factor, Injury Impact; model prob 63.7% vs market 48.7%",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV -0.9% (slight market fade)",
+          "key_insight": "Good result despite market fading. Monitor if the closing-line fade repeats.",
+          "in_budget": true
         },
         {
           "game": "Arizona Diamondbacks @ Miami Marlins",
@@ -2644,28 +2643,25 @@
           "pick": "Miami Marlins",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "Ryan Gusto FIP 1.8 / xFIP 2.58 | K/9: 9.0",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
-          "signals": [
-            "Starter Edge \u2014 Gusto",
-            "Starter Edge \u2014 Nelson",
-            "Park Factor (Pitcher)",
-            "Injury Impact"
-          ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
-          "in_budget": true,
+          "result": "WON",
+          "score": "Arizona Diamondbacks 0, Miami Marlins 8",
+          "pnl": "+$5.91",
+          "clv_pct": -0.4,
           "model_prob_pct": 63.8,
           "market_prob_pct": 48.8,
           "edge_pct": 15.0,
           "profit_if_win": 5.91,
           "total_cost": 6.09,
-          "commence_time": "2026-06-10T22:41:00Z",
-          "home_team": "Miami Marlins",
-          "away_team": "Arizona Diamondbacks"
+          "why_picked": "Model edge: Park Factor, Injury Impact; model prob 63.8% vs market 48.8%",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Wind Factor",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV -0.4% (slight market fade)",
+          "key_insight": "Good result despite market fading. Monitor if the closing-line fade repeats.",
+          "in_budget": true
         },
         {
           "game": "San Antonio Spurs @ New York Knicks",
@@ -2673,26 +2669,24 @@
           "pick": "San Antonio Spurs +2.5",
           "bet_type": "Spread",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "Home court advantage: New York Knicks (+2%)",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
-          "signals": [
-            "Home Advantage",
-            "Recent Form"
-          ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
-          "in_budget": true,
+          "result": "WON",
+          "score": "San Antonio Spurs 106, New York Knicks 107",
+          "pnl": "+$4.80",
+          "clv_pct": 0.5,
           "model_prob_pct": 62.6,
           "market_prob_pct": 50.0,
           "edge_pct": 12.6,
           "profit_if_win": 4.8,
           "total_cost": 5.2,
-          "commence_time": "2026-06-11T00:40:00Z",
-          "home_team": "New York Knicks",
-          "away_team": "San Antonio Spurs"
+          "why_picked": "Model edge: Home Advantage, Playoffs Intensity; model prob 62.6% vs market 50.0%",
+          "signals": [
+            "Home Advantage",
+            "Playoffs Intensity",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close +0.5%",
+          "key_insight": "Both results and CLV confirm the signal.",
+          "in_budget": true
         },
         {
           "game": "Los Angeles Dodgers @ Pittsburgh Pirates",
@@ -2700,28 +2694,25 @@
           "pick": "Pittsburgh Pirates +1.5",
           "bet_type": "Spread",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "\u26a0 ERA trap [MODERATE] \u2014 Shohei Ohtani: ERA 0.74 vs xFIP 3.11 over 61 IP (severity 0.61) \u2014 Los Angeles Dodgers ML may be ",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
-          "signals": [
-            "Starter Edge \u2014 Jones",
-            "Starter Edge \u2014 Ohtani",
-            "ERA Trap \u2014 Ohtani (Moderate)",
-            "Park Factor (Pitcher)"
-          ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
-          "in_budget": true,
+          "result": "WON",
+          "score": "Los Angeles Dodgers 8, Pittsburgh Pirates 9",
+          "pnl": "+$6.16",
+          "clv_pct": -0.5,
           "model_prob_pct": 60.7,
           "market_prob_pct": 46.7,
           "edge_pct": 14.1,
           "profit_if_win": 6.16,
           "total_cost": 5.84,
-          "commence_time": "2026-06-10T22:41:00Z",
-          "home_team": "Pittsburgh Pirates",
-          "away_team": "Los Angeles Dodgers"
+          "why_picked": "Model edge: ERA Trap \u2014 Shohei Ohtani, Park Factor; model prob 60.7% vs market 46.7%",
+          "signals": [
+            "ERA Trap \u2014 Shohei Ohtani",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV -0.5% (slight market fade)",
+          "key_insight": "Good result despite market fading. Monitor if the closing-line fade repeats.",
+          "in_budget": true
         },
         {
           "game": "Seattle Mariners @ Baltimore Orioles",
@@ -2729,90 +2720,99 @@
           "pick": "Seattle Mariners",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "\u26a0 ERA trap [SEVERE] \u2014 Brandon Young: ERA 3.47 vs xFIP 4.28 over 49 IP (severity 0.81) \u2014 Baltimore Orioles ML may be over",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
-          "signals": [
-            "Starter Edge \u2014 Young",
-            "Starter Edge \u2014 Kirby",
-            "ERA Trap \u2014 Young (Severe)",
-            "Park Factor (Pitcher)"
-          ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
-          "in_budget": true,
+          "result": "LOST",
+          "score": "Seattle Mariners 2, Baltimore Orioles 7",
+          "pnl": "-$4.68",
+          "clv_pct": 0.4,
           "model_prob_pct": 61.7,
           "market_prob_pct": 50.0,
           "edge_pct": 11.7,
           "profit_if_win": 4.32,
           "total_cost": 4.68,
-          "commence_time": "2026-06-10T22:36:00Z",
-          "home_team": "Baltimore Orioles",
-          "away_team": "Seattle Mariners"
+          "why_picked": "Model edge: ERA Trap \u2014 Brandon Young, Park Factor; model prob 61.7% vs market 50.0%",
+          "signals": [
+            "ERA Trap \u2014 Brandon Young",
+            "Park Factor",
+            "Injury Impact",
+            "Weather"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close +0.4%, lost on variance",
+          "key_insight": "Line moved our way before game time \u2014 correct process, bad outcome. Stay the course.",
+          "in_budget": true
         },
         {
           "pick": "Miami Marlins (ML) + Philadelphia Phillies (ML)",
           "sport": "PARLAY",
           "bet_type": "Parlay",
           "game": "Miami Marlins (ML) + Philadelphia Phillies (ML)",
-          "result": "PENDING",
-          "score": "Pending",
-          "pnl": "",
+          "result": "WON",
+          "pnl": "+$5.68",
+          "confidence": "HIGH",
           "legs": [
             {
               "pick": "Miami Marlins",
               "sport": "MLB",
-              "game": "Arizona Diamondbacks @ Miami Marlins",
-              "result": "PENDING"
+              "result": "WON",
+              "score": "Arizona Diamondbacks 0, Miami Marlins 8",
+              "clv_pct": -0.4
             },
             {
               "pick": "Philadelphia Phillies",
               "sport": "MLB",
-              "game": "Philadelphia Phillies @ Toronto Blue Jays",
-              "result": "PENDING"
+              "result": "WON",
+              "score": "Philadelphia Phillies 7, Toronto Blue Jays 4",
+              "clv_pct": -0.2
             }
           ],
           "signals": [
-            "Value Edge"
+            "Park Factor",
+            "Injury Impact",
+            "Wind Factor",
+            "Platoon Edge"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 both legs hit (Miami Marlins WON, Philadelphia Phillies WON)",
           "key_insight": "",
           "in_budget": true,
+          "total_cost": 2.32,
           "profit_if_win": 5.68,
-          "total_cost": 2.32
+          "clv_pct": -0.3
         },
         {
           "pick": "Seattle Mariners (ML) + Los Angeles Angels (ML)",
           "sport": "PARLAY",
           "bet_type": "Parlay",
           "game": "Seattle Mariners (ML) + Los Angeles Angels (ML)",
-          "result": "PENDING",
-          "score": "Pending",
-          "pnl": "",
+          "result": "LOST",
+          "pnl": "-$1.67",
+          "confidence": "HIGH",
           "legs": [
             {
               "pick": "Seattle Mariners",
               "sport": "MLB",
-              "game": "Seattle Mariners @ Baltimore Orioles",
-              "result": "PENDING"
+              "result": "LOST",
+              "score": "Seattle Mariners 2, Baltimore Orioles 7",
+              "clv_pct": 0.4
             },
             {
               "pick": "Los Angeles Angels",
               "sport": "MLB",
-              "game": "Houston Astros @ Los Angeles Angels",
-              "result": "PENDING"
+              "result": "WON",
+              "score": "Houston Astros 2, Los Angeles Angels 3",
+              "clv_pct": 1.3
             }
           ],
           "signals": [
-            "Value Edge"
+            "ERA Trap \u2014 Brandon Young",
+            "Park Factor",
+            "Injury Impact",
+            "Weather"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 one leg failed (Seattle Mariners LOST, Los Angeles Angels WON); avg leg CLV +0.9% \u2014 good process, one leg fell short",
+          "key_insight": "One leg (Seattle Mariners) sank the parlay \u2014 single bets on each leg would have split the result.",
           "in_budget": true,
+          "total_cost": 1.67,
           "profit_if_win": 4.33,
-          "total_cost": 1.67
+          "clv_pct": 0.9
         },
         {
           "game": "Philadelphia Phillies @ Toronto Blue Jays",
@@ -2820,26 +2820,18 @@
           "pick": "Philadelphia Phillies",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Philadelphia Phillies 7, Toronto Blue Jays 4",
           "pnl": "",
-          "why_picked": "Max Scherzer FIP 8.42 / xFIP 5.56 | K/9: 4.9",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -0.2,
           "signals": [
-            "Starter Edge \u2014 Scherzer",
-            "Starter Edge",
-            "Park Factor (Hitter)",
-            "Injury Impact"
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 66.5,
-          "market_prob_pct": 55.5,
-          "edge_pct": 11.1,
-          "profit_if_win": 3.83,
-          "total_cost": 5.17,
-          "commence_time": "2026-06-10T23:08:00Z"
+          "in_budget": false
         },
         {
           "game": "Houston Astros @ Los Angeles Angels",
@@ -2847,26 +2839,18 @@
           "pick": "Los Angeles Angels",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Houston Astros 2, Los Angeles Angels 3",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [SEVERE] \u2014 Peter Lambert: ERA 3.55 vs xFIP 4.47 over 50 IP (severity 0.92) \u2014 Houston Astros ML may be overpri",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 1.3,
           "signals": [
-            "Starter Edge \u2014 Detmers",
-            "Starter Edge \u2014 Lambert",
-            "ERA Trap \u2014 Lambert (Severe)",
-            "Park Factor (Pitcher)"
+            "ERA Trap \u2014 Peter Lambert",
+            "Park Factor",
+            "Platoon Edge"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won, beat the close +1.3%",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 62.4,
-          "market_prob_pct": 51.7,
-          "edge_pct": 10.6,
-          "profit_if_win": 3.7,
-          "total_cost": 4.3,
-          "commence_time": "2026-06-11T01:39:00Z"
+          "in_budget": false
         },
         {
           "game": "Texas Rangers @ Kansas City Royals",
@@ -2874,26 +2858,18 @@
           "pick": "Kansas City Royals +1.5",
           "bet_type": "Spread",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "LOST",
+          "score": "Texas Rangers 6, Kansas City Royals 4",
           "pnl": "",
-          "why_picked": "Seth Lugo FIP 3.66 / xFIP 3.95 | K/9: 7.6",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 1.2,
           "signals": [
-            "Starter Edge \u2014 Lugo",
-            "Starter Edge \u2014 Gore",
             "Injury Impact",
-            "Weather Factor"
+            "Wind Factor",
+            "Platoon Edge"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 beat the close +1.2%, lost on variance",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 67.6,
-          "market_prob_pct": 58.1,
-          "edge_pct": 9.6,
-          "profit_if_win": 2.8,
-          "total_cost": 4.2,
-          "commence_time": "2026-06-10T23:41:00Z"
+          "in_budget": false
         },
         {
           "game": "Cincinnati Reds @ San Diego Padres",
@@ -2901,26 +2877,18 @@
           "pick": "Under 8.5",
           "bet_type": "Total",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "LOST",
+          "score": "Cincinnati Reds 4, San Diego Padres 5",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [MILD] \u2014 Michael King: ERA 3.41 vs xFIP 3.65 over 74 IP (severity 0.24) \u2014 San Diego Padres ML may be overpric",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -1.0,
           "signals": [
-            "Starter Edge \u2014 King",
-            "Starter Edge \u2014 Singer",
-            "ERA Trap \u2014 King",
-            "Park Factor (Pitcher)"
+            "ERA Trap \u2014 Michael King",
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "INCORRECT \u2014 lost, CLV -1.0%",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 61.5,
-          "market_prob_pct": 51.2,
-          "edge_pct": 10.3,
-          "profit_if_win": 3.74,
-          "total_cost": 4.26,
-          "commence_time": "2026-06-10T20:11:00Z"
+          "in_budget": false
         },
         {
           "game": "Milwaukee Brewers @ Athletics",
@@ -2928,26 +2896,17 @@
           "pick": "Under 14.5",
           "bet_type": "Total",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Milwaukee Brewers 3, Athletics 4",
           "pnl": "",
-          "why_picked": "Jack Perkins FIP 2.42 / xFIP 2.91 | K/9: 11.0",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -0.9,
           "signals": [
-            "Starter Edge \u2014 Perkins",
-            "Starter Edge \u2014 Sproat",
             "Platoon Edge",
             "Recent Form"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 61.8,
-          "market_prob_pct": 51.5,
-          "edge_pct": 10.3,
-          "profit_if_win": 3.72,
-          "total_cost": 4.28,
-          "commence_time": "2026-06-11T01:06:00Z"
+          "in_budget": false
         },
         {
           "game": "Texas Rangers @ Kansas City Royals",
@@ -2955,26 +2914,18 @@
           "pick": "Under 10.5",
           "bet_type": "Total",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Texas Rangers 6, Kansas City Royals 4",
           "pnl": "",
-          "why_picked": "Seth Lugo FIP 3.66 / xFIP 3.95 | K/9: 7.6",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -2.1,
           "signals": [
-            "Starter Edge \u2014 Lugo",
-            "Starter Edge \u2014 Gore",
             "Injury Impact",
-            "Weather Factor"
+            "Wind Factor",
+            "Platoon Edge"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "MIXED \u2014 won, CLV -2.1% (market faded this pick)",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 62.5,
-          "market_prob_pct": 52.2,
-          "edge_pct": 10.3,
-          "profit_if_win": 3.66,
-          "total_cost": 4.34,
-          "commence_time": "2026-06-10T23:41:00Z"
+          "in_budget": false
         },
         {
           "game": "New York Yankees @ Cleveland Guardians",
@@ -2982,26 +2933,19 @@
           "pick": "New York Yankees",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "New York Yankees 8, Cleveland Guardians 4",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [SEVERE] \u2014 Parker Messick: ERA 2.40 vs xFIP 3.64 over 75 IP (severity 1.11) \u2014 Cleveland Guardians ML may be o",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -0.2,
           "signals": [
-            "Starter Edge \u2014 Messick",
-            "Starter Edge",
-            "ERA Trap \u2014 Messick (Severe)",
-            "ERA Trap (Moderate)"
+            "ERA Trap \u2014 Parker Messick",
+            "ERA Trap \u2014 Carlos Rod\u00f3n",
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 61.6,
-          "market_prob_pct": 48.1,
-          "edge_pct": 13.5,
-          "profit_if_win": 5.49,
-          "total_cost": 5.51,
-          "commence_time": "2026-06-10T17:11:00Z"
+          "in_budget": false
         },
         {
           "game": "Minnesota Twins @ Detroit Tigers",
@@ -3009,26 +2953,19 @@
           "pick": "Detroit Tigers",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "LOST",
+          "score": "Minnesota Twins 6, Detroit Tigers 4",
           "pnl": "",
-          "why_picked": "Framber Valdez FIP 3.95 / xFIP 3.98 | K/9: 7.4",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -0.1,
           "signals": [
-            "Starter Edge \u2014 Valdez",
-            "Park Factor (Pitcher)",
+            "Park Factor",
             "Injury Impact",
-            "Platoon Edge"
+            "Platoon Edge",
+            "Recent Form"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "INCORRECT \u2014 lost",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 68.3,
-          "market_prob_pct": 61.1,
-          "edge_pct": 7.1,
-          "profit_if_win": 1.84,
-          "total_cost": 3.16,
-          "commence_time": "2026-06-10T22:41:00Z"
+          "in_budget": false
         },
         {
           "game": "St. Louis Cardinals @ New York Mets",
@@ -3036,26 +2973,18 @@
           "pick": "St. Louis Cardinals",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "St. Louis Cardinals 9, New York Mets 2",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [SEVERE] \u2014 Austin Warren: ERA 2.01 vs xFIP 3.87 over 22 IP (severity 1.01) \u2014 New York Mets ML may be overpric",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -0.2,
           "signals": [
-            "Starter Edge \u2014 Warren",
-            "Starter Edge \u2014 Pallante",
-            "ERA Trap \u2014 Warren (Severe)",
-            "Park Factor (Pitcher)"
+            "ERA Trap \u2014 Austin Warren",
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 52.0,
-          "market_prob_pct": 45.0,
-          "edge_pct": 7.0,
-          "profit_if_win": 2.65,
-          "total_cost": 2.35,
-          "commence_time": "2026-06-10T23:11:00Z"
+          "in_budget": false
         },
         {
           "game": "Milwaukee Brewers @ Athletics",
@@ -3063,26 +2992,17 @@
           "pick": "Athletics +1.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Milwaukee Brewers 3, Athletics 4",
           "pnl": "",
-          "why_picked": "Jack Perkins FIP 2.42 / xFIP 2.91 | K/9: 11.0",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 0.1,
           "signals": [
-            "Starter Edge \u2014 Perkins",
-            "Starter Edge \u2014 Sproat",
             "Platoon Edge",
             "Recent Form"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won, beat the close +0.1%",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 64.9,
-          "market_prob_pct": 58.3,
-          "edge_pct": 6.7,
-          "profit_if_win": 1.59,
-          "total_cost": 2.41,
-          "commence_time": "2026-06-11T01:06:00Z"
+          "in_budget": false
         },
         {
           "game": "Chicago Cubs @ Colorado Rockies",
@@ -3090,26 +3010,18 @@
           "pick": "Under 12.5",
           "bet_type": "Total",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Chicago Cubs 2, Colorado Rockies 3",
           "pnl": "",
-          "why_picked": "Michael Lorenzen FIP 5.08 / xFIP 4.02 | K/9: 7.2",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -2.2,
           "signals": [
-            "Starter Edge \u2014 Lorenzen",
-            "Starter Edge \u2014 Imanaga",
-            "Park Factor (Hitter)",
-            "Injury Impact"
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "MIXED \u2014 won, CLV -2.2% (market faded this pick)",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 59.9,
-          "market_prob_pct": 53.0,
-          "edge_pct": 6.9,
-          "profit_if_win": 1.8,
-          "total_cost": 2.2,
-          "commence_time": "2026-06-11T00:41:00Z"
+          "in_budget": false
         },
         {
           "game": "Atlanta Braves @ Chicago White Sox",
@@ -3117,26 +3029,19 @@
           "pick": "Chicago White Sox +1.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Atlanta Braves 1, Chicago White Sox 2",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [MILD] \u2014 Chris Sale: ERA 2.23 vs xFIP 2.73 over 72 IP (severity 0.29) \u2014 Atlanta Braves ML may be overpriced b",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -0.0,
           "signals": [
-            "Starter Edge \u2014 Sale",
-            "ERA Trap \u2014 Sale",
-            "Park Factor (Pitcher)",
-            "Injury Impact"
+            "ERA Trap \u2014 Chris Sale",
+            "Park Factor",
+            "Injury Impact",
+            "Wind Factor"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won, beat the close +-0.0%",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 61.5,
-          "market_prob_pct": 55.4,
-          "edge_pct": 6.1,
-          "profit_if_win": 1.7,
-          "total_cost": 2.3,
-          "commence_time": "2026-06-10T23:41:00Z"
+          "in_budget": false
         },
         {
           "game": "Washington Nationals @ San Francisco Giants",
@@ -3144,26 +3049,18 @@
           "pick": "San Francisco Giants +1.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Washington Nationals 10, San Francisco Giants 11",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [SEVERE] \u2014 Robbie Ray: ERA 4.12 vs xFIP 4.97 over 67 IP (severity 0.85) \u2014 San Francisco Giants ML may be over",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 0.2,
           "signals": [
-            "Starter Edge \u2014 Ray",
-            "Starter Edge \u2014 Griffin",
-            "ERA Trap \u2014 Ray (Severe)",
-            "Park Factor (Pitcher)"
+            "ERA Trap \u2014 Robbie Ray",
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won, beat the close +0.2%",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 67.6,
-          "market_prob_pct": 62.3,
-          "edge_pct": 5.3,
-          "profit_if_win": 1.07,
-          "total_cost": 1.93,
-          "commence_time": "2026-06-10T19:46:00Z"
+          "in_budget": false
         },
         {
           "game": "Cincinnati Reds @ San Diego Padres",
@@ -3171,26 +3068,18 @@
           "pick": "Cincinnati Reds +1.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Cincinnati Reds 4, San Diego Padres 5",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [MILD] \u2014 Michael King: ERA 3.41 vs xFIP 3.65 over 74 IP (severity 0.24) \u2014 San Diego Padres ML may be overpric",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 0.1,
           "signals": [
-            "Starter Edge \u2014 King",
-            "Starter Edge \u2014 Singer",
-            "ERA Trap \u2014 King",
-            "Park Factor (Pitcher)"
+            "ERA Trap \u2014 Michael King",
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won, beat the close +0.1%",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 63.2,
-          "market_prob_pct": 58.2,
-          "edge_pct": 5.0,
-          "profit_if_win": 1.19,
-          "total_cost": 1.81,
-          "commence_time": "2026-06-10T20:11:00Z"
+          "in_budget": false
         },
         {
           "game": "Arizona Diamondbacks @ Miami Marlins",
@@ -3198,26 +3087,19 @@
           "pick": "Under 8.5",
           "bet_type": "Total",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Arizona Diamondbacks 0, Miami Marlins 8",
           "pnl": "",
-          "why_picked": "Ryan Gusto FIP 1.8 / xFIP 2.58 | K/9: 9.0",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -3.3,
           "signals": [
-            "Starter Edge \u2014 Gusto",
-            "Starter Edge \u2014 Nelson",
-            "Park Factor (Pitcher)",
-            "Injury Impact"
+            "Park Factor",
+            "Injury Impact",
+            "Wind Factor",
+            "Platoon Edge"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "MIXED \u2014 won, CLV -3.3% (market faded this pick)",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 57.8,
-          "market_prob_pct": 52.7,
-          "edge_pct": 5.2,
-          "profit_if_win": 1.36,
-          "total_cost": 1.64,
-          "commence_time": "2026-06-10T22:41:00Z"
+          "in_budget": false
         },
         {
           "game": "Milwaukee Brewers @ Athletics",
@@ -3225,26 +3107,17 @@
           "pick": "Milwaukee Brewers",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "LOST",
+          "score": "Milwaukee Brewers 3, Athletics 4",
           "pnl": "",
-          "why_picked": "Jack Perkins FIP 2.42 / xFIP 2.91 | K/9: 11.0",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 0.1,
           "signals": [
-            "Starter Edge \u2014 Perkins",
-            "Starter Edge \u2014 Sproat",
             "Platoon Edge",
             "Recent Form"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 beat the close +0.1%, lost on variance",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 53.5,
-          "market_prob_pct": 49.8,
-          "edge_pct": 3.7,
-          "profit_if_win": 0.48,
-          "total_cost": 0.52,
-          "commence_time": "2026-06-11T01:06:00Z"
+          "in_budget": false
         },
         {
           "game": "Atlanta Braves @ Chicago White Sox",
@@ -3252,26 +3125,19 @@
           "pick": "Over 7.5",
           "bet_type": "Total",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "LOST",
+          "score": "Atlanta Braves 1, Chicago White Sox 2",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [MILD] \u2014 Chris Sale: ERA 2.23 vs xFIP 2.73 over 72 IP (severity 0.29) \u2014 Atlanta Braves ML may be overpriced b",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 1.0,
           "signals": [
-            "Starter Edge \u2014 Sale",
-            "ERA Trap \u2014 Sale",
-            "Park Factor (Pitcher)",
-            "Injury Impact"
+            "ERA Trap \u2014 Chris Sale",
+            "Park Factor",
+            "Injury Impact",
+            "Wind Factor"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 beat the close +1.0%, lost on variance",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 54.9,
-          "market_prob_pct": 51.0,
-          "edge_pct": 3.9,
-          "profit_if_win": 0.47,
-          "total_cost": 0.53,
-          "commence_time": "2026-06-10T23:41:00Z"
+          "in_budget": false
         },
         {
           "game": "Minnesota Twins @ Detroit Tigers",
@@ -3279,26 +3145,19 @@
           "pick": "Under 9.5",
           "bet_type": "Total",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "LOST",
+          "score": "Minnesota Twins 6, Detroit Tigers 4",
           "pnl": "",
-          "why_picked": "Framber Valdez FIP 3.95 / xFIP 3.98 | K/9: 7.4",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": -0.4,
           "signals": [
-            "Starter Edge \u2014 Valdez",
-            "Park Factor (Pitcher)",
+            "Park Factor",
             "Injury Impact",
-            "Platoon Edge"
+            "Platoon Edge",
+            "Recent Form"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "INCORRECT \u2014 lost",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 54.1,
-          "market_prob_pct": 50.8,
-          "edge_pct": 3.3,
-          "profit_if_win": 0.47,
-          "total_cost": 0.53,
-          "commence_time": "2026-06-10T22:41:00Z"
+          "in_budget": false
         },
         {
           "game": "Atlanta Braves @ Chicago White Sox",
@@ -3306,26 +3165,19 @@
           "pick": "Atlanta Braves",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "LOST",
+          "score": "Atlanta Braves 1, Chicago White Sox 2",
           "pnl": "",
-          "why_picked": "\u26a0 ERA trap [MILD] \u2014 Chris Sale: ERA 2.23 vs xFIP 2.73 over 72 IP (severity 0.29) \u2014 Atlanta Braves ML may be overpriced b",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 0.0,
           "signals": [
-            "Starter Edge \u2014 Sale",
-            "ERA Trap \u2014 Sale",
-            "Park Factor (Pitcher)",
-            "Injury Impact"
+            "ERA Trap \u2014 Chris Sale",
+            "Park Factor",
+            "Injury Impact",
+            "Wind Factor"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "INCORRECT \u2014 lost",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 60.5,
-          "market_prob_pct": 57.5,
-          "edge_pct": 3.0,
-          "profit_if_win": 0.41,
-          "total_cost": 0.59,
-          "commence_time": "2026-06-10T23:41:00Z"
+          "in_budget": false
         },
         {
           "game": "Los Angeles Sparks @ Seattle Storm",
@@ -3333,23 +3185,18 @@
           "pick": "Los Angeles Sparks",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Los Angeles Sparks 88, Seattle Storm 83",
           "pnl": "",
-          "why_picked": "Home court: Seattle Storm (+2%)",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 1.4,
           "signals": [
-            "Home Advantage"
+            "Home Advantage",
+            "Recent Form",
+            "Lineup Impact"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won, beat the close +1.4%",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 82.3,
-          "market_prob_pct": 71.1,
-          "edge_pct": 11.2,
-          "profit_if_win": 0,
-          "total_cost": 0,
-          "commence_time": "2026-06-11T02:00:00Z"
+          "in_budget": false
         },
         {
           "game": "Connecticut Sun @ Toronto Tempo",
@@ -3357,38 +3204,34 @@
           "pick": "Toronto Tempo",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
+          "result": "WON",
+          "score": "Connecticut Sun 102, Toronto Tempo 106",
           "pnl": "",
-          "why_picked": "Home court: Toronto Tempo (+2%)",
-          "what_happened": "Game result pending \u2014 check tomorrow morning's debrief.",
+          "clv_pct": 1.8,
           "signals": [
-            "Home Advantage"
+            "Home Advantage",
+            "Recent Form",
+            "Back-to-Back",
+            "Lineup Impact"
           ],
-          "signal_verdict": "PENDING",
+          "signal_verdict": "CORRECT \u2014 won, beat the close +1.8%",
           "key_insight": "",
-          "in_budget": false,
-          "model_prob_pct": 81.6,
-          "market_prob_pct": 73.8,
-          "edge_pct": 7.8,
-          "profit_if_win": 0,
-          "total_cost": 0,
-          "commence_time": "2026-06-10T23:00:00Z"
+          "in_budget": false
         }
       ],
       "patterns": [
-        "5 budget singles all HIGH confidence \u2014 unusual conviction across MLB and NBA playoffs",
-        "ERA Trap signals on 2 of 5 budget picks (Ohtani MODERATE, Young SEVERE) \u2014 market correction plays",
-        "Coors Field (Park Factor 1.30) drives Colorado +1.5 pick despite Cubs pitching edge",
-        "NBA Playoffs context: Spurs +2.5 backed by model 109-109 projection (essentially a pick'em)",
-        "Results Snapshot commit failure must be investigated \u2014 two consecutive failures on same run"
+        "HIGH confidence budget singles: 4-1",
+        "ERA Trap picks (all tonight): 7-4, avg CLV +0.1%",
+        "MLB Unders (watchlist): 4-2, avg CLV -1.7% (market faded these lines)",
+        "WNBA (watchlist): 2-0, avg CLV +1.6% \u2014 strongest positive CLV of the night",
+        "Budget parlays: 1 WON (Miami ML + PHI ML, +$5.68), 1 LOST (SEA ML + LAA ML, -$1.67)"
       ],
       "model_observations": [
-        "All budget picks carry 11-15% model edge \u2014 clean, high-conviction slate",
-        "ERA Trap strategy present on LAD/PIT and SEA/BAL \u2014 model systematically finding market over-reliance on ERAs",
-        "Underdog ML/spread strategy: 3 of 5 budget picks are underdogs (SEA ML, PIT +1.5, COL +1.5)",
-        "ARI Diamondbacks 3-7 recent form is a key suppressor for their ML; MIA backed on pitching matchup",
-        "WNBA watchlist active: LA Sparks, Toronto Tempo MLs included for signal tracking"
+        "ERA Trap signal: 7-4 tonight (7/11 = 64%). Avg CLV +0.1% \u2014 results confirm ERA regression logic, CLV roughly neutral (market hasn't fully priced in ERA traps).",
+        "MLB Unders: won 4/6 but avg CLV -1.73% \u2014 the market consistently moved away from our under picks. Results and CLV disagree; review whether total-line model has a systematic bias toward the under.",
+        "WNBA model: 2-for-2 with avg CLV +1.6% \u2014 both results and line movement confirmed. Investigate expanding WNBA allocation in future runs.",
+        "SEA Mariners ML (budget LOST): ERA trap on Brandon Young (SEVERE, severity 0.81) fired correctly \u2014 line moved +0.4% our way (CLV positive) \u2014 this was variance, not a bad signal.",
+        "ATL @ CWS Over 7.5 (watchlist LOST): picked Over against Chris Sale with strong K/9; the game finished 2-1 for a combined 3 runs. Chris Sale suppressed even the above-average expected total. ERA trap mild \u2014 market side had it; consider tightening the Over threshold when a SEVERE ace is on the mound for the opposition."
       ]
     }
   ]
