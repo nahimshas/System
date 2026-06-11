@@ -2,104 +2,498 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nightly Debrief &mdash; 2026-06-10</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nightly Debrief — 2026-06-10</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: #050507;
-  color: #e2e8f0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 14px;
-  padding: 16px;
-}
-.container { max-width: 600px; margin: 0 auto; }
-a { color: #38bdf8; text-decoration: none; }
-a:hover { text-decoration: underline; }
-.header-card {
-  background: #1a1d27;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 16px;
-  border: 1px solid #2d3148;
-}
-.header-date { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
-.header-title { font-size: 20px; font-weight: 700; color: #38bdf8; margin-bottom: 10px; }
-.headline { font-size: 13px; color: #94a3b8; margin-bottom: 14px; line-height: 1.5; }
-.record-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { background: #0f1117; border: 1px solid #2d3148; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
-.chip-label { color: #64748b; margin-right: 4px; }
-.chip-value { color: #e2e8f0; }
-.chip-pnl { color: #22c55e; }
-.alert-banner {
-  background: #1c1106; border: 1px solid #f59e0b; border-radius: 8px;
-  padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #fcd34d; line-height: 1.5;
-}
-.section-header {
-  font-size: 11px; font-weight: 700; color: #64748b;
-  text-transform: uppercase; letter-spacing: 0.1em;
-  margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #1e2235;
-}
-.pick-card {
-  background: #1a1d27; border-radius: 10px; padding: 14px 16px;
-  margin-bottom: 10px; border: 1px solid #2d3148;
-}
-.pick-card.compact { padding: 10px 14px; }
-.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; }
-.sport-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }
-.game-name { display: block; font-size: 13px; font-weight: 600; color: #e2e8f0; margin-top: 2px; }
-.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
-.pnl-tag { font-size: 13px; font-weight: 700; flex-shrink: 0; }
-.pick-line { font-size: 15px; color: #38bdf8; margin-bottom: 6px; }
-.bet-type { font-size: 11px; color: #64748b; font-weight: normal; margin-left: 4px; }
-.conf-chip { font-size: 10px; background: #0f1117; border: 1px solid #2d3148; border-radius: 10px; padding: 1px 8px; color: #94a3b8; vertical-align: middle; margin-left: 6px; }
-.score-line { font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
-.signals-row { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
-.sig-chip { background: #0f1117; border: 1px solid #2d3148; border-radius: 10px; padding: 2px 8px; font-size: 10px; color: #94a3b8; }
-.prob-row { display: flex; gap: 12px; font-size: 11px; color: #64748b; margin: 6px 0; }
-.stake-row { display: flex; gap: 16px; font-size: 11px; color: #64748b; margin: 6px 0; }
-.game-time { margin-left: auto; }
-.why-row, .what-row { font-size: 12px; color: #94a3b8; margin: 6px 0; line-height: 1.5; }
-.label { font-weight: 600; color: #64748b; margin-right: 4px; }
-.verdict-row { font-size: 12px; color: #94a3b8; margin-top: 6px; }
-.verdict-label { font-weight: 600; color: #64748b; }
-.insight { background: #0f1117; border-radius: 6px; padding: 8px 10px; font-size: 12px; color: #94a3b8; margin-top: 8px; line-height: 1.5; }
-.legs-block { margin: 8px 0; }
-.leg-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #0f1117; font-size: 12px; }
-.leg-row:last-child { border-bottom: none; }
-.leg-pick { color: #e2e8f0; }
-.leg-badge { font-weight: 600; font-size: 11px; }
-.meta-row { display: flex; gap: 16px; font-size: 11px; color: #64748b; margin: 6px 0; }
-.sport-group { margin-bottom: 16px; }
-.sport-group-header { font-size: 12px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; padding: 4px 0; }
-.list-card { background: #1a1d27; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #2d3148; }
-.list-card ul { padding-left: 20px; }
-.list-card li { margin-bottom: 8px; font-size: 13px; color: #94a3b8; line-height: 1.5; }
-.footer { text-align: center; color: #64748b; font-size: 11px; margin-top: 24px; padding-bottom: 24px; line-height: 1.8; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050507;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;line-height:1.5;padding:16px}
+  .wrap{max-width:600px;margin:0 auto}
+  .header-card{background:#1a1d27;border-radius:12px;padding:18px;margin-bottom:12px}
+  .header-date{color:#64748b;font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+  .header-headline{font-size:15px;font-weight:600;color:#e2e8f0;margin-bottom:12px;line-height:1.4}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .section-title{font-size:13px;font-weight:700;color:#64748b;letter-spacing:.08em;text-transform:uppercase;margin:20px 0 10px}
+  .pick-card{background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px}
+  .pick-card.compact{padding:11px}
+  .pick-header{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+  .pick-label{color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  .pick-game{font-size:14px;font-weight:600;color:#e2e8f0;margin-bottom:4px}
+  .score-line{color:#94a3b8;font-size:13px;margin-bottom:6px}
+  .why-picked{font-size:12px;color:#94a3b8;margin-bottom:6px}
+  .why-picked .label-sm{font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
+  .verdict{font-size:12px;color:#94a3b8;margin-top:6px}
+  .insight{font-size:12px;color:#7dd3fc;margin-top:5px;background:#0c1929;border-radius:6px;padding:6px 8px}
+  .clv-note{font-size:12px;color:#fbbf24;margin-top:5px;background:#1c1600;border-radius:6px;padding:6px 8px}
+  .badge{padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}
+  .clv-tag{padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+  .pnl{font-size:14px;font-weight:700;margin-left:auto}
+  .sig-chips{display:flex;flex-wrap:wrap;gap:4px;margin:5px 0}
+  .sig-chip{background:#0f172a;color:#94a3b8;border:1px solid #1e293b;border-radius:10px;padding:2px 8px;font-size:11px}
+  .legs-block{background:#0c0e16;border-radius:8px;padding:8px 10px;margin:6px 0}
+  .leg-row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px}
+  .leg-pick{color:#e2e8f0;font-weight:500;flex:1}
+  .leg-score{color:#64748b;font-size:12px}
+  .sport-header{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px;display:flex;align-items:center;gap:8px}
+  .rec-chip{background:#1e293b;color:#94a3b8;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:600}
+  ul.pat-list{padding-left:18px;color:#94a3b8;font-size:13px}
+  ul.pat-list li{margin-bottom:5px}
+  .timeout-banner{background:#1c1200;border-left:3px solid #f59e0b;color:#fbbf24;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:13px}
+  .footer{text-align:center;color:#475569;font-size:12px;margin-top:24px;padding-top:16px;border-top:1px solid #1e293b}
+  .footer a{color:#38bdf8;text-decoration:none}
+  .info-card{background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px}
+  .info-card h4{font-size:13px;font-weight:700;color:#94a3b8;margin-bottom:8px}
 </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
+
+  <!-- HEADER -->
   <div class="header-card">
-    <div class="header-date">Nightly Debrief &middot; 2026-06-10</div>
-    <div class="header-title">&#128202; Nightly Debrief</div>
-    <div class="headline">28 picks PENDING — Results Snapshot workflow commit failed; all 7 budget + 21 watchlist picks settle tomorrow morning</div>
-    <div class="record-chips">
-      <div class="chip"><span class="chip-label">Today&rsquo;s Card</span><span class="chip-value">0-0</span></div>
-      <div class="chip"><span class="chip-label">Watchlist</span><span class="chip-value">0-0</span></div>
-      <div class="chip"><span class="chip-label">P&amp;L</span><span class="chip-pnl">+$0.00</span></div>
+    <div class="header-date">Nightly Debrief · 2026-06-10</div>
+    <div class="header-headline">5-2 on Today's Card (+$22.12), avg single CLV -0.18%; ERA trap signal 7-4 on the night; WNBA 2-for-2 with avg CLV +1.6%; watchlist 14-7 overall</div>
+    <div class="chips">
+      <span class="chip" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">Today's Card 5-2</span>
+      <span class="chip" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">Watchlist 14-7</span>
+      <span class="chip" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">P&amp;L +$22.12</span>
+      <span class="chip" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">Avg CLV -0.18%</span>
     </div>
   </div>
-  <div class="alert-banner">&#9888;&#65039; <strong>Results Snapshot workflow failed to commit</strong> — all picks are PENDING. The workflow successfully resolved picks against ESPN but git push failed twice (commit step). Results will appear in tomorrow morning's debrief.</div>
-  <div class="section-header">Today&rsquo;s Card &mdash; Budget Picks</div>
-  <div class="pick-card" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Chicago Cubs @ Colorado Rockies</span></div><div style="display:flex;gap:8px;align-items:center"><span class="badge" style="background:#f59e0b">PENDING</span></div></div><div class="pick-line"><strong>Colorado Rockies +1.5</strong> <span class="bet-type">Spread</span><span class="conf-chip">HIGH</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Lorenzen</span><span class="sig-chip">Starter Edge — Imanaga</span><span class="sig-chip">Park Factor (Hitter)</span><span class="sig-chip">Injury Impact</span></div><div class="prob-row"><span>Model 63.7%</span><span>Market 48.7%</span><span style="color:#22c55e">Edge 15.0%</span></div><div class="stake-row"><span>Stake: $6.08</span><span>Win: +$5.92</span><span class="game-time">12:41 AM UTC</span></div><div class="why-row"><span class="label">Signal:</span> Michael Lorenzen FIP 5.08 / xFIP 4.02 | K/9: 7.2</div><div class="verdict-row"><span class="verdict-label">Signal verdict:</span> <span>PENDING</span></div></div><div class="pick-card" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Arizona Diamondbacks @ Miami Marlins</span></div><div style="display:flex;gap:8px;align-items:center"><span class="badge" style="background:#f59e0b">PENDING</span></div></div><div class="pick-line"><strong>Miami Marlins</strong> <span class="bet-type">Moneyline</span><span class="conf-chip">HIGH</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Gusto</span><span class="sig-chip">Starter Edge — Nelson</span><span class="sig-chip">Park Factor (Pitcher)</span><span class="sig-chip">Injury Impact</span></div><div class="prob-row"><span>Model 63.8%</span><span>Market 48.8%</span><span style="color:#22c55e">Edge 15.0%</span></div><div class="stake-row"><span>Stake: $6.09</span><span>Win: +$5.91</span><span class="game-time">10:41 PM UTC</span></div><div class="why-row"><span class="label">Signal:</span> Ryan Gusto FIP 1.8 / xFIP 2.58 | K/9: 9.0</div><div class="verdict-row"><span class="verdict-label">Signal verdict:</span> <span>PENDING</span></div></div><div class="pick-card" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">🏀 NBA</span><span class="game-name">San Antonio Spurs @ New York Knicks</span></div><div style="display:flex;gap:8px;align-items:center"><span class="badge" style="background:#f59e0b">PENDING</span></div></div><div class="pick-line"><strong>San Antonio Spurs +2.5</strong> <span class="bet-type">Spread</span><span class="conf-chip">HIGH</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Home Advantage</span><span class="sig-chip">Recent Form</span></div><div class="prob-row"><span>Model 62.6%</span><span>Market 50.0%</span><span style="color:#f59e0b">Edge 12.6%</span></div><div class="stake-row"><span>Stake: $5.20</span><span>Win: +$4.80</span><span class="game-time">12:40 AM UTC</span></div><div class="why-row"><span class="label">Signal:</span> Home court advantage: New York Knicks (+2%)</div><div class="verdict-row"><span class="verdict-label">Signal verdict:</span> <span>PENDING</span></div></div><div class="pick-card" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Los Angeles Dodgers @ Pittsburgh Pirates</span></div><div style="display:flex;gap:8px;align-items:center"><span class="badge" style="background:#f59e0b">PENDING</span></div></div><div class="pick-line"><strong>Pittsburgh Pirates +1.5</strong> <span class="bet-type">Spread</span><span class="conf-chip">HIGH</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Jones</span><span class="sig-chip">Starter Edge — Ohtani</span><span class="sig-chip">ERA Trap — Ohtani (Moderate)</span><span class="sig-chip">Park Factor (Pitcher)</span></div><div class="prob-row"><span>Model 60.7%</span><span>Market 46.7%</span><span style="color:#f59e0b">Edge 14.1%</span></div><div class="stake-row"><span>Stake: $5.84</span><span>Win: +$6.16</span><span class="game-time">10:41 PM UTC</span></div><div class="why-row"><span class="label">Signal:</span> ⚠ ERA trap [MODERATE] — Shohei Ohtani: ERA 0.74 vs xFIP 3.11 over 61 IP (severity 0.61) — Los Angeles Dodgers ML may be </div><div class="verdict-row"><span class="verdict-label">Signal verdict:</span> <span>PENDING</span></div></div><div class="pick-card" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Seattle Mariners @ Baltimore Orioles</span></div><div style="display:flex;gap:8px;align-items:center"><span class="badge" style="background:#f59e0b">PENDING</span></div></div><div class="pick-line"><strong>Seattle Mariners</strong> <span class="bet-type">Moneyline</span><span class="conf-chip">HIGH</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Young</span><span class="sig-chip">Starter Edge — Kirby</span><span class="sig-chip">ERA Trap — Young (Severe)</span><span class="sig-chip">Park Factor (Pitcher)</span></div><div class="prob-row"><span>Model 61.7%</span><span>Market 50.0%</span><span style="color:#f59e0b">Edge 11.7%</span></div><div class="stake-row"><span>Stake: $4.68</span><span>Win: +$4.32</span><span class="game-time">10:36 PM UTC</span></div><div class="why-row"><span class="label">Signal:</span> ⚠ ERA trap [SEVERE] — Brandon Young: ERA 3.47 vs xFIP 4.28 over 49 IP (severity 0.81) — Baltimore Orioles ML may be over</div><div class="verdict-row"><span class="verdict-label">Signal verdict:</span> <span>PENDING</span></div></div><div class="pick-card" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">&#127919; PARLAY</span><span class="game-name">Miami Marlins (ML) + Philadelphia Phillies (ML)</span></div><div style="display:flex;gap:8px;align-items:center"><span class="badge" style="background:#f59e0b">PENDING</span></div></div><div class="legs-block"><div class="leg-row"><span class="leg-pick">⚾ Miami Marlins</span><span class="leg-badge" style="color:#f59e0b">PENDING</span></div><div class="leg-row"><span class="leg-pick">⚾ Philadelphia Phillies</span><span class="leg-badge" style="color:#f59e0b">PENDING</span></div></div><div class="signals-row"><span class="sig-chip">Value Edge</span></div><div class="meta-row"><span>Stake: $2.32</span><span>Win: +$5.68</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">&#127919; PARLAY</span><span class="game-name">Seattle Mariners (ML) + Los Angeles Angels (ML)</span></div><div style="display:flex;gap:8px;align-items:center"><span class="badge" style="background:#f59e0b">PENDING</span></div></div><div class="legs-block"><div class="leg-row"><span class="leg-pick">⚾ Seattle Mariners</span><span class="leg-badge" style="color:#f59e0b">PENDING</span></div><div class="leg-row"><span class="leg-pick">⚾ Los Angeles Angels</span><span class="leg-badge" style="color:#f59e0b">PENDING</span></div></div><div class="signals-row"><span class="sig-chip">Value Edge</span></div><div class="meta-row"><span>Stake: $1.67</span><span>Win: +$4.33</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div>
-  <div class="section-header">Watchlist &mdash; All Sport Tabs</div>
-  <div class="sport-group"><div class="sport-group-header">⚾ MLB</div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Philadelphia Phillies @ Toronto Blue Jays</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Philadelphia Phillies</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Scherzer</span><span class="sig-chip">Starter Edge</span><span class="sig-chip">Park Factor (Hitter)</span><span class="sig-chip">Injury Impact</span></div><div class="prob-row"><span>Model 66.5%</span><span>Market 55.5%</span><span style="color:#f59e0b">Edge 11.1%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Houston Astros @ Los Angeles Angels</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Los Angeles Angels</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Detmers</span><span class="sig-chip">Starter Edge — Lambert</span><span class="sig-chip">ERA Trap — Lambert (Severe)</span><span class="sig-chip">Park Factor (Pitcher)</span></div><div class="prob-row"><span>Model 62.4%</span><span>Market 51.7%</span><span style="color:#f59e0b">Edge 10.6%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Texas Rangers @ Kansas City Royals</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Kansas City Royals +1.5</strong> <span class="bet-type">Spread</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Lugo</span><span class="sig-chip">Starter Edge — Gore</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Weather Factor</span></div><div class="prob-row"><span>Model 67.6%</span><span>Market 58.1%</span><span style="color:#94a3b8">Edge 9.6%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Cincinnati Reds @ San Diego Padres</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Under 8.5</strong> <span class="bet-type">Total</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — King</span><span class="sig-chip">Starter Edge — Singer</span><span class="sig-chip">ERA Trap — King</span><span class="sig-chip">Park Factor (Pitcher)</span></div><div class="prob-row"><span>Model 61.5%</span><span>Market 51.2%</span><span style="color:#f59e0b">Edge 10.3%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Milwaukee Brewers @ Athletics</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Under 14.5</strong> <span class="bet-type">Total</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Perkins</span><span class="sig-chip">Starter Edge — Sproat</span><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div><div class="prob-row"><span>Model 61.8%</span><span>Market 51.5%</span><span style="color:#f59e0b">Edge 10.3%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Texas Rangers @ Kansas City Royals</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Under 10.5</strong> <span class="bet-type">Total</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Lugo</span><span class="sig-chip">Starter Edge — Gore</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Weather Factor</span></div><div class="prob-row"><span>Model 62.5%</span><span>Market 52.2%</span><span style="color:#f59e0b">Edge 10.3%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">New York Yankees @ Cleveland Guardians</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>New York Yankees</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Messick</span><span class="sig-chip">Starter Edge</span><span class="sig-chip">ERA Trap — Messick (Severe)</span><span class="sig-chip">ERA Trap (Moderate)</span></div><div class="prob-row"><span>Model 61.6%</span><span>Market 48.1%</span><span style="color:#f59e0b">Edge 13.5%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Minnesota Twins @ Detroit Tigers</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Detroit Tigers</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Valdez</span><span class="sig-chip">Park Factor (Pitcher)</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Platoon Edge</span></div><div class="prob-row"><span>Model 68.3%</span><span>Market 61.1%</span><span style="color:#94a3b8">Edge 7.1%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">St. Louis Cardinals @ New York Mets</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>St. Louis Cardinals</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Warren</span><span class="sig-chip">Starter Edge — Pallante</span><span class="sig-chip">ERA Trap — Warren (Severe)</span><span class="sig-chip">Park Factor (Pitcher)</span></div><div class="prob-row"><span>Model 52.0%</span><span>Market 45.0%</span><span style="color:#94a3b8">Edge 7.0%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Milwaukee Brewers @ Athletics</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Athletics +1.5</strong> <span class="bet-type">Spread</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Perkins</span><span class="sig-chip">Starter Edge — Sproat</span><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div><div class="prob-row"><span>Model 64.9%</span><span>Market 58.3%</span><span style="color:#94a3b8">Edge 6.7%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Chicago Cubs @ Colorado Rockies</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Under 12.5</strong> <span class="bet-type">Total</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Lorenzen</span><span class="sig-chip">Starter Edge — Imanaga</span><span class="sig-chip">Park Factor (Hitter)</span><span class="sig-chip">Injury Impact</span></div><div class="prob-row"><span>Model 59.9%</span><span>Market 53.0%</span><span style="color:#94a3b8">Edge 6.9%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Atlanta Braves @ Chicago White Sox</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Chicago White Sox +1.5</strong> <span class="bet-type">Spread</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Sale</span><span class="sig-chip">ERA Trap — Sale</span><span class="sig-chip">Park Factor (Pitcher)</span><span class="sig-chip">Injury Impact</span></div><div class="prob-row"><span>Model 61.5%</span><span>Market 55.4%</span><span style="color:#94a3b8">Edge 6.1%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Washington Nationals @ San Francisco Giants</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>San Francisco Giants +1.5</strong> <span class="bet-type">Spread</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Ray</span><span class="sig-chip">Starter Edge — Griffin</span><span class="sig-chip">ERA Trap — Ray (Severe)</span><span class="sig-chip">Park Factor (Pitcher)</span></div><div class="prob-row"><span>Model 67.6%</span><span>Market 62.3%</span><span style="color:#94a3b8">Edge 5.3%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Cincinnati Reds @ San Diego Padres</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Cincinnati Reds +1.5</strong> <span class="bet-type">Spread</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — King</span><span class="sig-chip">Starter Edge — Singer</span><span class="sig-chip">ERA Trap — King</span><span class="sig-chip">Park Factor (Pitcher)</span></div><div class="prob-row"><span>Model 63.2%</span><span>Market 58.2%</span><span style="color:#94a3b8">Edge 5.0%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Arizona Diamondbacks @ Miami Marlins</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Under 8.5</strong> <span class="bet-type">Total</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Gusto</span><span class="sig-chip">Starter Edge — Nelson</span><span class="sig-chip">Park Factor (Pitcher)</span><span class="sig-chip">Injury Impact</span></div><div class="prob-row"><span>Model 57.8%</span><span>Market 52.7%</span><span style="color:#94a3b8">Edge 5.2%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Milwaukee Brewers @ Athletics</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Milwaukee Brewers</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Perkins</span><span class="sig-chip">Starter Edge — Sproat</span><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div><div class="prob-row"><span>Model 53.5%</span><span>Market 49.8%</span><span style="color:#94a3b8">Edge 3.7%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Atlanta Braves @ Chicago White Sox</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Over 7.5</strong> <span class="bet-type">Total</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Sale</span><span class="sig-chip">ERA Trap — Sale</span><span class="sig-chip">Park Factor (Pitcher)</span><span class="sig-chip">Injury Impact</span></div><div class="prob-row"><span>Model 54.9%</span><span>Market 51.0%</span><span style="color:#94a3b8">Edge 3.9%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Minnesota Twins @ Detroit Tigers</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Under 9.5</strong> <span class="bet-type">Total</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Valdez</span><span class="sig-chip">Park Factor (Pitcher)</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Platoon Edge</span></div><div class="prob-row"><span>Model 54.1%</span><span>Market 50.8%</span><span style="color:#94a3b8">Edge 3.3%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">⚾ MLB</span><span class="game-name">Atlanta Braves @ Chicago White Sox</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Atlanta Braves</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Starter Edge — Sale</span><span class="sig-chip">ERA Trap — Sale</span><span class="sig-chip">Park Factor (Pitcher)</span><span class="sig-chip">Injury Impact</span></div><div class="prob-row"><span>Model 60.5%</span><span>Market 57.5%</span><span style="color:#94a3b8">Edge 3.0%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div></div><div class="sport-group"><div class="sport-group-header">🏀 WNBA</div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">🏀 WNBA</span><span class="game-name">Los Angeles Sparks @ Seattle Storm</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Los Angeles Sparks</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Home Advantage</span></div><div class="prob-row"><span>Model 82.3%</span><span>Market 71.1%</span><span style="color:#f59e0b">Edge 11.2%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div><div class="pick-card compact" style="border-left:4px solid #f59e0b"><div class="card-header"><div><span class="sport-label">🏀 WNBA</span><span class="game-name">Connecticut Sun @ Toronto Tempo</span></div><span class="badge" style="background:#f59e0b">PENDING</span></div><div class="pick-line"><strong>Toronto Tempo</strong> <span class="bet-type">Moneyline</span></div><div class="score-line">—</div><div class="signals-row"><span class="sig-chip">Home Advantage</span></div><div class="prob-row"><span>Model 81.6%</span><span>Market 73.8%</span><span style="color:#94a3b8">Edge 7.8%</span></div><div class="verdict-row"><span class="verdict-label">Signal:</span> <span>PENDING</span></div></div></div>
-  <div class="section-header">Patterns Today</div>
-  <div class="list-card"><ul><li>5 budget singles all HIGH confidence — unusual conviction across MLB and NBA playoffs</li><li>ERA Trap signals on 2 of 5 budget picks (Ohtani MODERATE, Young SEVERE) — market correction plays</li><li>Coors Field (Park Factor 1.30) drives Colorado +1.5 pick despite Cubs pitching edge</li><li>NBA Playoffs context: Spurs +2.5 backed by model 109-109 projection (essentially a pick'em)</li><li>Results Snapshot commit failure must be investigated — two consecutive failures on same run</li></ul></div>
-  <div class="section-header">Model Observations</div>
-  <div class="list-card"><ul><li>All budget picks carry 11-15% model edge — clean, high-conviction slate</li><li>ERA Trap strategy present on LAD/PIT and SEA/BAL — model systematically finding market over-reliance on ERAs</li><li>Underdog ML/spread strategy: 3 of 5 budget picks are underdogs (SEA ML, PIT +1.5, COL +1.5)</li><li>ARI Diamondbacks 3-7 recent form is a key suppressor for their ML; MIA backed on pitching matchup</li><li>WNBA watchlist active: LA Sparks, Toronto Tempo MLs included for signal tracking</li></ul></div>
-  <div class="footer">Generated 2026-06-11 06:14 UTC<br><a href="/index_spa.html">&larr; Back to Picks</a></div>
+
+  
+
+  <!-- BUDGET PICKS -->
+  <div class="section-title">Today's Card — Budget Picks</div>
+  
+<div class="pick-card" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Spread</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.9%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+    <span class="pnl" style="color:#22c55e">+$5.92</span>
+  </div>
+  <div class="pick-game">Chicago Cubs @ Colorado Rockies — <strong style="color:#38bdf8">Colorado Rockies +1.5</strong></div>
+  <div class="score-line">Chicago Cubs 2, Colorado Rockies 3</div>
+  <div class="why-picked"><span class="label-sm">WHY PICKED</span> Model edge: Park Factor, Injury Impact; model prob 63.7% vs market 48.7%</div>
+  <div class="sig-chips"><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div>
+  <div class="verdict">CORRECT — won; CLV -0.9% (slight market fade)</div>
+  <div class="insight">💡 Good result despite market fading. Monitor if the closing-line fade repeats.</div>
+  
+</div>
+<div class="pick-card" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.4%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+    <span class="pnl" style="color:#22c55e">+$5.91</span>
+  </div>
+  <div class="pick-game">Arizona Diamondbacks @ Miami Marlins — <strong style="color:#38bdf8">Miami Marlins</strong></div>
+  <div class="score-line">Arizona Diamondbacks 0, Miami Marlins 8</div>
+  <div class="why-picked"><span class="label-sm">WHY PICKED</span> Model edge: Park Factor, Injury Impact; model prob 63.8% vs market 48.8%</div>
+  <div class="sig-chips"><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Wind Factor</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">CORRECT — won; CLV -0.4% (slight market fade)</div>
+  <div class="insight">💡 Good result despite market fading. Monitor if the closing-line fade repeats.</div>
+  
+</div>
+<div class="pick-card" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">NBA · Spread</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +0.5%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+    <span class="pnl" style="color:#22c55e">+$4.80</span>
+  </div>
+  <div class="pick-game">San Antonio Spurs @ New York Knicks — <strong style="color:#38bdf8">San Antonio Spurs +2.5</strong></div>
+  <div class="score-line">San Antonio Spurs 106, New York Knicks 107</div>
+  <div class="why-picked"><span class="label-sm">WHY PICKED</span> Model edge: Home Advantage, Playoffs Intensity; model prob 62.6% vs market 50.0%</div>
+  <div class="sig-chips"><span class="sig-chip">Home Advantage</span><span class="sig-chip">Playoffs Intensity</span><span class="sig-chip">Injury Impact</span></div>
+  <div class="verdict">CORRECT — won and beat the close +0.5%</div>
+  <div class="insight">💡 Both results and CLV confirm the signal.</div>
+  
+</div>
+<div class="pick-card" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Spread</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.5%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+    <span class="pnl" style="color:#22c55e">+$6.16</span>
+  </div>
+  <div class="pick-game">Los Angeles Dodgers @ Pittsburgh Pirates — <strong style="color:#38bdf8">Pittsburgh Pirates +1.5</strong></div>
+  <div class="score-line">Los Angeles Dodgers 8, Pittsburgh Pirates 9</div>
+  <div class="why-picked"><span class="label-sm">WHY PICKED</span> Model edge: ERA Trap — Shohei Ohtani, Park Factor; model prob 60.7% vs market 46.7%</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Shohei Ohtani</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">CORRECT — won; CLV -0.5% (slight market fade)</div>
+  <div class="insight">💡 Good result despite market fading. Monitor if the closing-line fade repeats.</div>
+  
+</div>
+<div class="pick-card" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +0.4%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+    <span class="pnl" style="color:#ef4444">-$4.68</span>
+  </div>
+  <div class="pick-game">Seattle Mariners @ Baltimore Orioles — <strong style="color:#38bdf8">Seattle Mariners</strong></div>
+  <div class="score-line">Seattle Mariners 2, Baltimore Orioles 7</div>
+  <div class="why-picked"><span class="label-sm">WHY PICKED</span> Model edge: ERA Trap — Brandon Young, Park Factor; model prob 61.7% vs market 50.0%</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Brandon Young</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Weather</span></div>
+  <div class="verdict">CORRECT — beat the close +0.4%, lost on variance</div>
+  <div class="insight">💡 Line moved our way before game time — correct process, bad outcome. Stay the course.</div>
+  <p class="clv-note">✓ Good bet, bad result — the line moved our way before tip. This is variance, not a model error.</p>
+</div>
+<div class="pick-card" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">🎰 PARLAY</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.3%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+    <span class="pnl" style="color:#22c55e">+$5.68</span>
+  </div>
+  <div class="pick-game">Miami Marlins (ML) + Philadelphia Phillies (ML)</div>
+  <div class="legs-block">
+            <div class="leg-row">
+              <span style="color:#22c55e">✓</span>
+              <span class="leg-pick">Miami Marlins</span>
+              <span class="leg-score">Arizona Diamondbacks 0, Miami Marlins 8</span>
+              <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.4%</span>
+            </div>
+            <div class="leg-row">
+              <span style="color:#22c55e">✓</span>
+              <span class="leg-pick">Philadelphia Phillies</span>
+              <span class="leg-score">Philadelphia Phillies 7, Toronto Blue Jays 4</span>
+              <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.2%</span>
+            </div></div>
+  <div class="sig-chips"><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Wind Factor</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">CORRECT — both legs hit (Miami Marlins WON, Philadelphia Phillies WON)</div>
+  
+  
+</div>
+<div class="pick-card" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">🎰 PARLAY</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +0.9%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+    <span class="pnl" style="color:#ef4444">-$1.67</span>
+  </div>
+  <div class="pick-game">Seattle Mariners (ML) + Los Angeles Angels (ML)</div>
+  <div class="legs-block">
+            <div class="leg-row">
+              <span style="color:#ef4444">✗</span>
+              <span class="leg-pick">Seattle Mariners</span>
+              <span class="leg-score">Seattle Mariners 2, Baltimore Orioles 7</span>
+              <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +0.4%</span>
+            </div>
+            <div class="leg-row">
+              <span style="color:#22c55e">✓</span>
+              <span class="leg-pick">Los Angeles Angels</span>
+              <span class="leg-score">Houston Astros 2, Los Angeles Angels 3</span>
+              <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +1.3%</span>
+            </div></div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Brandon Young</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Weather</span></div>
+  <div class="verdict">INCORRECT — one leg failed (Seattle Mariners LOST, Los Angeles Angels WON); avg leg CLV +0.9% — good process, one leg fell short</div>
+  <div class="insight">💡 One leg (Seattle Mariners) sank the parlay — single bets on each leg would have split the result.</div>
+  <p class="clv-note">✓ Good bet, bad result — the line moved our way before tip. This is variance, not a model error.</p>
+</div>
+
+  <!-- WATCHLIST -->
+  <div class="section-title">Watchlist — All Sport Tabs</div>
+  <h3 class="sport-header">MLB <span class="rec-chip">12-7</span></h3>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.2%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+  </div>
+  <div class="pick-game">Philadelphia Phillies @ Toronto Blue Jays — <strong style="color:#38bdf8">Philadelphia Phillies</strong></div>
+  <div class="score-line">Philadelphia Phillies 7, Toronto Blue Jays 4</div>
+  <div class="sig-chips"><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">CORRECT — won</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +1.3%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+  </div>
+  <div class="pick-game">Houston Astros @ Los Angeles Angels — <strong style="color:#38bdf8">Los Angeles Angels</strong></div>
+  <div class="score-line">Houston Astros 2, Los Angeles Angels 3</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Peter Lambert</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">CORRECT — won, beat the close +1.3%</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Spread</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +1.2%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+  </div>
+  <div class="pick-game">Texas Rangers @ Kansas City Royals — <strong style="color:#38bdf8">Kansas City Royals +1.5</strong></div>
+  <div class="score-line">Texas Rangers 6, Kansas City Royals 4</div>
+  <div class="sig-chips"><span class="sig-chip">Injury Impact</span><span class="sig-chip">Wind Factor</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">CORRECT — beat the close +1.2%, lost on variance</div>
+  <p class="clv-note">✓ Good bet, bad result — the line moved our way before tip. This is variance, not a model error.</p>
+</div>
+<div class="pick-card compact" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Total</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">CLV -1.0%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+  </div>
+  <div class="pick-game">Cincinnati Reds @ San Diego Padres — <strong style="color:#38bdf8">Under 8.5</strong></div>
+  <div class="score-line">Cincinnati Reds 4, San Diego Padres 5</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Michael King</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span></div>
+  <div class="verdict">INCORRECT — lost, CLV -1.0%</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Total</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.9%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+  </div>
+  <div class="pick-game">Milwaukee Brewers @ Athletics — <strong style="color:#38bdf8">Under 14.5</strong></div>
+  <div class="score-line">Milwaukee Brewers 3, Athletics 4</div>
+  <div class="sig-chips"><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div>
+  <div class="verdict">CORRECT — won</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Total</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">CLV -2.1%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+  </div>
+  <div class="pick-game">Texas Rangers @ Kansas City Royals — <strong style="color:#38bdf8">Under 10.5</strong></div>
+  <div class="score-line">Texas Rangers 6, Kansas City Royals 4</div>
+  <div class="sig-chips"><span class="sig-chip">Injury Impact</span><span class="sig-chip">Wind Factor</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">MIXED — won, CLV -2.1% (market faded this pick)</div>
+  <p class="clv-note">⚠ Won, but the market moved against this pick. Worth watching if this signal repeats.</p>
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.2%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">New York Yankees @ Cleveland Guardians — <strong style="color:#38bdf8">New York Yankees</strong></div>
+  <div class="score-line">New York Yankees 8, Cleveland Guardians 4</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Parker Messick</span><span class="sig-chip">ERA Trap — Carlos Rodón</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span></div>
+  <div class="verdict">CORRECT — won</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.1%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Minnesota Twins @ Detroit Tigers — <strong style="color:#38bdf8">Detroit Tigers</strong></div>
+  <div class="score-line">Minnesota Twins 6, Detroit Tigers 4</div>
+  <div class="sig-chips"><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div>
+  <div class="verdict">INCORRECT — lost</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.2%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">St. Louis Cardinals @ New York Mets — <strong style="color:#38bdf8">St. Louis Cardinals</strong></div>
+  <div class="score-line">St. Louis Cardinals 9, New York Mets 2</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Austin Warren</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span></div>
+  <div class="verdict">CORRECT — won</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Spread</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +0.1%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Milwaukee Brewers @ Athletics — <strong style="color:#38bdf8">Athletics +1.5</strong></div>
+  <div class="score-line">Milwaukee Brewers 3, Athletics 4</div>
+  <div class="sig-chips"><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div>
+  <div class="verdict">CORRECT — won, beat the close +0.1%</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Total</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">CLV -2.2%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Chicago Cubs @ Colorado Rockies — <strong style="color:#38bdf8">Under 12.5</strong></div>
+  <div class="score-line">Chicago Cubs 2, Colorado Rockies 3</div>
+  <div class="sig-chips"><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">MIXED — won, CLV -2.2% (market faded this pick)</div>
+  <p class="clv-note">⚠ Won, but the market moved against this pick. Worth watching if this signal repeats.</p>
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Spread</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV +-0.0%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Atlanta Braves @ Chicago White Sox — <strong style="color:#38bdf8">Chicago White Sox +1.5</strong></div>
+  <div class="score-line">Atlanta Braves 1, Chicago White Sox 2</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Chris Sale</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Wind Factor</span></div>
+  <div class="verdict">CORRECT — won, beat the close +-0.0%</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Spread</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +0.2%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Washington Nationals @ San Francisco Giants — <strong style="color:#38bdf8">San Francisco Giants +1.5</strong></div>
+  <div class="score-line">Washington Nationals 10, San Francisco Giants 11</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Robbie Ray</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span></div>
+  <div class="verdict">CORRECT — won, beat the close +0.2%</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Spread</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +0.1%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Cincinnati Reds @ San Diego Padres — <strong style="color:#38bdf8">Cincinnati Reds +1.5</strong></div>
+  <div class="score-line">Cincinnati Reds 4, San Diego Padres 5</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Michael King</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span></div>
+  <div class="verdict">CORRECT — won, beat the close +0.1%</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Total</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">CLV -3.3%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Arizona Diamondbacks @ Miami Marlins — <strong style="color:#38bdf8">Under 8.5</strong></div>
+  <div class="score-line">Arizona Diamondbacks 0, Miami Marlins 8</div>
+  <div class="sig-chips"><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Wind Factor</span><span class="sig-chip">Platoon Edge</span></div>
+  <div class="verdict">MIXED — won, CLV -3.3% (market faded this pick)</div>
+  <p class="clv-note">⚠ Won, but the market moved against this pick. Worth watching if this signal repeats.</p>
+</div>
+<div class="pick-card compact" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +0.1%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Milwaukee Brewers @ Athletics — <strong style="color:#38bdf8">Milwaukee Brewers</strong></div>
+  <div class="score-line">Milwaukee Brewers 3, Athletics 4</div>
+  <div class="sig-chips"><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div>
+  <div class="verdict">CORRECT — beat the close +0.1%, lost on variance</div>
+  <p class="clv-note">✓ Good bet, bad result — the line moved our way before tip. This is variance, not a model error.</p>
+</div>
+<div class="pick-card compact" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Total</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +1.0%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Atlanta Braves @ Chicago White Sox — <strong style="color:#38bdf8">Over 7.5</strong></div>
+  <div class="score-line">Atlanta Braves 1, Chicago White Sox 2</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Chris Sale</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Wind Factor</span></div>
+  <div class="verdict">CORRECT — beat the close +1.0%, lost on variance</div>
+  <p class="clv-note">✓ Good bet, bad result — the line moved our way before tip. This is variance, not a model error.</p>
+</div>
+<div class="pick-card compact" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Total</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV -0.4%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Minnesota Twins @ Detroit Tigers — <strong style="color:#38bdf8">Under 9.5</strong></div>
+  <div class="score-line">Minnesota Twins 6, Detroit Tigers 4</div>
+  <div class="sig-chips"><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Platoon Edge</span><span class="sig-chip">Recent Form</span></div>
+  <div class="verdict">INCORRECT — lost</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #ef4444">
+  <div class="pick-header">
+    <span class="pick-label">MLB · Moneyline</span>
+    <span class="badge" style="background:#ef444420;color:#ef4444;border:1px solid #ef444440">LOST</span>
+    <span class="clv-tag" style="background:#94a3b820;color:#94a3b8;border:1px solid #94a3b840">CLV +0.0%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Atlanta Braves @ Chicago White Sox — <strong style="color:#38bdf8">Atlanta Braves</strong></div>
+  <div class="score-line">Atlanta Braves 1, Chicago White Sox 2</div>
+  <div class="sig-chips"><span class="sig-chip">ERA Trap — Chris Sale</span><span class="sig-chip">Park Factor</span><span class="sig-chip">Injury Impact</span><span class="sig-chip">Wind Factor</span></div>
+  <div class="verdict">INCORRECT — lost</div>
+  
+</div><h3 class="sport-header">WNBA <span class="rec-chip">2-0</span></h3>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">WNBA · Moneyline</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +1.4%</span>
+    <span class="badge" style="background:#38bdf820;color:#38bdf8;border:1px solid #38bdf840">HIGH</span>
+  </div>
+  <div class="pick-game">Los Angeles Sparks @ Seattle Storm — <strong style="color:#38bdf8">Los Angeles Sparks</strong></div>
+  <div class="score-line">Los Angeles Sparks 88, Seattle Storm 83</div>
+  <div class="sig-chips"><span class="sig-chip">Home Advantage</span><span class="sig-chip">Recent Form</span><span class="sig-chip">Lineup Impact</span></div>
+  <div class="verdict">CORRECT — won, beat the close +1.4%</div>
+  
+</div>
+<div class="pick-card compact" style="border-left:3px solid #22c55e">
+  <div class="pick-header">
+    <span class="pick-label">WNBA · Moneyline</span>
+    <span class="badge" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">WON</span>
+    <span class="clv-tag" style="background:#22c55e20;color:#22c55e;border:1px solid #22c55e40">CLV +1.8%</span>
+    <span class="badge" style="background:#a78bfa20;color:#a78bfa;border:1px solid #a78bfa40">MEDIUM</span>
+  </div>
+  <div class="pick-game">Connecticut Sun @ Toronto Tempo — <strong style="color:#38bdf8">Toronto Tempo</strong></div>
+  <div class="score-line">Connecticut Sun 102, Toronto Tempo 106</div>
+  <div class="sig-chips"><span class="sig-chip">Home Advantage</span><span class="sig-chip">Recent Form</span><span class="sig-chip">Back-to-Back</span><span class="sig-chip">Lineup Impact</span></div>
+  <div class="verdict">CORRECT — won, beat the close +1.8%</div>
+  
+</div>
+
+  <!-- PATTERNS -->
+  <div class="section-title">Patterns Today</div>
+  <div class="info-card">
+    <ul class="pat-list"><li>HIGH confidence budget singles: 4-1</li><li>ERA Trap picks (all tonight): 7-4, avg CLV +0.1%</li><li>MLB Unders (watchlist): 4-2, avg CLV -1.7% (market faded these lines)</li><li>WNBA (watchlist): 2-0, avg CLV +1.6% — strongest positive CLV of the night</li><li>Budget parlays: 1 WON (Miami ML + PHI ML, +$5.68), 1 LOST (SEA ML + LAA ML, -$1.67)</li></ul>
+  </div>
+
+  <!-- MODEL OBSERVATIONS -->
+  <div class="section-title">Model Observations</div>
+  <div class="info-card">
+    <ul class="pat-list"><li>ERA Trap signal: 7-4 tonight (7/11 = 64%). Avg CLV +0.1% — results confirm ERA regression logic, CLV roughly neutral (market hasn't fully priced in ERA traps).</li><li>MLB Unders: won 4/6 but avg CLV -1.73% — the market consistently moved away from our under picks. Results and CLV disagree; review whether total-line model has a systematic bias toward the under.</li><li>WNBA model: 2-for-2 with avg CLV +1.6% — both results and line movement confirmed. Investigate expanding WNBA allocation in future runs.</li><li>SEA Mariners ML (budget LOST): ERA trap on Brandon Young (SEVERE, severity 0.81) fired correctly — line moved +0.4% our way (CLV positive) — this was variance, not a bad signal.</li><li>ATL @ CWS Over 7.5 (watchlist LOST): picked Over against Chris Sale with strong K/9; the game finished 2-1 for a combined 3 runs. Chris Sale suppressed even the above-average expected total. ERA trap mild — market side had it; consider tightening the Over threshold when a SEVERE ace is on the mound for the opposition.</li></ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Generated 2026-06-11T10:17:16Z &nbsp;·&nbsp; <a href="/index_spa.html">← Back to Picks</a>
+  </div>
+
 </div>
 </body>
 </html>
