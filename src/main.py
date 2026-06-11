@@ -1030,7 +1030,11 @@ def main():
                         help="Re-render report from saved state — zero Odds API calls (for visual/template deploys)")
     args = parser.parse_args()
 
-    leagues   = [args.league] if args.league else ["nba", "mlb", "nfl", "nhl", "ipl", "wnba", "mls"]
+    # Default = every registered sport. Derived from REGISTRY so adding a new
+    # sport can never silently miss the daily run again (WC was skipped on its
+    # opening day, June 11 2026, because this list was hardcoded without it).
+    # Out-of-season sports are filtered inside run() via caps.active_months.
+    leagues   = [args.league] if args.league else list(REGISTRY.keys())
     bet_count = run(leagues=leagues, send_email=not args.no_email,
                     reevaluate=args.reevaluate, code_only=args.code_only)
     logger.info(f"Done. {bet_count} bet recommendation(s) generated.")
