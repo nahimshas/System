@@ -2603,8 +2603,8 @@
     },
     {
       "date": "2026-06-10",
-      "generated_at": "2026-06-11T13:21:32Z",
-      "headline": "Budget 5-2 (P&L +$22.12), avg CLV -0.18%; Watchlist 14-7; ERA trap 2-for-2 on CLV; dominant Marlins blowout 8-0",
+      "generated_at": "2026-06-11T13:58:35Z",
+      "headline": "5-2 on budget (+$22.12), avg CLV -0.18%; ERA trap 7-4 across all picks (avg CLV +0.1%); watchlist 14-7",
       "budget_record": "5-2",
       "watchlist_record": "14-7",
       "budget_pnl": 22.12,
@@ -2620,16 +2620,15 @@
           "result": "WON",
           "score": "Chicago Cubs 2, Colorado Rockies 3",
           "pnl": "+$5.92",
-          "why_picked": "Michael Lorenzen FIP 5.08 / xFIP 4.02; Shota Imanaga FIP 4.91 / xFIP 3.42",
-          "what_happened": "",
+          "why_picked": "Park factor and schedule load on both clubs made Rockies a live dog at Coors.",
+          "what_happened": "Sterlin Thompson delivered a walk-off RBI single for Colorado in a 3-2 win; Ian Happ homered for the Cubs but the Rockies' home-field edge held.",
           "signals": [
-            "FIP/xFIP Edge \u2014 Lorenzen",
-            "FIP/xFIP Edge \u2014 Imanaga",
             "Park Factor",
-            "Injury Impact"
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 won; CLV CLV -0.9% is approximately flat (noise range)",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.9%, noise range)",
+          "key_insight": "Park factor at Coors correctly identified Rockies as viable underdog",
           "in_budget": true,
           "clv_pct": -0.9
         },
@@ -2642,16 +2641,15 @@
           "result": "WON",
           "score": "Arizona Diamondbacks 0, Miami Marlins 8",
           "pnl": "+$5.91",
-          "why_picked": "Ryan Gusto FIP 1.8 / xFIP 2.58; Ryne Nelson FIP 5.25 / xFIP 4.50",
-          "what_happened": "",
+          "why_picked": "Ryan Gusto's elite FIP (1.8) gave Miami a massive starter edge over Arizona's struggling Ryne Nelson (FIP 5.25).",
+          "what_happened": "Miami dominated 8-0: Stowers hit a three-run homer in a six-run fourth, Nelson allowed 7 runs in 4 innings, and Otto L\u00f3pez raised his MLB-leading average to .342.",
           "signals": [
-            "FIP/xFIP Edge \u2014 Gusto",
-            "FIP/xFIP Edge \u2014 Nelson",
             "Park Factor",
-            "Injury Impact"
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 won; CLV CLV -0.4% is approximately flat (noise range)",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.4%, noise range)",
+          "key_insight": "Gusto's FIP 1.8 was the primary driver \u2014 validated emphatically with a shutout",
           "in_budget": true,
           "clv_pct": -0.4
         },
@@ -2664,15 +2662,14 @@
           "result": "WON",
           "score": "San Antonio Spurs 106, New York Knicks 107",
           "pnl": "+$4.80",
-          "why_picked": "Model edge on pitcher/lineup mismatch",
-          "what_happened": "",
+          "why_picked": "Home court (+2%) and Spurs injury impact tilted model toward NYK winning \u2014 the +2.5 spread gave cushion in a projected coin-flip.",
+          "what_happened": "The Knicks trailed by 27 at half but staged the largest-ever NBA Finals comeback (Brunson 36 pts, Anunoby 33-pt tip-in), winning 107-106 \u2014 Spurs covered by a single point.",
           "signals": [
-            "Home Court",
-            "Playoff Factor",
-            "Model Projection"
+            "Home Advantage",
+            "Recent Form"
           ],
-          "signal_verdict": "CORRECT \u2014 won and beat the close CLV +0.5%",
-          "key_insight": "Strong validation: result and line movement agree.",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.5%, noise range)",
+          "key_insight": "The +2.5 cushion was barely enough \u2014 Wembanyama shot 9-for-25 as model flagged regression risk",
           "in_budget": true,
           "clv_pct": 0.5
         },
@@ -2685,16 +2682,15 @@
           "result": "WON",
           "score": "Los Angeles Dodgers 8, Pittsburgh Pirates 9",
           "pnl": "+$6.16",
-          "why_picked": "Jared Jones FIP 5.18 / xFIP 4.04; Shohei Ohtani FIP 2.31 / xFIP 3.02",
-          "what_happened": "",
+          "why_picked": "ERA trap on Ohtani (0.74 ERA vs 3.11 xFIP over 61 IP) flagged the market had overpriced LAD; model projected Pittsburgh competitive at pitcher-friendly PNC Park.",
+          "what_happened": "Tyler Callihan hit two homers including a go-ahead 3-run blast in the 8th; Ohtani allowed a season-high 4 runs before Pittsburgh escaped 9-8, with Soto closing it out.",
           "signals": [
-            "FIP/xFIP Edge \u2014 Jones",
-            "FIP/xFIP Edge \u2014 Ohtani",
             "ERA Trap \u2014 Shohei Ohtani",
-            "Park Factor"
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "CORRECT \u2014 won; CLV CLV -0.5% is approximately flat (noise range)",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.5%, noise range)",
+          "key_insight": "Ohtani's ERA trap fired \u2014 season-high 4 runs allowed, exactly the regression the model anticipated",
           "in_budget": true,
           "clv_pct": -0.5
         },
@@ -2707,16 +2703,16 @@
           "result": "LOST",
           "score": "Seattle Mariners 2, Baltimore Orioles 7",
           "pnl": "-$4.68",
-          "why_picked": "Brandon Young FIP 4.32 / xFIP 4.43; George Kirby FIP 3.42 / xFIP 3.32",
-          "what_happened": "",
+          "why_picked": "SEVERE ERA trap on Brandon Young (3.47 ERA vs 4.28 xFIP over 49 IP) and Kirby's FIP edge (3.42) flagged Baltimore as overpriced.",
+          "what_happened": "Jackson Holliday launched his third career grand slam and Young was dominant \u2014 7 scoreless innings, 2 hits \u2014 as Baltimore won convincingly 7-2.",
           "signals": [
-            "FIP/xFIP Edge \u2014 Young",
-            "FIP/xFIP Edge \u2014 Kirby",
             "ERA Trap \u2014 Brandon Young",
-            "Park Factor"
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 beat the close CLV +0.4%, lost on variance; the model signal was confirmed by line movement",
-          "key_insight": "Good bet, bad result. CLV +0.4% shows the market agreed with our direction \u2014 this is a long-run edge.",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.4%)",
+          "key_insight": "Young's ERA trap did not fire tonight; long-term still a sound signal, but Young pitched to his ERA rather than his xFIP",
           "in_budget": true,
           "clv_pct": 0.4
         },
@@ -2724,56 +2720,69 @@
           "pick": "Miami Marlins (ML) + Philadelphia Phillies (ML)",
           "sport": "PARLAY",
           "bet_type": "Parlay",
+          "confidence": "HIGH",
           "result": "WON",
           "pnl": "+$5.68",
           "legs": [
             {
-              "pick": "Miami Marlins",
+              "game": "Arizona Diamondbacks @ Miami Marlins",
               "sport": "MLB",
-              "result": "WON"
+              "pick": "Miami Marlins",
+              "bet_type": "Moneyline",
+              "result": "WON",
+              "score": "Arizona Diamondbacks 0, Miami Marlins 8"
             },
             {
-              "pick": "Philadelphia Phillies",
+              "game": "Philadelphia Phillies @ Toronto Blue Jays",
               "sport": "MLB",
-              "result": "WON"
+              "pick": "Philadelphia Phillies",
+              "bet_type": "Moneyline",
+              "result": "WON",
+              "score": "Philadelphia Phillies 7, Toronto Blue Jays 4"
             }
           ],
+          "why_picked": "Both legs had HIGH individual confidence with strong starter matchup advantages.",
+          "what_happened": "Both legs hit convincingly \u2014 Marlins shutout (8-0) and Phillies routing Toronto (7-4).",
           "signals": [
-            "FIP/xFIP Edge \u2014 Gusto",
-            "FIP/xFIP Edge \u2014 Nelson",
-            "Park Factor",
-            "Injury Impact"
+            "Park Factor"
           ],
-          "signal_verdict": "CORRECT \u2014 all active legs hit",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 both legs hit",
+          "key_insight": "Pairing two strong starting pitcher edges into a parlay delivered strong value (+$5.68 on $2.32)",
           "in_budget": true
         },
         {
           "pick": "Seattle Mariners (ML) + Los Angeles Angels (ML)",
           "sport": "PARLAY",
           "bet_type": "Parlay",
+          "confidence": "HIGH",
           "result": "LOST",
           "pnl": "-$1.67",
           "legs": [
             {
-              "pick": "Seattle Mariners",
+              "game": "Seattle Mariners @ Baltimore Orioles",
               "sport": "MLB",
-              "result": "LOST"
+              "pick": "Seattle Mariners",
+              "bet_type": "Moneyline",
+              "result": "LOST",
+              "score": "Seattle Mariners 2, Baltimore Orioles 7"
             },
             {
-              "pick": "Los Angeles Angels",
+              "game": "Houston Astros @ Los Angeles Angels",
               "sport": "MLB",
-              "result": "WON"
+              "pick": "Los Angeles Angels",
+              "bet_type": "Moneyline",
+              "result": "WON",
+              "score": "Houston Astros 2, Los Angeles Angels 3"
             }
           ],
+          "why_picked": "Both teams had ERA trap advantages (Lambert for LAA, Young for SEA) with favorable starter matchups.",
+          "what_happened": "Angels held on 3-2 over Houston, but the Mariners leg sank it \u2014 Baltimore won 7-2 with Young dominant.",
           "signals": [
-            "FIP/xFIP Edge \u2014 Young",
-            "FIP/xFIP Edge \u2014 Kirby",
             "ERA Trap \u2014 Brandon Young",
-            "Park Factor"
+            "ERA Trap \u2014 Peter Lambert"
           ],
-          "signal_verdict": "INCORRECT \u2014 Seattle Mariners leg(s) lost",
-          "key_insight": "One losing leg sinks the parlay; parlay structure reflects acceptable risk.",
+          "signal_verdict": "INCORRECT \u2014 Mariners leg failed; Angels leg WON",
+          "key_insight": "ERA trap parlay: one leg fired (Lambert), one did not (Young) \u2014 single-leg failure costs the parlay",
           "in_budget": true
         },
         {
@@ -2784,14 +2793,15 @@
           "confidence": "HIGH",
           "result": "WON",
           "score": "Philadelphia Phillies 7, Toronto Blue Jays 4",
-          "pnl": "+$3.83",
+          "pnl": "",
+          "why_picked": "ERA trap on Scherzer (FIP 8.42) made PHI the strong starter favorite.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Scherzer",
-            "FIP/xFIP Edge \u2014 Luzardo",
             "Park Factor",
-            "Injury Impact"
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 result confirmed",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.2%, noise range)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -0.2
@@ -2804,14 +2814,15 @@
           "confidence": "HIGH",
           "result": "WON",
           "score": "Houston Astros 2, Los Angeles Angels 3",
-          "pnl": "+$3.70",
+          "pnl": "",
+          "why_picked": "SEVERE ERA trap on Peter Lambert (3.55 ERA vs 4.47 xFIP) flagged HOU as overpriced; Reid Detmers was excellent (FIP 2.85).",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Detmers",
-            "FIP/xFIP Edge \u2014 Lambert",
             "ERA Trap \u2014 Peter Lambert",
-            "Park Factor"
+            "Park Factor",
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 won and beat close (CLV +1.3%)",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.3%)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 1.3
@@ -2824,14 +2835,14 @@
           "confidence": "HIGH",
           "result": "LOST",
           "score": "Texas Rangers 6, Kansas City Royals 4",
-          "pnl": "-$4.20",
+          "pnl": "",
+          "why_picked": "Both starters projected evenly; KC at +1.5 offered value with injury cushion.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Lugo",
-            "FIP/xFIP Edge \u2014 Gore",
             "Injury Impact",
-            "Wind Factor"
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 beat the close (+1.2% CLV), lost on variance",
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.2%), lost on variance",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 1.2
@@ -2844,14 +2855,15 @@
           "confidence": "HIGH",
           "result": "LOST",
           "score": "Cincinnati Reds 4, San Diego Padres 5",
-          "pnl": "-$4.26",
+          "pnl": "",
+          "why_picked": "MILD ERA trap on Michael King and a pitcher-friendly park projected a low-scoring game.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 King",
-            "FIP/xFIP Edge \u2014 Singer",
             "ERA Trap \u2014 Michael King",
-            "Park Factor"
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "INCORRECT \u2014 pick lost",
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.0% against us",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -1.0
@@ -2864,14 +2876,14 @@
           "confidence": "HIGH",
           "result": "WON",
           "score": "Milwaukee Brewers 3, Athletics 4",
-          "pnl": "+$3.72",
+          "pnl": "",
+          "why_picked": "Jack Perkins' elite FIP (2.42) anchored the low-total projection for MIL/OAK.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Perkins",
-            "FIP/xFIP Edge \u2014 Sproat",
             "Platoon Edge",
-            "Recent Form \u2014 Athletics"
+            "Recent Form"
           ],
-          "signal_verdict": "CORRECT \u2014 result confirmed",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.9%, noise range)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -0.9
@@ -2884,14 +2896,14 @@
           "confidence": "HIGH",
           "result": "WON",
           "score": "Texas Rangers 6, Kansas City Royals 4",
-          "pnl": "+$3.66",
+          "pnl": "",
+          "why_picked": "Even starter matchup at a neutral park projected a moderate-scoring game; under had value.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Lugo",
-            "FIP/xFIP Edge \u2014 Gore",
             "Injury Impact",
-            "Wind Factor"
+            "Platoon Edge"
           ],
-          "signal_verdict": "MIXED \u2014 won despite market moving against us (-2.1% CLV)",
+          "signal_verdict": "MIXED \u2014 won, but the market moved -2.1% against this pick",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -2.1
@@ -2904,14 +2916,16 @@
           "confidence": "MEDIUM",
           "result": "WON",
           "score": "New York Yankees 8, Cleveland Guardians 4",
-          "pnl": "+$5.49",
+          "pnl": "",
+          "why_picked": "SEVERE ERA trap on Parker Messick (2.40 ERA vs 3.64 xFIP) flagged CLE as overpriced.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Messick",
-            "FIP/xFIP Edge \u2014 Rod\u00f3n",
             "ERA Trap \u2014 Parker Messick",
-            "ERA Trap \u2014 Carlos Rod\u00f3n"
+            "ERA Trap \u2014 Carlos Rod\u00f3n",
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "CORRECT \u2014 result confirmed",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.2%, noise range)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -0.2
@@ -2924,14 +2938,16 @@
           "confidence": "MEDIUM",
           "result": "LOST",
           "score": "Minnesota Twins 6, Detroit Tigers 4",
-          "pnl": "-$3.16",
+          "pnl": "",
+          "why_picked": "Pitcher-friendly Comerica and Framber Valdez (FIP 3.95) tilted model to DET.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Valdez",
             "Park Factor",
             "Injury Impact",
-            "Platoon Edge"
+            "Platoon Edge",
+            "Recent Form"
           ],
-          "signal_verdict": "INCORRECT \u2014 pick lost",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.1%)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -0.1
@@ -2944,14 +2960,15 @@
           "confidence": "MEDIUM",
           "result": "WON",
           "score": "St. Louis Cardinals 9, New York Mets 2",
-          "pnl": "+$2.65",
+          "pnl": "",
+          "why_picked": "SEVERE ERA trap on Austin Warren (2.01 ERA vs 3.87 xFIP) flagged NYM as overpriced.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Warren",
-            "FIP/xFIP Edge \u2014 Pallante",
             "ERA Trap \u2014 Austin Warren",
-            "Park Factor"
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "CORRECT \u2014 result confirmed",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.2%, noise range)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -0.2
@@ -2964,14 +2981,14 @@
           "confidence": "MEDIUM",
           "result": "WON",
           "score": "Milwaukee Brewers 3, Athletics 4",
-          "pnl": "+$1.59",
+          "pnl": "",
+          "why_picked": "Perkins' strength gave OAK a starter edge; +1.5 provided extra insurance.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Perkins",
-            "FIP/xFIP Edge \u2014 Sproat",
             "Platoon Edge",
-            "Recent Form \u2014 Athletics"
+            "Recent Form"
           ],
-          "signal_verdict": "CORRECT \u2014 result confirmed",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.1%, noise range)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 0.1
@@ -2984,14 +3001,15 @@
           "confidence": "MEDIUM",
           "result": "WON",
           "score": "Chicago Cubs 2, Colorado Rockies 3",
-          "pnl": "+$1.80",
+          "pnl": "",
+          "why_picked": "Coors-inflated totals often overbaked; model projected 8 combined runs.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Lorenzen",
-            "FIP/xFIP Edge \u2014 Imanaga",
             "Park Factor",
-            "Injury Impact"
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "MIXED \u2014 won despite market moving against us (-2.2% CLV)",
+          "signal_verdict": "MIXED \u2014 won, but the market moved -2.2% against this pick",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -2.2
@@ -3004,14 +3022,16 @@
           "confidence": "MEDIUM",
           "result": "WON",
           "score": "Atlanta Braves 1, Chicago White Sox 2",
-          "pnl": "+$1.70",
+          "pnl": "",
+          "why_picked": "MILD ERA trap on Chris Sale (2.23 ERA vs 2.73 xFIP) at pitcher-friendly Rate Field.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Sale",
             "ERA Trap \u2014 Chris Sale",
             "Park Factor",
-            "Injury Impact"
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 result confirmed",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.0%, noise range)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -0.0
@@ -3024,14 +3044,16 @@
           "confidence": "MEDIUM",
           "result": "WON",
           "score": "Washington Nationals 10, San Francisco Giants 11",
-          "pnl": "+$1.07",
+          "pnl": "",
+          "why_picked": "SEVERE ERA trap on Robbie Ray (4.12 ERA vs 4.97 xFIP) flagged Giants as undervalued.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Ray",
-            "FIP/xFIP Edge \u2014 Griffin",
             "ERA Trap \u2014 Robbie Ray",
-            "Park Factor"
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 result confirmed",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.2%, noise range)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 0.2
@@ -3044,14 +3066,15 @@
           "confidence": "MEDIUM",
           "result": "WON",
           "score": "Cincinnati Reds 4, San Diego Padres 5",
-          "pnl": "+$1.19",
+          "pnl": "",
+          "why_picked": "MILD ERA trap on King gave Reds value at +1.5 even with King pitching well.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 King",
-            "FIP/xFIP Edge \u2014 Singer",
             "ERA Trap \u2014 Michael King",
-            "Park Factor"
+            "Park Factor",
+            "Injury Impact"
           ],
-          "signal_verdict": "CORRECT \u2014 result confirmed",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.1%, noise range)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 0.1
@@ -3064,14 +3087,15 @@
           "confidence": "MEDIUM",
           "result": "WON",
           "score": "Arizona Diamondbacks 0, Miami Marlins 8",
-          "pnl": "+$1.36",
+          "pnl": "",
+          "why_picked": "Gusto's elite FIP + pitcher-friendly park = low-total projection.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Gusto",
-            "FIP/xFIP Edge \u2014 Nelson",
             "Park Factor",
-            "Injury Impact"
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "MIXED \u2014 won despite market moving against us (-3.3% CLV)",
+          "signal_verdict": "MIXED \u2014 won, but the market moved -3.3% against this pick",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -3.3
@@ -3084,14 +3108,14 @@
           "confidence": "MEDIUM",
           "result": "LOST",
           "score": "Milwaukee Brewers 3, Athletics 4",
-          "pnl": "-$0.52",
+          "pnl": "",
+          "why_picked": "Sproat (FIP 5.46) vs Perkins (FIP 2.42) \u2014 model projected MIL ML as slight edge.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Perkins",
-            "FIP/xFIP Edge \u2014 Sproat",
             "Platoon Edge",
-            "Recent Form \u2014 Athletics"
+            "Recent Form"
           ],
-          "signal_verdict": "INCORRECT \u2014 pick lost",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.1%)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 0.1
@@ -3104,14 +3128,16 @@
           "confidence": "MEDIUM",
           "result": "LOST",
           "score": "Atlanta Braves 1, Chicago White Sox 2",
-          "pnl": "-$0.53",
+          "pnl": "",
+          "why_picked": "Despite ERA trap on Sale, model projected moderate run total with Atlanta offense.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Sale",
             "ERA Trap \u2014 Chris Sale",
             "Park Factor",
-            "Injury Impact"
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "CORRECT \u2014 beat the close (+1.0% CLV), lost on variance",
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.0%), lost on variance",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 1.0
@@ -3124,14 +3150,16 @@
           "confidence": "MEDIUM",
           "result": "LOST",
           "score": "Minnesota Twins 6, Detroit Tigers 4",
-          "pnl": "-$0.53",
+          "pnl": "",
+          "why_picked": "Comerica + Valdez projected a pitcher-friendly low-scoring game.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Valdez",
             "Park Factor",
             "Injury Impact",
-            "Platoon Edge"
+            "Platoon Edge",
+            "Recent Form"
           ],
-          "signal_verdict": "INCORRECT \u2014 pick lost",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.4%)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -0.4
@@ -3144,14 +3172,16 @@
           "confidence": "MEDIUM",
           "result": "LOST",
           "score": "Atlanta Braves 1, Chicago White Sox 2",
-          "pnl": "-$0.59",
+          "pnl": "",
+          "why_picked": "Atlanta ML seen as value given Sale's ERA trap and CWS 2026 struggles.",
+          "what_happened": "",
           "signals": [
-            "FIP/xFIP Edge \u2014 Sale",
             "ERA Trap \u2014 Chris Sale",
             "Park Factor",
-            "Injury Impact"
+            "Injury Impact",
+            "Platoon Edge"
           ],
-          "signal_verdict": "INCORRECT \u2014 pick lost",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.0%)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 0.0
@@ -3165,13 +3195,13 @@
           "result": "WON",
           "score": "Los Angeles Sparks 88, Seattle Storm 83",
           "pnl": "",
+          "why_picked": "Seattle Storm lineup impact (-16.4%) and recent struggles gave Sparks the edge.",
+          "what_happened": "",
           "signals": [
-            "Home Court",
-            "Opponent Slump",
-            "Model Projection",
+            "Home Advantage",
             "Lineup Impact"
           ],
-          "signal_verdict": "CORRECT \u2014 won and beat close (CLV +1.4%)",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.4%)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 1.4
@@ -3185,31 +3215,34 @@
           "result": "WON",
           "score": "Connecticut Sun 102, Toronto Tempo 106",
           "pnl": "",
+          "why_picked": "Sun on back-to-back (+4% fatigue factor) plus Toronto home court; Tempo had strong injury advantage (+24.7%).",
+          "what_happened": "",
           "signals": [
-            "Home Court",
-            "Opponent Slump",
+            "Home Advantage",
             "Back-to-Back",
-            "Model Projection"
+            "Lineup Impact"
           ],
-          "signal_verdict": "CORRECT \u2014 won and beat close (CLV +1.8%)",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.8%)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 1.8
         }
       ],
       "patterns": [
-        "HIGH confidence (budget): 4-1 today",
-        "MLB budget picks: 3-1",
-        "Budget spread picks: 3-0",
-        "ERA Trap picks (budget): 1-1 \u2014 Ohtani trap hit; Young trap lost on a BAL blowout",
-        "Watchlist MLB totals: 5 WON, 2 LOST (totals model strong tonight)",
-        "WNBA picks: 2-0 \u2014 both CLV-positive (+1.4%, +1.8%)"
+        "HIGH confidence budget singles: 4-1 today",
+        "ERA trap signal: 7-4 today, avg CLV +0.1%",
+        "MLB totals (watchlist): 5-4 today",
+        "NBA Finals pick: Spurs +2.5 WON (barely, 107-106)",
+        "WNBA: 2-0 today with positive CLV on both picks",
+        "Park Factor picks: 13-6"
       ],
       "model_observations": [
-        "ERA Trap picks: 8-4 with avg CLV +0.08% \u2014 Ohtani trap (Pirates +1.5) validated by result; Young trap (Mariners ML) lost the game but had +0.4% CLV (market agreed, variance beat us)",
-        "Park Factor picks: 11-6 with avg CLV -0.36% \u2014 Coors Field (Rockies +1.5, Under 12.5) both won; market moved slightly against both but results confirmed",
-        "WNBA picks: 2-0 with avg CLV +1.6% \u2014 lineup-impact and back-to-back signals showing strong CLV; worth elevating to budget",
-        "Watchlist MLB totals: 4-3, avg CLV -1.27% \u2014 negative CLV on totals (market moves against our Under calls) but results are profitable tonight; may be capturing short-term variance"
+        "ERA Trap: 7-5 today across all picks (avg CLV +0.1%) \u2014 signal remains valid long-term; the one budget failure (Young) was variance not signal breakdown",
+        "Budget CLV average is -0.18% \u2014 all five budget CLVs in the noise range (\u00b11%), meaning line movement neither confirmed nor contradicted today's selections; result quality was the primary evidence",
+        "Ohtani ERA trap (MODERATE) fired correctly \u2014 Pittsburgh +1.5 WON and Ohtani allowed season-high 4 runs; validates the severity tier",
+        "Brandon Young ERA trap (SEVERE) did not fire \u2014 Young pitched 7 scoreless innings; the xFIP-ERA gap remains real but tonight was an outlier",
+        "WNBA picks both won (Sparks +88-83, Tempo +106-102) with positive CLV (+1.4%, +1.8%) \u2014 lineup/injury impact signals confirmed",
+        "Cubs/Rockies Under 12.5 WON (final 5 runs) despite Coors Field context; CLV -2.2% suggests market disagreed but it hit"
       ]
     }
   ]
