@@ -1817,6 +1817,89 @@
   </div>
   {% endif %}
 
+  {# ────────────────────────────────────────────────────────────────────── #}
+  {# Closing Line Value (CLV) — per-market skill signal + budget governor   #}
+  {# ────────────────────────────────────────────────────────────────────── #}
+  {% if report.clv %}
+  {% set clv = report.clv %}
+  <div class="section" id="sec-clv">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Closing Line Value</span>
+      {% if clv.computed_at %}
+      <span style="font-size:0.7rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);">
+        auto-updated &middot; {{ clv.computed_at[:19].replace('T', ' ') }} UTC
+      </span>
+      {% endif %}
+    </div>
+    <div class="card">
+      <details>
+        <summary style="cursor:pointer;list-style:none;font-size:0.85rem;color:var(--teal);padding:4px 0;">
+          ▶ What CLV means and how the governor uses it
+        </summary>
+        <div style="font-size:0.78rem;color:var(--muted);line-height:1.55;margin:8px 0 14px;padding-left:6px;border-left:2px solid var(--border);">
+          CLV = the market's <em>closing</em> probability minus the probability when the model picked.
+          <span style="color:#22c55e;">Positive</span> means the line moved toward our pick after we took it — we beat the close, the strongest known predictor of long-term edge, regardless of whether the individual bet won.
+          <span style="color:#ef4444;">Negative</span> means the market moved against us — the close beat us, and a market that consistently does this will lose long-term even if it's currently winning.
+          <ul style="margin:6px 0 0 18px;padding:0;">
+            <li><strong>Phase 0</strong> — &lt; {{ clv.thresholds.phase1_min_n or 30 }} graded picks: observe only, nothing is gated.</li>
+            <li><strong>Phase 1</strong> — {{ clv.thresholds.phase1_min_n or 30 }}–{{ (clv.thresholds.phase2_min_n or 50) - 1 }} picks: only an extreme record (avg &le; {{ ((clv.thresholds.phase1_gate or -0.02) * 100) | round(0) }}%) is gated.</li>
+            <li><strong>Phase 2</strong> — &ge; {{ clv.thresholds.phase2_min_n or 50 }} picks: avg CLV &le; {{ ((clv.thresholds.phase2_gate or -0.01) * 100) | round(0) }}% gates the market out of the budget pool.</li>
+          </ul>
+          Gated markets keep being analyzed, displayed, and logged — only real-money allocation is blocked, so a market that improves un-gates itself automatically.
+        </div>
+      </details>
+
+      {% if not clv.has_data %}
+      <div style="font-size:0.85rem;color:var(--muted);margin-top:8px;">
+        No closing-line data yet. CLV capture stamps each pick's closing probability nightly (and backfills history) — this panel activates as graded picks accumulate.
+      </div>
+      {% else %}
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;color:var(--muted);">
+              <th style="text-align:left;padding:8px 6px;">Sport &middot; Market</th>
+              <th style="text-align:right;padding:8px 6px;">Graded picks</th>
+              <th style="text-align:right;padding:8px 6px;">Avg CLV</th>
+              <th style="text-align:left;padding:8px 6px;">Phase</th>
+              <th style="text-align:left;padding:8px 6px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in clv.markets %}
+            <tr style="border-bottom:1px solid var(--border);{% if m.gated %}background:rgba(239,68,68,0.06);{% endif %}">
+              <td style="padding:7px 6px;">
+                <strong>{{ m.sport }}</strong> &middot; <span style="color:var(--muted);">{{ m.market_type }}</span>
+              </td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">{{ m.n }}</td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;font-weight:600;
+                         color:{% if m.avg_clv_pct >= 1.0 %}#22c55e{% elif m.avg_clv_pct <= -1.0 %}#ef4444{% else %}var(--text){% endif %};">
+                {{ m.clv_display }}
+              </td>
+              <td style="padding:7px 6px;">
+                <span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;
+                             background:{% if m.phase == 0 %}#3b3a52{% elif m.phase == 1 %}#0e7490{% else %}#0f766e{% endif %};color:#fff;">
+                  {{ m.phase }}
+                </span>
+              </td>
+              <td style="padding:7px 6px;font-size:0.74rem;
+                         color:{% if m.gated %}#ef4444{% else %}var(--muted){% endif %};">
+                {{ m.status_label }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;font-size:0.72rem;color:var(--muted);line-height:1.5;">
+        <strong>Rule of thumb:</strong> sustained avg CLV above <span style="color:#22c55e;">+1%</span> is proven edge — the model sees something before the market does.
+        Between &minus;1% and +1% is noise. Below <span style="color:#ef4444;">&minus;1%</span> over 50+ picks, the market is correcting our picks — the governor pulls that market from the budget automatically.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="footer">
     Sports Betting Analysis System &middot; Robinhood Contracts
     <div class="disclaimer">

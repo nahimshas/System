@@ -9,6 +9,64 @@ from src.config import DAILY_BUDGET, MAX_SINGLE_BETS
 logger = logging.getLogger(__name__)
 
 
+def _load_clv_panel() -> Dict:
+    """
+    Load the persisted CLV governor state (state/clv_state.json) and shape it
+    for the template. CLV = closing-line value: market_prob_at_close minus
+    market_prob at pick time. Positive = the market moved toward our picks.
+    """
+    out = {"has_data": False, "computed_at": None, "markets": [], "thresholds": {}}
+    path = Path("state/clv_state.json")
+    if not path.exists():
+        return out
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except Exception as e:
+        logger.debug(f"CLV panel load failed (non-fatal): {e}")
+        return out
+
+    out["computed_at"] = data.get("computed_at")
+    out["thresholds"]  = data.get("thresholds", {})
+    p1 = out["thresholds"].get("phase1_min_n", 30)
+    p2 = out["thresholds"].get("phase2_min_n", 50)
+
+    for m in data.get("markets", []) or []:
+        n       = int(m.get("n", 0))
+        avg_clv = float(m.get("avg_clv", 0.0))
+        phase   = int(m.get("phase", 0))
+        gated   = bool(m.get("gated", False))
+        avg_pct = avg_clv * 100
+
+        if gated:
+            status_label, status_class = "GATED — excluded from budget", "status-gated"
+        elif phase == 0:
+            status_label = f"Observing — {max(0, p1 - n)} graded picks to activation"
+            status_class = "status-building"
+        elif phase == 1:
+            status_label = f"Active (extreme gate only) — {max(0, p2 - n)} picks to full gate"
+            status_class = "status-active"
+        else:
+            status_label, status_class = "Active — full gate", "status-active"
+
+        out["markets"].append({
+            "sport":        m.get("sport", ""),
+            "market_type":  m.get("market_type", ""),
+            "n":            n,
+            "avg_clv_pct":  round(avg_pct, 2),
+            "clv_display":  f"{avg_pct:+.2f}%",
+            "phase":        phase,
+            "gated":        gated,
+            "status_label": status_label,
+            "status_class": status_class,
+        })
+
+    # Sort: gated first (most important), then by sample size descending
+    out["markets"].sort(key=lambda r: (not r["gated"], -r["n"]))
+    out["has_data"] = bool(out["markets"])
+    return out
+
+
 def _load_calibration_panel() -> Dict:
     """
     Load the persisted calibration state and shape it for the template.
@@ -624,6 +682,7 @@ def build_report(
         # picks start being calibration-adjusted at the slot-ranking chokepoint.
         "calibration":             _load_calibration_panel(),
         "cap_state":               _load_cap_panel(),
+        "clv":                     _load_clv_panel(),
     }
 
 

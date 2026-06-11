@@ -26,7 +26,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Resolve today's picks against ESPN
+      - name: Resolve today's picks against ESPN (+ CLV capture)
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: python -m src.data.results_snapshot
 
       - name: Commit snapshot
@@ -34,6 +36,6 @@ jobs:
           git config user.name "results-snapshot-bot"
           git config user.email "actions@users.noreply.github.com"
           git pull --rebase
-          git add state/results_snapshot.json
+          git add state/results_snapshot.json state/shadow_log/
           git diff --cached --quiet || git commit -m "Results snapshot: $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push

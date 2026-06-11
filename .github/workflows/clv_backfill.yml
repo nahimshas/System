@@ -1,0 +1,50 @@
+name: CLV Backfill
+
+# Fetches historical closing lines for past shadow log entries that predate
+# the nightly CLV capture. Throttled by a per-run credit budget — run it once
+# a day (or a few times) until it reports "Nothing left to backfill".
+# Idempotent: already-stamped entries are always skipped.
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_credits:
+        description: "Odds API credit budget for this run"
+        required: false
+        default: "900"
+      since:
+        description: "Earliest pick date to backfill (YYYY-MM-DD)"
+        required: false
+        default: "2026-04-25"
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Backfill closing lines
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python backfill_clv.py --max-credits "${{ github.event.inputs.max_credits }}" --since "${{ github.event.inputs.since }}"
+
+      - name: Commit shadow log
+        run: |
+          git config user.name "clv-backfill-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git pull --rebase
+          git add state/shadow_log/
+          git diff --cached --quiet || git commit -m "CLV backfill: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push

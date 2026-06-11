@@ -181,6 +181,23 @@ def main() -> int:
 
     logger.info(f"Resolving picks for {picks_date}")
 
+    # ── CLV capture (self-healing) ────────────────────────────────────────
+    # Stamp closing-line probabilities onto shadow log entries whose games
+    # have started, then build a lookup so each resolved pick below carries
+    # its CLV. Historical archive data persists, so a failed night here is
+    # automatically repaired on the next run (or the morning run). Non-fatal.
+    clv_lookup = {}
+    try:
+        from src.data.closing_lines import (
+            update_shadow_log_clv, repair_missing_commence_times, clv_lookup_for_date,
+        )
+        repair_missing_commence_times(max_credits=20)
+        clv_summary = update_shadow_log_clv(max_credits=600, lookback_days=7)
+        logger.info(f"CLV capture summary: {clv_summary}")
+        clv_lookup = clv_lookup_for_date(picks_date)
+    except Exception as e:
+        logger.warning(f"CLV capture failed (non-fatal): {e}")
+
     # Collect every pick list the debrief shows
     singles = state.get("singles", [])
     parlays = state.get("parlays", [])
@@ -212,7 +229,7 @@ def main() -> int:
         res = _resolve(sport, p.get("pick", ""), p.get("bet_type", ""),
                        p.get("home_team", ""), p.get("away_team", ""),
                        p.get("commence_time", ""), events_by_sport)
-        return {
+        out = {
             "game":      p.get("game", ""),
             "sport":     sport,
             "bet_type":  p.get("bet_type", ""),
@@ -220,6 +237,14 @@ def main() -> int:
             "result":    res["result"],
             "score":     res["score"],
         }
+        # Attach closing-line value when the shadow log has it. clv is the
+        # probability delta (close − open): positive = we beat the close.
+        clv_info = clv_lookup.get((out["game"], out["bet_type"], out["pick"]))
+        if clv_info and clv_info.get("clv") is not None:
+            out["clv"] = clv_info["clv"]
+            out["clv_pct"] = round(clv_info["clv"] * 100, 1)
+            out["market_prob_at_close"] = clv_info["market_prob_at_close"]
+        return out
 
     budget_keys = {(p.get("game"), p.get("bet_type"), p.get("pick")) for p in singles}
 

@@ -107,6 +107,29 @@ def _effective_edge_safe(rec) -> float:
         return float(getattr(rec, "edge", 0.0) or 0.0)
 
 
+def _clv_gate_safe(rec) -> bool:
+    """
+    CLV governor gate with a safe fail-open default.
+
+    Blocks a pick from the BUDGET pool only when its (sport, market_type) has
+    an earned negative closing-line-value record (see src/state/clv_governor).
+    Phase 0 (n < 30 graded picks) gates nothing, so behaviour is identical to
+    pre-deployment until CLV data accumulates. Any failure returns True so the
+    governor can never empty the card by accident.
+    """
+    try:
+        from src.state.clv_governor import clv_gate
+        allowed, reason = clv_gate(rec)
+        if not allowed:
+            logger.info(
+                f"Budget gate: {getattr(rec, 'sport', '?')} {getattr(rec, 'pick', '?')} "
+                f"excluded — {reason}"
+            )
+        return allowed
+    except Exception:
+        return True
+
+
 def _recalibrate_confidence(recs) -> None:
     """
     Downgrade HIGH → MEDIUM for any pick whose *calibrated* edge falls below the
@@ -353,6 +376,18 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     except Exception as _e_espn_settle:
         logger.warning(f"Shadow ESPN settlement failed (non-fatal): {_e_espn_settle}")
 
+    # CLV capture (self-healing): stamp closing-line probabilities onto any
+    # recent shadow log entries still missing them. The historical archive
+    # persists, so this pass repairs nights where the results-snapshot run
+    # failed or timed out — late data, never lost data. Non-fatal.
+    try:
+        from src.data.closing_lines import update_shadow_log_clv
+        _clv_summary = update_shadow_log_clv(max_credits=400, lookback_days=7)
+        if _clv_summary.get("stamped"):
+            logger.info(f"CLV self-heal: {_clv_summary}")
+    except Exception as _e_clv:
+        logger.warning(f"CLV self-heal failed (non-fatal): {_e_clv}")
+
     # Cap auto-relaxation: counterfactual analysis on cap-fired picks decides
     # whether each credibility cap should widen, tighten, or stay. Throttled
     # to once per 30 days per cap with hard safety bounds (±5% to ±30%).
@@ -431,7 +466,10 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         if caps.in_main_display_pool:
             all_display_raw.extend(display_raw)
             if caps.enters_budget:
-                all_singles_raw.extend(qualifying)
+                # CLV governor: markets with an earned negative closing-line
+                # record are excluded from real money. Display pools are
+                # untouched — gated markets keep logging so they can recover.
+                all_singles_raw.extend(r for r in qualifying if _clv_gate_safe(r))
         else:
             own_display[slug] = qualifying    # IPL / WNBA / MLS → own tile (same MIN_EDGE gate)
 
@@ -614,6 +652,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         _persist_calib()
     except Exception as _calib_err:
         logger.error(f"Calibration persist failed (non-fatal): {_calib_err}")
+
+    # CLV governor panel snapshot (state/clv_state.json) — read by the report.
+    try:
+        from src.state.clv_governor import persist_state as _persist_clv
+        _persist_clv()
+    except Exception as _clv_err:
+        logger.error(f"CLV state persist failed (non-fatal): {_clv_err}")
 
     # ------------------------------------------------------------------ #
     #  IPL rolling pending management
