@@ -27,7 +27,7 @@ Read it at the start of any session that involves model changes, new sport integ
 ---
 
 ## What the system does
-Runs daily at 9am PDT (GitHub Actions). Fetches odds for NBA/MLB/NFL/NHL/IPL/WNBA/MLS, runs edge models, picks top-5 singles + parlays + props, saves state, generates an HTML report, deploys to GitHub Pages, and sends an email.
+Runs daily at 9am PDT (GitHub Actions). Fetches odds for NBA/MLB/NFL/NHL/IPL/WNBA/MLS/WC, runs edge models, picks top-5 singles + parlays + props, saves state, generates an HTML report, deploys to GitHub Pages, and sends an email. A nightly Results Snapshot workflow (dispatched by the user's debrief routine at ~10:50pm) resolves results AND captures closing lines (CLV) for every pick; a CLV governor automatically gates negative-CLV markets out of the budget pool.
 
 Report URL: `https://nahimshas.github.io/System/`
 
@@ -75,6 +75,11 @@ Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_ga
 | `state/watchlist_history.json` | All-time watchlist results (NHL/IPL/WNBA/MLS) |
 | `state/watchlist_pending.json` | Rolling IPL picks in-progress |
 | `backfill_shadow_log.py` | One-time root script — imports historical settled picks into shadow log |
+| `src/data/closing_lines.py` | CLV capture — historical Odds API fetch, self-healing shadow-log stamping (`market_prob_at_close`, `clv`), credit-budgeted. See "CLV system" below. |
+| `src/state/clv_governor.py` | Phase-gated budget gating per (sport, market_type) by average CLV. `clv_gate(rec)`, `persist_state()` → `state/clv_state.json` |
+| `backfill_clv.py` + `clv_backfill.yml` | Throttled historical CLV backfill (workflow button, ~900 credits/run, idempotent — run until "Nothing left to backfill") |
+| `state/clv_state.json` | Per-market CLV snapshot — read by the CLV panels (classic report + PWA Analytics tab) |
+| `docs/debrief_routine_prompt.md` | Canonical CLV-aware nightly debrief routine prompt (credential placeholders — real tokens live only in the user's routine) |
 | `docs/DEVELOPMENT_PLAN.md` | Feature roadmap + model change log |
 
 ---
@@ -110,6 +115,24 @@ A fully autonomous feedback loop. **Do not work around it manually** — it self
 - Phase 0 behaviour must be byte-identical to pre-deployment (identity adjustment, raw edges used).
 
 Full deep reference: see "Self-Calibration System" section in the project memory file.
+
+---
+
+## CLV system (June 2026) — closing-line value capture + governor
+
+CLV = `market_prob_at_close − market_prob_at_first_pick` (positive = beat the close). The fastest reliable skill signal: ~50 graded picks per (sport, market) gives a verdict win/loss needs 500+ for. **Set and forget — do not work around it manually.**
+
+| Concept | Where | Quick reference |
+|---|---|---|
+| Capture | `src/data/closing_lines.py` | `update_shadow_log_clv(max_credits, lookback_days/since)` — scans shadow log for entries missing `market_prob_at_close`, fetches Odds API **historical** snapshots at each game's commence_time (10 credits/market/region; one snapshot covers a whole sport wave), stamps `clv`. Self-healing + idempotent; `clv_fetch_attempts` capped at 3. |
+| Nightly run | `results_snapshot.py` (+ workflow) | Capture runs inside the snapshot the debrief routine dispatches; each resolved pick carries `clv`/`clv_pct`. Workflow needs `ODDS_API_KEY` secret and commits `state/shadow_log/`. |
+| Morning self-heal | `main.py` (before cap auto-adjust) | 400-credit budget, 7-day lookback — repairs failed nights. Late data, never lost data. |
+| Governor | `src/state/clv_governor.py` + `_clv_gate_safe()` in `main.py` | Phase 0 (n<30) observe → Phase 1 (30–49) gate avg ≤ −2% → Phase 2 (≥50) gate avg ≤ −1%. Gates BUDGET routing only — display/watchlist/shadow log untouched, so markets recover automatically. Fail-open everywhere. First gate fired Jun 11 2026: MLB Total (−2.28% over 37). |
+| Panels | classic `#sec-clv` + PWA Analytics `sect-clv` | Both read `state/clv_state.json` via `_load_clv_panel()` in `generator.py`. |
+
+**Consistency rule:** closing probs use the SAME no-vig consensus math as the morning pipeline. Never source closing lines from web search or any other feed — apples-to-apples or the CLV signal is corrupted.
+
+**Workflow commit pattern:** in any workflow that commits state, the order MUST be `git add` → `git commit` → `git pull --rebase` → `git push`. Pull-before-add fails with "unstaged changes" whenever the debrief routine commits concurrently (bit both new workflows on day one).
 
 ---
 
