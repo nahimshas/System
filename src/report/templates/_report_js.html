@@ -515,10 +515,30 @@
   }
 
   // ── Fuzzy team-name match ────────────────────────────────────────────────
+  // FIFA country divergences between ESPN and the Odds API ("Czechia" vs
+  // "Czech Republic") defeat substring matching, which killed flags + live
+  // scores on World Cup cards. Normalise both names (lowercase, strip
+  // accents, alias map) before any comparison. No-op for club teams.
+  var COUNTRY_ALIASES = {
+    "czechia": "czech republic",
+    "korea republic": "south korea",
+    "korea dpr": "north korea",
+    "ir iran": "iran",
+    "cote d'ivoire": "ivory coast",
+    "cote divoire": "ivory coast",
+    "cabo verde": "cape verde",
+    "turkiye": "turkey",
+    "usa": "united states",
+    "united states of america": "united states"
+  };
+  function normCountry(s) {
+    var low = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    return COUNTRY_ALIASES[low] || low;
+  }
   function teamMatch(espnName, ourName) {
     if (!ourName || !espnName) return false;
-    var e = espnName.toLowerCase();
-    var o = ourName.toLowerCase();
+    var e = normCountry(espnName.toLowerCase());
+    var o = normCountry(ourName.toLowerCase());
     if (e.includes(o) || o.includes(e)) return true;
     var nick = o.split(/\s+/).pop();
     if (nick.length > 3 && e.includes(nick)) return true;

@@ -3742,7 +3742,10 @@ def analyze_wc_game(
 
     research.append(f"Goal projection: {home_raw} {lam_home:.2f} – {away_raw} {lam_away:.2f}")
     research.append(f"Win probs: H {p_home_win:.1%} | D {p_draw:.1%} | A {p_away_win:.1%}")
-    signals.append(f"Goal projection: {lam_home:.2f} – {lam_away:.2f}")
+    # "Model projected score:" prefix is load-bearing — the PWA card template
+    # renders any context line with this prefix as the teal headline (same as
+    # every other sport) instead of falling back to a bare "Details" toggle.
+    signals.append(f"Model projected score: {home_raw} {lam_home:.1f} — {away_raw} {lam_away:.1f}")
 
     # Calibration capture: raw 3-way probabilities (pre-cred-cap).
     _wc_raw_home = p_home_win
@@ -3793,13 +3796,24 @@ def analyze_wc_game(
         recs.append(r)
 
     # Totals
+    # Robinhood only offers half-integer lines, and goals are integers, so each
+    # side is expressed at the exact half-line its probability corresponds to.
+    # Quarter and whole book lines map exactly: P(sum > 3.0) = P(sum ≥ 4) = the
+    # "Over 3.5" probability; P(sum > 2.25) = P(sum ≥ 3) = "Over 2.5". Market
+    # prices stay from the book's line (same convention as the NBA ".5 label
+    # shift"); for whole lines the book price includes push protection, which
+    # overstates the market prob and understates our edge — conservative.
     tot = game.get("total")
     if tot:
         line = tot.get("point") or tot.get("line", 2.5)
         market_over_prob  = tot.get("over_prob", 0.5)
         market_under_prob = tot.get("under_prob", 0.5)
-        model_over  = sum(v for (i, j), v in matrix.items() if i + j > line)
-        model_under = sum(v for (i, j), v in matrix.items() if i + j < line)
+        k_over  = math.floor(line) + 1          # min total goals for Over to win
+        k_under = math.ceil(line) - 1           # max total goals for Under to win
+        over_disp_line  = k_over - 0.5
+        under_disp_line = k_under + 0.5
+        model_over  = sum(v for (i, j), v in matrix.items() if i + j >= k_over)
+        model_under = sum(v for (i, j), v in matrix.items() if i + j <= k_under)
         _wc_total_raw_over  = model_over
         _wc_total_raw_under = model_under
         model_over,  _wc_total_cred_over  = _apply_credibility_cap_dispatched(
@@ -3809,8 +3823,8 @@ def analyze_wc_game(
             model_under, market_under_prob, _cred_cap("wc", wc_cap, "credibility_total"), "wc", "credibility_total"
         )
         for pick_str, model_p, market_p, raw_p, cap_fired in [
-            (f"Over {line}",  model_over,  market_over_prob,  _wc_total_raw_over,  _wc_total_cred_over),
-            (f"Under {line}", model_under, market_under_prob, _wc_total_raw_under, _wc_total_cred_under),
+            (f"Over {over_disp_line}",  model_over,  market_over_prob,  _wc_total_raw_over,  _wc_total_cred_over),
+            (f"Under {under_disp_line}", model_under, market_under_prob, _wc_total_raw_under, _wc_total_cred_under),
         ]:
             r = _make_rec(pick_str, "Total", model_p, market_p)
             if r:
@@ -3819,17 +3833,28 @@ def analyze_wc_game(
                 recs.append(r)
 
     # Spread (Asian handicap)
+    # Same half-integer principle as totals: soccer margins are integers, so
+    # each side is expressed at the exact half-line its cover probability
+    # corresponds to. Asian quarter lines (-1.25) and whole/level lines (-1.0,
+    # 0.0) map exactly — e.g. home -1.25 covers iff margin ≥ 2, which IS the
+    # -1.5 probability; a 0.0 (draw-no-bet) line becomes ±0.5 with the
+    # unconditional win probability. Each side gets its own threshold (they are
+    # NOT complements on whole lines, where the push band sits between them).
+    # Market prices stay from the book's line; on whole/level lines they
+    # include push/refund protection, which overstates the market prob and
+    # understates our edge — conservative.
     sp = game.get("spread")
     if sp:
         home_point     = sp.get("home_spread") or sp.get("home_point", 0)
         market_home_sp = sp.get("home_prob", 0.5)
         market_away_sp = sp.get("away_prob", 0.5)
-        if home_point % 1 == 0 and home_point != 0:
-            home_point = (home_point - 0.5) if home_point > 0 else (home_point + 0.5)
-        model_home_sp = sum(
-            v for (i, j), v in matrix.items() if (i - j) > -home_point
-        )
-        model_away_sp = 1.0 - model_home_sp
+        tau    = -float(home_point)             # home margin required by the book line
+        k_home = math.floor(tau) + 1            # min home margin for home cover
+        k_away = math.ceil(tau) - 1             # max home margin for away cover
+        home_disp_line = -(k_home - 0.5)
+        away_disp_line = k_away + 0.5
+        model_home_sp = sum(v for (i, j), v in matrix.items() if (i - j) >= k_home)
+        model_away_sp = sum(v for (i, j), v in matrix.items() if (i - j) <= k_away)
         _wc_sp_raw_home = model_home_sp
         _wc_sp_raw_away = model_away_sp
         model_home_sp, _wc_sp_cred_home = _apply_credibility_cap_dispatched(
@@ -3838,10 +3863,9 @@ def analyze_wc_game(
         model_away_sp, _wc_sp_cred_away = _apply_credibility_cap_dispatched(
             model_away_sp, market_away_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
         )
-        away_point = -home_point
         for pick_str, model_p, market_p, raw_p, cap_fired in [
-            (f"{home_raw} {home_point:+.1f}", model_home_sp, market_home_sp, _wc_sp_raw_home, _wc_sp_cred_home),
-            (f"{away_raw} {away_point:+.1f}", model_away_sp, market_away_sp, _wc_sp_raw_away, _wc_sp_cred_away),
+            (f"{home_raw} {home_disp_line:+.1f}", model_home_sp, market_home_sp, _wc_sp_raw_home, _wc_sp_cred_home),
+            (f"{away_raw} {away_disp_line:+.1f}", model_away_sp, market_away_sp, _wc_sp_raw_away, _wc_sp_cred_away),
         ]:
             r = _make_rec(pick_str, "Spread", model_p, market_p)
             if r:

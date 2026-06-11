@@ -445,6 +445,35 @@ _TEAM_NAME_SKIP_TOKENS = {
     "new", "los", "san", "fort", "real", "club", "the",
 }
 
+# FIFA country-name divergences between the Odds API and ESPN. ESPN uses
+# "Czechia"-era names while the Odds API keeps traditional English names;
+# substring and token-overlap matching both fail on these pairs (found on
+# World Cup opening day: "Czechia" vs "Czech Republic" broke live cards and
+# would have broken settlement). Applied after lowercasing + accent stripping
+# by _norm_country().
+_COUNTRY_ALIASES = {
+    "czechia":                  "czech republic",
+    "korea republic":           "south korea",
+    "korea dpr":                "north korea",
+    "ir iran":                  "iran",
+    "cote d'ivoire":            "ivory coast",
+    "cote divoire":             "ivory coast",
+    "cabo verde":               "cape verde",
+    "turkiye":                  "turkey",
+    "usa":                      "united states",
+    "united states of america": "united states",
+}
+
+
+def _norm_country(s: str) -> str:
+    """Lowercase, strip accents, and map known FIFA naming divergences to a
+    canonical form so 'Czechia' matches 'Czech Republic', 'Türkiye' matches
+    'Turkey', etc."""
+    import unicodedata
+    low = unicodedata.normalize("NFKD", (s or "").lower())
+    low = "".join(c for c in low if not unicodedata.combining(c)).strip()
+    return _COUNTRY_ALIASES.get(low, low)
+
 
 def _team_name_tokens(s: str) -> list:
     """Tokenise a team name for fallback matching — drops league suffixes and
@@ -469,6 +498,14 @@ def _team_token_overlap_match(query: str, key: str) -> bool:
     Requires ≥ 2 substantial token overlaps to avoid false positives like
     NYCFC ↔ NY Red Bulls (only "york" overlaps).
     """
+    # Country-alias normalisation first: catches FIFA naming divergences
+    # ("Czechia" ↔ "Czech Republic") that defeat both substring and token
+    # matching — including single-token names the gate below would reject.
+    nq, nk = _norm_country(query), _norm_country(key)
+    if nq and nq == nk:
+        return True
+    query, key = nq, nk
+
     q_tok = _team_name_tokens(query)
     k_tok = _team_name_tokens(key)
     if len(q_tok) < 2 or len(k_tok) < 2:
@@ -619,12 +656,17 @@ def _determine_mls_outcome(pick: str, bet_type: str, home_team: str, away_team: 
       - Total, Spread: delegate to _determine_outcome()
     """
     bt = bet_type.lower().strip()
+    # Country-alias normalisation so ESPN's "Czechia" settles picks stored as
+    # "Czech Republic" (and similar FIFA divergences). No-op for club teams —
+    # _norm_country only lowercases/de-accents names without an alias entry.
+    home_team = _norm_country(home_team)
+    away_team = _norm_country(away_team)
     if bt == "draw":
         return "WON" if home_score == away_score else "LOST"
     if bt in ("moneyline", "h2h"):
         if home_score == away_score:
             return "LOST"  # soccer: draw = loss for ML picks
-        pick_lower = pick.lower()
+        pick_lower = _norm_country(pick)
         home_lower = home_team.lower()
         away_lower = away_team.lower()
         home_won = home_score > away_score
