@@ -3885,13 +3885,10 @@ def analyze_wc_game(
         research.append(f"Goals O/U 2.5 (model, no market line): Over {_model_over_25:.1%} | Under {_model_under_25:.1%}")
 
     # Spread (Asian handicap)
-    # Robinhood only supports ±1.5 spreads. Asian quarter lines (e.g. -0.25,
-    # -0.75) and DNB (0.0) all map to ±0.5 after the half-integer transform —
-    # effectively the same bet as ML. We skip those and only emit a spread pick
-    # when the book line maps to ±1.5 or beyond (i.e. the book is offering a
-    # meaningful handicap on an uneven matchup). The ±1.5 model probability from
-    # the matrix is always added to research regardless, so the user can see it
-    # even when no spread pick is produced.
+    # +0.5 ("don't lose" = win or draw) is a distinct bet from ML and is valid
+    # on Robinhood. -0.5 ("must win") is identical to ML — skip it. All lines
+    # ≥ ±1.5 are meaningful and always emitted. The ±1.5 model probability from
+    # the matrix is always added to research regardless of whether a pick fires.
     sp = game.get("spread")
     # Always compute model ±1.5 probabilities for research.
     _model_home_15 = sum(v for (i, j), v in matrix.items() if (i - j) >= 2)   # home wins by 2+
@@ -3906,28 +3903,27 @@ def analyze_wc_game(
         k_away = math.ceil(tau) - 1             # max home margin for away cover
         home_disp_line = -(k_home - 0.5)
         away_disp_line = k_away + 0.5
-        # Only produce a spread pick when the line is ±1.5 or beyond.
-        # Lines that map to ±0.5 (DNB, -0.25, -0.75) are redundant with ML.
-        if abs(home_disp_line) >= 1.5:
-            model_home_sp = sum(v for (i, j), v in matrix.items() if (i - j) >= k_home)
-            model_away_sp = sum(v for (i, j), v in matrix.items() if (i - j) <= k_away)
-            _wc_sp_raw_home = model_home_sp
-            _wc_sp_raw_away = model_away_sp
-            model_home_sp, _wc_sp_cred_home = _apply_credibility_cap_dispatched(
-                model_home_sp, market_home_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
-            )
-            model_away_sp, _wc_sp_cred_away = _apply_credibility_cap_dispatched(
-                model_away_sp, market_away_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
-            )
-            for pick_str, model_p, market_p, raw_p, cap_fired in [
-                (f"{home_raw} {home_disp_line:+.1f}", model_home_sp, market_home_sp, _wc_sp_raw_home, _wc_sp_cred_home),
-                (f"{away_raw} {away_disp_line:+.1f}", model_away_sp, market_away_sp, _wc_sp_raw_away, _wc_sp_cred_away),
-            ]:
-                r = _make_rec(pick_str, "Spread", model_p, market_p)
-                if r:
-                    r.model_prob_raw = raw_p
-                    r.credibility_cap_fired = cap_fired
-                    recs.append(r)
+        model_home_sp = sum(v for (i, j), v in matrix.items() if (i - j) >= k_home)
+        model_away_sp = sum(v for (i, j), v in matrix.items() if (i - j) <= k_away)
+        _wc_sp_raw_home = model_home_sp
+        _wc_sp_raw_away = model_away_sp
+        model_home_sp, _wc_sp_cred_home = _apply_credibility_cap_dispatched(
+            model_home_sp, market_home_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
+        )
+        model_away_sp, _wc_sp_cred_away = _apply_credibility_cap_dispatched(
+            model_away_sp, market_away_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
+        )
+        for pick_str, model_p, market_p, disp_line, raw_p, cap_fired in [
+            (f"{home_raw} {home_disp_line:+.1f}", model_home_sp, market_home_sp, home_disp_line, _wc_sp_raw_home, _wc_sp_cred_home),
+            (f"{away_raw} {away_disp_line:+.1f}", model_away_sp, market_away_sp, away_disp_line, _wc_sp_raw_away, _wc_sp_cred_away),
+        ]:
+            if disp_line == -0.5:
+                continue  # "must win" — identical to ML, skip
+            r = _make_rec(pick_str, "Spread", model_p, market_p)
+            if r:
+                r.model_prob_raw = raw_p
+                r.credibility_cap_fired = cap_fired
+                recs.append(r)
 
     # Stamp per-game calibration metadata onto every rec.
     _lv = locals()
