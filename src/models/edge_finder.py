@@ -3844,7 +3844,12 @@ def analyze_wc_game(
     # prices stay from the book's line (same convention as the NBA ".5 label
     # shift"); for whole lines the book price includes push protection, which
     # overstates the market prob and understates our edge — conservative.
+    # If the Odds API does not return a totals market for this game, we still
+    # compute Over/Under 2.5 from the matrix and surface it in research so the
+    # user always sees the model's goals projection.
     tot = game.get("total")
+    _model_over_25  = sum(v for (i, j), v in matrix.items() if i + j >= 3)
+    _model_under_25 = sum(v for (i, j), v in matrix.items() if i + j <= 2)
     if tot:
         line = tot.get("point") or tot.get("line", 2.5)
         market_over_prob  = tot.get("over_prob", 0.5)
@@ -3872,19 +3877,26 @@ def analyze_wc_game(
                 r.model_prob_raw = raw_p
                 r.credibility_cap_fired = cap_fired
                 recs.append(r)
+        if abs(line - 2.5) > 0.01:
+            # Book line differs from 2.5 — also note the 2.5 model probability
+            research.append(f"Goals O/U 2.5 (model): Over {_model_over_25:.1%} | Under {_model_under_25:.1%}")
+    else:
+        # No market totals line available — show model projection only
+        research.append(f"Goals O/U 2.5 (model, no market line): Over {_model_over_25:.1%} | Under {_model_under_25:.1%}")
 
     # Spread (Asian handicap)
-    # Same half-integer principle as totals: soccer margins are integers, so
-    # each side is expressed at the exact half-line its cover probability
-    # corresponds to. Asian quarter lines (-1.25) and whole/level lines (-1.0,
-    # 0.0) map exactly — e.g. home -1.25 covers iff margin ≥ 2, which IS the
-    # -1.5 probability; a 0.0 (draw-no-bet) line becomes ±0.5 with the
-    # unconditional win probability. Each side gets its own threshold (they are
-    # NOT complements on whole lines, where the push band sits between them).
-    # Market prices stay from the book's line; on whole/level lines they
-    # include push/refund protection, which overstates the market prob and
-    # understates our edge — conservative.
+    # Robinhood only supports ±1.5 spreads. Asian quarter lines (e.g. -0.25,
+    # -0.75) and DNB (0.0) all map to ±0.5 after the half-integer transform —
+    # effectively the same bet as ML. We skip those and only emit a spread pick
+    # when the book line maps to ±1.5 or beyond (i.e. the book is offering a
+    # meaningful handicap on an uneven matchup). The ±1.5 model probability from
+    # the matrix is always added to research regardless, so the user can see it
+    # even when no spread pick is produced.
     sp = game.get("spread")
+    # Always compute model ±1.5 probabilities for research.
+    _model_home_15 = sum(v for (i, j), v in matrix.items() if (i - j) >= 2)   # home wins by 2+
+    _model_away_15 = sum(v for (i, j), v in matrix.items() if (i - j) <= -2)  # away wins by 2+
+    research.append(f"±1.5 spread (model): {home_raw} {_model_home_15:.1%} | {away_raw} {_model_away_15:.1%}")
     if sp:
         home_point     = sp.get("home_spread") or sp.get("home_point", 0)
         market_home_sp = sp.get("home_prob", 0.5)
@@ -3894,25 +3906,28 @@ def analyze_wc_game(
         k_away = math.ceil(tau) - 1             # max home margin for away cover
         home_disp_line = -(k_home - 0.5)
         away_disp_line = k_away + 0.5
-        model_home_sp = sum(v for (i, j), v in matrix.items() if (i - j) >= k_home)
-        model_away_sp = sum(v for (i, j), v in matrix.items() if (i - j) <= k_away)
-        _wc_sp_raw_home = model_home_sp
-        _wc_sp_raw_away = model_away_sp
-        model_home_sp, _wc_sp_cred_home = _apply_credibility_cap_dispatched(
-            model_home_sp, market_home_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
-        )
-        model_away_sp, _wc_sp_cred_away = _apply_credibility_cap_dispatched(
-            model_away_sp, market_away_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
-        )
-        for pick_str, model_p, market_p, raw_p, cap_fired in [
-            (f"{home_raw} {home_disp_line:+.1f}", model_home_sp, market_home_sp, _wc_sp_raw_home, _wc_sp_cred_home),
-            (f"{away_raw} {away_disp_line:+.1f}", model_away_sp, market_away_sp, _wc_sp_raw_away, _wc_sp_cred_away),
-        ]:
-            r = _make_rec(pick_str, "Spread", model_p, market_p)
-            if r:
-                r.model_prob_raw = raw_p
-                r.credibility_cap_fired = cap_fired
-                recs.append(r)
+        # Only produce a spread pick when the line is ±1.5 or beyond.
+        # Lines that map to ±0.5 (DNB, -0.25, -0.75) are redundant with ML.
+        if abs(home_disp_line) >= 1.5:
+            model_home_sp = sum(v for (i, j), v in matrix.items() if (i - j) >= k_home)
+            model_away_sp = sum(v for (i, j), v in matrix.items() if (i - j) <= k_away)
+            _wc_sp_raw_home = model_home_sp
+            _wc_sp_raw_away = model_away_sp
+            model_home_sp, _wc_sp_cred_home = _apply_credibility_cap_dispatched(
+                model_home_sp, market_home_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
+            )
+            model_away_sp, _wc_sp_cred_away = _apply_credibility_cap_dispatched(
+                model_away_sp, market_away_sp, _cred_cap("wc", wc_cap, "credibility_spread"), "wc", "credibility_spread"
+            )
+            for pick_str, model_p, market_p, raw_p, cap_fired in [
+                (f"{home_raw} {home_disp_line:+.1f}", model_home_sp, market_home_sp, _wc_sp_raw_home, _wc_sp_cred_home),
+                (f"{away_raw} {away_disp_line:+.1f}", model_away_sp, market_away_sp, _wc_sp_raw_away, _wc_sp_cred_away),
+            ]:
+                r = _make_rec(pick_str, "Spread", model_p, market_p)
+                if r:
+                    r.model_prob_raw = raw_p
+                    r.credibility_cap_fired = cap_fired
+                    recs.append(r)
 
     # Stamp per-game calibration metadata onto every rec.
     _lv = locals()
