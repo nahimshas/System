@@ -47,6 +47,16 @@ def main() -> int:
     )
     if summary["credits_spent"] == 0 and summary["stamped"] == 0:
         logger.info("Nothing left to backfill — all reachable entries are stamped.")
+
+    # Refresh clv_state.json so a subsequent code-only report run shows the
+    # updated CLV table without needing a full morning run.
+    try:
+        from src.state.clv_governor import persist_state as _persist_clv
+        _persist_clv()
+        logger.info("clv_state.json refreshed")
+    except Exception as e:
+        logger.warning(f"clv_state.json refresh failed (non-fatal): {e}")
+
     return 0
 
 
