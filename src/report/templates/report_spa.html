@@ -1274,7 +1274,7 @@
       <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
         <div class="signals-title">Watchlist Tracking <span style="font-size:0.68rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">&nbsp;— no budget allocated, W-L only</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          {% for sport_key, badge_class, label in [('NHL', 'badge-nhl', '🏒 NHL'), ('IPL', 'badge-ipl', '🏏 IPL'), ('WNBA', 'badge-wnba', '🏀 WNBA'), ('MLS', 'badge-mls', '⚽ MLS')] %}
+          {% for sport_key, badge_class, label in [('NHL', 'badge-nhl', '🏒 NHL'), ('IPL', 'badge-ipl', '🏏 IPL'), ('WNBA', 'badge-wnba', '🏀 WNBA'), ('MLS', 'badge-mls', '⚽ MLS'), ('WC', 'badge-wc', '🌍 WC')] %}
           {% set ws = wl.get(sport_key, {}) %}
           <div id="wl-tile-{{ sport_key }}"
                data-hist-won="{{ ws.won }}"
@@ -1626,6 +1626,7 @@
             <th style="text-align:left;padding:8px 6px;">Market</th>
             <th style="text-align:right;padding:8px 6px;">Picks</th>
             <th style="text-align:right;padding:8px 6px;">Avg CLV</th>
+            <th style="text-align:left;padding:8px 6px;">Phase</th>
             <th style="text-align:left;padding:8px 6px;">Status</th>
           </tr></thead>
           <tbody>
@@ -1634,6 +1635,9 @@
               <td style="padding:7px 6px;"><strong>{{ m.sport }}</strong> <span style="color:var(--muted);">{{ m.market_type }}</span></td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">{{ m.n }}</td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;font-weight:700;color:{% if m.avg_clv_pct >= 1.0 %}var(--green){% elif m.avg_clv_pct <= -1.0 %}var(--red){% else %}var(--text){% endif %};">{{ m.clv_display }}</td>
+              <td style="padding:7px 6px;">
+                <span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:{% if m.phase == 0 %}#3b3a52{% elif m.phase == 1 %}#0e7490{% else %}#0f766e{% endif %};color:#fff;">{{ m.phase }}</span>
+              </td>
               <td style="padding:7px 6px;font-size:0.7rem;color:{% if m.gated %}var(--red){% else %}var(--muted){% endif %};">
                 {% if m.gated %}GATED — out of budget{% elif m.phase == 0 %}Observing ({{ (clv.thresholds.phase1_min_n or 30) - m.n }} to go){% elif m.phase == 1 %}Active — extreme gate{% else %}Active — full gate{% endif %}
               </td>
