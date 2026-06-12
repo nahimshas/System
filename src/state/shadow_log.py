@@ -214,6 +214,7 @@ def _build_entry(
         "pick":          getattr(rec, "pick", ""),
         "bet_type":      getattr(rec, "bet_type", ""),
         "commence_time": commence,
+        "game_type":     getattr(rec, "game_type", ""),  # regular/play_in/postseason/superbowl ("" = unstamped)
 
         # Model output — raw value and cap trigger flags populated by sport
         # analyzers when they apply caps. Defaults preserve backward compat.
@@ -273,6 +274,9 @@ def _update_entry(existing: Dict[str, Any], rec: Any, now_iso: str) -> Dict[str,
     existing["signal_count"]                    = len(getattr(rec, "signals", []) or [])
     existing["final_confidence_label"]          = getattr(rec, "confidence", "")
     existing["last_updated_at"]                 = now_iso
+    _gt = getattr(rec, "game_type", "")
+    if _gt:
+        existing["game_type"] = _gt
     # Refresh calibration metadata if the analyzer populated it; preserve
     # whatever was already stored otherwise (handles old shadow log entries).
     _raw_new = _safe_optional_float(getattr(rec, "model_prob_raw", None))

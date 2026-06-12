@@ -136,6 +136,14 @@ CLV = `market_prob_at_close − market_prob_at_first_pick` (positive = beat the 
 
 ---
 
+## Calibrated sizing + game types + soccer knockouts (June 2026)
+
+- **Calibrated Kelly sizing** — `_resize_with_calibrated_probs()` in `main.py` (runs right after `_recalibrate_confidence`): Kelly stakes are recomputed on `market_prob + effective_edge` (the calibration-corrected belief), stamped as `rec.model_prob_calibrated`. Parlay legs use it too (`parlay_builder.py`). Phase 0 = byte-identical sizing. Watchlist zero-sizing recs untouched. Budget routing additionally requires `sizing.num_contracts > 0` (mirrors analyzer creation gate). Cards still DISPLAY the raw model prob — only stakes change.
+- **Per-game season types** — `src/data/game_types.py` stamps `season_game_type` (`exhibition`/`regular`/`play_in`/`postseason`/`superbowl`) onto game dicts from ESPN's per-event `season.type` (verified: 1 pre, 2 regular, 3 post, 5 play-in; Super Bowl via competition notes headline). Wired in `main.py` loop after `fetch_games`; exhibition games are SKIPPED entirely. Analyzers use `_game_playoff(game, _is_x_playoff)` — per-game flag with the legacy calendar windows as FALLBACK (do not delete them). Super Bowl zeroes NFL home advantage. `rec.game_type` flows into shadow log entries (`game_type` field) so CLV/calibration can segment by type — finer play-in/round distinctions wait for that data. IPL/WC keep their existing date-based stage logic.
+- **Soccer 90-minute settlement** — `_soccer_90min_scores()` in `outcome_checker.py`, applied to MLS/WC in `_fetch_watchlist_final_scores` AND `results_snapshot._fetch_events`: knockout games decided in ET/pens are graded on the 90-minute score (sum of the first two half linescores). If a game went past regulation and halves are unavailable → pick stays PENDING (never grade against the post-ET final). WC knockouts start Jun 28 2026; same code covers MLS Cup playoffs in November.
+
+---
+
 ## Critical rules
 - `report.html` is ~3100 lines. Always use `offset` and `limit` when reading it — never read the whole file.
 - The `today` parameter in sport modules is always a **string** `"YYYY-MM-DD"`. Stats functions need `datetime.date` — always convert with `date.fromisoformat(today)` inside the module.

@@ -129,6 +129,7 @@ def _stamp_recs_calibration(
     home_injury_fired: bool = False,
     away_injury_fired: bool = False,
     stats_avail: bool = True,
+    game: Optional[Dict] = None,
 ) -> None:
     """
     Stamp per-game calibration metadata onto every rec just before return.
@@ -141,10 +142,22 @@ def _stamp_recs_calibration(
     is stamped by bet-specific cap logic before this function is called;
     this function skips those recs (sentinel: model_prob_raw is not None).
     """
+    # Per-game season type (stamped by src/data/game_types.py in main.py) —
+    # carried onto every rec so the shadow log can segment CLV/calibration by
+    # game type (regular vs play-in vs postseason) and answer empirically
+    # whether finer model distinctions are warranted.
+    _gt   = (game or {}).get("season_game_type", "") or ""
+    _note = (game or {}).get("season_game_note", "") or ""
+
     for rec in recs:
         # Game-level flags — always stamp
         rec.hardcap_fired   = hardcap_fired
         rec.stats_available = stats_avail
+        rec.game_type       = _gt
+        if _note and not any(_note in r for r in rec.research):
+            rec.research.append(f"Game type: {_note}")
+        if _gt == "play_in" and not any("Play-In" in r for r in rec.research):
+            rec.research.append("Game type: Play-In — playoff treatment applied")
 
         # Per-pick calibration — skip if already stamped by bet-specific cap logic
         if rec.model_prob_raw is None:
@@ -245,8 +258,23 @@ _TOTAL_MARKET_ANCHOR = 0.40  # 40% weight toward market line — was 0.20; raise
                              # leaving genuine large model/market disagreements as (smaller) edges.
 
 
+def _game_playoff(game: Optional[Dict], calendar_fallback) -> bool:
+    """
+    Per-game playoff flag. Prefers the ESPN-derived `season_game_type` stamped
+    by src/data/game_types.py (handles mixed days — mid-April NBA has regular,
+    play-in, and playoff games in the same week — and yearly schedule shifts).
+    Unstamped games fall back to the legacy calendar window, so behavior on
+    any data failure is exactly the pre-deployment behavior.
+    """
+    gt = (game or {}).get("season_game_type")
+    if gt:
+        return gt in ("postseason", "play_in", "superbowl")
+    return calendar_fallback()
+
+
 def _is_nba_playoff(dt: Optional[datetime] = None) -> bool:
-    """NBA playoffs: mid-April through mid-June."""
+    """NBA playoffs: mid-April through mid-June. (Calendar FALLBACK — primary
+    signal is the per-game season type; see _game_playoff.)"""
     d = (dt or datetime.now(timezone.utc)).date()
     return (d.month == 4 and d.day >= 14) or d.month in (5, 6)
 
@@ -303,11 +331,13 @@ class BetRecommendation:
     # calibration system can later run counterfactual analysis (raw vs
     # capped realised rates).
     model_prob_raw: Optional[float] = None       # pre-any-cap model probability
+    model_prob_calibrated: Optional[float] = None  # market + edge × calibration ratio — what Kelly sizes on (set in main.py)
     credibility_cap_fired: bool = False          # general ±cred-cap fired
     injury_cap_fired:      bool = False          # injury cap fired
     hardcap_fired:         bool = False          # [lo, hi] hard prob bound fired
     stats_available:       bool = True           # sport stats were available for this game
     game_pk:               str  = ""            # MLB game primary key — for live pitcher/batter lookup
+    game_type:             str  = ""            # per-game season type (regular/play_in/postseason/superbowl)
 
 
 def _confidence_label(edge: float, signal_count: int, stats_available: bool) -> str:
@@ -361,7 +391,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
     recs = []
     _min = min_edge if min_edge is not None else MIN_EDGE
 
-    playoff = _is_nba_playoff()
+    playoff = _game_playoff(game, _is_nba_playoff)
     stats_available = bool(nba_ctx["season_stats"].get(home) or nba_ctx["season_stats"].get(away))
 
     # Pre-initialise so Total block can reference these even if ml block is skipped
@@ -846,6 +876,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
     _home_raw = _lv.get("_nba_raw_home")
     _stamp_recs_calibration(
         recs,
+        game=game,
         home_team=home, away_team=away,
         home_raw=_home_raw,
         away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
@@ -1073,7 +1104,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     game_time = _utc_to_pdt(commence_time)
     venue = game.get("venue", "")
     park_factor = get_park_factor(venue)
-    playoff = _is_mlb_playoff()
+    playoff = _game_playoff(game, _is_mlb_playoff)
     recs = []
     _min = min_edge if min_edge is not None else MIN_EDGE
     umpire_tendency = umpire_tendency or {}
@@ -1761,6 +1792,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     _home_raw = _lv.get("_mlb_raw_home")
     _stamp_recs_calibration(
         recs,
+        game=game,
         home_team=home, away_team=away,
         home_raw=_home_raw,
         away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
@@ -1818,7 +1850,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
     recs = []
     _min = min_edge if min_edge is not None else MIN_EDGE
 
-    playoff = _is_nfl_playoff()
+    playoff = _game_playoff(game, _is_nfl_playoff)
     stats_available = bool(nfl_ctx["season_stats"].get(home) or nfl_ctx["season_stats"].get(away))
 
     home_rest = nfl_ctx["rest_days"].get(home, 7)
@@ -1856,9 +1888,13 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
         if not stats_available:
             signals.append("⚠ NFL stats unavailable — using market baseline only")
 
-        # Home field advantage
-        adj += NFL_HOME_ADV
-        signals.append(f"Home field advantage: {home} (+{NFL_HOME_ADV*100:.0f}%)")
+        # Home field advantage — zeroed for the Super Bowl (neutral site; the
+        # designated "home" team has no real venue edge there).
+        if game.get("season_game_type") == "superbowl":
+            signals.append("Neutral site (Super Bowl) — no home field advantage applied")
+        else:
+            adj += NFL_HOME_ADV
+            signals.append(f"Home field advantage: {home} (+{NFL_HOME_ADV*100:.0f}%)")
 
         # Team strength research
         if home_stats:
@@ -2142,6 +2178,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
     _home_raw = _lv.get("_nfl_raw_home")
     _stamp_recs_calibration(
         recs,
+        game=game,
         home_team=home, away_team=away,
         home_raw=_home_raw,
         away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
@@ -2207,7 +2244,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
     recs = []
     _min = min_edge if min_edge is not None else MIN_EDGE
 
-    playoff = _is_nhl_playoff()
+    playoff = _game_playoff(game, _is_nhl_playoff)
     stats_available = bool(nhl_ctx["season_stats"].get(home) or nhl_ctx["season_stats"].get(away))
 
     home_rest = nhl_ctx["rest_days"].get(home, 2)
@@ -2585,6 +2622,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
     _home_raw = _lv.get("_nhl_raw_home")
     _stamp_recs_calibration(
         recs,
+        game=game,
         home_team=home, away_team=away,
         home_raw=_home_raw,
         away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
@@ -2899,6 +2937,7 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
     _home_raw = _lv.get("_ipl_raw_home")
     _stamp_recs_calibration(
         recs,
+        game=game,
         home_team=home, away_team=away,
         home_raw=_home_raw,
         away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
@@ -3179,6 +3218,7 @@ def analyze_wnba_game(
     _home_raw = _lv.get("_wnba_raw_home")
     _stamp_recs_calibration(
         recs,
+        game=game,
         home_team=home_raw, away_team=away_raw,
         home_raw=_home_raw,
         away_raw=(1.0 - _home_raw) if _home_raw is not None else None,
@@ -3564,6 +3604,7 @@ def analyze_mls_game(
     _lv = locals()
     _stamp_recs_calibration(
         recs,
+        game=game,
         home_team=home_raw, away_team=away_raw,
         home_raw=_lv.get("_mls_raw_home"),
         away_raw=_lv.get("_mls_raw_away"),
@@ -3877,6 +3918,7 @@ def analyze_wc_game(
     _lv = locals()
     _stamp_recs_calibration(
         recs,
+        game=game,
         home_team=home_raw, away_team=away_raw,
         home_raw=_lv.get("_wc_raw_home"),
         away_raw=_lv.get("_wc_raw_away"),

@@ -25,6 +25,8 @@ from src.data.outcome_checker import (
     _determine_outcome,
     _determine_mls_outcome,
     _team_token_overlap_match,
+    _soccer_90min_scores,
+    _SOCCER_90MIN_SPORTS,
 )
 
 logger = logging.getLogger(__name__)
@@ -92,6 +94,17 @@ def _fetch_events(sport: str, game_date: date) -> list:
             away_score = float(away.get("score", 0) or 0)
         except (TypeError, ValueError):
             home_score = away_score = 0.0
+
+        # Soccer knockouts: grade 90-minute markets on the 90-minute score.
+        # If the game went to ET/pens and the half breakdown is unavailable,
+        # treat as not-completed → the pick stays PENDING (honest PENDING
+        # beats grading against the wrong number).
+        if sport in _SOCCER_90MIN_SPORTS and completed:
+            h90, a90, ok90 = _soccer_90min_scores(comp, home, away)
+            if ok90:
+                home_score, away_score = h90, a90
+            else:
+                completed = False
 
         entries.append({
             "home_name":  home.get("team", {}).get("displayName", ""),

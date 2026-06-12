@@ -130,6 +130,39 @@ def _clv_gate_safe(rec) -> bool:
         return True
 
 
+def _resize_with_calibrated_probs(recs) -> None:
+    """
+    Re-run Kelly sizing on the CALIBRATED probability instead of the raw model
+    probability.
+
+    The calibration layer already shrinks edges for ranking (effective_edge),
+    but Kelly was still sizing stakes off the raw probability — systematically
+    over-staking the worst-calibrated markets. The calibrated probability is
+    market_prob + effective_edge (i.e. the model's belief after the measured
+    realised/predicted correction); Kelly runs on that.
+
+    Phase 0 (ratio 1.0) leaves the calibrated prob equal to the raw prob, so
+    sizing is byte-identical until a market has earned a correction. Watchlist
+    recs (zero sizing by design) are skipped. Display fields (model_prob_pct
+    on cards) keep showing the raw model probability — only stakes change.
+    Failures leave the original sizing untouched.
+    """
+    from src.models.kelly import robinhood_kelly
+    for r in recs:
+        try:
+            sz = getattr(r, "sizing", None)
+            if sz is None or (sz.num_contracts <= 0 and sz.dollar_allocation <= 0):
+                continue   # watchlist sports use zero sizing by design
+            eff = _effective_edge_safe(r)
+            cal_prob = min(1.0, max(0.0, float(r.market_prob) + eff))
+            r.model_prob_calibrated = round(cal_prob, 4)
+            if abs(cal_prob - float(r.model_prob)) < 1e-9:
+                continue   # no correction — keep the analyzer's sizing
+            r.sizing = robinhood_kelly(cal_prob, float(r.market_prob))
+        except Exception:
+            continue
+
+
 def _recalibrate_confidence(recs) -> None:
     """
     Downgrade HIGH → MEDIUM for any pick whose *calibrated* edge falls below the
@@ -437,6 +470,22 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         logger.info(f"=== {entry.label} Analysis ===")
 
         games = module.fetch_games(today_str) if ODDS_API_KEY else []
+
+        # Per-game season types (ESPN): stamps season_game_type so analyzers
+        # apply playoff treatment per GAME instead of per calendar window, and
+        # exhibition games (preseason / All-Star) are refused entirely — no
+        # stats model is meaningful there. Unstamped games fall back to the
+        # legacy calendar windows. Non-fatal.
+        try:
+            from src.data.game_types import stamp_game_types
+            stamp_game_types(games, slug, today_str)
+            _exhib = [g for g in games if g.get("season_game_type") == "exhibition"]
+            if _exhib:
+                logger.info(f"{entry.label}: skipping {len(_exhib)} exhibition game(s)")
+                games = [g for g in games if g.get("season_game_type") != "exhibition"]
+        except Exception as _e_gt:
+            logger.warning(f"Game-type stamping failed (non-fatal): {_e_gt}")
+
         game_counts[slug] = len(games)
 
         # Surface prop-line API errors before checking game count
@@ -457,6 +506,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # clears the HIGH bar (overconfident markets like totals), so they don't
         # jump the confidence-first slot queue ahead of better-calibrated picks.
         _recalibrate_confidence(display_raw)
+        # Kelly stakes sized on calibrated probabilities (no-op in Phase 0)
+        _resize_with_calibrated_probs(display_raw)
         # Budget gate uses the CALIBRATED edge — a market the calibration layer has
         # learned to distrust (ratio < 1) must clear MIN_EDGE on its shrunk edge,
         # not its inflated raw edge. Phase 0 ratio = 1.0 → identical to before.
@@ -469,7 +520,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 # CLV governor: markets with an earned negative closing-line
                 # record are excluded from real money. Display pools are
                 # untouched — gated markets keep logging so they can recover.
-                all_singles_raw.extend(r for r in qualifying if _clv_gate_safe(r))
+                # num_contracts > 0 mirrors the analyzers' own creation gate —
+                # a pick whose calibrated-prob resize zeroed its stake carries
+                # no money and must not occupy a budget slot.
+                all_singles_raw.extend(
+                    r for r in qualifying
+                    if _clv_gate_safe(r) and getattr(r.sizing, "num_contracts", 0) > 0
+                )
         else:
             own_display[slug] = qualifying    # IPL / WNBA / MLS → own tile (same MIN_EDGE gate)
 

@@ -1283,6 +1283,52 @@ def _parse_score_str(score_str) -> float:
         return 0.0
 
 
+# Soccer sports whose picks are 90-minute markets (3-way ML, totals, handicaps).
+# Knockout games decided in extra time / penalties must be graded on the
+# 90-minute score — the post-ET final settles those markets WRONG (a 1-1 game
+# that finishes 2-1 in ET is a Draw for betting purposes).
+_SOCCER_90MIN_SPORTS = {"MLS", "WC"}
+
+
+def _soccer_90min_scores(comp: Dict, home_comp: Dict, away_comp: Dict):
+    """
+    Return (home_score, away_score, ok) for grading a soccer game's 90-minute
+    markets. Regulation finishes pass the final score through. For games that
+    went to extra time / penalties, the 90' score is recovered as the sum of
+    the first two half linescores. ok=False means the game went past
+    regulation but the half-by-half breakdown is unavailable — the caller must
+    leave the pick PENDING rather than grade against the wrong number.
+    """
+    status = comp.get("status", {}) or {}
+    stype  = status.get("type", {}) or {}
+    detail = f"{stype.get('detail', '')} {stype.get('shortDetail', '')}".lower()
+    period = status.get("period", 0) or 0
+    went_et = (
+        period > 2
+        or "aet" in detail or "extra time" in detail
+        or "pen" in detail or "shootout" in detail
+    )
+
+    h_full = _parse_score_str(home_comp.get("score", 0))
+    a_full = _parse_score_str(away_comp.get("score", 0))
+    if not went_et:
+        return h_full, a_full, True
+
+    def _regulation(c: Dict):
+        ls = c.get("linescores") or []
+        if len(ls) < 2:
+            return None
+        try:
+            return sum(float(x.get("value", 0) or 0) for x in ls[:2])
+        except (TypeError, ValueError):
+            return None
+
+    h90, a90 = _regulation(home_comp), _regulation(away_comp)
+    if h90 is None or a90 is None:
+        return h_full, a_full, False
+    return h90, a90, True
+
+
 def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
     """
     Fetch completed game scores for watchlist sports (NHL, IPL) from ESPN.
@@ -1323,8 +1369,17 @@ def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
         away_name  = away_comp.get("team", {}).get("displayName", "")
         home_abbr  = home_comp.get("team", {}).get("abbreviation", "")
         away_abbr  = away_comp.get("team", {}).get("abbreviation", "")
-        home_score = _parse_score_str(home_comp.get("score", 0))
-        away_score = _parse_score_str(away_comp.get("score", 0))
+        if sport in _SOCCER_90MIN_SPORTS:
+            home_score, away_score, _ok = _soccer_90min_scores(comp, home_comp, away_comp)
+            if not _ok:
+                logger.warning(
+                    f"{sport} {home_name} vs {away_name}: went past regulation but 90' "
+                    f"linescores unavailable — leaving unsettled (manual review)"
+                )
+                continue
+        else:
+            home_score = _parse_score_str(home_comp.get("score", 0))
+            away_score = _parse_score_str(away_comp.get("score", 0))
 
         entry = {
             "home_name": home_name, "away_name": away_name,

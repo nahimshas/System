@@ -84,7 +84,13 @@ def build_parlays(singles: List[BetRecommendation]) -> List[ParlayRecommendation
         if not _parlay_valid(leg_a, leg_b):
             continue
 
-        combined_true_prob   = leg_a.model_prob  * leg_b.model_prob
+        # Use calibrated leg probabilities when available (stamped in main.py)
+        # — a parlay compounds any per-leg overconfidence, so it must be the
+        # first consumer of the corrected numbers. Falls back to raw model
+        # probs for legs without a calibration stamp (Phase 0 = identical).
+        _pa = getattr(leg_a, "model_prob_calibrated", None) or leg_a.model_prob
+        _pb = getattr(leg_b, "model_prob_calibrated", None) or leg_b.model_prob
+        combined_true_prob   = _pa * _pb
         combined_market_prob = leg_a.market_prob * leg_b.market_prob
 
         parlay_price = round(combined_market_prob, 4)
