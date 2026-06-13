@@ -409,6 +409,18 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     except Exception as _e_espn_settle:
         logger.warning(f"Shadow ESPN settlement failed (non-fatal): {_e_espn_settle}")
 
+    # Decision-log settlement: grade candidate OUTCOMES (both sides, rejected too)
+    # from ESPN final scores. Isolated/additive — never touches the settlement
+    # above. Outcomes are backfillable from historical scores, so a missed night
+    # self-heals on any later run.
+    try:
+        from src.state.decision_log import settle_decision_from_scores
+        _settled_dec = settle_decision_from_scores(today)
+        if _settled_dec:
+            logger.info(f"Decision-log settlement: {_settled_dec} candidate(s) graded")
+    except Exception as _e_dec_settle:
+        logger.warning(f"Decision-log settlement failed (non-fatal): {_e_dec_settle}")
+
     # CLV capture (self-healing): stamp closing-line probabilities onto any
     # recent shadow log entries still missing them. The historical archive
     # persists, so this pass repairs nights where the results-snapshot run
