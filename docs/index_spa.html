@@ -3617,7 +3617,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 13, 2026 at 12:47 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">June 13, 2026 at 12:53 PM PDT</div>
         </div>
         
       </div>
@@ -5986,7 +5986,28 @@ function toggleCtx(el) {
     if (betType === "Parlay" || betType === "Prop") return;
 
     var ev = findEvent(allEvents, homeTeam, awayTeam);
-    if (!ev) return;
+    if (!ev) {
+      // ESPN's fifa.world feed omits some matchups (friendlies / qualifiers the
+      // Odds API still lists under the World Cup). Without an event there's no
+      // scoreboard — show the country flags so the card isn't blank.
+      var _hf = _flagFor(homeTeam), _af = _flagFor(awayTeam);
+      if (_hf || _af) {
+        var _ls = card.querySelector(".live-status");
+        if (_ls && !_ls.getAttribute("data-flagfb")) {
+          _ls.setAttribute("data-flagfb", "1");
+          _ls.innerHTML =
+            '<div style="margin-top:8px;display:flex;align-items:center;justify-content:center;' +
+                 'gap:8px;font-size:0.72rem;color:#94a3b8;">' +
+              '<span style="font-size:1.4rem;line-height:1;">' + (_af || "") + '</span>' +
+              '<span>' + awayTeam + '</span>' +
+              '<span style="opacity:0.55;">vs</span>' +
+              '<span>' + homeTeam + '</span>' +
+              '<span style="font-size:1.4rem;line-height:1;">' + (_hf || "") + '</span>' +
+            '</div>';
+        }
+      }
+      return;
+    }
 
     // Stamp game state so sortTodayCard() can re-order Today's Card live.
     if (card.classList.contains("alloc-card")) {
