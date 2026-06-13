@@ -4,7 +4,27 @@ import logging
 from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
-from src.config import DAILY_BUDGET, MAX_SINGLE_BETS
+from src.config import DAILY_BUDGET, MAX_SINGLE_BETS, PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR
+
+
+def _pwa_show(d: dict) -> bool:
+    """Render-layer display gate (mirrors main.py `_pwa_display_eligible`, dict form).
+
+    Hides totals/draws + sub-floor longshots from the cards. Applied here too so
+    the gate holds on code-only re-renders of already-saved state, not only on
+    fresh analysis. Never affects the shadow/decision logs. Fail-open.
+    """
+    try:
+        if (d.get("bet_type") or "") in PWA_HIDDEN_MARKETS:
+            return False
+        mp = d.get("model_prob")
+        if mp is None and d.get("model_prob_pct") is not None:
+            mp = float(d["model_prob_pct"]) / 100.0
+        if mp is not None and float(mp) < PWA_MODEL_PROB_FLOOR:
+            return False
+        return True
+    except Exception:
+        return True
 
 logger = logging.getLogger(__name__)
 
@@ -240,25 +260,25 @@ def build_report(
                 -r.get("model_prob_pct", 0))
 
     ipl_watchlist = sorted(
-        ipl_display or [],
+        [s for s in (ipl_display or []) if _pwa_show(s)],
         key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
     # WNBA is watchlist-only — never enters budget allocation or parlays.
     wnba_watchlist = sorted(
-        [s for s in (wnba_display or []) if s.get("sport") == "WNBA"],
+        [s for s in (wnba_display or []) if s.get("sport") == "WNBA" and _pwa_show(s)],
         key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
     # MLS is watchlist-only — never enters budget allocation or parlays.
     mls_watchlist = sorted(
-        [s for s in (mls_display or []) if s.get("sport") == "MLS"],
+        [s for s in (mls_display or []) if s.get("sport") == "MLS" and _pwa_show(s)],
         key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
     # World Cup is watchlist-only — never enters budget allocation or parlays.
     wc_watchlist = sorted(
-        [s for s in (wc_display or []) if s.get("sport") == "WC"],
+        [s for s in (wc_display or []) if s.get("sport") == "WC" and _pwa_show(s)],
         key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
@@ -309,7 +329,7 @@ def build_report(
     _seen_game_bets: set = set()
     _deduped_pool = []
     for s in sorted(
-        singles,
+        [s for s in singles if _pwa_show(s)],
         key=lambda r: (0 if r["confidence"] == "HIGH" else 1,
                        -(r.get("effective_edge") or r["edge"]),
                        -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
@@ -333,7 +353,7 @@ def build_report(
         out = []
         # 1. Locked budget picks go first — they must always show in their section.
         locked_budget = sorted(
-            [s for s in singles if s.get("sport") == sport and s.get("locked")],
+            [s for s in singles if s.get("sport") == sport and s.get("locked") and _pwa_show(s)],
             key=lambda r: (-r.get("effective_edge", r["edge"]),
                            -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
         )
@@ -346,7 +366,7 @@ def build_report(
         # Uses effective_edge (calibration-adjusted) for consistency with slot selection —
         # a MEDIUM MLB ML at 15% raw edge is only ~13% effective (MLB ratio ≈ 0.87).
         for s in sorted(
-            [s for s in _display if s.get("sport") == sport],
+            [s for s in _display if s.get("sport") == sport and _pwa_show(s)],
             key=lambda r: (0 if r["confidence"] == "HIGH" else 1,
                            -r.get("effective_edge", r["edge"]),
                            -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
