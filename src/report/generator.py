@@ -310,7 +310,8 @@ def build_report(
     _deduped_pool = []
     for s in sorted(
         singles,
-        key=lambda r: (0 if r["confidence"] == "HIGH" else 1, -r["edge"],
+        key=lambda r: (0 if r["confidence"] == "HIGH" else 1,
+                       -(r.get("effective_edge") or r["edge"]),
                        -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
     ):
         _key = (s.get("sport", ""), s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))

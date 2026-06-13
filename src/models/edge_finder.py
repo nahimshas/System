@@ -71,7 +71,11 @@ MLB_RUNLINE_SIGMA = 3.5
 # made small projection-vs-line gaps look like large edges and manufactured
 # false Over edges (backtest: model "Over 66%" picks realised ~39%). 3.8 sits
 # just above the run-line sigma and better-calibrates the totals probability.
-MLB_TOTAL_STD = 3.8
+# Raised 3.8 → 4.3 (Jun 2026): the true SD of MLB game totals is ~4.3 runs;
+# the tighter 3.8 manufactured phantom edges (model claimed +14% edge on totals
+# it bet, realised ~50% win). Widening to the empirical SD deflates overconfident
+# totals probabilities so fewer junk totals clear MIN_EDGE.
+MLB_TOTAL_STD = 4.3
 
 # Injury credibility gate ─────────────────────────────────────────────────────
 # When a team's injury_adjustment ≥ INJURY_GATE, our season net-rating baseline
@@ -1388,7 +1392,12 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         # Shouldn't happen (Rockies always home at Coors) but guard anyway
         home_ops = home_ops * _COORS_OPS_DEFLATOR
 
-    league_avg_runs = 4.5
+    # Lowered 4.5 → 4.35 (Jun 2026): 4.5 R/G per team (9.0 baseline) sat ~0.3 runs
+    # above current MLB scoring (~4.35 R/G / ~8.7 total), giving every total a
+    # constant upward (Over) thumb. MLB Over picks realised 42.9% vs the 65.7%
+    # the model claimed — the asymmetry vs Unders (only 7.7pp overconfident) is
+    # the signature of this baseline bias. 4.35 removes the lean at its source.
+    league_avg_runs = 4.35
 
     # Bullpen quality score uses same scale as SP: (4.20 - ERA) / 1.50
     # Positive = better than average (suppresses opponent runs), negative = worse.
