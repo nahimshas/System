@@ -1354,28 +1354,14 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     home_ops = home_batting.get("ops", 0.735)
     away_ops = away_batting.get("ops", 0.735)
 
-    # Platoon split: nudge each lineup's OPS toward its performance vs the
-    # OPPOSING starter's throwing hand (PA-weighted toward overall — thin early
-    # samples barely move it). Applied before the Coors deflator so altitude
-    # correction operates on the platoon-adjusted value.
-    _home_ops_pre_split, _away_ops_pre_split = home_ops, away_ops
-    home_ops = _platoon_ops(home_ops, home_off_split)
-    away_ops = _platoon_ops(away_ops, away_off_split)
-    # Emit a transparent platoon line whenever a split is available, naming the
-    # opposing starter's hand, the split OPS + sample, the season OPS, and the
-    # value the model actually used. Card context + narrative read these.
-    if home_off_split and home_off_split.get("ops"):
-        signals.append(
-            f"Platoon: {home} vs {_hand_label(home_off_split.get('vs_hand'))} — "
-            f"{home_off_split['ops']:.3f} OPS ({home_off_split.get('pa', 0)} PA), "
-            f"season {_home_ops_pre_split:.3f} → model {home_ops:.3f}"
-        )
-    if away_off_split and away_off_split.get("ops"):
-        signals.append(
-            f"Platoon: {away} vs {_hand_label(away_off_split.get('vs_hand'))} — "
-            f"{away_off_split['ops']:.3f} OPS ({away_off_split.get('pa', 0)} PA), "
-            f"season {_away_ops_pre_split:.3f} → model {away_ops:.3f}"
-        )
+    # Platoon split adjustment REMOVED (Jun 2026). Added May 30 (Tier 3 8a), it
+    # blended each lineup's OPS toward its raw vs-hand split at full weight by
+    # 300 PA — far too aggressive for a stat that needs ~1000+ PA to stabilise
+    # and should be regressed ~50%. The unregressed split manufactured edge on
+    # the side the market had already priced: platoon-fired MLB moneylines won
+    # 45.7% (vs 58.1% for picks without it) over 51 settled picks. Season OPS is
+    # left untouched. _platoon_ops() is retained (unused) in case a properly
+    # regressed version is reintroduced later and validated against CLV first.
 
     # Coors Field correction — Colorado's season OPS and pitcher xFIP/ERA are
     # heavily inflated by home games at altitude. When the Rockies play AWAY,
