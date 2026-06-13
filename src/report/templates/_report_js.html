@@ -104,18 +104,38 @@
     return dark2 || base;
   }
 
+  // Two-stage image fallback (global so inline onerror can reach it): ESPN often
+  // serves a logo URL whose image 404s for World Cup federations. First error →
+  // swap the dark variant for the default; second error → replace with the
+  // country flag emoji (or abbreviation). Fixes blank icons for Australia, Turkey, etc.
+  window._logoFallback = function (img) {
+    if (img.getAttribute("data-fb")) {
+      var f = img.getAttribute("data-flag") || "";
+      var a = img.getAttribute("data-abbr") || "";
+      var span = f
+        ? '<span style="font-size:1.6rem;line-height:1;">' + f + "</span>"
+        : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + a + "</span>";
+      if (img.parentNode) img.parentNode.innerHTML = span;
+    } else {
+      img.setAttribute("data-fb", "1");
+      img.src = img.src.replace("/500-dark/", "/500/");
+    }
+  };
   function _teamIcon(logo, abbr, name) {
-    // No ESPN logo? Fall back to a country flag emoji (World Cup), then to the
-    // abbreviation. _flagFor returns "" for non-countries so clubs are unaffected.
-    var flag = logo ? "" : _flagFor(name || abbr || "");
+    // Country flag emoji fallback (World Cup). _flagFor returns "" for non-
+    // countries so club teams are unaffected.
+    var flag = _flagFor(name || abbr || "");
+    var fb = flag
+      ? '<span style="font-size:1.6rem;line-height:1;">' + flag + "</span>"
+      : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + (abbr || "") + "</span>";
+    var inner = logo
+      ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;" ' +
+          'data-flag="' + flag + '" data-abbr="' + (abbr || "") + '" onerror="_logoFallback(this)">'
+      : fb;
     return (
       '<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;' +
            'background:#1e2130;display:flex;align-items:center;justify-content:center;">' +
-        (logo
-          ? '<img src="' + logo + '" width="40" height="40" style="object-fit:contain;" onerror="this.src=this.src.replace(\'/500-dark/\',\'/500/\');this.onerror=null;">'
-          : (flag
-              ? '<span style="font-size:1.6rem;line-height:1;">' + flag + '</span>'
-              : '<span style="font-size:0.6rem;font-weight:700;color:#94a3b8;">' + abbr + '</span>')) +
+        inner +
       '</div>'
     );
   }

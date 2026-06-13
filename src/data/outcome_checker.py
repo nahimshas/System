@@ -1877,10 +1877,27 @@ def load_watchlist_performance() -> Dict[str, Dict]:
     settlement followed by a manual correction) is counted correctly.
     When duplicates exist the LOST record takes precedence over WON.
     """
+    from src.config import PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR
+
+    def _counts_for_tile(r: Dict) -> bool:
+        """Tile reflects only what the PWA actually shows. Gated picks (totals,
+        draws, sub-floor longshots) are 'rejected' — kept in history for analysis
+        but excluded from the win/loss tile so it matches the visible cards."""
+        if (r.get("bet_type") or "") in PWA_HIDDEN_MARKETS:
+            return False
+        mp = r.get("model_prob_pct")
+        if mp is not None and float(mp) / 100.0 < PWA_MODEL_PROB_FLOOR:
+            return False
+        return True
+
     records = _load_watchlist_history()
     result: Dict[str, Dict] = {}
     for sport in ("NHL", "IPL", "WNBA", "MLS", "WC"):
-        subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
+        subset = [
+            r for r in records
+            if r.get("sport") == sport and r.get("result") in ("WON", "LOST")
+            and _counts_for_tile(r)
+        ]
         # Deduplicate: one entry per (date, game, pick) so that multiple
         # legitimate picks for the same game (ML + spread + total) are all
         # counted, while the exact same pick settled twice with different
