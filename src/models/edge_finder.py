@@ -276,16 +276,27 @@ def _game_playoff(game: Optional[Dict], calendar_fallback) -> bool:
     return calendar_fallback()
 
 
-def _stamp_decision(game, min_edge, features, markets):
+def _stamp_decision(game, min_edge, features, markets, recs=None):
     """
     Assemble the FULL candidate set (both sides of every market) + the structured
     model-input `features`, and stamp it onto game["_decision"] for the
     decision_log archive. Purely diagnostic — never affects pick selection.
 
     `markets` is an iterable of (market_type, side, model_prob, market_prob, line)
-    tuples. Sides with a missing probability are skipped. Fully exception-safe.
+    tuples. Sides with a missing probability are skipped. When `recs` (the built
+    BetRecommendations) is passed, each MADE candidate is tagged with its
+    confidence label, so confidence can be correlated against CLV/outcome/features.
+    Fully exception-safe.
     """
     try:
+        conf = {}
+        if recs:
+            try:
+                from src.state.shadow_log import _market_type as _mt, _pick_side as _ps
+                for r in recs:
+                    conf[(_mt(r), _ps(r))] = getattr(r, "confidence", None)
+            except Exception:
+                conf = {}
         cands = []
         for mtype, side, mp, mk, line in markets:
             if mp is None or mk is None:
@@ -299,6 +310,7 @@ def _stamp_decision(game, min_edge, features, markets):
                 "edge": round(edge, 4),
                 "made": edge >= min_edge,
                 "line": (round(float(line), 1) if line is not None else None),
+                "confidence": conf.get((mtype, side)),
             })
         game["_decision"] = {"features": features or {}, "candidates": cands}
     except Exception:
@@ -936,7 +948,7 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         ("Total", "under",
          (1.0 - _lv["model_over_prob"]) if _lv.get("model_over_prob") is not None else None,
          _lv.get("market_under_prob"), _lv.get("market_line")),
-    ])
+    ], recs)
     return recs
 
 
@@ -1890,7 +1902,7 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
              (1.0 - _lv["model_over_prob"]) if _lv.get("model_over_prob") is not None else None,
              _lv.get("market_under_prob"), _lv.get("market_line")),
         ]
-        _stamp_decision(game, _min, _feat, _markets)
+        _stamp_decision(game, _min, _feat, _markets, recs)
     except Exception:
         pass
 
@@ -2293,7 +2305,7 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
         ("Total", "under",
          (1.0 - _lv["model_over_prob"]) if _lv.get("model_over_prob") is not None else None,
          _lv.get("market_under_prob"), _lv.get("market_line")),
-    ])
+    ], recs)
     return recs
 
 
@@ -2755,7 +2767,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
         ("Total", "under",
          (1.0 - _lv["model_over_prob"]) if _lv.get("model_over_prob") is not None else None,
          _lv.get("market_under_prob"), _lv.get("market_line")),
-    ])
+    ], recs)
     return recs
 
 
@@ -3077,7 +3089,7 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
         ("Moneyline", away,
          (1.0 - _lv["adjusted_home_prob"]) if _lv.get("adjusted_home_prob") is not None else None,
          _lv.get("market_away_prob"), None),
-    ])
+    ], recs)
     return recs
 
 
@@ -3367,7 +3379,7 @@ def analyze_wnba_game(
     }, [
         ("Moneyline", home_raw, _lv.get("adj_home_prob"), _lv.get("market_home_prob"), None),
         ("Moneyline", away_raw, _lv.get("adj_away_prob"), _lv.get("market_away_prob"), None),
-    ])
+    ], recs)
     return recs
 
 
@@ -3773,7 +3785,7 @@ def analyze_mls_game(
         ("Spread", home_raw, _lv.get("model_home_sp"), _lv.get("market_home_sp"),
          _lv.get("home_disp_line") if _lv.get("home_disp_line") is not None else _lv.get("home_point")),
         ("Spread", away_raw, _lv.get("model_away_sp"), _lv.get("market_away_sp"), _lv.get("away_disp_line")),
-    ])
+    ], recs)
     return recs
 
 
@@ -4118,5 +4130,5 @@ def analyze_wc_game(
         ("Spread", home_raw, _lv.get("model_home_sp"), _lv.get("market_home_sp"),
          _lv.get("home_disp_line") if _lv.get("home_disp_line") is not None else _lv.get("home_point")),
         ("Spread", away_raw, _lv.get("model_away_sp"), _lv.get("market_away_sp"), _lv.get("away_disp_line")),
-    ])
+    ], recs)
     return recs

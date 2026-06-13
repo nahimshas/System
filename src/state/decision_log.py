@@ -334,6 +334,7 @@ def record_candidates(
                     "market_prob_at_last_update": market_p,
                     "edge": edge,
                     "made": bool(c.get("made", False)),
+                    "final_confidence_label": c.get("confidence") or existing.get("final_confidence_label"),
                     "features": features or existing.get("features") or {},
                     # CLV / outcome stamped later by the snapshot + settlement passes
                     "market_prob_at_close": existing.get("market_prob_at_close"),

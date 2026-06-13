@@ -57,6 +57,21 @@ def test_records_both_sides_and_made_flag(tmp_path, monkeypatch):
     assert entries["2026-06-13|MLB|Miami Marlins @ Atlanta Braves|Total|over"]["line"] == 8.5
 
 
+def test_confidence_persisted(tmp_path, monkeypatch):
+    monkeypatch.setattr(dl, "DECISION_LOG_DIR", tmp_path)
+    d = date(2026, 6, 13)
+    cands = [
+        {"market_type": "Moneyline", "side": "Braves", "model_prob": 0.62,
+         "market_prob": 0.55, "made": True, "confidence": "HIGH"},
+        {"market_type": "Moneyline", "side": "Marlins", "model_prob": 0.38,
+         "market_prob": 0.45, "made": False},  # rejected → no confidence
+    ]
+    dl.record_candidates(d, "MLB", "Marlins @ Braves", _future_ct(), "Braves", "Marlins", cands)
+    e = dl._load_shard(dl._shard_path(d))["entries"]
+    assert e["2026-06-13|MLB|Marlins @ Braves|Moneyline|Braves"]["final_confidence_label"] == "HIGH"
+    assert e["2026-06-13|MLB|Marlins @ Braves|Moneyline|Marlins"]["final_confidence_label"] is None
+
+
 def test_idempotent_rerun_updates_not_duplicates(tmp_path, monkeypatch):
     monkeypatch.setattr(dl, "DECISION_LOG_DIR", tmp_path)
     d = date(2026, 6, 13)
