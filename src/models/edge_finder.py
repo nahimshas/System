@@ -289,25 +289,35 @@ def _stamp_decision(game, min_edge, features, markets, recs=None):
     Fully exception-safe.
     """
     try:
-        conf = {}
+        conf, rawp = {}, {}
         if recs:
             try:
                 from src.state.shadow_log import _market_type as _mt, _pick_side as _ps
                 for r in recs:
-                    conf[(_mt(r), _ps(r))] = getattr(r, "confidence", None)
+                    _k = (_mt(r), _ps(r))
+                    conf[_k] = getattr(r, "confidence", None)
+                    rawp[_k] = getattr(r, "model_prob_raw", None)
             except Exception:
-                conf = {}
+                conf, rawp = {}, {}
         cands = []
         for mtype, side, mp, mk, line in markets:
             if mp is None or mk is None:
                 continue
-            edge = float(mp) - float(mk)
+            mp_f, mk_f = float(mp), float(mk)
+            edge = mp_f - mk_f
+            # Raw (pre-credibility-cap) prob comes from the matching rec, so it's
+            # only available for MADE picks (rejected sides have no rec). The
+            # stored model_prob / edge are POST-cap (what the model acted on).
+            _raw = rawp.get((mtype, side))
+            _raw_f = float(_raw) if _raw is not None else None
             cands.append({
                 "market_type": mtype,
                 "side": side,
-                "model_prob": round(float(mp), 4),
-                "market_prob": round(float(mk), 4),
-                "edge": round(edge, 4),
+                "model_prob": round(mp_f, 4),                 # post-cap (acted on)
+                "model_prob_raw": round(_raw_f, 4) if _raw_f is not None else None,
+                "market_prob": round(mk_f, 4),
+                "edge": round(edge, 4),                       # post-cap edge
+                "raw_edge": round(_raw_f - mk_f, 4) if _raw_f is not None else None,
                 "made": edge >= min_edge,
                 "line": (round(float(line), 1) if line is not None else None),
                 "confidence": conf.get((mtype, side)),

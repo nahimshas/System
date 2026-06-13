@@ -312,10 +312,14 @@ def record_candidates(
                     continue  # frozen — don't overwrite post-commence snapshot
 
                 model_p = _f(c.get("model_prob"))
+                model_p_raw = _f(c.get("model_prob_raw"))
                 market_p = _f(c.get("market_prob"))
                 edge = _f(c.get("edge"))
                 if edge is None and model_p is not None and market_p is not None:
                     edge = model_p - market_p
+                raw_edge = _f(c.get("raw_edge"))
+                if raw_edge is None and model_p_raw is not None and market_p is not None:
+                    raw_edge = model_p_raw - market_p
 
                 existing = entries.get(key, {})
                 entries[key] = {
@@ -328,11 +332,13 @@ def record_candidates(
                     "side": side,
                     "line": _f(c.get("line")),
                     "commence_time": commence_time,
-                    "model_prob": model_p,
+                    "model_prob": model_p,            # post-credibility-cap (acted on)
+                    "model_prob_raw": model_p_raw,    # pre-cap (made picks only; None if rejected)
                     "market_prob_at_first_pick": existing.get("market_prob_at_first_pick", market_p)
                         if existing else market_p,
                     "market_prob_at_last_update": market_p,
-                    "edge": edge,
+                    "edge": edge,                     # post-cap edge
+                    "raw_edge": raw_edge,             # pre-cap edge (made picks only)
                     "made": bool(c.get("made", False)),
                     "final_confidence_label": c.get("confidence") or existing.get("final_confidence_label"),
                     "features": features or existing.get("features") or {},
