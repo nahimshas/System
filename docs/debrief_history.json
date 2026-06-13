@@ -3749,6 +3749,607 @@
         "Schedule Load signal: appeared in 10+ picks tonight; no isolated CLV signal this session but correlates with losses on COL, STL, PIT \u2014 worth tracking as a confidence-damper rather than a standalone signal.",
         "WNBA Back-to-Back signal: 0-1 today (Portland); the back-to-back edge was overwhelmed by the Aces' star talent differential \u2014 model needs a talent-gap floor before applying fatigue adjustments."
       ]
+    },
+    {
+      "date": "2026-06-12",
+      "generated_at": "2026-06-13T05:58:03Z",
+      "headline": "3-4 budget (-$4.29), avg CLV -0.12%; Giants beat close (+1.6%) but lost on variance; watchlist 9-9; 1 WC pick pending",
+      "budget_record": "3-4",
+      "watchlist_record": "9-9",
+      "budget_pnl": -4.29,
+      "avg_budget_clv": -0.12,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "Tampa Bay Rays @ Los Angeles Angels",
+          "sport": "MLB",
+          "pick": "Los Angeles Angels +1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Tampa Bay Rays 3, Los Angeles Angels 4",
+          "pnl": "+$5.15",
+          "clv_pct": 0.1,
+          "why_picked": "ERA trap on McClanahan (ERA 2.85 vs xFIP 3.56) suggested Tampa Bay's ML was market-overpriced; taking the Angels +1.5 captured value against that overvaluation while the spread provided cushion.",
+          "what_happened": "Sam Aldegheri held the Rays to 3 runs and earned the win 4-3; T. Mancini drove in 2 for Los Angeles while J. Aranda accounted for 3 Rays RBIs in a tight game that confirmed the spread buffer held.",
+          "signals": [
+            "ERA Trap \u2014 McClanahan",
+            "ERA Trap \u2014 Aldegheri",
+            "Park Factor",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (0.1%, noise range)",
+          "key_insight": "ERA trap on McClanahan correctly flagged overpriced TB market; spread hedge (+1.5) removed the variance of a potential close Rays win.",
+          "in_budget": true
+        },
+        {
+          "game": "New York Yankees @ Toronto Blue Jays",
+          "sport": "MLB",
+          "pick": "New York Yankees",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "New York Yankees 5, Toronto Blue Jays 8",
+          "pnl": "-$5.10",
+          "clv_pct": -1.7,
+          "why_picked": "Ryan Weathers' elite xFIP (3.04) and Toronto's weak platoon splits vs LHP (.645 OPS) suggested a Yankees edge; TOR's starter was unknown/unannounced, creating pitching uncertainty.",
+          "what_happened": "Toronto throttled the Yankees 8-5 at Rogers Centre before 41,596 fans; Aaron Judge's absence (out since June 2) proved more costly than modeled as the depleted Yankees lineup couldn't overcome a dominant Blue Jays performance.",
+          "signals": [
+            "Pitcher Stats \u2014 Weathers",
+            "Platoon Edge",
+            "Injury Impact",
+            "Park Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 1.7% against us",
+          "key_insight": "The Injury Impact on the Yankees (-1.8%) was underweighted \u2014 Judge's absence materially reduced lineup depth beyond what the model priced; reconsider injury thresholds for star players.",
+          "in_budget": true
+        },
+        {
+          "game": "San Diego Padres @ Baltimore Orioles",
+          "sport": "MLB",
+          "pick": "Baltimore Orioles",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "San Diego Padres 3, Baltimore Orioles 7",
+          "pnl": "+$4.38",
+          "clv_pct": -0.2,
+          "why_picked": "Griffin Canning came in with a 6.34 ERA and 4.8 BB/9 for San Diego, while the Padres carried a -4.2% injury drag; Baltimore's .745 OPS vs RHP matchup supported a dominant home win.",
+          "what_happened": "Baltimore rolled to a 7-3 win at Camden Yards, backing the model's read on a Padres squad undermined by Canning's command issues and a heavy injury toll in warm, ball-carrying conditions (93\u00b0F, wind out).",
+          "signals": [
+            "Pitcher Stats \u2014 Canning",
+            "Injury Impact",
+            "Platoon Edge",
+            "Weather Factor"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (\u22120.2%, noise range)",
+          "key_insight": "Padres -4.2% injury drag was the strongest injury signal on tonight's card and correctly predicted underperformance; high ERA + walk rate pitcher remains a reliable fade signal.",
+          "in_budget": true
+        },
+        {
+          "game": "Chicago Cubs @ San Francisco Giants",
+          "sport": "MLB",
+          "pick": "San Francisco Giants",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Chicago Cubs 5, San Francisco Giants 1",
+          "pnl": "-$5.53",
+          "clv_pct": 1.6,
+          "why_picked": "Landen Roupp's elite peripherals (FIP 3.03, xFIP 3.18, K/9 10.0) made San Francisco compelling against Javier Assad (FIP 4.38); Giants had better recent form (5-5 vs Cubs' 3-7 last 10).",
+          "what_happened": "Javier Assad outperformed his peripherals completely \u2014 striking out five over six innings \u2014 while Michael Busch's three-run blast off Roupp in the fifth proved decisive; Jung Hoo Lee's 18-game hitting streak was snapped in the 5-1 Cubs win.",
+          "signals": [
+            "Pitcher Stats \u2014 Roupp",
+            "Pitcher Stats \u2014 Assad",
+            "Recent Form",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.6%), lost on variance",
+          "key_insight": "Market moved in our favor post-bet (+1.6% CLV) but Assad's underlying ERA (4.73) masked one-night dominance; Roupp allowed four runs in 4.2 IP \u2014 ace with control issues on wrong night. Good process, bad result.",
+          "in_budget": true
+        },
+        {
+          "game": "Atlanta Braves @ New York Mets",
+          "sport": "MLB",
+          "pick": "Atlanta Braves",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Atlanta Braves 5, New York Mets 7",
+          "pnl": "-$4.87",
+          "clv_pct": -0.4,
+          "why_picked": "Atlanta posted the strongest platoon edge on tonight's card (.757 OPS vs RHP); Mets carried a -2.5% injury drag, and McLean's 3.04 xFIP suggested he could suppress New York's lineup.",
+          "what_happened": "Juan Soto's go-ahead solo homer in the seventh inning was the knockout blow in a rain-delayed 7-5 Mets win; Spencer Strider was unable to hold the lead in a high-scoring affair that exceeded model projections (NYM projected 3.6 runs, scored 7).",
+          "signals": [
+            "Platoon Edge",
+            "Injury Impact",
+            "Pitcher Stats \u2014 McLean",
+            "Weather Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (\u22120.4%)",
+          "key_insight": "Mets injury drag (-2.5%) didn't translate \u2014 their healthy contributors (Soto) stepped up; model projected 3.6 Mets runs but they scored 7 despite the injury flag, suggesting the injury impact multiplier may overfit on lineup depth vs. star availability.",
+          "in_budget": true
+        },
+        {
+          "game": "San Diego Padres @ Baltimore Orioles / Philadelphia Phillies @ Milwaukee Brewers",
+          "sport": "PARLAY",
+          "pick": "Baltimore Orioles (ML) + Milwaukee Brewers (ML)",
+          "bet_type": "Parlay",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "BAL 7-3 over SD / MIL 6-0 over PHI",
+          "pnl": "+$3.65",
+          "why_picked": "Both Baltimore and Milwaukee carried pitcher advantages and injury edges against struggling opponents (SD -4.2%, PHI vs Misiorowski).",
+          "what_happened": "Both legs hit convincingly \u2014 Baltimore dominated 7-3 and Jacob Misiorowski threw a 15-strikeout masterpiece for Milwaukee's 6-0 shutout of Philadelphia.",
+          "signals": [
+            "Pitcher Stats \u2014 Canning",
+            "Injury Impact",
+            "Pitcher Stats \u2014 Baz"
+          ],
+          "legs": [
+            {
+              "pick": "Baltimore Orioles",
+              "sport": "MLB",
+              "result": "WON"
+            },
+            {
+              "pick": "Milwaukee Brewers",
+              "sport": "MLB",
+              "result": "WON"
+            }
+          ],
+          "signal_verdict": "CORRECT \u2014 both legs hit; +$3.65 on $2.35 stake",
+          "key_insight": "Parlay correctly bundled two independently strong ML picks; risk was reasonable given both picks had similar underlying signal quality.",
+          "in_budget": true
+        },
+        {
+          "game": "New York Yankees @ Toronto Blue Jays / Chicago Cubs @ San Francisco Giants",
+          "sport": "PARLAY",
+          "pick": "New York Yankees (ML) + San Francisco Giants (ML)",
+          "bet_type": "Parlay",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "TOR 8-5 over NYY / CHC 5-1 over SF",
+          "pnl": "-$1.97",
+          "why_picked": "Two high-confidence ML plays (Yankees and Giants) combined for enhanced value on strong pitcher analytics.",
+          "what_happened": "Both legs lost \u2014 the Yankees fell 8-5 to Toronto and the Giants were stunned 5-1 by the Cubs, meaning neither anchor of the parlay delivered.",
+          "signals": [
+            "Pitcher Stats \u2014 Weathers",
+            "Pitcher Stats \u2014 Roupp",
+            "Platoon Edge"
+          ],
+          "legs": [
+            {
+              "pick": "New York Yankees",
+              "sport": "MLB",
+              "result": "LOST"
+            },
+            {
+              "pick": "San Francisco Giants",
+              "sport": "MLB",
+              "result": "LOST"
+            }
+          ],
+          "signal_verdict": "INCORRECT \u2014 both legs lost",
+          "key_insight": "Parlay compounded variance risk; Yankees pick was market-confirmed bad (-1.7% CLV) while Giants had good CLV (+1.6%) but lost on the night \u2014 combining a weak pick with a strong one reduces expected value.",
+          "in_budget": true
+        },
+        {
+          "game": "Detroit Tigers @ Cleveland Guardians",
+          "sport": "MLB",
+          "pick": "Detroit Tigers",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Detroit Tigers 2, Cleveland Guardians 3",
+          "pnl": "-$4.84",
+          "why_picked": "Watchlist pick: Tanner Bibee FIP 4.69 / xFIP 4.04 | K/9: 7.4",
+          "what_happened": "Cleveland edged Detroit 3-2 in a pitcher's duel despite the model flagging the Tigers as value play.",
+          "signals": [
+            "Park Factor",
+            "Weather Factor",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (0.2%)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.2
+        },
+        {
+          "game": "Los Angeles Dodgers @ Chicago White Sox",
+          "sport": "MLB",
+          "pick": "Chicago White Sox +1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Los Angeles Dodgers 2, Chicago White Sox 8",
+          "pnl": "+$3.73",
+          "why_picked": "Watchlist pick: Anthony Kay FIP 5.1 / xFIP 4.42 | K/9: 6.8",
+          "what_happened": "Chicago stunned Los Angeles 8-2, easily covering the +1.5 spread in a blowout the model identified as potential value.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved 1.2% against this pick",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -1.2
+        },
+        {
+          "game": "Philadelphia Phillies @ Milwaukee Brewers",
+          "sport": "MLB",
+          "pick": "Milwaukee Brewers",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Philadelphia Phillies 0, Milwaukee Brewers 6",
+          "pnl": "+$2.64",
+          "why_picked": "Watchlist pick: Jacob Misiorowski FIP 1.74 / xFIP 2.07 | K/9: 13.4",
+          "what_happened": "Milwaukee's Jacob Misiorowski struck out 15 Phillies in a dominant 6-0 shutout, confirming the model's read.",
+          "signals": [
+            "ERA Trap \u2014 Misiorowski",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (0.2%, noise range)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.2
+        },
+        {
+          "game": "Miami Marlins @ Pittsburgh Pirates",
+          "sport": "MLB",
+          "pick": "Pittsburgh Pirates",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Miami Marlins 8, Pittsburgh Pirates 3",
+          "pnl": "-$3.52",
+          "why_picked": "Watchlist pick: Braxton Ashcraft FIP 2.99 / xFIP 2.79 | K/9: 9.8",
+          "what_happened": "Miami surprised Pittsburgh 8-3, reversing the expected home advantage the model identified.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (0.0%)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.0
+        },
+        {
+          "game": "Colorado Rockies @ Athletics",
+          "sport": "MLB",
+          "pick": "Under 14.5",
+          "bet_type": "Total",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Colorado Rockies 4, Athletics 6",
+          "pnl": "+$2.77",
+          "why_picked": "Watchlist pick: Gage Jump FIP 2.59 / xFIP 4.39 | K/9: 6.5",
+          "what_happened": "Oakland beat Colorado 6-4 for a total of 10 runs, well under the 14.5 threshold.",
+          "signals": [
+            "ERA Trap \u2014 Jump",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.4%, noise range)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.4
+        },
+        {
+          "game": "Seattle Mariners @ Washington Nationals",
+          "sport": "MLB",
+          "pick": "Seattle Mariners",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Seattle Mariners 10, Washington Nationals 2",
+          "pnl": "+$3.68",
+          "why_picked": "Watchlist pick: Zack Littell FIP 5.96 / xFIP 4.81 | K/9: 5.5",
+          "what_happened": "Seattle routed Washington 10-2 in a dominant road performance, easily backing the model's pick.",
+          "signals": [
+            "ERA Trap \u2014 Miller",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (0.3%, noise range)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.3
+        },
+        {
+          "game": "Arizona Diamondbacks @ Cincinnati Reds",
+          "sport": "MLB",
+          "pick": "Arizona Diamondbacks",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Arizona Diamondbacks 5, Cincinnati Reds 2",
+          "pnl": "+$3.43",
+          "why_picked": "Watchlist pick: Nick Lodolo FIP 6.18 / xFIP 4.36 | K/9: 7.0",
+          "what_happened": "Arizona defeated Cincinnati 5-2 in a well-pitched game, confirming the Diamondbacks' edge.",
+          "signals": [
+            "ERA Trap \u2014 Rodriguez",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.1%, noise range)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.1
+        },
+        {
+          "game": "Colorado Rockies @ Athletics",
+          "sport": "MLB",
+          "pick": "Athletics",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Colorado Rockies 4, Athletics 6",
+          "pnl": "+$1.64",
+          "why_picked": "Watchlist pick: Gage Jump FIP 2.59 / xFIP 4.39 | K/9: 6.5",
+          "what_happened": "Oakland won 6-4 over Colorado, backing the home team model signal in a clean win.",
+          "signals": [
+            "ERA Trap \u2014 Jump",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.7%)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 1.7
+        },
+        {
+          "game": "St. Louis Cardinals @ Minnesota Twins",
+          "sport": "MLB",
+          "pick": "Under 9.5",
+          "bet_type": "Total",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "St. Louis Cardinals 8, Minnesota Twins 9",
+          "pnl": "-$1.61",
+          "why_picked": "Watchlist pick: Joe Ryan FIP 2.82 / xFIP 3.09 | K/9: 9.9",
+          "what_happened": "St. Louis and Minnesota combined for 17 runs (8-9) \u2014 well over the 9.5 total, making this a clear miss.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 3.2% against us",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -3.2
+        },
+        {
+          "game": "Houston Astros @ Kansas City Royals",
+          "sport": "MLB",
+          "pick": "Kansas City Royals +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Houston Astros 10, Kansas City Royals 8",
+          "pnl": "-$2.45",
+          "why_picked": "Watchlist pick: Luinder Avila FIP 4.07 / xFIP 4.24 | K/9: 8.1",
+          "what_happened": "Houston hammered Kansas City 10-8; the Royals lost by 2, just missing the +1.5 cover.",
+          "signals": [
+            "ERA Trap \u2014 Avila",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.6%), lost on variance",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 1.6
+        },
+        {
+          "game": "Colorado Rockies @ Athletics",
+          "sport": "MLB",
+          "pick": "Colorado Rockies +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Colorado Rockies 4, Athletics 6",
+          "pnl": "-$1.51",
+          "why_picked": "Watchlist pick: Gage Jump FIP 2.59 / xFIP 4.39 | K/9: 6.5",
+          "what_happened": "Oakland beat Colorado 6-4 and covered; Rockies lost by 2, failing to cover +1.5.",
+          "signals": [
+            "ERA Trap \u2014 Jump",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 2.9% against us",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -2.9
+        },
+        {
+          "game": "Philadelphia Phillies @ Milwaukee Brewers",
+          "sport": "MLB",
+          "pick": "Over 7.5",
+          "bet_type": "Total",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Philadelphia Phillies 0, Milwaukee Brewers 6",
+          "pnl": "-$1.12",
+          "why_picked": "Watchlist pick: Jacob Misiorowski FIP 1.74 / xFIP 2.07 | K/9: 13.4",
+          "what_happened": "Milwaukee's 6-0 shutout meant only 6 total runs \u2014 well under the 7.5 total.",
+          "signals": [
+            "ERA Trap \u2014 Misiorowski",
+            "Park Factor",
+            "Injury Impact",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 2.5% against us",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -2.5
+        },
+        {
+          "game": "St. Louis Cardinals @ Minnesota Twins",
+          "sport": "MLB",
+          "pick": "St. Louis Cardinals +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "St. Louis Cardinals 8, Minnesota Twins 9",
+          "pnl": "+$0.74",
+          "why_picked": "Watchlist pick: Joe Ryan FIP 2.82 / xFIP 3.09 | K/9: 9.9",
+          "what_happened": "Cardinals covered the spread, losing 8-9 by just one run in a high-scoring game.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (0.3%, noise range)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.3
+        },
+        {
+          "game": "San Diego Padres @ Baltimore Orioles",
+          "sport": "MLB",
+          "pick": "Under 9.5",
+          "bet_type": "Total",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "San Diego Padres 3, Baltimore Orioles 7",
+          "pnl": "-$0.54",
+          "why_picked": "Watchlist pick: Shane Baz FIP 4.01 / xFIP 4.06 | K/9: 7.7",
+          "what_happened": "Baltimore-San Diego combined for 10 runs (7-3), barely going over the 9.5 total.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor",
+            "Platoon Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 1.4% against us",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -1.4
+        },
+        {
+          "game": "Toronto Tempo @ Washington Mystics",
+          "sport": "WNBA",
+          "pick": "Washington Mystics",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Toronto Tempo 85, Washington Mystics 86",
+          "pnl": "+$0.00",
+          "why_picked": "Watchlist pick: Home court: Washington Mystics (+2%)",
+          "what_happened": "Washington edged Toronto 86-85 in a tight WNBA game \u2014 the market (CLV -2.9%) didn't favor this pick but it squeaked through.",
+          "signals": [
+            "Model Edge"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved 2.9% against this pick",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -2.9
+        },
+        {
+          "game": "Golden State Valkyries @ Seattle Storm",
+          "sport": "WNBA",
+          "pick": "Golden State Valkyries",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Golden State Valkyries 76, Seattle Storm 72",
+          "pnl": "+$0.00",
+          "why_picked": "Watchlist pick: Home court: Seattle Storm (+2%)",
+          "what_happened": "Golden State held off Seattle 76-72 in a competitive WNBA matchup.",
+          "signals": [
+            "Model Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (0.6%, noise range)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.6
+        },
+        {
+          "game": "Bosnia & Herzegovina @ Canada",
+          "sport": "WC",
+          "pick": "Canada",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "why_picked": "Watchlist pick: Host nation advantage: Canada (+60 Elo)",
+          "what_happened": "World Cup match result pending.",
+          "signals": [
+            "Model Edge"
+          ],
+          "signal_verdict": "PENDING \u2014 CLV -0.2%",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.2
+        },
+        {
+          "game": "Paraguay @ USA",
+          "sport": "WC",
+          "pick": "Paraguay +0.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Paraguay 1, United States 4",
+          "pnl": "-$0.00",
+          "why_picked": "Watchlist pick: Host nation advantage: USA (+60 Elo)",
+          "what_happened": "USA dominated Paraguay 4-1; Paraguay needed a draw to cover +0.5 but fell short.",
+          "signals": [
+            "Model Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (0.7%)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.7
+        },
+        {
+          "game": "Paraguay @ USA",
+          "sport": "WC",
+          "pick": "Paraguay",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Paraguay 1, United States 4",
+          "pnl": "-$0.00",
+          "why_picked": "Watchlist pick: Host nation advantage: USA (+60 Elo)",
+          "what_happened": "USA won the World Cup match 4-1; Paraguay was overmatched.",
+          "signals": [
+            "Model Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.5%)",
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.5
+        }
+      ],
+      "patterns": [
+        "HIGH confidence singles: 2-3 (all five budget picks rated HIGH; two won, three lost)",
+        "MLB moneylines: 2-3 (BAL won decisively, NYY/ATL/SF lost)",
+        "MLB spreads: 1-0 (LAA +1.5 covered; model ERA trap signal aligned)",
+        "Parlays: 1-1 (BAL+MIL won cleanly; NYY+SF both legs failed)",
+        "Watchlist MLB totals: 2-2 (Under 14.5 hit; Under 9.5 and Over 7.5 missed; STL/MIN went 17 total)",
+        "World Cup: 0-2 settled + 1 PENDING (Paraguay double failed badly; USA won 4-1)",
+        "WNBA: 2-0 (both picks covered; Mystics win was a 1-point squeaker with negative CLV)"
+      ],
+      "model_observations": [
+        "ERA Trap \u2014 McClanahan: 1-0 with CLV +0.1% \u2014 TB's ML was correctly flagged as overpriced; the spread play on LAA capitalized on this signal.",
+        "Pitcher Stats \u2014 Roupp vs Assad: Giants lost despite CLV +1.6% \u2014 Assad (ERA 4.73, FIP 4.38) had an unexpectedly dominant outing; one-night variance overrode solid signal.",
+        "Injury Impact signal: 1-4 across budget picks with injury flags \u2014 market appears to already price in minor injury drags (-1.2% to -2.5%); signal adding noise rather than edge at current thresholds.",
+        "Platoon Edge: 0-2 on budget picks (CLV \u22120.05%) \u2014 the signal is not generating market-beating insights in current sample; worth monitoring for multi-week trend.",
+        "Yankees ML (CLV \u22121.7%): clearest bad pick of the night \u2014 market moved against us AND result was a loss. Judge absence compounded the platoon edge assumption.",
+        "Oakland Athletics ML (watchlist): WON with CLV +1.7% \u2014 strongest single CLV value tonight; model correctly identified value before the market moved.",
+        "STL/MIN Under 9.5 (watchlist): Lost with CLV \u22123.2% \u2014 strong market signal against the pick was confirmed; totals in high-variance matchups deserve extra CLV scrutiny."
+      ]
     }
   ]
 }
