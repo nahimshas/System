@@ -18,6 +18,7 @@ from jinja2 import Environment, FileSystemLoader
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
     MAX_SINGLE_BETS, MAX_PROPS_PER_SPORT, MIN_EDGE,
+    PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR,
 )
 from src.data.odds_client import get_last_api_error, get_api_credits
 from src.models.parlay_builder import build_parlays
@@ -126,6 +127,28 @@ def _clv_gate_safe(rec) -> bool:
                 f"excluded — {reason}"
             )
         return allowed
+    except Exception:
+        return True
+
+
+def _pwa_display_eligible(rec) -> bool:
+    """
+    DISPLAY/BUDGET gate for the PWA + today's card. Returns False to HIDE a pick
+    from what the user sees and bets — NEVER from the shadow/decision logs, which
+    keep recording every candidate for analysis.
+
+    Hides: structurally-bad markets (PWA_HIDDEN_MARKETS — totals/draws, negative
+    CLV everywhere) and deep-longshot picks the model rates below
+    PWA_MODEL_PROB_FLOOR (the tail where the model is most overconfident, CLV is
+    least reliable, and realized ROI is negative). Fail-open on any error.
+    """
+    try:
+        if (getattr(rec, "bet_type", "") or "") in PWA_HIDDEN_MARKETS:
+            return False
+        mp = getattr(rec, "model_prob", None)
+        if mp is not None and float(mp) < PWA_MODEL_PROB_FLOOR:
+            return False
+        return True
     except Exception:
         return True
 
@@ -565,6 +588,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 all_singles_raw.extend(
                     r for r in qualifying
                     if _clv_gate_safe(r) and getattr(r.sizing, "num_contracts", 0) > 0
+                    and _pwa_display_eligible(r)
                 )
         else:
             own_display[slug] = qualifying    # IPL / WNBA / MLS → own tile (same MIN_EDGE gate)
@@ -683,7 +707,11 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         if _dkey not in _display_seen:
             _display_seen.add(_dkey)
             _display_deduped.append(_r)
-    fresh_singles_display = [_to_dict_with_eff(r) for r in _display_deduped]
+    # PWA display gate: hide totals/draws + sub-floor longshots from the cards
+    # (still fully recorded in the shadow + decision logs above — display only).
+    fresh_singles_display = [
+        _to_dict_with_eff(r) for r in _display_deduped if _pwa_display_eligible(r)
+    ]
 
     # Display props — all positive-EV props (no MIN_PROP_EDGE gate).
     fresh_props_display = [prop_to_dict(p) for p in props_display_raw]
@@ -692,8 +720,12 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # IPL pending section will overwrite fresh_own_displays["ipl"] below.
     # Cap non-IPL own-tile sports at MAX_SINGLE_BETS (top 5) — without this cap
     # WNBA/MLS can produce 40+ picks that clutter their tile sections.
+    # Own-tile display gate: same PWA filter (totals/draws + sub-floor longshots
+    # hidden from the WC/MLS/WNBA/IPL tabs) applied BEFORE the cap so hidden picks
+    # don't waste a tile slot. `own_display` itself stays full for the logs.
     fresh_own_displays: dict[str, list] = {
-        slug: [_to_dict_with_eff(r) for r in sorted(raw, key=_slot_sort_key)]
+        slug: [_to_dict_with_eff(r)
+               for r in sorted(raw, key=_slot_sort_key) if _pwa_display_eligible(r)]
               [:MAX_SINGLE_BETS if slug != "ipl" else len(raw)]
         for slug, raw in own_display.items()
     }

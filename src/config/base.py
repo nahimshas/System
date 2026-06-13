@@ -60,6 +60,18 @@ MAX_PARLAYS: int = 2                  # max 2-leg parlay recommendations
 MAX_PROPS_PER_SPORT: int = 6          # max props per sport (NBA/MLB); mirrors analyzer cap
 MIN_PARLAY_LEG_EDGE: float = 0.025   # each parlay leg must have ≥ 2.5% edge
 
+# ── Display / today's-card gating (DISPLAY-ONLY — never affects logging) ──────
+# What the PWA shows and the today's card bets is filtered by these; the shadow
+# log and decision log keep recording EVERY candidate for analysis regardless.
+#   • PWA_HIDDEN_MARKETS — markets the model is structurally bad at (negative CLV
+#     everywhere). Gated from display + budget, still fully logged.
+#   • PWA_MODEL_PROB_FLOOR — hide picks the model itself rates below this to win.
+#     The deep-longshot tail is where the model is most overconfident and CLV is
+#     least reliable, and realized ROI there is negative. 0.38 keeps the proven
+#     40–50% bucket while cutting the <40% longshots. Still logged.
+PWA_HIDDEN_MARKETS: frozenset = frozenset({"Total", "Draw"})
+PWA_MODEL_PROB_FLOOR: float = 0.38
+
 # --- Schedule load (7-day fatigue) ---
 # Applied when a team has played many games in the last 7 days
 SCHEDULE_LOAD_THRESHOLDS = {5: 0.01, 6: 0.02, 7: 0.03}  # games_in_7d → penalty
