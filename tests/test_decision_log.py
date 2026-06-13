@@ -57,6 +57,24 @@ def test_records_both_sides_and_made_flag(tmp_path, monkeypatch):
     assert entries["2026-06-13|MLB|Miami Marlins @ Atlanta Braves|Total|over"]["line"] == 8.5
 
 
+def test_raw_prob_and_edge_persisted_both_sides(tmp_path, monkeypatch):
+    monkeypatch.setattr(dl, "DECISION_LOG_DIR", tmp_path)
+    d = date(2026, 6, 13)
+    cands = [
+        {"market_type": "Moneyline", "side": "Braves", "model_prob": 0.62,
+         "model_prob_raw": 0.71, "market_prob": 0.55, "made": True},
+        {"market_type": "Moneyline", "side": "Marlins", "model_prob": 0.38,
+         "model_prob_raw": 0.29, "market_prob": 0.45, "made": False},  # rejected w/ raw
+    ]
+    dl.record_candidates(d, "MLB", "Marlins @ Braves", _future_ct(), "Braves", "Marlins", cands)
+    e = dl._load_shard(dl._shard_path(d))["entries"]
+    home = e["2026-06-13|MLB|Marlins @ Braves|Moneyline|Braves"]
+    away = e["2026-06-13|MLB|Marlins @ Braves|Moneyline|Marlins"]
+    assert home["model_prob_raw"] == 0.71 and abs(home["raw_edge"] - 0.16) < 1e-9
+    # rejected side also carries raw prob + raw edge
+    assert away["model_prob_raw"] == 0.29 and abs(away["raw_edge"] - (-0.16)) < 1e-9
+
+
 def test_confidence_persisted(tmp_path, monkeypatch):
     monkeypatch.setattr(dl, "DECISION_LOG_DIR", tmp_path)
     d = date(2026, 6, 13)
