@@ -919,6 +919,24 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         away_injury_fired=_lv.get("away_injury_capped", False),
         stats_avail=stats_available,
     )
+    _stamp_decision(game, _min, {
+        "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
+        "base_margin": _lv.get("base_margin"), "effective_margin": _lv.get("effective_margin"),
+        "expected_total": _lv.get("blended_total"),
+        "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
+        "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
+        "playoff": _lv.get("playoff"), "stats_available": stats_available,
+    }, [
+        ("Moneyline", home, _lv.get("adjusted_home_prob"), _lv.get("market_home_prob"), None),
+        ("Moneyline", away, _lv.get("adjusted_away_prob"), _lv.get("market_away_prob"), None),
+        ("Spread", home, _lv.get("model_home_cover"), _lv.get("market_home_cover"), _lv.get("home_spread_line")),
+        ("Spread", away, _lv.get("model_away_cover"), _lv.get("market_away_cover"),
+         (-_lv["home_spread_line"]) if _lv.get("home_spread_line") is not None else None),
+        ("Total", "over", _lv.get("model_over_prob"), _lv.get("market_over_prob"), _lv.get("market_line")),
+        ("Total", "under",
+         (1.0 - _lv["model_over_prob"]) if _lv.get("model_over_prob") is not None else None,
+         _lv.get("market_under_prob"), _lv.get("market_line")),
+    ])
     return recs
 
 
@@ -2258,6 +2276,24 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
         away_injury_fired=_lv.get("away_injury_capped", False),
         stats_avail=stats_available,
     )
+    _stamp_decision(game, _min, {
+        "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
+        "base_margin": _lv.get("base_margin"), "effective_margin": _lv.get("effective_margin"),
+        "expected_total": _lv.get("blended_total"),
+        "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
+        "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
+        "playoff": _lv.get("playoff"), "stats_available": stats_available,
+    }, [
+        ("Moneyline", home, _lv.get("adjusted_home_prob"), _lv.get("market_home_prob"), None),
+        ("Moneyline", away, _lv.get("adjusted_away_prob"), _lv.get("market_away_prob"), None),
+        ("Spread", home, _lv.get("model_home_cover"), _lv.get("market_home_cover"), _lv.get("home_spread_line")),
+        ("Spread", away, _lv.get("model_away_cover"), _lv.get("market_away_cover"),
+         (-_lv["home_spread_line"]) if _lv.get("home_spread_line") is not None else None),
+        ("Total", "over", _lv.get("model_over_prob"), _lv.get("market_over_prob"), _lv.get("market_line")),
+        ("Total", "under",
+         (1.0 - _lv["model_over_prob"]) if _lv.get("model_over_prob") is not None else None,
+         _lv.get("market_under_prob"), _lv.get("market_line")),
+    ])
     return recs
 
 
@@ -2702,6 +2738,24 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
         away_injury_fired=_lv.get("away_injury_capped", False),
         stats_avail=stats_available,
     )
+    _stamp_decision(game, _min, {
+        "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
+        "base_margin": _lv.get("base_margin"), "effective_margin": _lv.get("effective_margin"),
+        "expected_total": _lv.get("blended_total"),
+        "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
+        "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
+        "playoff": _lv.get("playoff"), "stats_available": stats_available,
+    }, [
+        ("Moneyline", home, _lv.get("adjusted_home_prob"), _lv.get("market_home_prob"), None),
+        ("Moneyline", away, _lv.get("adjusted_away_prob"), _lv.get("market_away_prob"), None),
+        ("Spread", home, _lv.get("model_home_cover"), _lv.get("market_home_cover"), _lv.get("home_spread_line")),
+        ("Spread", away, _lv.get("model_away_cover"), _lv.get("market_away_cover"),
+         (-_lv["home_spread_line"]) if _lv.get("home_spread_line") is not None else None),
+        ("Total", "over", _lv.get("model_over_prob"), _lv.get("market_over_prob"), _lv.get("market_line")),
+        ("Total", "under",
+         (1.0 - _lv["model_over_prob"]) if _lv.get("model_over_prob") is not None else None,
+         _lv.get("market_under_prob"), _lv.get("market_line")),
+    ])
     return recs
 
 
@@ -3015,6 +3069,15 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
         hardcap_fired=_lv.get("_ipl_hardcap_fired", False),
         stats_avail=stats_available,
     )
+    _stamp_decision(game, _min, {
+        "base_home_prob": _lv.get("base_home_prob"), "adj": _lv.get("adj"),
+        "stats_available": stats_available,
+    }, [
+        ("Moneyline", home, _lv.get("adjusted_home_prob"), _lv.get("market_home_prob"), None),
+        ("Moneyline", away,
+         (1.0 - _lv["adjusted_home_prob"]) if _lv.get("adjusted_home_prob") is not None else None,
+         _lv.get("market_away_prob"), None),
+    ])
     return recs
 
 
@@ -3296,6 +3359,15 @@ def analyze_wnba_game(
         hardcap_fired=_lv.get("_wnba_hardcap_fired", False),
         stats_avail=stats_available,
     )
+    _stamp_decision(game, _min, {
+        "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
+        "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
+        "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
+        "stats_available": stats_available,
+    }, [
+        ("Moneyline", home_raw, _lv.get("adj_home_prob"), _lv.get("market_home_prob"), None),
+        ("Moneyline", away_raw, _lv.get("adj_away_prob"), _lv.get("market_away_prob"), None),
+    ])
     return recs
 
 
@@ -3682,6 +3754,26 @@ def analyze_mls_game(
         hardcap_fired=False,  # MLS uses Poisson — no hard prob cap currently
         stats_avail=stats_available,
     )
+    _stamp_decision(game, _min, {
+        "lam_home": _lv.get("lam_home"), "lam_away": _lv.get("lam_away"),
+        "elo_diff": _lv.get("elo_diff"), "supremacy": _lv.get("supremacy"),
+        "r_home": _lv.get("r_home"), "r_away": _lv.get("r_away"),
+        "stats_available": stats_available,
+    }, [
+        ("Moneyline", home_raw, _lv.get("p_home_win"), _lv.get("market_home_prob"), None),
+        ("Moneyline", away_raw, _lv.get("p_away_win"), _lv.get("market_away_prob"), None),
+        ("Draw", "draw", _lv.get("p_draw"), _lv.get("market_draw_prob"), None),
+        ("Total", "over", _lv.get("model_over"), _lv.get("market_over_prob"),
+         _lv.get("line") if _lv.get("line") is not None else _lv.get("market_line")),
+        ("Total", "under",
+         _lv.get("model_under") if _lv.get("model_under") is not None
+         else ((1.0 - _lv["model_over"]) if _lv.get("model_over") is not None else None),
+         _lv.get("market_under_prob"),
+         _lv.get("line") if _lv.get("line") is not None else _lv.get("market_line")),
+        ("Spread", home_raw, _lv.get("model_home_sp"), _lv.get("market_home_sp"),
+         _lv.get("home_disp_line") if _lv.get("home_disp_line") is not None else _lv.get("home_point")),
+        ("Spread", away_raw, _lv.get("model_away_sp"), _lv.get("market_away_sp"), _lv.get("away_disp_line")),
+    ])
     return recs
 
 
@@ -4007,4 +4099,24 @@ def analyze_wc_game(
         hardcap_fired=False,  # WC uses Poisson — no hard prob cap
         stats_avail=stats_available,
     )
+    _stamp_decision(game, _min, {
+        "lam_home": _lv.get("lam_home"), "lam_away": _lv.get("lam_away"),
+        "elo_diff": _lv.get("elo_diff"), "supremacy": _lv.get("supremacy"),
+        "r_home": _lv.get("r_home"), "r_away": _lv.get("r_away"),
+        "host_bonus": _lv.get("host_bonus"), "stats_available": stats_available,
+    }, [
+        ("Moneyline", home_raw, _lv.get("p_home_win"), _lv.get("market_home_prob"), None),
+        ("Moneyline", away_raw, _lv.get("p_away_win"), _lv.get("market_away_prob"), None),
+        ("Draw", "draw", _lv.get("p_draw"), _lv.get("market_draw_prob"), None),
+        ("Total", "over", _lv.get("model_over"), _lv.get("market_over_prob"),
+         _lv.get("line") if _lv.get("line") is not None else _lv.get("market_line")),
+        ("Total", "under",
+         _lv.get("model_under") if _lv.get("model_under") is not None
+         else ((1.0 - _lv["model_over"]) if _lv.get("model_over") is not None else None),
+         _lv.get("market_under_prob"),
+         _lv.get("line") if _lv.get("line") is not None else _lv.get("market_line")),
+        ("Spread", home_raw, _lv.get("model_home_sp"), _lv.get("market_home_sp"),
+         _lv.get("home_disp_line") if _lv.get("home_disp_line") is not None else _lv.get("home_point")),
+        ("Spread", away_raw, _lv.get("model_away_sp"), _lv.get("market_away_sp"), _lv.get("away_disp_line")),
+    ])
     return recs
