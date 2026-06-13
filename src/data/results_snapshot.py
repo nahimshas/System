@@ -62,7 +62,12 @@ def _fetch_events(sport: str, game_date: date) -> list:
     path = ALL_ESPN_PATHS.get(sport)
     if not path:
         return []
-    date_str = game_date.strftime("%Y%m%d")
+    # Soccer is ESPN-dated by UTC, so an evening-Pacific match rolls into the
+    # next date — query a 2-day window so those games settle (see outcome_checker).
+    if sport in ("MLS", "WC"):
+        date_str = f"{game_date.strftime('%Y%m%d')}-{(game_date + timedelta(days=1)).strftime('%Y%m%d')}"
+    else:
+        date_str = game_date.strftime("%Y%m%d")
     url = f"{ESPN_BASE}/{path}/scoreboard"
     try:
         r = requests.get(url, params={"dates": date_str}, timeout=20)

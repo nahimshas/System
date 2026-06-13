@@ -8,14 +8,23 @@
   // Always fetch the report's own date so refreshing after midnight still
   // finds the right games (ESPN default scoreboard returns today's games only).
   var _espnDate = TODAY_DATE.replace(/-/g, "");   // "2026-04-27" → "20260427"
+  // Evening Pacific games roll into the NEXT UTC date, and ESPN dates soccer
+  // games by UTC — so a 9pm PDT World Cup match is filed under tomorrow. Query
+  // a 2-day window (today–tomorrow) for soccer so those boundary games are found.
+  var _espnDateNext = (function () {
+    var d = new Date(TODAY_DATE + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10).replace(/-/g, "");
+  })();
+  var _soccerDates = _espnDate + "-" + _espnDateNext;
   var ESPN = {
     NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=" + _espnDate,
     MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate,
     NHL: "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=" + _espnDate,
     NFL: "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=" + _espnDate,
     WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate,
-    MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _espnDate,
-    WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _espnDate
+    MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _soccerDates,
+    WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _soccerDates
   };
 
   // ── Local timezone formatting ────────────────────────────────────────────

@@ -1339,7 +1339,13 @@ def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
     if not path:
         return {}
 
-    date_str = game_date.strftime("%Y%m%d")
+    # Soccer (MLS/WC) is dated by UTC on ESPN, so an evening-Pacific match rolls
+    # into the next ESPN date. Query a 2-day window so those boundary games are
+    # found and can settle (otherwise the pick sits PENDING forever).
+    if sport in ("MLS", "WC"):
+        date_str = f"{game_date.strftime('%Y%m%d')}-{(game_date + timedelta(days=1)).strftime('%Y%m%d')}"
+    else:
+        date_str = game_date.strftime("%Y%m%d")
     url = f"{ESPN_BASE}/{path}/scoreboard"
     try:
         r = requests.get(url, params={"dates": date_str}, timeout=15)
