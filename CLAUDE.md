@@ -79,6 +79,7 @@ Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_ga
 | `src/state/clv_governor.py` | Phase-gated budget gating per (sport, market_type) by average CLV. `clv_gate(rec)`, `persist_state()` → `state/clv_state.json` |
 | `backfill_clv.py` + `clv_backfill.yml` | Throttled historical CLV backfill (workflow button, ~900 credits/run, idempotent — run until "Nothing left to backfill") |
 | `state/clv_state.json` | Per-market CLV snapshot — read by the CLV panels (classic report + PWA Analytics tab) |
+| `src/state/decision_log.py` | Full candidate + feature archive (both sides of every market, made + rejected) → `state/decision_log/YYYY-MM.json`. Pure analysis layer, separate from the shadow log. `record_candidates()`, `update_decision_log_clv` (in closing_lines), `settle_decision_from_scores()`. See "Decision log" below — **has a maintenance rule**. |
 | `docs/debrief_routine_prompt.md` | Canonical CLV-aware nightly debrief routine prompt (credential placeholders — real tokens live only in the user's routine) |
 | `docs/DEVELOPMENT_PLAN.md` | Feature roadmap + model change log |
 
@@ -133,6 +134,26 @@ CLV = `market_prob_at_close − market_prob_at_first_pick` (positive = beat the 
 **Consistency rule:** closing probs use the SAME no-vig consensus math as the morning pipeline. Never source closing lines from web search or any other feed — apples-to-apples or the CLV signal is corrupted.
 
 **Workflow commit pattern:** in any workflow that commits state, the order MUST be `git add` → `git commit` → `git pull --rebase` → `git push`. Pull-before-add fails with "unstaged changes" whenever the debrief routine commits concurrently (bit both new workflows on day one).
+
+---
+
+## Decision log (June 2026) — full candidate + feature archive
+
+The "log everything so we can improve later" layer. `src/state/decision_log.py` + `state/decision_log/YYYY-MM.json`. **SEPARATE from the shadow log** (which feeds calibration/caps and must stay clean) — the decision log is a pure analysis archive that NEVER touches display or calibration. Month-sharded, idempotent (stable key `date|sport|game|market|side`), game-locked, exception-safe — same safety patterns as the shadow log.
+
+Captures, for EVERY analyzed game, BOTH sides of EVERY market (made **and rejected**) + the model inputs behind each probability. This is what makes exhaustive CLV analysis possible: measuring CLV/outcome for picks the model REJECTED, segmented by any input.
+
+| Concept | Where | Quick reference |
+|---|---|---|
+| Capture | `edge_finder._stamp_decision(game, min_edge, features, markets, recs)` | Called before `return recs` in every analyzer. `markets` = 6-tuples `(market_type, side, model_prob_POST, model_prob_RAW, market_prob, line)`. Stamps `game["_decision"]={"features":{...},"candidates":[...]}`. |
+| Record | `main.py` loop → `decision_log.record_candidates(...)` | Per analyzed game; preserves `market_prob_at_first_pick` across re-runs. |
+| Candidate CLV | `closing_lines.update_decision_log_clv()` | Mirrors `update_shadow_log_clv` over the decision log. `_SNAPSHOT_CACHE` reuses the shadow pass's snapshots → overlapping waves cost 0 extra credits. Runs after the shadow CLV pass in `main.py` + `results_snapshot.py`. |
+| Candidate outcomes | `decision_log.settle_decision_from_scores(today)` | Grades both sides from ESPN final scores. `_grade_candidate()` uses structured market/side/line; soccer ML draw = LOSS; soccer uses 90-min score. IPL skipped (no reliable historical score). Wired in `main.py` after shadow settlement. |
+| Row schema | `state/decision_log/*.json` | market_prob (open/last/close), model_prob (post-cap), model_prob_raw (pre-cap, both sides), edge, raw_edge, made, line, final_confidence_label (made only), clv, outcome, + features dict. |
+
+**⚠️ MAINTENANCE RULE — part of "done" for ANY model change:** whenever you add or change a model input/variable/signal for any sport or bet type, ALSO add it to that sport's `_stamp_decision(...)` `features` dict. Any NEW market/bet type must be added to that sport's `candidates` list (both sides) INCLUDING its pre-cap raw prob as the 4th tuple element. Skip this and the input/market becomes permanently invisible to future analysis (no backfill possible — a feature only has history from the day it's wired in). Decision-log data starts Jun 13 2026; nothing before exists.
+
+**Re-run safety:** stable keys mean every mode (reset / code-only / full re-run) UPDATES rows, never duplicates. `code_only` returns before any analysis → touches neither log. `reset_state` deletes only `state/picks_TODAY.json` (not the logs). `market_prob_at_first_pick` is preserved across all re-runs, and started games are frozen (game-lock + the odds API dropping them), so the at-pick-time snapshot is never corrupted.
 
 ---
 
