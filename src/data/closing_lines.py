@@ -137,14 +137,27 @@ def _parse_iso(ts: str) -> Optional[datetime]:
 # Historical API fetch
 # ---------------------------------------------------------------------------
 
+# Process-level snapshot cache. The shadow-log and decision-log CLV passes run
+# back-to-back in the same process and request the SAME (sport, wave, markets)
+# snapshots. Caching means the decision pass reuses what the shadow pass already
+# paid for — overlapping waves cost ZERO extra Odds API credits. Only waves
+# unique to the decision log (rejected-only games) incur a fetch.
+_SNAPSHOT_CACHE: Dict[Tuple[str, str, Tuple[str, ...]], Optional[List[Dict]]] = {}
+
+
 def _fetch_historical_snapshot(
     sport_key: str, snapshot_iso: str, market_keys: List[str]
 ) -> Optional[List[Dict]]:
     """One historical odds snapshot for a sport at (or just before) a timestamp.
 
     The API returns the latest archived snapshot at or before `date`, so
-    requesting the game's commence_time yields the closing snapshot.
+    requesting the game's commence_time yields the closing snapshot. Cached per
+    (sport, snapshot, markets) for the life of the process so the two CLV passes
+    don't double-spend credits on the same wave.
     """
+    ckey = (sport_key, snapshot_iso, tuple(sorted(set(market_keys))))
+    if ckey in _SNAPSHOT_CACHE:
+        return _SNAPSHOT_CACHE[ckey]
     data = _get(
         f"/historical/sports/{sport_key}/odds",
         {
@@ -154,9 +167,16 @@ def _fetch_historical_snapshot(
             "date": snapshot_iso,
         },
     )
-    if not data or not isinstance(data, dict):
-        return None
-    return data.get("data") or []
+    result = (data.get("data") or []) if (data and isinstance(data, dict)) else None
+    # Only cache successful fetches — a None (API error) should be retried.
+    if result is not None:
+        _SNAPSHOT_CACHE[ckey] = result
+    return result
+
+
+def snapshot_cache_hit(sport_key: str, snapshot_iso: str, market_keys: List[str]) -> bool:
+    """True if this snapshot is already cached (i.e. fetching it costs 0 credits)."""
+    return (sport_key, snapshot_iso, tuple(sorted(set(market_keys)))) in _SNAPSHOT_CACHE
 
 
 def _find_event(events: List[Dict], home: str, away: str,
@@ -338,6 +358,30 @@ def _closing_prob_for_entry(event: Dict, entry: Dict) -> Optional[Dict[str, Any]
     return None
 
 
+def _closing_prob_for_decision(event: Dict, entry: Dict) -> Optional[Dict[str, Any]]:
+    """Closing probability for a DECISION-log candidate row.
+
+    Decision rows carry `side` + `line` directly (no `pick` string to parse), so
+    this dispatches straight to the same consensus extractors used for the shadow
+    log — keeping candidate CLV apples-to-apples with made-pick CLV.
+    """
+    mt = entry.get("market_type", "")
+    side = entry.get("side", "")
+    line = entry.get("line")
+    sport = (entry.get("sport") or "").upper()
+
+    if mt in ("Moneyline", "Draw"):
+        prob = _closing_ml_prob(event, side, sport)
+        return {"prob": prob, "close_point": None} if prob is not None else None
+    if mt == "Spread":
+        res = _closing_spread_prob(event, side, line)
+        return {"prob": res[0], "close_point": res[1]} if res else None
+    if mt == "Total":
+        res = _closing_total_prob(event, side, line)
+        return {"prob": res[0], "close_point": res[1]} if res else None
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Shadow log scan + stamp (the self-healing core)
 # ---------------------------------------------------------------------------
@@ -469,6 +513,114 @@ def update_shadow_log_clv(
 
     except Exception as e:
         logger.error(f"CLV capture failed (non-fatal): {e}")
+        return summary
+
+
+# ---------------------------------------------------------------------------
+# Decision-log CLV — stamp closing prob on EVERY candidate (rejected too)
+# ---------------------------------------------------------------------------
+
+def update_decision_log_clv(
+    *,
+    max_credits: int = 400,
+    lookback_days: int = 7,
+    since: Optional[str] = None,
+) -> Dict[str, int]:
+    """Stamp `market_prob_at_close` + `clv` onto decision-log candidates.
+
+    Mirrors update_shadow_log_clv but over the decision log — so CLV is captured
+    for the picks the model REJECTED and the non-bet side of every market, not
+    just the made picks.
+
+    CREDITS: reuses the process-level snapshot cache. Run this RIGHT AFTER
+    update_shadow_log_clv in the same process and every wave the shadow pass
+    already fetched costs ZERO here; only waves unique to the decision log
+    (games where no pick was made) incur a fetch. Self-healing + idempotent.
+    Never raises. Returns {"stamped","credits_spent","waves","unmatched"}.
+    """
+    summary = {"stamped": 0, "credits_spent": 0, "waves": 0, "unmatched": 0}
+    try:
+        from src.state import decision_log as _dl
+        ddir = _dl.DECISION_LOG_DIR
+        if not ddir.exists():
+            return summary
+
+        now = datetime.now(timezone.utc)
+        floor = since or (now - timedelta(days=lookback_days)).date().isoformat()
+
+        loaded: Dict[Any, Dict] = {}
+        waves: Dict[Tuple[str, str], List[Tuple[Any, Dict]]] = defaultdict(list)
+        for shard_path in sorted(ddir.glob("*.json")):
+            shard = _dl._load_shard(shard_path)
+            loaded[shard_path] = shard
+            for entry in shard.get("entries", {}).values():
+                if entry.get("market_prob_at_close") is not None:
+                    continue
+                if entry.get("clv_fetch_attempts", 0) >= _MAX_FETCH_ATTEMPTS:
+                    continue
+                if (entry.get("date") or "") < floor:
+                    continue
+                sport = (entry.get("sport") or "").upper()
+                if sport not in _SPORT_KEYS:
+                    continue
+                ct = entry.get("commence_time", "")
+                ct_dt = _parse_iso(ct)
+                if ct_dt is None or ct_dt > now:
+                    continue
+                if entry.get("market_type") not in _MARKET_KEYS:
+                    continue
+                waves[_wave_key(sport, ct)].append((shard_path, entry))
+
+        if not waves:
+            return summary
+
+        ordered = sorted(waves.items(), key=lambda kv: kv[0][1], reverse=True)
+        modified: set = set()
+        for (sport, wave_iso), items in ordered:
+            market_keys = sorted({_MARKET_KEYS[e.get("market_type")] for _, e in items})
+            cached = snapshot_cache_hit(_SPORT_KEYS[sport], wave_iso, market_keys)
+            cost = 0 if cached else _HIST_COST_PER_MARKET * len(market_keys)
+            if summary["credits_spent"] + cost > max_credits:
+                break
+
+            events = _fetch_historical_snapshot(_SPORT_KEYS[sport], wave_iso, market_keys)
+            summary["credits_spent"] += cost
+            summary["waves"] += 1
+            if events is None:
+                continue
+
+            now_iso = datetime.now(timezone.utc).isoformat()
+            for shard_path, entry in items:
+                away, home = _split_game(entry.get("game", ""))
+                event = _find_event(events, home, away, entry.get("commence_time", ""))
+                res = _closing_prob_for_decision(event, entry) if event else None
+                if res is None:
+                    entry["clv_fetch_attempts"] = entry.get("clv_fetch_attempts", 0) + 1
+                    summary["unmatched"] += 1
+                    modified.add(shard_path)
+                    continue
+                open_prob = entry.get("market_prob_at_first_pick")
+                entry["market_prob_at_close"] = round(res["prob"], 4)
+                entry["clv"] = (
+                    round(res["prob"] - float(open_prob), 4)
+                    if open_prob is not None else None
+                )
+                entry["close_point"] = res["close_point"]
+                entry["clv_captured_at"] = now_iso
+                summary["stamped"] += 1
+                modified.add(shard_path)
+
+        for shard_path in modified:
+            _dl._save_shard_atomic(shard_path, loaded[shard_path])
+
+        logger.info(
+            f"Decision-log CLV: {summary['stamped']} stamped, "
+            f"{summary['unmatched']} unmatched, ~{summary['credits_spent']} credits "
+            f"({summary['waves']} wave(s); cache-shared with shadow pass)"
+        )
+        return summary
+    except Exception as e:
+        logger.error(f"Decision-log CLV failed (non-fatal): {e}")
         return summary
 
 
