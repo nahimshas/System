@@ -502,6 +502,28 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         ctx         = module.fetch_context(today_str, games)
         display_raw = module.analyze_games(games, ctx)
+
+        # Decision-log capture — archive EVERY evaluated candidate (both sides of
+        # every market, made or rejected) + the model inputs behind it, so CLV and
+        # outcomes can later be measured for rejected picks too. Analyzers stamp
+        # game["_decision"] = {"features": {...}, "candidates": [...]}; sports not
+        # yet wired simply have no _decision key. Fully non-fatal.
+        try:
+            from src.state.decision_log import record_candidates as _record_decision
+            for _g in games:
+                _dec = _g.get("_decision")
+                if not _dec or not _dec.get("candidates"):
+                    continue
+                _record_decision(
+                    run_date=today, sport=slug.upper(),
+                    game=f"{_g.get('away_team','')} @ {_g.get('home_team','')}",
+                    commence_time=_g.get("commence_time", ""),
+                    home_team=_g.get("home_team", ""), away_team=_g.get("away_team", ""),
+                    candidates=_dec["candidates"], features=_dec.get("features"),
+                )
+        except Exception as _dec_err:
+            logger.warning(f"Decision-log capture failed (non-fatal): {_dec_err}")
+
         # Honest confidence: downgrade HIGH picks whose calibrated edge no longer
         # clears the HIGH bar (overconfident markets like totals), so they don't
         # jump the confidence-first slot queue ahead of better-calibrated picks.

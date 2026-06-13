@@ -276,6 +276,35 @@ def _game_playoff(game: Optional[Dict], calendar_fallback) -> bool:
     return calendar_fallback()
 
 
+def _stamp_decision(game, min_edge, features, markets):
+    """
+    Assemble the FULL candidate set (both sides of every market) + the structured
+    model-input `features`, and stamp it onto game["_decision"] for the
+    decision_log archive. Purely diagnostic — never affects pick selection.
+
+    `markets` is an iterable of (market_type, side, model_prob, market_prob, line)
+    tuples. Sides with a missing probability are skipped. Fully exception-safe.
+    """
+    try:
+        cands = []
+        for mtype, side, mp, mk, line in markets:
+            if mp is None or mk is None:
+                continue
+            edge = float(mp) - float(mk)
+            cands.append({
+                "market_type": mtype,
+                "side": side,
+                "model_prob": round(float(mp), 4),
+                "market_prob": round(float(mk), 4),
+                "edge": round(edge, 4),
+                "made": edge >= min_edge,
+                "line": (round(float(line), 1) if line is not None else None),
+            })
+        game["_decision"] = {"features": features or {}, "candidates": cands}
+    except Exception:
+        pass
+
+
 def _is_nba_playoff(dt: Optional[datetime] = None) -> bool:
     """NBA playoffs: mid-April through mid-June. (Calendar FALLBACK — primary
     signal is the per-game season type; see _game_playoff.)"""
@@ -1801,6 +1830,52 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     _gpk = str(game.get("game_pk") or "")
     for _r in recs:
         _r.game_pk = _gpk
+
+    # ── Decision-log capture (diagnostic; never affects selection) ───────────
+    # Log BOTH sides of every market the model evaluated + the structured inputs
+    # behind the projection, so CLV/outcome can later be measured for the picks
+    # the model REJECTED too. Reads from locals() so block-local vars (spread /
+    # total only exist when those markets are offered) resolve safely to None.
+    try:
+        _hp = home_pitcher_stats or {}
+        _ap = away_pitcher_stats or {}
+        _feat = {
+            "expected_home_runs": _lv.get("expected_home_runs"),
+            "expected_away_runs": _lv.get("expected_away_runs"),
+            "run_diff": _lv.get("run_diff"),
+            "run_diff_capped": _lv.get("run_diff_capped"),
+            "park_factor": _lv.get("park_factor"),
+            "home_ops": _lv.get("home_ops"),
+            "away_ops": _lv.get("away_ops"),
+            "league_avg_runs": _lv.get("league_avg_runs"),
+            "home_inj": _lv.get("home_inj"),
+            "away_inj": _lv.get("away_inj"),
+            "home_bp_era": _lv.get("home_bp_era"),
+            "away_bp_era": _lv.get("away_bp_era"),
+            "home_sp_xfip": _hp.get("xfip"),
+            "away_sp_xfip": _ap.get("xfip"),
+            "home_sp_fip": _hp.get("fip"),
+            "away_sp_fip": _ap.get("fip"),
+            "home_sp_k9": _hp.get("k_per_9"),
+            "away_sp_k9": _ap.get("k_per_9"),
+            "playoff": _lv.get("playoff"),
+            "stats_available": stats_available,
+        }
+        _markets = [
+            ("Moneyline", home, _lv.get("model_home_prob"), _lv.get("market_home_prob"), None),
+            ("Moneyline", away, _lv.get("model_away_prob"), _lv.get("market_away_prob"), None),
+            ("Spread", home, _lv.get("model_home_cover"), _lv.get("market_home_cover"), _lv.get("home_spread_line")),
+            ("Spread", away, _lv.get("model_away_cover"), _lv.get("market_away_cover"),
+             (-_lv["home_spread_line"]) if _lv.get("home_spread_line") is not None else None),
+            ("Total", "over", _lv.get("model_over_prob"), _lv.get("market_over_prob"), _lv.get("market_line")),
+            ("Total", "under",
+             (1.0 - _lv["model_over_prob"]) if _lv.get("model_over_prob") is not None else None,
+             _lv.get("market_under_prob"), _lv.get("market_line")),
+        ]
+        _stamp_decision(game, _min, _feat, _markets)
+    except Exception:
+        pass
+
     return recs
 
 
