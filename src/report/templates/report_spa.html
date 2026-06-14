@@ -1399,7 +1399,8 @@
           <div class="stat-value {% if pa.all.avg_err and pa.all.avg_err > 0 %}green{% elif pa.all.avg_err and pa.all.avg_err < -1 %}red{% else %}teal{% endif %}" id="pa-avg-err">{% if pa.all.avg_err is not none %}{{ "%+.1f"|format(pa.all.avg_err) }}{% else %}—{% endif %}</div>
         </div>
       </div>
-      {% if pa.by_type %}
+      {% set pa_groups = pa.by_sport_type if pa.by_sport_type else {'': pa.by_type} %}
+      {% if pa_groups %}
       <table style="width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:12px;">
         <thead><tr style="color:var(--muted);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.05em;">
           <th style="text-align:left;padding:4px 0;">Prop Type</th>
@@ -1410,7 +1411,11 @@
           <th style="text-align:right;padding:4px 6px;">Avg Error</th>
         </tr></thead>
         <tbody>
-          {% for pt, stats in pa.by_type.items() %}
+          {% for sp, types in pa_groups.items() %}
+          {% if sp %}
+          <tr><td colspan="6" style="padding:10px 0 3px;font-weight:700;color:var(--blue);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">{{ sp }}</td></tr>
+          {% endif %}
+          {% for pt, stats in types.items() %}
           {% set hst = pa.hist_by_type.get(pt, {}) %}
           <tr style="border-top:1px solid var(--border);" data-prop-type="{{ pt }}" data-type-total="{{ hst.get('total', 0) }}" data-type-hits="{{ hst.get('hits', 0) }}">
             <td style="padding:5px 0;">{{ pt.replace(" Over (1+)", "").replace(" Over", "") }}</td>
@@ -1420,6 +1425,7 @@
             <td style="text-align:right;padding:5px 6px;color:var(--muted);">{{ stats.avg_actual }}</td>
             <td style="text-align:right;padding:5px 6px;font-weight:600;color:{% if stats.avg_err and stats.avg_err > 0 %}var(--green){% elif stats.avg_err and stats.avg_err < -1 %}var(--red){% else %}var(--muted){% endif %};">{% if stats.avg_err is not none %}{{ "%+.1f"|format(stats.avg_err) }}{% else %}—{% endif %}</td>
           </tr>
+          {% endfor %}
           {% endfor %}
         </tbody>
       </table>

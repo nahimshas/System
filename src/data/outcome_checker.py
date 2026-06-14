@@ -1120,12 +1120,33 @@ def load_prop_accuracy() -> Dict:
             by_sport[sp]      = _acc(subset)
             hist_by_sport[sp] = _acc(hist_subset)
 
+    # Prop types grouped UNDER each sport, for a sport-grouped accuracy table
+    # (so NBA points/rebounds/assists sit together, MLB strikeouts/hits together,
+    # instead of all prop types mixed). Per-type stats are identical to by_type
+    # (a prop type belongs to one sport), just nested by sport.
+    by_sport_type: Dict[str, Dict] = {}
+    for sp in seen_sports:
+        sp_records = [r for r in records if r.get("sport") == sp]
+        sp_types: list = []
+        for r in sp_records:
+            pt = r.get("prop_type", "")
+            if pt and pt not in sp_types:
+                sp_types.append(pt)
+        nested: Dict[str, Dict] = {}
+        for pt in sp_types:
+            sub = [r for r in sp_records if r.get("prop_type") == pt]
+            if sub:
+                nested[pt] = _acc(sub)
+        if nested:
+            by_sport_type[sp] = nested
+
     hist_all = _acc(hist_records)
 
     return {
         "total":         len(records),
         "all":           _acc(records),
         "by_type":       by_type,
+        "by_sport_type": by_sport_type,
         "by_conf":       by_conf,
         "by_sport":      by_sport,
         "recent":        records[-20:],   # last 20 for display in report

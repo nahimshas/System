@@ -1221,7 +1221,12 @@
           </tr>
         </thead>
         <tbody>
-          {% for pt, stats in pa.by_type.items() %}
+          {% set pa_groups = pa.by_sport_type if pa.by_sport_type else {'': pa.by_type} %}
+          {% for sp, types in pa_groups.items() %}
+          {% if sp %}
+          <tr><td colspan="6" style="padding:10px 0 3px;font-weight:700;color:var(--accent,#60a5fa);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">{{ sp }}</td></tr>
+          {% endif %}
+          {% for pt, stats in types.items() %}
           {% set hst = pa.hist_by_type.get(pt, {}) %}
           <tr style="border-top:1px solid var(--border);"
               data-prop-type="{{ pt }}"
@@ -1240,6 +1245,7 @@
               {% if stats.avg_err is not none %}{{ "%+.1f"|format(stats.avg_err) }}{% else %}—{% endif %}
             </td>
           </tr>
+          {% endfor %}
           {% endfor %}
         </tbody>
       </table>
