@@ -4353,13 +4353,13 @@
     },
     {
       "date": "2026-06-13",
-      "generated_at": "2026-06-14T06:01:32Z",
-      "headline": "0-0 on budget, 7 budget picks PENDING (snapshot timed out) \u2014 18 watchlist picks also pending. Results will resolve in morning run.",
-      "budget_record": "0-0",
-      "watchlist_record": "0-0",
-      "budget_pnl": 0.0,
-      "avg_budget_clv": null,
-      "snapshot_timeout": true,
+      "generated_at": "2026-06-14T06:13:47Z",
+      "headline": "1-6 on budget picks (-$19.17), avg CLV +0.58%; Knicks clinched NBA Finals in Game 5 (pick cashed); 4 MLB ML picks lost; watchlist went 11-7",
+      "budget_record": "1-6",
+      "watchlist_record": "11-7",
+      "budget_pnl": -19.17,
+      "avg_budget_clv": 0.58,
+      "snapshot_timeout": false,
       "picks": [
         {
           "game": "New York Knicks @ San Antonio Spurs",
@@ -4367,18 +4367,20 @@
           "pick": "New York Knicks +5.5",
           "bet_type": "Spread",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "Model projects a close game (65.4% win probability) with home advantage offset by Spurs injury concerns; Knicks covering +5.5 at 65.4% projected probability.",
-          "what_happened": "Result pending \u2014 game has not yet settled in the snapshot.",
+          "result": "WON",
+          "score": "New York Knicks 94, San Antonio Spurs 90",
+          "pnl": "+$5.71",
+          "clv_pct": -0.2,
+          "why_picked": "Knicks catching +5.5 points in NBA Finals Game 5 while model projected a 109-109 coin-flip; Spurs missing key rotation players (-2.3% impact) and playoff defensive intensity favored the Dogs.",
+          "what_happened": "Jalen Brunson erupted for 45 points, including 13 straight in the fourth quarter, as the Knicks won 94-90 to claim their first NBA championship in 53 years. Mikal Bridges and Josh Hart combined for 27 more; Victor Wembanyama had 19/14/5 blocks for San Antonio in a losing effort.",
           "signals": [
-            "Home Advantage",
-            "Playoffs",
-            "Injury Impact"
+            "Home Court \u2014 Spurs",
+            "Playoff Intensity",
+            "Injury Impact \u2014 Spurs",
+            "Even Projection"
           ],
-          "signal_verdict": "PENDING \u2014 result not yet available",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.2%, noise range)",
+          "key_insight": "Model's 109-109 projection yielded a perfect spread bet \u2014 picking +5.5 in a true coin-flip. Knicks winning outright validated the playoff-intensity edge.",
           "in_budget": true
         },
         {
@@ -4387,19 +4389,20 @@
           "pick": "Detroit Tigers",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "Tarik Skubal (FIP 2.13) vs Joey Cantillo (FIP 5.07) is a major pitcher mismatch favoring Detroit; Tigers 7-3 in last 10 games.",
-          "what_happened": "Result pending \u2014 game has not yet settled in the snapshot.",
+          "result": "LOST",
+          "score": "Detroit Tigers 1, Cleveland Guardians 3",
+          "pnl": "-$5.77",
+          "clv_pct": 0.4,
+          "why_picked": "Opposing starter Cantillo carried a 5.07 FIP vs 4.31 xFIP, Tigers on a 7-3 hot streak scoring 6.4 R/G, with schedule load flagged for both teams and model projecting Tigers 4.5-3.3.",
+          "what_happened": "Tarik Skubal returned from elbow surgery and Daniel Schneemann hit a two-run homer off him, but the Guardians' pitching staff held the Tigers to just 1 run. Jose Ramirez broke a bone in his left hand during the victory, clouding Cleveland's outlook going forward.",
           "signals": [
-            "Pitcher Profile \u2014 Cantillo",
-            "Pitcher Profile \u2014 Skubal",
+            "Pitcher Matchup",
             "Park Factor",
-            "Injury Impact"
+            "Schedule Load",
+            "Recent Form \u2014 Tigers"
           ],
-          "signal_verdict": "PENDING \u2014 result not yet available",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.4%)",
+          "key_insight": "Skubal (2.13 FIP) was always the dominant signal here \u2014 model bet against his opponent (Cantillo), not against Skubal. Tigers' recent hot form didn't translate when their ace-caliber ace is on the mound for the other team.",
           "in_budget": true
         },
         {
@@ -4408,19 +4411,20 @@
           "pick": "Miami Marlins",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "ERA trap on Pittsburgh's Lake Bachar (ERA 2.97 vs xFIP 3.23); Marlins 9-1 in last 10 and superior recent run production.",
-          "what_happened": "Result pending \u2014 game has not yet settled in the snapshot.",
+          "result": "LOST",
+          "score": "Miami Marlins 2, Pittsburgh Pirates 3",
+          "pnl": "-$4.77",
+          "clv_pct": 3.4,
+          "why_picked": "Marlins riding a 9-1 last-10 stretch (5.4 R/G), opposing Bubba Chandler carrying a 4.81 FIP, and schedule load on Pittsburgh \u2014 model projected Miami 4.4-3.9 in a pitcher-friendly park.",
+          "what_happened": "Pittsburgh eked out a 3-2 win in a tight pitching duel, ending Miami's hot streak at 9. Lake Bachar performed close to expectations (no dramatic ERA regression today) but the Marlins' offense went cold at the wrong moment.",
           "signals": [
-            "Pitcher Profile \u2014 Chandler",
-            "Pitcher Profile \u2014 Bachar",
-            "ERA Trap (Mild) \u2014 Bachar",
-            "Park Factor"
+            "ERA Trap \u2014 Bachar",
+            "Park Factor",
+            "Recent Form \u2014 Marlins",
+            "Schedule Load"
           ],
-          "signal_verdict": "PENDING \u2014 result not yet available",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 beat the close (+3.4%), lost on variance",
+          "key_insight": "CLV +3.4% is the best signal of the night \u2014 the market moved heavily toward the Marlins by game time, confirming model logic was sound. A 3-2 final in a pitcher-friendly park is pure variance; this pick rates as correct by process.",
           "in_budget": true
         },
         {
@@ -4429,19 +4433,20 @@
           "pick": "Baltimore Orioles",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "Severe ERA trap on San Diego's Randy V\u00e1squez (ERA 3.63 vs xFIP 4.83 over 69 IP, severity 1.21); Padres 3-7 in last 10, scoring only 3.1 R/G.",
-          "what_happened": "Result pending \u2014 game has not yet settled in the snapshot.",
+          "result": "LOST",
+          "score": "San Diego Padres 9, Baltimore Orioles 3",
+          "pnl": "-$5.48",
+          "clv_pct": -0.3,
+          "why_picked": "Severe ERA trap on Randy V\u00e1squez (ERA 3.63 vs xFIP 4.83, 69 IP) flagged the Padres ML as overpriced; Padres on a 3-7 cold streak, Orioles projected 4.4-3.3.",
+          "what_happened": "Jackson Merrill and Samad Taylor hit two-run homers in the first inning to stake the Padres to a 4-0 lead, and San Diego never looked back, winning 9-3. V\u00e1squez actually held Baltimore to 2 runs in 5 innings \u2014 the ERA trap was on the right pitcher but the Padres' offense exploded regardless. Trey Gibson was removed in the 5th after hitting Xander Bogaerts in the helmet.",
           "signals": [
-            "Pitcher Profile \u2014 Gibson",
-            "Pitcher Profile \u2014 V\u00e1squez",
-            "ERA Trap (Mild) \u2014 Gibson",
-            "ERA Trap (Severe) \u2014 V\u00e1squez"
+            "ERA Trap \u2014 Gibson",
+            "ERA Trap \u2014 V\u00e1squez",
+            "Park Factor",
+            "Recent Form \u2014 Padres Cold"
           ],
-          "signal_verdict": "PENDING \u2014 result not yet available",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.3%)",
+          "key_insight": "V\u00e1squez neutralized his ERA trap risk (solid outing), but the Padres' offense \u2014 not covered by the ERA trap model \u2014 went off for 9 runs. ERA trap reads pitcher risk, not offense explosion risk.",
           "in_budget": true
         },
         {
@@ -4450,89 +4455,108 @@
           "pick": "San Francisco Giants",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "Severe ERA trap on Chicago's Ben Brown (ERA 1.74 vs xFIP 3.21 over 57 IP, severity 1.40); Giants model projects 4.1\u20133.5 advantage.",
-          "what_happened": "Result pending \u2014 game has not yet settled in the snapshot.",
+          "result": "LOST",
+          "score": "Chicago Cubs 6, San Francisco Giants 1",
+          "pnl": "-$4.99",
+          "clv_pct": -0.4,
+          "why_picked": "Severe ERA trap on Ben Brown (ERA 1.74 vs xFIP 3.21, severity 1.40) suggested Cubs were overpriced; Giants at 5-5 recent form, cool 56\u00b0F at Oracle Park suppressing run totals.",
+          "what_happened": "Brown continued to defy his xFIP, and the Cubs cruised 6-1. Brown has now dominated across multiple starts this season \u2014 All-Star buzz surrounds him. Giants scored just 1 run against Cubs pitching.",
           "signals": [
-            "Pitcher Profile \u2014 McDonald",
-            "Pitcher Profile \u2014 Brown",
-            "ERA Trap (Severe) \u2014 Brown",
-            "Park Factor"
+            "ERA Trap \u2014 Brown",
+            "Park Factor",
+            "Cool Weather",
+            "Recent Form \u2014 Giants"
           ],
-          "signal_verdict": "PENDING \u2014 result not yet available",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.4%)",
+          "key_insight": "Ben Brown's severe ERA trap (severity 1.40) has fired repeatedly this season without regression materializing. The model must consider whether Brown has developed legitimate swing-and-miss stuff that his xFIP model doesn't capture \u2014 skill vs. luck needs a deeper dive.",
           "in_budget": true
         },
         {
+          "game": "SD Padres @ Baltimore Orioles / Detroit Tigers @ Cleveland Guardians",
+          "sport": "PARLAY",
           "pick": "Baltimore Orioles (ML) + Detroit Tigers (ML)",
-          "sport": "PARLAY",
           "bet_type": "Parlay",
-          "confidence": "HIGH",
-          "result": "PENDING",
-          "pnl": "",
+          "result": "LOST",
+          "score": "BAL 3 SD 9 / DET 1 CLE 3",
+          "pnl": "-$2.20",
           "legs": [
             {
-              "pick": "Baltimore Orioles",
-              "sport": "MLB",
-              "result": "PENDING",
               "game": "San Diego Padres @ Baltimore Orioles",
-              "bet_type": "Moneyline"
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "pick": "Baltimore Orioles",
+              "result": "LOST",
+              "score": "San Diego Padres 9, Baltimore Orioles 3",
+              "clv": -0.0032,
+              "clv_pct": -0.3,
+              "market_prob_at_close": 0.5252
             },
             {
-              "pick": "Detroit Tigers",
-              "sport": "MLB",
-              "result": "PENDING",
               "game": "Detroit Tigers @ Cleveland Guardians",
-              "bet_type": "Moneyline"
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "pick": "Detroit Tigers",
+              "result": "LOST",
+              "score": "Detroit Tigers 1, Cleveland Guardians 3",
+              "clv": 0.0041,
+              "clv_pct": 0.4,
+              "market_prob_at_close": 0.5606
             }
           ],
-          "why_picked": "Correlated budget singles combined for enhanced value.",
-          "what_happened": "Result pending \u2014 legs have not yet settled.",
+          "why_picked": "Double-up on the two ERA-trap/form-edge MLB picks; both legs were HIGH confidence.",
+          "what_happened": "Both legs lost \u2014 Padres exploded 9-3 and Guardians held Tigers to 1 run. No parlay payout.",
           "signals": [
-            "Pitcher Profile \u2014 Gibson",
-            "Pitcher Profile \u2014 V\u00e1squez",
-            "ERA Trap (Mild) \u2014 Gibson",
-            "ERA Trap (Severe) \u2014 V\u00e1squez"
+            "ERA Trap \u2014 Gibson",
+            "ERA Trap \u2014 V\u00e1squez",
+            "Recent Form \u2014 Tigers",
+            "Schedule Load"
           ],
-          "signal_verdict": "PENDING \u2014 legs not yet settled",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 both legs lost",
+          "key_insight": "Parlaying two correlated-risk picks (both MLB ML on schedule-load nights) amplified the loss when the market was already skeptical (-0.3% and +0.4% CLV).",
           "in_budget": true
         },
         {
-          "pick": "Miami Marlins (ML) + San Francisco Giants (ML)",
+          "game": "Miami Marlins @ Pittsburgh Pirates / Chicago Cubs @ San Francisco Giants",
           "sport": "PARLAY",
+          "pick": "Miami Marlins (ML) + San Francisco Giants (ML)",
           "bet_type": "Parlay",
-          "confidence": "HIGH",
-          "result": "PENDING",
-          "pnl": "",
+          "result": "LOST",
+          "score": "MIA 2 PIT 3 / CHC 6 SF 1",
+          "pnl": "-$1.67",
           "legs": [
             {
-              "pick": "Miami Marlins",
-              "sport": "MLB",
-              "result": "PENDING",
               "game": "Miami Marlins @ Pittsburgh Pirates",
-              "bet_type": "Moneyline"
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "pick": "Miami Marlins",
+              "result": "LOST",
+              "score": "Miami Marlins 2, Pittsburgh Pirates 3",
+              "clv": 0.034,
+              "clv_pct": 3.4,
+              "market_prob_at_close": 0.4912
             },
             {
-              "pick": "San Francisco Giants",
-              "sport": "MLB",
-              "result": "PENDING",
               "game": "Chicago Cubs @ San Francisco Giants",
-              "bet_type": "Moneyline"
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "pick": "San Francisco Giants",
+              "result": "LOST",
+              "score": "Chicago Cubs 6, San Francisco Giants 1",
+              "clv": -0.0037,
+              "clv_pct": -0.4,
+              "market_prob_at_close": 0.4755
             }
           ],
-          "why_picked": "Correlated budget singles combined for enhanced value.",
-          "what_happened": "Result pending \u2014 legs have not yet settled.",
+          "why_picked": "Paired the ERA-trap-driven SF Giants pick with the hot-form Marlins for a boosted payout.",
+          "what_happened": "Both legs lost \u2014 Marlins dropped a tight 3-2 game and Giants were dominated 6-1 by Brown. No payout.",
           "signals": [
-            "Pitcher Profile \u2014 Chandler",
-            "Pitcher Profile \u2014 Bachar",
-            "ERA Trap (Mild) \u2014 Bachar",
+            "ERA Trap \u2014 Brown",
+            "ERA Trap \u2014 Bachar",
+            "Recent Form \u2014 Marlins",
             "Park Factor"
           ],
-          "signal_verdict": "PENDING \u2014 legs not yet settled",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 both legs lost",
+          "key_insight": "MIA leg had CLV +3.4% (a process win), but SF leg had CLV -0.4% \u2014 the parlay was only half-validated by the market.",
           "in_budget": true
         },
         {
@@ -4541,19 +4565,18 @@
           "pick": "Chicago White Sox +1.5",
           "bet_type": "Spread",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 HIGH confidence",
-          "what_happened": "Result pending.",
+          "result": "LOST",
+          "score": "Los Angeles Dodgers 7, Chicago White Sox 1",
+          "pnl": "-$4.98",
+          "clv_pct": -0.0,
+          "why_picked": "Yamamoto mild ERA trap (2.68 vs 2.93 xFIP) suggested Dodgers slightly overpriced; White Sox +1.5 as a value spread.",
+          "what_happened": "Dodgers won 7-1; Yamamoto's trap didn't materialize \u2014 he dominated.",
           "signals": [
-            "Pitcher Profile \u2014 Burke",
-            "Pitcher Profile \u2014 Yamamoto",
-            "ERA Trap (Mild) \u2014 Yamamoto",
+            "ERA Trap \u2014 Yamamoto",
+            "Pitcher Matchup",
             "Park Factor"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.0%)",
           "in_budget": false
         },
         {
@@ -4562,19 +4585,18 @@
           "pick": "St. Louis Cardinals",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 HIGH confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "St. Louis Cardinals 9, Minnesota Twins 6",
+          "pnl": "+$3.78",
+          "clv_pct": -0.1,
+          "why_picked": "Model favored Cardinals' Liberatore matchup vs Prielipp (3.39 FIP) at pitcher-friendly Target Field.",
+          "what_happened": "Cardinals erupted 9-6 over the Twins in a high-scoring affair.",
           "signals": [
-            "Pitcher Profile \u2014 Prielipp",
-            "Pitcher Profile \u2014 Liberatore",
+            "Pitcher Matchup",
             "Park Factor",
-            "Injury Impact"
+            "Recent Form \u2014 Cardinals"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.1%, noise range)",
           "in_budget": false
         },
         {
@@ -4583,19 +4605,17 @@
           "pick": "Seattle Mariners",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 HIGH confidence",
-          "what_happened": "Result pending.",
+          "result": "LOST",
+          "score": "Seattle Mariners 3, Washington Nationals 8",
+          "pnl": "-$2.98",
+          "clv_pct": 0.4,
+          "why_picked": "Mariners backed by Luis Castillo at Nationals Park; Cavalli (3.03 FIP) the opposing concern.",
+          "what_happened": "Nationals upset the Mariners 8-3 in a surprise offensive outburst.",
           "signals": [
-            "Pitcher Profile \u2014 Cavalli",
-            "Pitcher Profile \u2014 Castillo",
-            "Park Factor",
-            "Injury Impact"
+            "Pitcher Matchup",
+            "Park Factor"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (0.4%)",
           "in_budget": false
         },
         {
@@ -4604,19 +4624,18 @@
           "pick": "Atlanta Braves",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "Atlanta Braves 3, New York Mets 1",
+          "pnl": "+$4.99",
+          "clv_pct": -0.3,
+          "why_picked": "Severe ERA trap on Mart\u00edn P\u00e9rez (ERA 3.02 vs xFIP 3.97, 56 IP) marked Braves as underpriced; Citi Field pitcher-friendly.",
+          "what_happened": "Braves won 3-1 behind solid pitching; P\u00e9rez ERA trap correctly identified market overpricing of Mets.",
           "signals": [
-            "Pitcher Profile \u2014 P\u00e9rez",
-            "ERA Trap (Severe) \u2014 P\u00e9rez",
+            "ERA Trap \u2014 P\u00e9rez",
             "Park Factor",
-            "Injury Impact"
+            "Recent Form \u2014 Braves"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.3%, noise range)",
           "in_budget": false
         },
         {
@@ -4625,19 +4644,18 @@
           "pick": "Los Angeles Angels +1.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "Tampa Bay Rays 0, Los Angeles Angels 8",
+          "pnl": "+$2.25",
+          "clv_pct": -0.2,
+          "why_picked": "Moderate ERA trap on Soriano (2.96 vs 3.83 xFIP) and Griffin Jax's high FIP for Rays gave Angels value at +1.5.",
+          "what_happened": "Angels blew out the Rays 8-0; Rays shut out completely \u2014 spread crushed.",
           "signals": [
-            "Pitcher Profile \u2014 Soriano",
-            "Pitcher Profile \u2014 Jax",
-            "Park Factor",
+            "ERA Trap \u2014 Soriano",
+            "Pitcher Matchup",
             "Recent Form"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.2%, noise range)",
           "in_budget": false
         },
         {
@@ -4646,19 +4664,17 @@
           "pick": "Boston Red Sox",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "Texas Rangers 3, Boston Red Sox 6",
+          "pnl": "+$1.83",
+          "clv_pct": 1.0,
+          "why_picked": "Fenway Park hitter-friendly (1.08) with deGrom's high 3.86 FIP vs Red Sox's Suarez at 2.94 FIP.",
+          "what_happened": "Red Sox won 6-3; Fenway lived up to its hitter-friendly billing.",
           "signals": [
-            "Pitcher Profile \u2014 Suarez",
-            "Pitcher Profile \u2014 deGrom",
-            "Park Factor",
-            "Injury Impact"
+            "Park Factor \u2014 Fenway",
+            "Pitcher Matchup"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.0%)",
           "in_budget": false
         },
         {
@@ -4667,19 +4683,18 @@
           "pick": "Athletics",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "Colorado Rockies 5, Athletics 7",
+          "pnl": "+$1.48",
+          "clv_pct": -2.9,
+          "why_picked": "Freeland's inflated FIP (5.6) vs xFIP (3.83) and Rockies missing key players in hot Las Vegas weather.",
+          "what_happened": "Athletics won 7-5; Rockies' injury-depleted lineup struggled in the heat.",
           "signals": [
-            "Pitcher Profile \u2014 Freeland",
-            "Injury Impact",
-            "Weather",
-            "Recent Form"
+            "ERA Trap \u2014 Freeland",
+            "Injury Impact \u2014 Rockies",
+            "Hot Weather"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "MIXED \u2014 won, but the market moved 2.9% against this pick",
           "in_budget": false
         },
         {
@@ -4688,19 +4703,17 @@
           "pick": "Cincinnati Reds +1.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "Arizona Diamondbacks 1, Cincinnati Reds 2",
+          "pnl": "+$1.78",
+          "clv_pct": 0.2,
+          "why_picked": "Great American Ball Park (1.12) is hitter-friendly; Reds got +1.5 cushion against the Diamondbacks.",
+          "what_happened": "Reds won outright 2-1 over the Diamondbacks; spread was never in doubt.",
           "signals": [
-            "Pitcher Profile \u2014 Lowder",
-            "Pitcher Profile \u2014 Soroka",
             "Park Factor",
-            "Injury Impact"
+            "Pitcher Matchup"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (0.2%, noise range)",
           "in_budget": false
         },
         {
@@ -4709,19 +4722,17 @@
           "pick": "New York Yankees",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "New York Yankees 3, Toronto Blue Jays 1",
+          "pnl": "+$0.94",
+          "clv_pct": 1.1,
+          "why_picked": "Moderate ERA trap on Blue Jays' Schlittler (1.87 vs 3.08 xFIP) flagged Toronto's price as inflated.",
+          "what_happened": "Yankees won 3-1; Schlittler ERA trap validated as Yankees got good value against the overpriced Jays.",
           "signals": [
-            "Pitcher Profile \u2014 Gausman",
-            "Pitcher Profile \u2014 Schlittler",
-            "Park Factor",
-            "Injury Impact"
+            "ERA Trap \u2014 Schlittler",
+            "Pitcher Matchup"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.1%)",
           "in_budget": false
         },
         {
@@ -4730,19 +4741,17 @@
           "pick": "Arizona Diamondbacks",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "LOST",
+          "score": "Arizona Diamondbacks 1, Cincinnati Reds 2",
+          "pnl": "-$1.19",
+          "clv_pct": -0.1,
+          "why_picked": "Diamondbacks as slight road favorites at Great American Ball Park; both pitchers projectable.",
+          "what_happened": "Reds won 2-1; Diamondbacks fell short despite model edge.",
           "signals": [
-            "Pitcher Profile \u2014 Lowder",
-            "Pitcher Profile \u2014 Soroka",
-            "Park Factor",
-            "Injury Impact"
+            "Pitcher Matchup",
+            "Park Factor"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.1%)",
           "in_budget": false
         },
         {
@@ -4751,19 +4760,18 @@
           "pick": "Milwaukee Brewers",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "LOST",
+          "score": "Philadelphia Phillies 9, Milwaukee Brewers 8",
+          "pnl": "-$0.62",
+          "clv_pct": -0.5,
+          "why_picked": "Drohan (2.80 FIP) against Nola (4.31 FIP) at American Family Field; Brewers projected as home value.",
+          "what_happened": "Phillies won 9-8 in a walk-off; Brewers couldn't hold a late lead.",
           "signals": [
-            "Pitcher Profile \u2014 Drohan",
-            "Pitcher Profile \u2014 Nola",
-            "Park Factor",
-            "Injury Impact"
+            "ERA Trap \u2014 Drohan",
+            "Pitcher Matchup",
+            "Park Factor"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.5%)",
           "in_budget": false
         },
         {
@@ -4772,19 +4780,17 @@
           "pick": "Colorado Rockies +1.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "MLB model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "LOST",
+          "score": "Colorado Rockies 5, Athletics 7",
+          "pnl": "-$0.56",
+          "clv_pct": 1.9,
+          "why_picked": "Rockies getting +1.5 runs despite injury issues as a hedge on the same game the model favored Athletics ML.",
+          "what_happened": "Athletics won 7-5; Colorado lost by 2, so +1.5 spread didn't cover (Athletics won by more than 1.5).",
           "signals": [
-            "Pitcher Profile \u2014 Freeland",
-            "Injury Impact",
-            "Weather",
-            "Recent Form"
+            "Injury Impact \u2014 Rockies",
+            "Park Factor"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.9%), lost on variance",
           "in_budget": false
         },
         {
@@ -4793,16 +4799,18 @@
           "pick": "Minnesota Lynx",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "WNBA model edge \u2014 HIGH confidence",
-          "what_happened": "Result pending.",
+          "result": "LOST",
+          "score": "Minnesota Lynx 97, Las Vegas Aces 100",
+          "pnl": "-$0.00",
+          "clv_pct": -2.5,
+          "why_picked": "Lynx projected to win outright (93-83) based on recent dominance despite Aces home court.",
+          "what_happened": "Aces won 100-97; Lynx covered spread in spirit but not ML.",
           "signals": [
-            "Model Edge"
+            "Recent Form \u2014 Lynx",
+            "Home Court \u2014 Aces",
+            "Model Projection"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 2.5% against us",
           "in_budget": false
         },
         {
@@ -4811,16 +4819,17 @@
           "pick": "Los Angeles Sparks",
           "bet_type": "Moneyline",
           "confidence": "HIGH",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "WNBA model edge \u2014 HIGH confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "Los Angeles Sparks 111, Phoenix Mercury 102",
+          "pnl": "+$0.00",
+          "clv_pct": -0.9,
+          "why_picked": "Mercury on back-to-back and struggling recently (\u22128.0 net last 8); Sparks on even terms.",
+          "what_happened": "Sparks won 111-102; Mercury's tired legs showed in the fourth.",
           "signals": [
-            "Model Edge"
+            "Recent Form \u2014 Mercury Poor",
+            "Back-to-Back"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.9%, noise range)",
           "in_budget": false
         },
         {
@@ -4829,16 +4838,17 @@
           "pick": "Indiana Fever",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "WNBA model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "Indiana Fever 85, Connecticut Sun 75",
+          "pnl": "+$0.00",
+          "clv_pct": -1.5,
+          "why_picked": "Sun on back-to-back and -10.8 net last 8; Fever despite own back-to-back looked the better team.",
+          "what_happened": "Fever won 85-75; Indiana's offensive firepower too much for a tired Connecticut roster.",
           "signals": [
-            "Model Edge"
+            "Recent Form \u2014 Sun Poor",
+            "Back-to-Back"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "MIXED \u2014 won, but the market moved 1.5% against this pick",
           "in_budget": false
         },
         {
@@ -4847,16 +4857,17 @@
           "pick": "Dallas Wings",
           "bet_type": "Moneyline",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "WNBA model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "LOST",
+          "score": "Dallas Wings 83, Portland Fire 84",
+          "pnl": "-$0.00",
+          "clv_pct": -7.4,
+          "why_picked": "Model projected Wings 91-82 with Portland struggling at -5.5 net last 8.",
+          "what_happened": "Portland Fire won 84-83 in a buzzer-beater; Wings' model edge evaporated at the wire.",
           "signals": [
-            "Model Edge"
+            "Recent Form \u2014 Fire Poor",
+            "Model Projection"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 7.4% against us",
           "in_budget": false
         },
         {
@@ -4865,16 +4876,16 @@
           "pick": "Australia +0.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "WC model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "T\u00fcrkiye 0, Australia 2",
+          "pnl": "+$0.00",
+          "clv_pct": -1.7,
+          "why_picked": "Model projected Australia 1.4-1.2 over Turkey; +0.5 spread as insurance on Australian edge.",
+          "what_happened": "Australia dominated 2-0; the line moved heavily against Turkey post-kick.",
           "signals": [
-            "Model Edge"
+            "Model Projection"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "MIXED \u2014 won, but the market moved 1.7% against this pick",
           "in_budget": false
         },
         {
@@ -4883,34 +4894,35 @@
           "pick": "Qatar +1.5",
           "bet_type": "Spread",
           "confidence": "MEDIUM",
-          "result": "PENDING",
-          "score": "Score not available",
-          "pnl": "",
-          "why_picked": "WC model edge \u2014 MEDIUM confidence",
-          "what_happened": "Result pending.",
+          "result": "WON",
+          "score": "Switzerland 1, Qatar 1",
+          "pnl": "+$0.00",
+          "clv_pct": -5.2,
+          "why_picked": "Switzerland's 245-point Elo edge projected 2.0-0.5 goals, but +1.5 for Qatar offers draw coverage.",
+          "what_happened": "Game ended 1-1; Qatar covered the +1.5 spread with ease. Switzerland's Elo edge didn't produce a runaway win.",
           "signals": [
-            "Model Edge"
+            "Elo Edge \u2014 Switzerland",
+            "Model Projection"
           ],
-          "signal_verdict": "PENDING",
-          "key_insight": "",
+          "signal_verdict": "MIXED \u2014 won, but the market moved 5.2% against this pick",
           "in_budget": false
         }
       ],
       "patterns": [
-        "ALL picks: PENDING \u2014 Results Snapshot did not arrive in time",
-        "MLB: 4 budget singles (4 HIGH confidence) \u2014 all pending",
-        "NBA: 1 budget spread pick (HIGH confidence) \u2014 pending",
-        "Parlays: 2 budget parlays \u2014 pending",
-        "Watchlist: 18 picks across MLB, WNBA, WC",
-        "Dominant signal today: ERA Trap (3 picks in budget, including 2 SEVERE)"
+        "NBA Finals Game 5: 1-0 (Knicks spread hit \u2014 and won the championship)",
+        "MLB Moneyline: 0-4 on budget, rough sample in high-variance night",
+        "ERA Trap signal: budget 0-3 in results, avg CLV +0.9% (process solid despite results)",
+        "Parlays: 0-2 (both legs of each missed)",
+        "Watchlist: 11-7 \u2014 11 wins including WNBA and WC picks"
       ],
       "model_observations": [
-        "Cannot evaluate signal performance \u2014 all picks PENDING due to snapshot timeout",
-        "ERA Trap signal present on 3 of 4 MLB budget picks (V\u00e1squez SEVERE, Brown SEVERE, Bachar MILD)",
-        "Schedule Load appears on all 4 MLB budget picks \u2014 both teams fatigued in each matchup",
-        "Knicks +5.5 spread is the only NBA pick and involves playoff-weighted model",
-        "Two parlays each pair high-confidence ERA trap picks for value multiplication",
-        "Morning run will update results and CLV once snapshot resolves"
+        "Ben Brown ERA Trap (SEVERE, 1.40): 0-1 result, CLV -0.4% \u2014 Brown has now dominated across multiple starts this season; the model should flag him as a potential ERA-trap false-positive until end-of-season regression appears",
+        "MIA ML: LOST but CLV +3.4% \u2014 market fully agreed with the pick at close; classify as variance not a model error; Marlins' recent-form signal remains strong",
+        "Randy V\u00e1squez ERA Trap (SEVERE): pitched 5 solid innings \u2014 loss was driven by early Padres offensive explosion (9-3), not by pitcher regression; ERA trap correctly identified Padres ML as overpriced but couldn't foresee the Padres' bats",
+        "Schedule Load both-teams scenario (DET, MIA, BAL, SF all flagged): 0-4 on picks where both teams shared the load flag \u2014 when both teams carry the same schedule stress, the signal should be down-weighted or nullified",
+        "Watchlist ERA Trap wins: ATL ML (+ERA trap on P\u00e9rez WON), NYY ML (+ERA trap on Schlittler WON, CLV +1.1%) \u2014 ERA trap signal performs better as a watchlist identifier than as a budget bet driver when used in isolation",
+        "WNBA Back-to-Back signal: 2-0 (Sparks WON, Fever WON) \u2014 continues to be a reliable WNBA edge",
+        "WC Model Projection: 2-0 (AUS dominated, QAT covered) \u2014 goal-projection model performing well in tournament play"
       ]
     }
   ]
