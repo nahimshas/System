@@ -946,7 +946,8 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
     _stamp_decision(game, _min, {
         "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
         "base_margin": _lv.get("base_margin"), "effective_margin": _lv.get("effective_margin"),
-        "expected_total": _lv.get("blended_total"),
+        "win_prob_adj": _lv.get("adj"), "rest_diff": _lv.get("rest_diff"),
+        "expected_total": _lv.get("blended_total"), "total_std": _lv.get("total_std"),
         "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
         "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
         "playoff": _lv.get("playoff"), "stats_available": stats_available,
@@ -1904,6 +1905,39 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             "away_sp_fip": _ap.get("fip"),
             "home_sp_k9": _hp.get("k_per_9"),
             "away_sp_k9": _ap.get("k_per_9"),
+            # Pitcher quality + weighting (directly drives how much the starter
+            # moves the projection — the pitcher-weight question).
+            "home_sp_score": _lv.get("home_sp_score"),
+            "away_sp_score": _lv.get("away_sp_score"),
+            "home_sp_ip": _lv.get("home_sp_ip"),
+            "away_sp_ip": _lv.get("away_sp_ip"),
+            "home_sp_coeff": _lv.get("home_sp_coeff"),
+            "away_sp_coeff": _lv.get("away_sp_coeff"),
+            "home_trap_sev": _lv.get("home_trap_sev"),
+            "away_trap_sev": _lv.get("away_trap_sev"),
+            "home_bullpen_score": _lv.get("home_bullpen_score"),
+            "away_bullpen_score": _lv.get("away_bullpen_score"),
+            "home_bp_whip": _lv.get("home_bp_whip"),
+            "away_bp_whip": _lv.get("away_bp_whip"),
+            "home_offense_adj": _lv.get("home_offense_adj"),
+            "away_offense_adj": _lv.get("away_offense_adj"),
+            # Team strength + every run adjustment in the projection
+            "home_win_pct": _lv.get("home_win_pct"),
+            "away_win_pct": _lv.get("away_win_pct"),
+            "home_season_rpg": _lv.get("home_season_rpg"),
+            "away_season_rpg": _lv.get("away_season_rpg"),
+            "home_recent_rpg": _lv.get("home_recent_rpg"),
+            "away_recent_rpg": _lv.get("away_recent_rpg"),
+            "home_form_delta": _lv.get("home_form_delta"),
+            "away_form_delta": _lv.get("away_form_delta"),
+            "home_k_penalty": _lv.get("home_k_penalty"),
+            "away_k_penalty": _lv.get("away_k_penalty"),
+            "home_schedule_load": _lv.get("home_schedule_load"),
+            "away_schedule_load": _lv.get("away_schedule_load"),
+            "home_load_pen": _lv.get("home_load_pen"),
+            "away_load_pen": _lv.get("away_load_pen"),
+            "ump_run_factor": _lv.get("ump_run_factor"),
+            "weather_run_adj": _lv.get("wx_adj"),
             "playoff": _lv.get("playoff"),
             "stats_available": stats_available,
         }
@@ -2314,7 +2348,8 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
     _stamp_decision(game, _min, {
         "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
         "base_margin": _lv.get("base_margin"), "effective_margin": _lv.get("effective_margin"),
-        "expected_total": _lv.get("blended_total"),
+        "win_prob_adj": _lv.get("adj"), "rest_diff": _lv.get("rest_diff"),
+        "expected_total": _lv.get("blended_total"), "total_std": _lv.get("total_std"),
         "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
         "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
         "playoff": _lv.get("playoff"), "stats_available": stats_available,
@@ -2781,7 +2816,8 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
     _stamp_decision(game, _min, {
         "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
         "base_margin": _lv.get("base_margin"), "effective_margin": _lv.get("effective_margin"),
-        "expected_total": _lv.get("blended_total"),
+        "win_prob_adj": _lv.get("adj"), "rest_diff": _lv.get("rest_diff"),
+        "expected_total": _lv.get("blended_total"), "total_std": _lv.get("total_std"),
         "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
         "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
         "playoff": _lv.get("playoff"), "stats_available": stats_available,
@@ -3114,7 +3150,10 @@ def analyze_ipl_game(game: Dict, ipl_ctx: Dict, min_edge: float = None) -> List[
         stats_avail=stats_available,
     )
     _stamp_decision(game, _min, {
-        "base_home_prob": _lv.get("base_home_prob"), "adj": _lv.get("adj"),
+        "base_home_prob": _lv.get("base_home_prob"), "win_prob_adj": _lv.get("adj"),
+        "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
+        "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
+        "recent_gap": _lv.get("recent_gap"),
         "stats_available": stats_available,
     }, [
         ("Moneyline", home, _lv.get("adjusted_home_prob"), _lv.get("_ipl_raw_home"), _lv.get("market_home_prob"), None),
@@ -3405,7 +3444,10 @@ def analyze_wnba_game(
         stats_avail=stats_available,
     )
     _stamp_decision(game, _min, {
-        "home_strength": _lv.get("home_strength"), "away_strength": _lv.get("away_strength"),
+        "home_net": _lv.get("home_net"), "away_net": _lv.get("away_net"),
+        "home_recent_net": _lv.get("home_recent_net"), "away_recent_net": _lv.get("away_recent_net"),
+        "net_diff": _lv.get("net_diff"), "win_prob_adj": _lv.get("adj"),
+        "home_sos": _lv.get("home_sos"), "away_sos": _lv.get("away_sos"),
         "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
         "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
         "stats_available": stats_available,
@@ -3803,8 +3845,10 @@ def analyze_mls_game(
     )
     _stamp_decision(game, _min, {
         "lam_home": _lv.get("lam_home"), "lam_away": _lv.get("lam_away"),
-        "elo_diff": _lv.get("elo_diff"), "supremacy": _lv.get("supremacy"),
-        "r_home": _lv.get("r_home"), "r_away": _lv.get("r_away"),
+        "home_xgd": _lv.get("home_xgd"), "away_xgd": _lv.get("away_xgd"), "xgd_diff": _lv.get("xgd_diff"),
+        "attack_home": _lv.get("attack_home"), "attack_away": _lv.get("attack_away"),
+        "defense_home": _lv.get("defense_home"), "defense_away": _lv.get("defense_away"),
+        "home_inj_pen": _lv.get("home_inj_pen"), "away_inj_pen": _lv.get("away_inj_pen"),
         "stats_available": stats_available,
     }, [
         ("Moneyline", home_raw, _lv.get("p_home_win"), _lv.get("_mls_raw_home"), _lv.get("market_home_prob"), None),
@@ -4151,7 +4195,10 @@ def analyze_wc_game(
         "lam_home": _lv.get("lam_home"), "lam_away": _lv.get("lam_away"),
         "elo_diff": _lv.get("elo_diff"), "supremacy": _lv.get("supremacy"),
         "r_home": _lv.get("r_home"), "r_away": _lv.get("r_away"),
-        "host_bonus": _lv.get("host_bonus"), "stats_available": stats_available,
+        "host_bonus": _lv.get("host_bonus"), "rest_elo": _lv.get("rest_elo"),
+        "alt_home": _lv.get("alt_home"), "alt_away": _lv.get("alt_away"),
+        "dead_rubber_home": _lv.get("dr_home"), "dead_rubber_away": _lv.get("dr_away"),
+        "base_total": _lv.get("base_total"), "stats_available": stats_available,
     }, [
         ("Moneyline", home_raw, _lv.get("p_home_win"), _lv.get("_wc_raw_home"), _lv.get("market_home_prob"), None),
         ("Moneyline", away_raw, _lv.get("p_away_win"), _lv.get("_wc_raw_away"), _lv.get("market_away_prob"), None),
