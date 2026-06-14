@@ -1980,8 +1980,9 @@ window._reportDate = "{{ report.run_date_iso }}";
     var box = document.getElementById('debrief-scorecard');
     if (!box) return;
 
-    // Aggregate signals → { correct, incorrect, mixed, total }
-    var sigMap = {};
+    // Aggregate signals PER SPORT so high-volume MLB doesn't crowd out the
+    // lower-volume sports (NHL/WNBA/WC). bySport[sport][signal] = tally.
+    var bySport = {};
     var totalDays = 0, budgetW = 0, budgetL = 0;
 
     entries.forEach(function(e) {
@@ -1993,36 +1994,31 @@ window._reportDate = "{{ report.run_date_iso }}";
         var v = (p.signal_verdict || '').toUpperCase();
         var verdict = (v.match(/^(CORRECT|INCORRECT|MIXED)/) || [])[1];
         if (!verdict) return;
+        // Normalise sport: "NHL · Stanley Cup Final" → "NHL", "WC" → "WC".
+        var sport = (p.sport || '?').split(/[·|]/)[0].trim().split(' ')[0] || '?';
+        if (!bySport[sport]) bySport[sport] = {};
+        var sm = bySport[sport];
         (p.signals || []).forEach(function(sig) {
           var norm = sig.replace(/\s*[—–-]\s*.+$/, '').replace(/\s*\(.+\)$/, '').trim();
           if (!norm) return;
-          if (!sigMap[norm]) sigMap[norm] = { correct:0, incorrect:0, mixed:0, total:0 };
-          sigMap[norm].total++;
-          if (verdict === 'CORRECT')   sigMap[norm].correct++;
-          else if (verdict === 'INCORRECT') sigMap[norm].incorrect++;
-          else sigMap[norm].mixed++;
+          if (!sm[norm]) sm[norm] = { correct:0, incorrect:0, mixed:0, total:0 };
+          sm[norm].total++;
+          if (verdict === 'CORRECT')   sm[norm].correct++;
+          else if (verdict === 'INCORRECT') sm[norm].incorrect++;
+          else sm[norm].mixed++;
         });
       });
     });
 
-    var sigs = Object.keys(sigMap)
-      .sort(function(a,b) { return sigMap[b].total - sigMap[a].total; })
-      .slice(0, 10);
+    function _vol(sp) { var t = 0, m = bySport[sp]; for (var k in m) t += m[k].total; return t; }
+    var sports = Object.keys(bySport).filter(function(s) { return _vol(s) > 0; })
+      .sort(function(a, b) { return _vol(b) - _vol(a); });
+    if (!sports.length) { box.innerHTML = ''; return; }
 
-    if (!sigs.length) { box.innerHTML = ''; return; }
-
-    var html = '<div class="sec-label" style="margin-top:0;">📈 Signal Scorecard</div>' +
-      '<div style="font-size:0.68rem;color:var(--muted);margin-bottom:12px;">' +
-        totalDays + ' night' + (totalDays !== 1 ? 's' : '') + ' · ' +
-        budgetW + '-' + budgetL + ' budget overall' +
-      '</div>';
-
-    sigs.forEach(function(sig) {
-      var d = sigMap[sig];
+    function sigRow(sig, d) {
       var rate = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
       var col = rate >= 60 ? 'var(--green)' : rate >= 45 ? 'var(--yellow)' : 'var(--red)';
-      html +=
-        '<div style="margin-bottom:9px;">' +
+      return '<div style="margin-bottom:9px;">' +
           '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">' +
             '<span style="font-size:0.78rem;font-weight:600;color:var(--text);">' + sig + '</span>' +
             '<span style="font-size:0.74rem;font-weight:700;color:' + col + ';">' +
@@ -2034,6 +2030,23 @@ window._reportDate = "{{ report.run_date_iso }}";
             '<div style="width:' + rate + '%;height:100%;background:' + col + ';border-radius:3px;"></div>' +
           '</div>' +
         '</div>';
+    }
+
+    var html = '<div class="sec-label" style="margin-top:0;">📈 Signal Scorecard</div>' +
+      '<div style="font-size:0.68rem;color:var(--muted);margin-bottom:12px;">' +
+        totalDays + ' night' + (totalDays !== 1 ? 's' : '') + ' · ' +
+        budgetW + '-' + budgetL + ' budget overall' +
+      '</div>';
+
+    sports.forEach(function(sp) {
+      var sm = bySport[sp];
+      var sigs = Object.keys(sm)
+        .sort(function(a, b) { return sm[b].total - sm[a].total; })
+        .slice(0, 8);   // top 8 signals per sport
+      if (!sigs.length) return;
+      html += '<div style="font-size:0.72rem;font-weight:700;color:var(--blue);' +
+                'margin:14px 0 7px;text-transform:uppercase;letter-spacing:0.03em;">' + sp + '</div>';
+      sigs.forEach(function(sig) { html += sigRow(sig, sm[sig]); });
     });
 
     box.innerHTML = html;
