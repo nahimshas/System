@@ -66,6 +66,10 @@ As before, for each single pick produce: `result`, `score`, `pnl`, `why_picked`,
 - `why_picked` must come from the pick's OWN signals array — never generic, never cross-sport.
 - `clv_pct`: copied from the snapshot entry if present, else omit.
 - `signal_verdict` uses fixed templates keyed on (result, CLV band) — e.g. LOST + CLV ≥ +1% → "CORRECT — beat the close (+X.X%), lost on variance"; WON + CLV ≤ −1% → "MIXED — won, but the market moved X.X% against this pick". Never repeat the word CLV twice.
+- **`signals` MUST be short CANONICAL names — for EVERY sport, not just MLB.** The Signal Scorecard groups by sport and tallies each name's hit rate, so a name must be a *reusable category*, never a raw context string. NEVER put numbers, team names, scores, ratings, or projections in a signal name. Map each pick's raw context line to its canonical category. Examples:
+  - BAD (raw context, do not use): "CAR NetRtg 0.68 vs VGK 0.18", "Model projected CAR 3.1 vs VGK 2.8", "Rating edge: NYK blended NetRtg diff −8.5", "Spurs injury impact −1.9%", "Wings momentum: 4", "Playoffs form weight 55%".
+  - GOOD (canonical): "Rating Edge", "Model Projection", "Injury Impact", "Recent Form", "Home Advantage", "Playoff Adjustment", "Rest Advantage".
+  - Canonical vocabulary by sport (reuse these exact strings; add a new canonical name only if no existing one fits): **MLB**: Park Factor, ERA Trap, Injury Impact, Platoon Edge, Pitching Edge, Recent Form, Home Advantage, Pitcher Matchup, Schedule Load, Weather Factor, xFIP Projection. **NBA/WNBA/NHL**: Rating Edge, Recent Form, Home Advantage, Injury Impact, Rest Advantage, Playoff Adjustment, Lineup Impact, Pace/Style. **NHL adds**: Goalie Edge. **WC/MLS (soccer)**: Elo Edge, Host Nation Advantage, Altitude Edge, xG Edge, Rest Advantage, Dead Rubber, Model Projection. Keep names Title Case and ≤ 3 words.
 - Parlays: `game` = leg games joined with " / " (never null).
 - In `model_observations`, aggregate per-signal CLV when ≥2 picks share a signal name tonight.
 
