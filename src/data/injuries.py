@@ -95,8 +95,21 @@ _SPORT_POSITION_MAP = {
 }
 
 
+# Cap on total injury drag. Raised 0.06 → 0.10 to let value-weighted star
+# injuries register more than the old flat position model allowed.
+INJURY_DRAG_CAP = 0.10
+
+
 def injury_adjustment(team: str, injuries: Dict[str, List[Dict]], sport: str) -> float:
-    """Returns negative win probability adjustment for a team based on injuries."""
+    """
+    Returns negative win probability adjustment for a team based on injuries.
+
+    Each injury is weighted by position × status × value_mult, where value_mult
+    (stamped onto the injury dict by the sport's value-enrichment step; defaults
+    to 1.0 when absent) scales by the injured player's importance — so an Aaron
+    Judge injury docks far more than a bench player at the same position. Sports
+    not yet value-enriched fall through with value_mult = 1.0 (prior behaviour).
+    """
     position_map = _SPORT_POSITION_MAP.get(sport, NBA_POSITION_IMPACT)
     adjustment = 0.0
     for inj in injuries.get(team, []):
@@ -104,5 +117,6 @@ def injury_adjustment(team: str, injuries: Dict[str, List[Dict]], sport: str) ->
         status = inj.get("status", "questionable").lower()
         impact = position_map.get(pos, 0.010)
         weight = STATUS_WEIGHT.get(status, 0.35)
-        adjustment += impact * weight
-    return min(adjustment, 0.06)   # cap at 6% total injury drag (market prices injuries quickly)
+        value_mult = inj.get("value_mult", 1.0)   # 1.0 = position-only (unenriched)
+        adjustment += impact * weight * value_mult
+    return min(adjustment, INJURY_DRAG_CAP)

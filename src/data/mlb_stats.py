@@ -486,6 +486,66 @@ def get_batter_props_stats(team_id: int, player_names: List[str], min_pa: int = 
     return result
 
 
+def get_injury_value_mults(team_id: int, player_names: List[str]) -> Dict[str, float]:
+    """
+    For injured POSITION players, return {player_name: value_mult} scaling the
+    injury impact by the player's offensive value vs a replacement bat:
+
+        value_mult = (OPS - REPLACEMENT) / (LEAGUE_AVG - REPLACEMENT)
+
+    1.0 = league-average regular, ~3.0 = elite (Judge/Ohtani), ~0.3 = depth.
+    So losing a star docks far more win probability than losing a bench player
+    at the same position (the prior model treated all injuries at a position the
+    same). Clamped to [0.3, 3.0]; thin samples (<50 PA) shrink toward 1.0.
+
+    Players not matched (pitchers, name mismatch, no stats) are omitted — the
+    caller defaults them to 1.0, i.e. the prior position-only behaviour.
+    """
+    if not team_id or not player_names:
+        return {}
+    data = _get("/stats", {
+        "stats": "season", "group": "hitting", "gameType": "R",
+        "season": date.today().year, "teamId": team_id, "limit": 50,
+    })
+    if not data:
+        return {}
+
+    REPLACEMENT_OPS, LEAGUE_AVG_OPS = 0.650, 0.735
+    norm_targets = {n.lower().strip(): n for n in player_names if n}
+    out: Dict[str, float] = {}
+
+    for stat_group in data.get("stats", []):
+        for split in stat_group.get("splits", []):
+            player = split.get("player", {})
+            stat   = split.get("stat", {})
+            name   = player.get("fullName", "")
+            if not name:
+                continue
+            norm    = name.lower().strip()
+            matched = norm_targets.get(norm)
+            if not matched:
+                for tn, orig in norm_targets.items():
+                    if all(p in norm for p in tn.split()):
+                        matched = orig
+                        break
+            if not matched:
+                continue
+            try:
+                ops = float(str(stat.get("ops", "0")).replace("-", "0") or "0")
+            except (ValueError, TypeError):
+                continue
+            if ops <= 0:
+                continue
+            pa = int(stat.get("plateAppearances", 0) or 0)
+            mult = (ops - REPLACEMENT_OPS) / (LEAGUE_AVG_OPS - REPLACEMENT_OPS)
+            if pa < 50:                       # thin sample → shrink toward average
+                w = max(0.0, pa / 50.0)
+                mult = mult * w + 1.0 * (1.0 - w)
+            out[matched] = round(max(0.3, min(3.0, mult)), 2)
+
+    return out
+
+
 def get_team_recent_batting(team_id: int, today: date, last_n: int = 10) -> Dict:
     """
     Returns runs-scored and wins over this team's last N completed games.

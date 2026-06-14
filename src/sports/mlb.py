@@ -172,7 +172,7 @@ class MLBModule:
             get_pitcher_stats, get_pitcher_recent_stats,
             get_team_batting_stats, get_bullpen_stats, get_team_schedule_load,
             get_pitcher_hand, get_team_splits_vs_hand,
-            get_team_recent_batting,
+            get_team_recent_batting, get_injury_value_mults,
         )
         from src.data.umpire import get_umpire_tendency
         from src.data.weather import get_game_weather
@@ -190,6 +190,22 @@ class MLBModule:
         for game in games:
             home = game["home_team"]
             away = game["away_team"]
+
+            # Value-weight injuries: stamp each injured hitter's value_mult (star
+            # vs depth) onto the injury dict so injury_adjustment docks more for a
+            # Judge/Ohtani than a bench bat at the same position. Unmatched players
+            # (pitchers, name mismatch) keep value_mult=1.0 = prior behaviour.
+            try:
+                for _side, _tid in ((home, game.get("home_team_id")),
+                                    (away, game.get("away_team_id"))):
+                    _inj_list = injuries.get(_side, [])
+                    if _inj_list and _tid:
+                        _names = [i.get("player") for i in _inj_list if i.get("player")]
+                        _mults = get_injury_value_mults(_tid, _names)
+                        for _i in _inj_list:
+                            _i["value_mult"] = _mults.get(_i.get("player"), 1.0)
+            except Exception as _e_iv:
+                logger.debug(f"Injury value-weighting failed ({home}/{away}): {_e_iv}")
 
             # Weather (cached by city — no duplicate API calls for same park)
             try:

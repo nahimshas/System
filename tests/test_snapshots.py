@@ -316,3 +316,23 @@ class TestLoadPerformanceSummaryStructure:
         assert result["total"] == 2
         assert result["won"] == 1
         assert result["lost"] == 1
+
+
+class TestInjuryValueWeighting:
+    """Injuries weight by player value (value_mult), not position alone."""
+
+    def test_star_injury_docks_more_than_bench(self):
+        from src.data.injuries import injury_adjustment, INJURY_DRAG_CAP
+        star = {"T": [{"player": "Star", "position": "RF", "status": "out", "value_mult": 3.0}]}
+        bench = {"T": [{"player": "Depth", "position": "RF", "status": "out", "value_mult": 0.4}]}
+        a_star = injury_adjustment("T", star, "mlb")
+        a_bench = injury_adjustment("T", bench, "mlb")
+        assert a_star > a_bench
+        assert abs(a_star - 0.030) < 1e-9   # trips _INJURY_GATE (0.030)
+        assert INJURY_DRAG_CAP == 0.10
+
+    def test_unenriched_injury_matches_prior_behavior(self):
+        from src.data.injuries import injury_adjustment
+        # No value_mult key → defaults to 1.0 → position-only (old) behaviour
+        old = {"T": [{"player": "X", "position": "RF", "status": "out"}]}
+        assert abs(injury_adjustment("T", old, "mlb") - 0.010) < 1e-9
