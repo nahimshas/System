@@ -104,10 +104,22 @@ class TestPitcherQualityScore:
 
     def test_small_sample_blends_toward_average(self):
         from src.models.edge_finder import _pitcher_quality_score
-        # 0 IP → 100% blended to league average → score = 0
-        stats = {"innings_pitched": 0.0, "fip": 2.00, "xfip": 2.00}
+        # Small-sample xFIP regression is now handled by _blend_xfip before
+        # _pitcher_quality_score is called. Test the contract: when xFIP has
+        # already been regressed to league average (4.20) at 0 IP, score = 0.
+        stats = {"innings_pitched": 0.0, "fip": 4.20, "xfip": 4.20}
         result = _pitcher_quality_score(stats)
         assert abs(result) < 1e-6
+
+    def test_small_sample_k9_bb9_regressed(self):
+        from src.models.edge_finder import _pitcher_quality_score
+        # At tiny IP, effective K/9 and BB/9 should be pulled toward league avg,
+        # so a pitcher with elite peripherals from 9 IP scores below full-confidence.
+        tiny_ip = {"era": 6.00, "xfip": 3.80, "fip": 2.00,
+                   "bb_per_9": 2.0, "k_per_9": 9.0, "innings_pitched": 9.0}
+        full_ip  = {"era": 6.00, "xfip": 3.80, "fip": 2.00,
+                    "bb_per_9": 2.0, "k_per_9": 9.0, "innings_pitched": 80.0}
+        assert _pitcher_quality_score(tiny_ip) < _pitcher_quality_score(full_ip)
 
 
 class TestEraTrapSeverity:
