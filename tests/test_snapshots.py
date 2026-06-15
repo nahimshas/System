@@ -341,7 +341,7 @@ class TestInjuryValueWeighting:
         a_bench = injury_adjustment("T", bench, "mlb")
         assert a_star > a_bench
         assert abs(a_star - 0.030) < 1e-9   # trips _INJURY_GATE (0.030)
-        assert INJURY_DRAG_CAP == 0.10
+        assert INJURY_DRAG_CAP == 0.15
 
     def test_unenriched_injury_matches_prior_behavior(self):
         from src.data.injuries import injury_adjustment
