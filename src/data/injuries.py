@@ -119,9 +119,13 @@ _SPORT_POSITION_MAP = {
 }
 
 
-# Cap on total injury drag. Raised 0.06 → 0.10 to let value-weighted star
-# injuries register more than the old flat position model allowed.
-INJURY_DRAG_CAP = 0.10
+# Cap on total injury drag. Raised 0.06 → 0.10 → 0.15.
+# 0.10 fired too often in MLB (any team with SP + 4 position players on IL hit
+# it), causing bilateral cap hits where both teams clamp to the same value and
+# the signal washes out completely. The real fix is excluding 60-day IL (below)
+# but 0.15 provides headroom: requires a truly catastrophic IL situation
+# (2+ starters + many position players, all game-relevant) before clamping.
+INJURY_DRAG_CAP = 0.15
 
 
 def injury_adjustment(team: str, injuries: Dict[str, List[Dict]], sport: str) -> float:
