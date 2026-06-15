@@ -4927,8 +4927,8 @@
     },
     {
       "date": "2026-06-14",
-      "generated_at": "2026-06-15T06:39:43Z",
-      "headline": "3-4 on budget (-$2.84), avg CLV -0.16%; 1 pick(s) pending. Carolina wins the Stanley Cup \u2014 model's highest-edge pick of the night.",
+      "generated_at": "2026-06-15T07:11:28Z",
+      "headline": "3-4 budget (-$2.84), avg CLV -0.16%; Hurricanes win Stanley Cup (CLV +0.6%); Athletics took franchise-record 23-run loss on +2.2% CLV; 1 WC pick pending",
       "budget_record": "3-4",
       "watchlist_record": "6-10",
       "budget_pnl": -2.84,
@@ -4944,16 +4944,16 @@
           "result": "WON",
           "score": "Chicago Cubs 1, San Francisco Giants 5",
           "pnl": "+$2.59",
-          "why_picked": "ERA trap on opponent starter \u2014 \u26a0 ERA trap [SEVERE] \u2014 Ryan Rolison: ERA 2.25 vs xFIP 3.74 over 24 IP (severity 1.",
-          "what_happened": "Logan Webb dominated for eight innings, allowing just one unearned run; Jackson Chapman hit his seventh homer and the Giants offense backed Webb with five total runs to shut the Cubs out of a comeback.",
+          "why_picked": "SEVERE ERA trap on Rolison (ERA 2.25 vs xFIP 3.74, severity 1.04) \u2014 Cubs ML was overpriced; Logan Webb's process metrics (FIP 3.10/xFIP 3.13) strongly favored SF at pitcher-friendly Oracle Park (PF 0.94).",
+          "what_happened": "Logan Webb dominated with 8 innings of 7-hit ball and 7 strikeouts, pitching out of jams in three of the first five innings. Matt Chapman homered twice driving in 2 and Jung Hoo Lee added two hits as SF won 5-1 to avoid a series sweep.",
           "signals": [
             "ERA Trap",
             "Park Factor",
             "Injury Impact",
             "Recent Form"
           ],
-          "signal_verdict": "MIXED \u2014 won, but the market moved -1.0% against this pick",
-          "key_insight": "",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-1.0%, noise range)",
+          "key_insight": "ERA trap on Rolison (SEVERE) correctly identified Cubs ML as overpriced; Webb's process outperformed the ERA trap on a pitcher actually pitching well this year.",
           "in_budget": true,
           "clv_pct": -1.0
         },
@@ -4966,16 +4966,15 @@
           "result": "LOST",
           "score": "Colorado Rockies 23, Athletics 9",
           "pnl": "-$5.24",
-          "why_picked": "ERA trap on opponent starter \u2014 \u26a0 ERA trap [MODERATE] \u2014 Tomoyuki Sugano: ERA 4.08 vs xFIP 4.67 over 68 IP (sever.",
-          "what_happened": "The Rockies put up a franchise-record 23 runs: Willi Castro smashed a grand slam with seven RBI, Hunter Goodman went 5-for-5 with two homers, and Jeffrey Springs was chased in four innings as Colorado piled up 24 hits.",
+          "why_picked": "MODERATE ERA trap on Sugano (ERA 4.08 vs xFIP 4.67); Athletics' hot recent form (6-4 last 10, 5.7 R/G) in a favorable 91\u00b0F ball-carries-well environment at Las Vegas Ballpark.",
+          "what_happened": "Colorado set a franchise record with 23 runs \u2014 Willi Castro went 4-for-4 with 7 RBI including a grand slam, Hunter Goodman had 5 hits with 2 homers, and the Rockies scored 6 in the 5th inning. An extreme outlier offensive explosion that fell entirely outside any model's probability distribution.",
           "signals": [
             "ERA Trap",
             "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
+            "Recent Form"
           ],
           "signal_verdict": "CORRECT \u2014 beat the close (+2.2%), lost on variance",
-          "key_insight": "Franchise-record 23-run game is a 5-sigma outlier; CLV +2.2% confirms the model had real edge \u2014 pure variance loss.",
+          "key_insight": "The +2.2% CLV validates the pick was correct process. A franchise-record 23-run game is irreducible variance \u2014 no model signal could anticipate this outlier.",
           "in_budget": true,
           "clv_pct": 2.2
         },
@@ -4988,16 +4987,15 @@
           "result": "LOST",
           "score": "Tampa Bay Rays 8, Los Angeles Angels 3",
           "pnl": "-$5.50",
-          "why_picked": "ERA trap on opponent starter \u2014 \u26a0 ERA trap [MODERATE] \u2014 Casey Legumina: ERA 3.07 vs xFIP 3.79 over 29 IP (severi.",
-          "what_happened": "Tampa Bay broke open a tight game with a five-run eighth: Junior Caminero's tiebreaking two-run homer and Victor Mesa Jr.'s two-run blast sent the Rays to an 8-3 win, blowing past the +1.5 cushion.",
+          "why_picked": "MODERATE ERA trap on Legumina (ERA 3.07 vs xFIP 3.79) \u2014 Rays ML overpriced; Angels' superior recent form (6-4 last 10, 5.7 R/G). +1.5 spread hedged Angels starting pitcher risk.",
+          "what_happened": "Grayson Rodriguez's 8.10 ERA proved prophetic as the Angels starter struggled; the Rays' bullpen took over and Junior Caminero hit a tiebreaking 2-run homer in the 8th in a 5-run inning that blew the spread open, 8-3 final.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
             "Recent Form",
-            "Schedule Load"
+            "Pitcher Matchup"
           ],
           "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.8%)",
-          "key_insight": "",
+          "key_insight": "ERA trap on the opposing pitcher (Legumina) doesn't offset an Angels starter with an 8.10 ERA. Grayson Rodriguez's own poor metrics should have dampened confidence here \u2014 model needs stronger weight on home-starter quality for spread picks.",
           "in_budget": true,
           "clv_pct": -0.8
         },
@@ -5010,16 +5008,16 @@
           "result": "WON",
           "score": "Philadelphia Phillies 0, Milwaukee Brewers 4",
           "pnl": "+$4.16",
-          "why_picked": "ERA trap on opponent starter \u2014 \u26a0 ERA trap [MILD] \u2014 Cristopher S\u00e1nchez: ERA 1.54 vs xFIP 2.22 over 93 IP (severi.",
-          "what_happened": "Kyle Harrison held the Phillies to three hits over six shutout innings, Jackson Chourio launched a leadoff homer and Blake Perkins followed with a three-run shot in the fourth to tag Cristopher S\u00e1nchez for a 4-0 Brewers win.",
+          "why_picked": "MILD ERA trap on S\u00e1nchez (ERA 1.54 vs xFIP 2.22, severity 0.36); Kyle Harrison's elite process metrics (FIP 3.05/xFIP 2.81, 11.7 K/9); Phillies injury impact (-2.4%) with Johan Rojas OUT.",
+          "what_happened": "Harrison rebounded brilliantly from his worst outing, throwing 6 scoreless innings of 6-hit ball. Jackson Chourio homered leadoff and Blake Perkins hit a 3-run homer in the 4th to chase S\u00e1nchez for a 4-0 Milwaukee shutout.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
             "Injury Impact",
-            "Recent Form"
+            "Recent Form",
+            "Pitching Edge"
           ],
-          "signal_verdict": "MIXED \u2014 won, but the market moved -1.8% against this pick",
-          "key_insight": "Market drifted toward Phillies (CLV -1.8%) but Kyle Harrison's performance validated the pitching matchup edge.",
+          "signal_verdict": "MIXED \u2014 won, but the market moved 1.8% against this pick",
+          "key_insight": "The -1.8% CLV means the market correctly disagreed \u2014 S\u00e1nchez is genuinely elite (MILD ERA trap only) and market priced this closer to a coinflip. The win came via Harrison's elite process and the Brewers' red-hot offense (7.4 R/G last 10), not the ERA trap thesis.",
           "in_budget": true,
           "clv_pct": -1.8
         },
@@ -5032,26 +5030,28 @@
           "result": "WON",
           "score": "Carolina Hurricanes 3, Vegas Golden Knights 0",
           "pnl": "+$4.67",
-          "why_picked": "Rating edge favoring Carolina Hurricanes: stronger season NetRtg and superior recent-form differential.",
-          "what_happened": "Brandon Bussi stopped all 22 Golden Knights shots for a shutout; Jackson Blake scored and added an assist, with Taylor Hall and Nikolaj Ehlers also finding the net, as Carolina clinched the Stanley Cup 3-0 in Game 6 (franchise's 16-3 playoff record).",
+          "why_picked": "Dominant Rating Edge \u2014 Carolina NetRtg 0.68 vs VGK 0.18; William Karlsson (C) OUT for Vegas; playoff form weighted 55% favoring the Hurricanes' superior defensive structure.",
+          "what_happened": "Brandon Bussi stopped all 22 shots for a shutout as the Hurricanes clinched the Stanley Cup with a dominant 3-0 win. Jordan Staal, 37, won the Conn Smythe with 6 goals in the Final. Vegas went nearly 19 straight minutes without a shot on goal late in Game 6.",
           "signals": [
-            "Injury Impact",
-            "Recent Form",
             "Rating Edge",
+            "Injury Impact",
             "Playoff Adjustment"
           ],
           "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.6%, noise range)",
-          "key_insight": "Shutout in a Stanley Cup clincher; Rating Edge + Playoff Adjustment signal combination delivered cleanly.",
+          "key_insight": "Rating Edge proved dominant across the entire series (4-2 CAR). The model correctly prioritized Carolina's deeper defensive structure over Vegas home ice advantage. Karlsson's absence was decisive.",
           "in_budget": true,
           "clv_pct": 0.6
         },
         {
-          "pick": "Milwaukee Brewers (ML) + Los Angeles Angels (ML)",
-          "sport": "PARLAY",
-          "bet_type": "Parlay",
           "game": "Philadelphia Phillies @ Milwaukee Brewers / Tampa Bay Rays @ Los Angeles Angels",
+          "sport": "PARLAY",
+          "pick": "Milwaukee Brewers (ML) + Los Angeles Angels (ML)",
+          "bet_type": "Parlay",
           "result": "LOST",
+          "score": "Brewers 4-0 PHI / Rays 8-3 LAA",
           "pnl": "-$1.44",
+          "why_picked": "Two ERA-trap-anchored underdog plays with double-digit edge; Brewers ML for Harrison's elite xFIP and Phillies injuries; Angels ML for the Legumina ERA trap and Angels' hot recent form.",
+          "what_happened": "Brewers won 4-0 (leg hit); Angels lost 8-3 after a Rays 5-run 8th inning (leg sunk the parlay).",
           "legs": [
             {
               "game": "Philadelphia Phillies @ Milwaukee Brewers",
@@ -5076,25 +5076,25 @@
               "market_prob_at_close": 0.4705
             }
           ],
-          "why_picked": "Two-leg parlay combining model's highest-edge picks for combined payout.",
-          "what_happened": "Milwaukee Brewers (WON); Los Angeles Angels (LOST)",
           "signals": [
             "ERA Trap",
-            "Park Factor",
             "Injury Impact",
             "Recent Form"
           ],
-          "signal_verdict": "INCORRECT \u2014 one or more legs failed",
-          "key_insight": "Los Angeles Angels leg failed, busting the parlay.",
+          "signal_verdict": "INCORRECT \u2014 parlay lost on the Angels leg; Brewers ML hit cleanly",
+          "key_insight": "Parlay lost because the weaker leg (Angels +1.5/ML) failed. When picking parlays anchored to ERA trap spreads, the home starter's own quality must also clear a threshold.",
           "in_budget": true
         },
         {
-          "pick": "Athletics (ML) + Carolina Hurricanes (ML)",
-          "sport": "PARLAY",
-          "bet_type": "Parlay",
           "game": "Colorado Rockies @ Athletics / Carolina Hurricanes @ Vegas Golden Knights",
+          "sport": "PARLAY",
+          "pick": "Athletics (ML) + Carolina Hurricanes (ML)",
+          "bet_type": "Parlay",
           "result": "LOST",
+          "score": "Rockies 23-9 ATH / CAR 3-0 VGK",
           "pnl": "-$2.08",
+          "why_picked": "Highest-edge budget picks combined \u2014 Athletics' 11.5% edge on ERA trap + recent form; Hurricanes' 13.1% edge on dominant Rating Edge and Karlsson injury.",
+          "what_happened": "Carolina won 3-0 to clinch the Stanley Cup (leg hit cleanly); the historic 23-run Rockies eruption sank the Athletics leg.",
           "legs": [
             {
               "game": "Colorado Rockies @ Athletics",
@@ -5119,16 +5119,14 @@
               "market_prob_at_close": 0.5172
             }
           ],
-          "why_picked": "Two-leg parlay combining model's highest-edge picks for combined payout.",
-          "what_happened": "Athletics (LOST); Carolina Hurricanes (WON)",
           "signals": [
             "ERA Trap",
+            "Rating Edge",
             "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
+            "Playoff Adjustment"
           ],
-          "signal_verdict": "INCORRECT \u2014 one or more legs failed",
-          "key_insight": "Athletics leg failed, busting the parlay.",
+          "signal_verdict": "INCORRECT \u2014 lost on the Athletics leg despite +2.2% CLV; Hurricanes leg WON",
+          "key_insight": "Even high-edge legs (Athletics at +2.2% CLV) lose to extreme outlier events. The Hurricanes leg would have been +$4.67 as a standalone \u2014 parlay structure amplified the cost of the variance loss.",
           "in_budget": true
         },
         {
@@ -5140,13 +5138,12 @@
           "result": "WON",
           "score": "Los Angeles Dodgers 4, Chicago White Sox 6",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Los Angeles Dodgers 4, Chicago White Sox 6 \u2014 Chicago White Sox +1.5 covered.",
+          "why_picked": "SEVERE ERA trap on Bryan Hudson (ERA 2.25 vs xFIP 4.06, severity 1.81) \u2014 White Sox ML overpriced; Dodgers injury impact (-3.4%) with Kendall George OUT.",
+          "what_happened": "Chicago won 6-4 as the Dodgers' depleted lineup couldn't fully capitalize on their modest run advantage; White Sox covered the +1.5 spread comfortably.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
             "Injury Impact",
-            "Recent Form"
+            "Park Factor"
           ],
           "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.2%, noise range)",
           "key_insight": "",
@@ -5162,15 +5159,14 @@
           "result": "LOST",
           "score": "St. Louis Cardinals 4, Minnesota Twins 5",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "St. Louis Cardinals 4, Minnesota Twins 5.",
+          "why_picked": "SEVERE ERA trap on McGreevy (ERA 2.99 vs xFIP 4.01, severity 1.02) \u2014 Cards ML on a 7-3 hot streak (6.7 R/G last 10).",
+          "what_happened": "Minnesota edged St. Louis 5-4 in a tight game; the Cardinals hit well but couldn't overcome a one-run deficit at the end.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form"
+            "Recent Form",
+            "Injury Impact"
           ],
-          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.9%)",
+          "signal_verdict": "CORRECT \u2014 beat the close (+0.9%), lost on variance",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": 0.9
@@ -5184,16 +5180,15 @@
           "result": "LOST",
           "score": "Atlanta Braves 1, New York Mets 8",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Atlanta Braves 1, New York Mets 8.",
+          "why_picked": "SEVERE ERA trap on Bryce Elder (ERA 2.66 vs xFIP 3.88, severity 1.22) \u2014 Braves ML overpriced; model projected ATL win (4.1 vs 3.5).",
+          "what_happened": "Rookie A.J. Ewing nearly hit for the cycle, powering the last-place Mets to an 8-1 win \u2014 a four-run first inning off Bryce Elder ended the game early. Atlanta's 4.2 R/G recent form (vs 5.1 season avg) signaled a team in regression.",
           "signals": [
             "ERA Trap",
             "Park Factor",
-            "Injury Impact",
             "Recent Form"
           ],
-          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -3.4% against us",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 3.4% against us",
+          "key_insight": "A -3.4% CLV is the loudest negative signal of the night. The market was right: Atlanta was in offensive regression and Bryce Elder's 1.22 severity ERA trap backfired. The Braves' recent form decline should have weighted against this pick.",
           "in_budget": false,
           "clv_pct": -3.4
         },
@@ -5206,13 +5201,13 @@
           "result": "LOST",
           "score": "Texas Rangers 6, Boston Red Sox 4",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Texas Rangers 6, Boston Red Sox 4 \u2014 Boston Red Sox +1.5 did not cover.",
+          "why_picked": "MODERATE ERA trap on Connelly Early (ERA 3.30 vs xFIP 3.79); Texas injury impact (-6.0%) was expected to suppress Rangers offense; hitter-friendly Fenway (PF 1.08) with favorable wind (+0.4 runs).",
+          "what_happened": "Texas won 6-4; Rangers overcome significant injury concerns to score 6 at Fenway, busting the spread.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
             "Injury Impact",
-            "Schedule Load"
+            "Park Factor",
+            "Weather Factor"
           ],
           "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.2%)",
           "key_insight": "",
@@ -5228,13 +5223,12 @@
           "result": "LOST",
           "score": "San Diego Padres 5, Baltimore Orioles 2",
           "pnl": "",
-          "why_picked": "Model edge: 7.1% over market probability.",
-          "what_happened": "San Diego Padres 5, Baltimore Orioles 2.",
+          "why_picked": "San Diego injury impact (-4.2%); Orioles' strong recent form (5-5, 6.1 R/G vs 4.7 season); model projected BAL 4.2 vs SD 3.6.",
+          "what_happened": "San Diego's offense overcame their own injury issues to score 5 runs on Walker Buehler and the Orioles bullpen; Baltimore could only muster 2 in reply.",
           "signals": [
-            "Park Factor",
+            "Pitcher Matchup",
             "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
+            "Recent Form"
           ],
           "signal_verdict": "CORRECT \u2014 beat the close (+1.5%), lost on variance",
           "key_insight": "",
@@ -5249,16 +5243,15 @@
           "confidence": "MEDIUM",
           "result": "VOID",
           "score": "Postponed",
-          "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Game postponed (PPD).",
+          "pnl": "$0.00",
+          "why_picked": "SEVERE ERA trap on Casey Mize (ERA 2.27 vs xFIP 3.42); Detroit's superior recent form (6-4 last 10, 5.5 R/G).",
+          "what_happened": "Game postponed \u2014 stake returned.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
             "Recent Form",
-            "Schedule Load"
+            "Park Factor"
           ],
-          "signal_verdict": "VOID \u2014 game postponed, stake returned",
+          "signal_verdict": "N/A \u2014 postponed",
           "key_insight": "",
           "in_budget": false
         },
@@ -5271,16 +5264,14 @@
           "result": "WON",
           "score": "Seattle Mariners 1, Washington Nationals 10",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Seattle Mariners 1, Washington Nationals 10 \u2014 Washington Nationals +1.5 covered.",
+          "why_picked": "Dual SEVERE ERA trap on both starters \u2014 PJ Poulin (ERA 3.20 vs xFIP 4.87, severity 1.26) and Emerson Hancock (ERA 2.74 vs xFIP 3.73, severity 0.99) \u2014 game wide open; Nationals +1.5 offered better value than picking a winner.",
+          "what_happened": "Miles Mikolas threw 7 shutout innings in relief and Nationals exploded for 10 runs including homers from Keibert Ruiz and James Wood; Hancock was roughed up as Seattle lost their 4th of 5.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
-            "Injury Impact",
-            "Schedule Load"
+            "Pitcher Matchup"
           ],
           "signal_verdict": "CORRECT \u2014 won and beat the close (+2.1%)",
-          "key_insight": "",
+          "key_insight": "Dual ERA trap with spread pick was the strongest signal structure of the day \u2014 +2.1% CLV AND a 10-1 result. When both starters are severe ERA traps, the spread pick is often better than either ML.",
           "in_budget": false,
           "clv_pct": 2.1
         },
@@ -5293,13 +5284,12 @@
           "result": "LOST",
           "score": "New York Yankees 8, Toronto Blue Jays 3",
           "pnl": "",
-          "why_picked": "Model edge: 5.7% over market probability.",
-          "what_happened": "New York Yankees 8, Toronto Blue Jays 3 \u2014 Toronto Blue Jays +1.5 did not cover.",
+          "why_picked": "New York injury impact (-1.8%); Rogers Centre hitter-friendly (PF 1.05); Blue Jays +1.5 spread as run-line hedge.",
+          "what_happened": "The Yankees pounded out 8 runs \u2014 Will Warren's strong pitching metrics (FIP 3.26/xFIP 3.18) held up for NY as they easily covered the spread in a 5-run win.",
           "signals": [
-            "Park Factor",
+            "Pitcher Matchup",
             "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
+            "Park Factor"
           ],
           "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.9%)",
           "key_insight": "",
@@ -5315,16 +5305,14 @@
           "result": "LOST",
           "score": "Seattle Mariners 1, Washington Nationals 10",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Seattle Mariners 1, Washington Nationals 10.",
+          "why_picked": "Model projected Seattle 4.5 vs Nationals 3.9; SEVERE ERA trap on Poulin (Nationals starter) signaled Nationals ML overpriced \u2014 contrarian model pick on Seattle ML.",
+          "what_happened": "Same game \u2014 Nationals won 10-1; the dual ERA trap on Hancock (Seattle starter, severity 0.99) was the stronger signal that also pointed away from Seattle.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
-            "Injury Impact",
-            "Schedule Load"
+            "Pitcher Matchup"
           ],
           "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.5%)",
-          "key_insight": "",
+          "key_insight": "When dual ERA traps exist in a game, the spread pick (Nationals +1.5, WON +2.1% CLV) dominated over either ML pick. The model correctly analyzed the game as ERA-trap-driven but chose the wrong side on ML.",
           "in_budget": false,
           "clv_pct": -0.5
         },
@@ -5337,13 +5325,12 @@
           "result": "LOST",
           "score": "Arizona Diamondbacks 5, Cincinnati Reds 3",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Arizona Diamondbacks 5, Cincinnati Reds 3 \u2014 Cincinnati Reds +1.5 did not cover.",
+          "why_picked": "MODERATE ERA trap on Abbott (ERA 4.10 vs xFIP 4.87); hitter-friendly Great American Ball Park (PF 1.12); Reds injury impact (-4.2%).",
+          "what_happened": "Arizona won 5-3; the +1.5 spread didn't save Cincinnati as the D-backs won by 2.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
             "Injury Impact",
-            "Recent Form"
+            "Park Factor"
           ],
           "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.4%)",
           "key_insight": "",
@@ -5359,16 +5346,14 @@
           "result": "WON",
           "score": "Colorado Rockies 23, Athletics 9",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Colorado Rockies 23, Athletics 9 \u2014 Colorado Rockies +1.5 covered.",
+          "why_picked": "Same game as budget Athletics ML \u2014 the +1.5 spread on Rockies was the watchlist hedge version, capturing the run-line value against the model's dominant Athletics projection.",
+          "what_happened": "The same historic 23-9 Rockies blowout that sank the budget Athletics ML pick also hit the Rockies +1.5 spread watchlist pick for a comfortable WON.",
           "signals": [
             "ERA Trap",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
+            "Injury Impact"
           ],
           "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.5%, noise range)",
-          "key_insight": "",
+          "key_insight": "Same game, split result: budget Athletics ML LOST (CLV +2.2%) vs watchlist Rockies +1.5 WON (CLV -0.5%). The spread pick captured the actual game dynamic better despite the model preferring Athletics outright.",
           "in_budget": false,
           "clv_pct": -0.5
         },
@@ -5381,13 +5366,12 @@
           "result": "WON",
           "score": "Houston Astros 0, Kansas City Royals 4",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Houston Astros 0, Kansas City Royals 4 \u2014 Kansas City Royals +1.5 covered.",
+          "why_picked": "SEVERE ERA trap on Arrighetti (ERA 2.21 vs xFIP 4.33, severity 2.12) \u2014 Astros ML overpriced; Royals' improved recent form (5-5, 5.1 R/G vs 4.0 season).",
+          "what_happened": "Kansas City won 4-0 \u2014 Arrighetti's inflated ERA proved to be a telling mismatch, and the Royals didn't even need the spread insurance, winning outright.",
           "signals": [
             "ERA Trap",
             "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
+            "Recent Form"
           ],
           "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.3%, noise range)",
           "key_insight": "",
@@ -5403,13 +5387,12 @@
           "result": "WON",
           "score": "Arizona Diamondbacks 5, Cincinnati Reds 3",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Arizona Diamondbacks 5, Cincinnati Reds 3.",
+          "why_picked": "MODERATE ERA trap on Abbott (ERA 4.10 vs xFIP 4.87, severity 0.77) \u2014 Reds ML overpriced; Cincinnati injury impact (-4.2%).",
+          "what_happened": "Arizona won 5-3; the ERA trap on Cincinnati's starter correctly identified the Reds as overpriced favorites.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
             "Injury Impact",
-            "Recent Form"
+            "Park Factor"
           ],
           "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.5%, noise range)",
           "key_insight": "",
@@ -5425,13 +5408,12 @@
           "result": "WON",
           "score": "Miami Marlins 4, Pittsburgh Pirates 2",
           "pnl": "",
-          "why_picked": "ERA trap signal on opposing starter.",
-          "what_happened": "Miami Marlins 4, Pittsburgh Pirates 2.",
+          "why_picked": "MODERATE ERA trap on Max Meyer (ERA 2.85 vs xFIP 3.48, severity 0.51) \u2014 Pirates ML overpriced; Miami's elite recent form (8-2 last 10, 4.9 R/G) and Pittsburgh's cold streak (3-7 last 10).",
+          "what_happened": "Miami won 4-2 despite facing Paul Skenes; the Marlins' hot streak continued as Pittsburgh's offensive cold snap persisted.",
           "signals": [
             "ERA Trap",
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form"
+            "Recent Form",
+            "Pitcher Matchup"
           ],
           "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.9%, noise range)",
           "key_insight": "",
@@ -5447,13 +5429,13 @@
           "result": "PENDING",
           "score": "Cura\u00e7ao 1, Germany 7",
           "pnl": "",
-          "why_picked": "Elo edge favoring Cura\u00e7ao.",
-          "what_happened": "Score: Cura\u00e7ao 1, Germany 7 \u2014 result pending settlement.",
+          "why_picked": "Elo spread value \u2014 Germany's 345-pt Elo advantage projects a 2.09-goal margin; +3.5 gives buffer for an outsized German performance.",
+          "what_happened": "Germany won 7-1 in a dominant World Cup opener \u2014 Kai Havertz scored twice, Felix Nmecha and Jamal Musiala also scored, but Cura\u00e7ao made history with the smallest nation ever to score at a World Cup (Livano Comenencia). Official settlement pending.",
           "signals": [
             "Elo Edge",
             "Model Projection"
           ],
-          "signal_verdict": "PENDING \u2014 CLV -1.9%",
+          "signal_verdict": "PENDING (CLV -1.9% \u2014 market moved against this pick pre-game)",
           "key_insight": "",
           "in_budget": false,
           "clv_pct": -1.9
@@ -5467,14 +5449,14 @@
           "result": "LOST",
           "score": "Japan 2, Netherlands 2",
           "pnl": "",
-          "why_picked": "Elo edge favoring Netherlands.",
-          "what_happened": "Japan 2, Netherlands 2.",
+          "why_picked": "Elo edge: Netherlands +165 pts (1.00-goal supremacy); model projected Netherlands 1.8 vs Japan 0.8.",
+          "what_happened": "Netherlands led twice but Japan equalized via a deflection from Kamada in the 89th minute to force a 2-2 draw in the 1000th World Cup match at Dallas Stadium \u2014 a draw is a loss for an ML bet.",
           "signals": [
             "Elo Edge",
             "Model Projection"
           ],
           "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.1%)",
-          "key_insight": "",
+          "key_insight": "World Cup ML bets carry endemic draw risk \u2014 1-in-3 outcomes are a guaranteed loss on ML. The model's Elo-based win probability doesn't account for the compounding draw exposure in tournament-format soccer.",
           "in_budget": false,
           "clv_pct": 0.1
         },
@@ -5487,14 +5469,14 @@
           "result": "LOST",
           "score": "Ecuador 0, Ivory Coast 1",
           "pnl": "",
-          "why_picked": "Elo edge favoring Ecuador.",
-          "what_happened": "Ecuador 0, Ivory Coast 1.",
+          "why_picked": "Elo edge: Ecuador +100 pts (0.61-goal supremacy); model projected Ecuador 1.6 vs Ivory Coast 1.0.",
+          "what_happened": "Ivory Coast's Amad Diallo came off the bench to score a stoppage-time winner in the 90th minute as Ecuador dominated but hit the woodwork three times \u2014 cruel luck for a team that deserved a point.",
           "signals": [
             "Elo Edge",
             "Model Projection"
           ],
           "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.4%)",
-          "key_insight": "",
+          "key_insight": "Ecuador completely dominated by xG but lost to a single stoppage-time counter; World Cup ML bets have this compounding risk of close-loss outcomes beyond just the draw.",
           "in_budget": false,
           "clv_pct": 0.4
         },
@@ -5507,33 +5489,34 @@
           "result": "LOST",
           "score": "Tunisia 1, Sweden 5",
           "pnl": "",
-          "why_picked": "Elo edge favoring Tunisia.",
-          "what_happened": "Tunisia 1, Sweden 5 \u2014 Tunisia +0.5 did not cover.",
+          "why_picked": "Venue heat factor (Estadio BBVA) expected to suppress scoring; model projected Sweden 1.4 vs Tunisia 1.1 \u2014 a narrow expected margin giving Tunisia +0.5 value.",
+          "what_happened": "Sweden's Yasin Ayari opened with a long-range stunner in the 6th minute, Alexander Isak doubled the lead on a counter, and Sweden ran out 5-1 winners in the second half \u2014 entirely one-sided from the start.",
           "signals": [
-            "Weather Factor",
             "Model Projection"
           ],
-          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.7% against us",
-          "key_insight": "",
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 1.7% against us",
+          "key_insight": "The -1.7% CLV confirms the market correctly read Sweden as stronger than the model's Elo projection suggested; Tunisia's weaker squad was exposed comprehensively.",
           "in_budget": false,
           "clv_pct": -1.7
         }
       ],
       "patterns": [
-        "HIGH confidence (budget singles): 3-2 on budget singles (all rated HIGH confidence)",
-        "ERA Trap singles: 2-2 tonight \u2014 signal fired on all 4 MLB budget picks",
-        "NHL Stanley Cup Final: Model correctly backed Carolina Hurricanes (Rating Edge + Playoff Adjustment) \u2014 won the cup with a shutout",
-        "Parlays: 0-2 \u2014 both legs had at least one bust (Athletics 23-run implosion, Angels losing by 5)",
-        "Watchlist: 6-10 \u2014 spread picks outperformed ML picks",
-        "WC watchlist: 0-3 (Netherlands drew, Ecuador and Tunisia lost); Curacao +3.5 PENDING"
+        "HIGH confidence: 3-4 across budget singles + parlays",
+        "ERA Trap (budget singles): 2-2 \u2014 SF Giants WON (CLV -1.0%), Brewers WON (CLV -1.8%), Athletics LOST (CLV +2.2%), Angels LOST (CLV -0.8%)",
+        "Rating Edge + Playoff Adjustment (NHL): 1-0 \u2014 Carolina Hurricanes clinched Stanley Cup",
+        "Watchlist MLB Spread plays: 4-3 \u2014 Nationals +1.5 (CLV +2.1%), White Sox +1.5, Rockies +1.5, Royals +1.5 WON; Red Sox +1.5, Blue Jays +1.5, Reds +1.5 LOST",
+        "World Cup picks: 0-3 on settled (Netherlands, Ecuador, Tunisia all LOST); Cura\u00e7ao PENDING",
+        "Parlays: 0-2 today \u2014 both collapsed on a single failing leg",
+        "Same-game split: Rockies +1.5 WON (watchlist) vs Athletics ML LOST (budget) \u2014 spread hedge outperformed the outright pick on a historic variance day"
       ],
       "model_observations": [
-        "ERA Trap (budget): 2-4 with avg CLV -0.3% \u2014 results split 2-2 but CLV suggests edge exists on some; the Athletics pick hit +2.2% CLV before a 5-sigma offensive explosion wiped it out.",
-        "Rating Edge + Playoff Adjustment (NHL): Carolina Hurricanes 1-0, CLV +0.6% \u2014 clean signal delivery, model identified the superior team; outcome was a Stanley Cup-clinching shutout.",
-        "Schedule Load: appeared on all 4 MLB budget picks (both teams flagged in each game) \u2014 no differential signal value when both teams carry equal load; consider downweighting symmetric schedule flags.",
-        "Recent Form: appeared on 3 of 4 MLB budget picks. Athletics recent form was accurate (6-4 L10) but overwhelmed by a historic offensive outlier. Brewers and Giants recent form signals both converted.",
-        "WC Elo picks: 0-3 tonight (Netherlands drew, Ecuador and Tunisia lost) \u2014 Elo model underperformed on WC matchups with lower-seed upsets. CLV averaged near zero, suggesting the market priced these similarly.",
-        "Parlay structure: both parlays had one leg bust. The primary budget single picks (Athletics, Angels) were the culprits \u2014 parlay risk compounds single-pick variance."
+        "ERA Trap (budget singles): avg CLV -0.35% across 4 picks \u2014 overall mixed; individual severe traps (SF Giants) outperformed mild ones (Brewers -1.8% CLV suggests market was right)",
+        "ERA Trap (watchlist spreads): Nationals +1.5 (CLV +2.1% WON), White Sox +1.5 (CLV +0.2% WON), Royals +1.5 (CLV -0.3% WON) \u2014 spread plays on ERA trap outperformed ML picks today",
+        "Rating Edge (NHL): 1-0 with CLV +0.6% \u2014 Carolina's NetRtg 0.68 vs VGK 0.18 was the cleanest signal of the night, confirmed by series result",
+        "Braves ML: CLV -3.4% (worst of the night) \u2014 market correctly priced Atlanta's offensive regression; severe ERA trap on Elder backfired. Signals: model should weight team's recent R/G trend vs season avg more heavily when ERA trap is the primary driver",
+        "World Cup ML signals need draw-probability discount: 0-3 on settled WC ML/spread picks (Netherlands +0.1%, Ecuador +0.4%, Tunisia -1.7% CLV). Draw outcomes aren't adequately penalized in Elo-based WC ML projections",
+        "Dual ERA trap structure (Nationals game) produced best CLV of watchlist (+2.1%) \u2014 when both starters carry SEVERE ERA traps, the spread pick systematically outperforms either ML",
+        "Parlay record 0-2: both collapsed on single legs that individually had reasonable CLV (+2.2% on Athletics, -0.7% on Angels). Reducing parlay exposure on games with active ERA traps on the home starter is worth considering"
       ]
     }
   ]
