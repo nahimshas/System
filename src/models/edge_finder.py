@@ -1259,6 +1259,19 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         )
         signals.append(f"{name} {fip_str}{xfip_str} | K/9: {k9}")
 
+        # Short-leash warning: flag starters who consistently can't get through 3 innings
+        _gs   = int(stats.get("games_started", 0) or 0)
+        _avip = stats.get("avg_ip_per_start")
+        if _gs >= 3 and _avip is not None and float(_avip) < 4.0:
+            signals.append(
+                f"⚠ Short leash: {name} averaging {_avip:.1f} IP/start over {_gs} starts "
+                f"— bullpen carries {9 - float(_avip):.1f} innings"
+            )
+            research.append(
+                f"⚠ {name} short-leash risk: {_avip:.1f} IP/start avg ({_gs} GS) — "
+                f"effective opener, opponent's 2nd/3rd look already at bullpen"
+            )
+
     if home_pitcher_stats:
         _pitcher_lines(home_pitcher_name, home_pitcher_stats, "🔵", home)
     else:
