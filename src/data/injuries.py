@@ -26,15 +26,20 @@ def _normalize_status(raw_status: str):
     Normalise an ESPN injury status to one of STATUS_WEIGHT's keys, or None to
     skip (active / unknown).
 
-    Critically: MLB reports injuries as IL designations ("10-Day-IL",
-    "15-Day-IL", "60-Day-IL") and almost never "Out" — any IL stint means the
-    player is unavailable for today's game, so it maps to "out". (NFL "IR" too.)
-    Without this, every IL player — i.e. essentially all real MLB injuries — was
-    silently dropped, leaving only Day-To-Day guys at the lowest weight.
+    MLB reports injuries as IL designations ("10-Day-IL", "15-Day-IL",
+    "60-Day-IL"). 10-Day and 15-Day stints are recent-enough that the market
+    may not have fully adjusted — map them to "out". 60-Day IL is skipped:
+    these players have been unavailable for weeks/months and their absence is
+    already fully priced into team odds; counting them as fresh injury drag
+    manufactures false signal on information the market already knows.
+    NFL "IR" is similarly treated as "out" (season-ending, already priced, but
+    IR players rarely appear in week-to-week ESPN injury feeds so this is moot).
     """
     s = (raw_status or "").lower().strip()
     tokens = s.replace("-", " ").split()
-    if "il" in tokens or "ir" in tokens:        # injured list / injured reserve
+    if "60" in tokens and "il" in tokens:       # 60-day IL → fully priced in, skip
+        return None
+    if "il" in tokens or "ir" in tokens:        # 10-day / 15-day IL → game-relevant
         return "out"
     if s in ("out", "doubtful", "questionable", "day-to-day"):
         return s
