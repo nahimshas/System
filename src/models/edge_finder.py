@@ -975,30 +975,47 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
 
 def _pitcher_quality_score(stats: Dict) -> float:
     """
-    Returns a quality score for a starting pitcher.
+    Pitcher quality score feeding directly into run projections.
 
-    Improvements:
-    - Prefers xFIP over FIP (normalises HR/FB rate, more stable early-season)
-    - Applies a small-sample blend toward league average when IP < 50:
-      a pitcher with 20 IP gets 40 % weight on actual stats, 60 % on the mean,
-      preventing an outlier ERA/FIP over a tiny sample from dominating the model.
+    Formula: 100 - 10(xFIP) - 5(BB/9) + 1.5(K/9) + 2*(ERA-xFIP)*min(1,IP/50)
+    Normalized so a league-average pitcher scores 0 and the output range matches
+    the prior (LEAGUE_AVG - xFIP) / 1.50 scale — no retuning of run-projection
+    coefficients required.
+
+    Inputs:
+    - xFIP: already regressed toward league average by _blend_xfip (called before
+      this function) — small-sample pitchers are pulled toward 4.20 automatically.
+    - BB/9: walk rate penalises command-poor pitchers independently of xFIP.
+    - K/9: strikeout rate rewards swing-and-miss stuff.
+    - ERA trap (IP-scaled): when ERA diverges from xFIP over a meaningful sample,
+      adjust the score. ERA > xFIP means the pitcher has been unlucky (boost score);
+      ERA < xFIP means ERA looks better than true talent (reduce score).
+      Scaled by min(1, IP/50) so tiny samples can't generate large trap bonuses.
     """
-    LEAGUE_AVG = 4.20
-    ip   = stats.get("innings_pitched", 0)
-    xfip = stats.get("xfip")          # None when airOuts data unavailable
-    fip  = stats.get("fip", LEAGUE_AVG)
+    LEAGUE_AVG_XFIP  = 4.20
+    LEAGUE_AVG_BB9   = 3.0
+    LEAGUE_AVG_K9    = 8.5
+    FORMULA_BASELINE = 55.75   # raw score of a league-average pitcher
+    FORMULA_SCALE    = 20.0    # normalises to same range as prior formula
 
-    # xFIP normalises HR luck via fly-ball rate — more reliable early-season
-    base = xfip if xfip is not None else fip
+    ip   = stats.get("innings_pitched", 0) or 0
+    xfip = stats.get("xfip") or stats.get("fip", LEAGUE_AVG_XFIP)
+    era  = stats.get("era")
+    bb9  = stats.get("bb_per_9") or LEAGUE_AVG_BB9
+    k9   = stats.get("k_per_9")  or LEAGUE_AVG_K9
 
-    # Below 20 IP the numbers are very noisy — blend toward league mean.
-    # 20 IP ≈ 4-5 starts: enough to apply real signal.
-    # (Old threshold was 50 IP which was too aggressive and collapsed most edges.)
-    if ip < 20:
-        weight = max(0.0, ip / 20.0)          # 0 IP → 0 %, 20 IP → 100 %
-        base   = base * weight + LEAGUE_AVG * (1.0 - weight)
+    ip_conf  = min(1.0, ip / 50.0)
+    era_trap = 0.0
+    if isinstance(era, float) and ip >= 10:
+        era_trap = 2.0 * (float(era) - float(xfip)) * ip_conf
 
-    return (LEAGUE_AVG - base) / 1.50
+    raw = (100.0
+           - 10.0 * float(xfip)
+           - 5.0  * float(bb9)
+           + 1.5  * float(k9)
+           + era_trap)
+
+    return (raw - FORMULA_BASELINE) / FORMULA_SCALE
 
 
 def _era_trap_severity(stats: Dict) -> float:
