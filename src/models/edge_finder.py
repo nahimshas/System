@@ -1304,10 +1304,15 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         return round(blended, 3)
 
     def _effective_avg_ip(stats: Dict) -> float:
-        """Returns best available avg IP per start — recent form preferred over season."""
+        """Returns best available avg IP per start — recent form preferred over season.
+
+        Fallback is 4.0 (not 5.0) when no data exists: a pitcher whose stats are
+        absent from the API is more likely a rookie / spot starter than an established
+        6-inning workhorse, so 4.0 puts more weight on the bullpen by default.
+        """
         recent = stats.get("recent_avg_ip_per_start")
         season = stats.get("avg_ip_per_start")
-        return float(recent or season or 5.0)
+        return float(recent or season or 4.0)
 
     if home_pitcher_stats:
         home_blended_xfip = _blend_xfip(home_pitcher_stats)
