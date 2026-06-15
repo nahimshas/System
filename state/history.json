@@ -7620,5 +7620,161 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-06-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Chicago Cubs @ San Francisco Giants",
+    "bet_type": "Moneyline",
+    "pick": "San Francisco Giants",
+    "home_team": "San Francisco Giants",
+    "away_team": "Chicago Cubs",
+    "edge_pct": 9.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 64.5,
+    "market_prob_pct": 54.8,
+    "cost": 3.41,
+    "profit_if_win": 2.59,
+    "result": "WON",
+    "actual_pnl": 2.59,
+    "actual_home_score": 5.0,
+    "actual_away_score": 1.0
+  },
+  {
+    "date": "2026-06-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Colorado Rockies @ Athletics",
+    "bet_type": "Moneyline",
+    "pick": "Athletics",
+    "home_team": "Athletics",
+    "away_team": "Colorado Rockies",
+    "edge_pct": 11.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 75.0,
+    "market_prob_pct": 63.6,
+    "cost": 5.24,
+    "profit_if_win": 2.76,
+    "result": "LOST",
+    "actual_pnl": -5.24,
+    "actual_home_score": 9.0,
+    "actual_away_score": 23.0
+  },
+  {
+    "date": "2026-06-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Tampa Bay Rays @ Los Angeles Angels",
+    "bet_type": "Spread",
+    "pick": "Los Angeles Angels +1.5",
+    "home_team": "Los Angeles Angels",
+    "away_team": "Tampa Bay Rays",
+    "edge_pct": 12.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 71.3,
+    "market_prob_pct": 59.0,
+    "cost": 5.5,
+    "profit_if_win": 3.5,
+    "result": "LOST",
+    "actual_pnl": -5.5,
+    "actual_home_score": 3.0,
+    "actual_away_score": 8.0
+  },
+  {
+    "date": "2026-06-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Philadelphia Phillies @ Milwaukee Brewers",
+    "bet_type": "Moneyline",
+    "pick": "Milwaukee Brewers",
+    "home_team": "Milwaukee Brewers",
+    "away_team": "Philadelphia Phillies",
+    "edge_pct": 13.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 59.1,
+    "market_prob_pct": 46.1,
+    "cost": 3.84,
+    "profit_if_win": 4.16,
+    "result": "WON",
+    "actual_pnl": 4.16,
+    "actual_home_score": 4.0,
+    "actual_away_score": 0.0
+  },
+  {
+    "date": "2026-06-14",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Carolina Hurricanes @ Vegas Golden Knights",
+    "bet_type": "Moneyline",
+    "pick": "Carolina Hurricanes",
+    "home_team": "Vegas Golden Knights",
+    "away_team": "Carolina Hurricanes",
+    "edge_pct": 13.1,
+    "confidence": "HIGH",
+    "model_prob_pct": 64.4,
+    "market_prob_pct": 51.3,
+    "cost": 5.33,
+    "profit_if_win": 4.67,
+    "result": "WON",
+    "actual_pnl": 4.67,
+    "actual_home_score": 0.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-06-14",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Milwaukee Brewers (ML) + Los Angeles Angels (ML)",
+    "bet_type": "Parlay",
+    "pick": "Milwaukee Brewers (ML) + Los Angeles Angels (ML)",
+    "edge_pct": 11.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 33.0,
+    "market_prob_pct": 0,
+    "cost": 1.44,
+    "profit_if_win": 4.56,
+    "result": "LOST",
+    "actual_pnl": -1.44,
+    "legs": [
+      {
+        "game": "Philadelphia Phillies @ Milwaukee Brewers",
+        "pick": "Milwaukee Brewers",
+        "result": "WON"
+      },
+      {
+        "game": "Tampa Bay Rays @ Los Angeles Angels",
+        "pick": "Los Angeles Angels",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-06-14",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Athletics (ML) + Carolina Hurricanes (ML)",
+    "bet_type": "Parlay",
+    "pick": "Athletics (ML) + Carolina Hurricanes (ML)",
+    "edge_pct": 14.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 46.9,
+    "market_prob_pct": 0,
+    "cost": 2.08,
+    "profit_if_win": 3.92,
+    "result": "LOST",
+    "actual_pnl": -2.08,
+    "legs": [
+      {
+        "game": "Colorado Rockies @ Athletics",
+        "pick": "Athletics",
+        "result": "LOST"
+      },
+      {
+        "game": "Carolina Hurricanes @ Vegas Golden Knights",
+        "pick": "Carolina Hurricanes",
+        "result": "WON"
+      }
+    ]
   }
 ]
