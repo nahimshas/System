@@ -1309,10 +1309,18 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         Fallback is 4.0 (not 5.0) when no data exists: a pitcher whose stats are
         absent from the API is more likely a rookie / spot starter than an established
         6-inning workhorse, so 4.0 puts more weight on the bullpen by default.
+
+        Recent form requires ≥ 2 starts to override the season average. A single
+        outing in the game log is too noisy — a pitcher whose game log only shows
+        one qualifying start could have a 7-IP avg from an outlier start, masking
+        a pattern of early exits (e.g. a rookie averaging 3.3 IP/start season-wide
+        but the recent window only sees his one long outing).
         """
-        recent = stats.get("recent_avg_ip_per_start")
-        season = stats.get("avg_ip_per_start")
-        return float(recent or season or 4.0)
+        recent        = stats.get("recent_avg_ip_per_start")
+        recent_starts = int(stats.get("recent_starts", 0) or 0)
+        season        = stats.get("avg_ip_per_start")
+        valid_recent  = recent if (recent is not None and recent_starts >= 2) else None
+        return float(valid_recent or season or 4.0)
 
     if home_pitcher_stats:
         home_blended_xfip = _blend_xfip(home_pitcher_stats)
