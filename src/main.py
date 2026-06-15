@@ -171,6 +171,8 @@ def _resize_with_calibrated_probs(recs) -> None:
     Failures leave the original sizing untouched.
     """
     from src.models.kelly import robinhood_kelly
+    from src.state.bankroll import load_bankroll
+    _bankroll = load_bankroll()
     for r in recs:
         try:
             sz = getattr(r, "sizing", None)
@@ -181,7 +183,7 @@ def _resize_with_calibrated_probs(recs) -> None:
             r.model_prob_calibrated = round(cal_prob, 4)
             if abs(cal_prob - float(r.model_prob)) < 1e-9:
                 continue   # no correction — keep the analyzer's sizing
-            r.sizing = robinhood_kelly(cal_prob, float(r.market_prob))
+            r.sizing = robinhood_kelly(cal_prob, float(r.market_prob), budget=_bankroll)
         except Exception:
             continue
 
