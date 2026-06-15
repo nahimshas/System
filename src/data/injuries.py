@@ -111,12 +111,18 @@ def injury_adjustment(team: str, injuries: Dict[str, List[Dict]], sport: str) ->
     not yet value-enriched fall through with value_mult = 1.0 (prior behaviour).
     """
     position_map = _SPORT_POSITION_MAP.get(sport, NBA_POSITION_IMPACT)
-    adjustment = 0.0
+    # Compound combination (1 − ∏(1 − pₖ)) instead of a naive sum, so multiple
+    # injuries saturate naturally rather than growing linearly into the cap
+    # (mirrors WNBA's lineup-penalty math). For a single injury this equals the
+    # old sum, so one-injury behaviour is unchanged.
+    survival = 1.0
     for inj in injuries.get(team, []):
         pos = inj.get("position", "")
         status = inj.get("status", "questionable").lower()
         impact = position_map.get(pos, 0.010)
         weight = STATUS_WEIGHT.get(status, 0.35)
         value_mult = inj.get("value_mult", 1.0)   # 1.0 = position-only (unenriched)
-        adjustment += impact * weight * value_mult
+        single = min(impact * weight * value_mult, 0.15)   # per-player cap
+        survival *= (1.0 - single)
+    adjustment = 1.0 - survival
     return min(adjustment, INJURY_DRAG_CAP)

@@ -336,3 +336,23 @@ class TestInjuryValueWeighting:
         # No value_mult key → defaults to 1.0 → position-only (old) behaviour
         old = {"T": [{"player": "X", "position": "RF", "status": "out"}]}
         assert abs(injury_adjustment("T", old, "mlb") - 0.010) < 1e-9
+
+
+class TestInjuryCompoundCombination:
+    """Multiple injuries combine via compound (1-∏(1-p)), not naive sum."""
+
+    def test_single_injury_unchanged_by_compound(self):
+        from src.data.injuries import injury_adjustment
+        one = {"T": [{"player": "A", "position": "RF", "status": "out", "value_mult": 3.0}]}
+        assert abs(injury_adjustment("T", one, "mlb") - 0.030) < 1e-9
+
+    def test_two_injuries_compound_below_sum(self):
+        from src.data.injuries import injury_adjustment
+        two = {"T": [
+            {"player": "A", "position": "RF", "status": "out", "value_mult": 3.0},  # 0.030
+            {"player": "B", "position": "RF", "status": "out", "value_mult": 3.0},  # 0.030
+        ]}
+        adj = injury_adjustment("T", two, "mlb")
+        # compound = 1-(1-0.03)^2 = 0.0591, below naive sum 0.060
+        assert abs(adj - 0.0591) < 1e-4
+        assert adj < 0.060

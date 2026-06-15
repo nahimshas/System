@@ -536,8 +536,16 @@ def get_injury_value_mults(team_id: int, player_names: List[str]) -> Dict[str, f
                 continue
             if ops <= 0:
                 continue
-            pa = int(stat.get("plateAppearances", 0) or 0)
-            mult = (ops - REPLACEMENT_OPS) / (LEAGUE_AVG_OPS - REPLACEMENT_OPS)
+            pa    = int(stat.get("plateAppearances", 0) or 0)
+            games = int(stat.get("gamesPlayed", 0) or 0)
+            ops_value = (ops - REPLACEMENT_OPS) / (LEAGUE_AVG_OPS - REPLACEMENT_OPS)
+            # Role floor: OPS only measures hitting, so an everyday regular (full
+            # PA load) is worth at least ~average even with a weak bat — his
+            # defense / baserunning / lineup role still matter. Mirrors WNBA's
+            # minutes-share floor. ~4.3 PA/game ≈ a full-time everyday player.
+            pa_per_game = pa / games if games else 0.0
+            role_floor  = min(1.0, pa_per_game / 4.3) * 0.85
+            mult = max(ops_value, role_floor)
             if pa < 50:                       # thin sample → shrink toward average
                 w = max(0.0, pa / 50.0)
                 mult = mult * w + 1.0 * (1.0 - w)
