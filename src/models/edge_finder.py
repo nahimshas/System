@@ -1004,15 +1004,22 @@ def _pitcher_quality_score(stats: Dict) -> float:
     bb9  = stats.get("bb_per_9") or LEAGUE_AVG_BB9
     k9   = stats.get("k_per_9")  or LEAGUE_AVG_K9
 
-    ip_conf  = min(1.0, ip / 50.0)
+    ip_conf = min(1.0, ip / 50.0)
+
+    # Regress BB/9 and K/9 toward league average at small samples — same logic
+    # as _blend_xfip does for xFIP. K% stabilises ~20 IP, BB% ~50 IP; using
+    # ip_conf for both is conservative but consistent.
+    eff_bb9 = ip_conf * float(bb9) + (1.0 - ip_conf) * LEAGUE_AVG_BB9
+    eff_k9  = ip_conf * float(k9)  + (1.0 - ip_conf) * LEAGUE_AVG_K9
+
     era_trap = 0.0
     if isinstance(era, float) and ip >= 10:
         era_trap = 2.0 * (float(era) - float(xfip)) * ip_conf
 
     raw = (100.0
            - 10.0 * float(xfip)
-           - 5.0  * float(bb9)
-           + 1.5  * float(k9)
+           - 5.0  * eff_bb9
+           + 1.5  * eff_k9
            + era_trap)
 
     return (raw - FORMULA_BASELINE) / FORMULA_SCALE
