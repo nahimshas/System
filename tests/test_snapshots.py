@@ -376,8 +376,13 @@ class TestInjuryStatusNormalization:
     def test_il_maps_to_out(self):
         from src.data.injuries import _normalize_status
         assert _normalize_status("10-Day-IL") == "out"
-        assert _normalize_status("60-Day-IL") == "out"
+        assert _normalize_status("15-Day-IL") == "out"
         assert _normalize_status("IR") == "out"          # NFL injured reserve
+
+    def test_60day_il_skipped(self):
+        # 60-day IL is fully priced into team odds — skip to avoid false signal
+        from src.data.injuries import _normalize_status
+        assert _normalize_status("60-Day-IL") is None
 
     def test_known_statuses_passthrough(self):
         from src.data.injuries import _normalize_status
