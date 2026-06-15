@@ -3883,7 +3883,7 @@ def analyze_wc_game(
     Elo supremacy → Poisson goal expectations → Dixon-Coles scoreline grid →
     Moneyline / Draw / Total / Spread probabilities, compared to the market.
     """
-    from src.data.wc_stats import normalize as wc_normalize
+    from src.data.wc_stats import normalize as wc_normalize, _canon as _wc_canon
     from src.config import (
         WC_ELO_DEFAULT, WC_BASE_TOTAL, WC_ELO_PER_GOAL, WC_MAX_SUPREMACY,
         WC_DC_RHO, WC_HOST_NATIONS, WC_HOST_ELO_BONUS, WC_CRED_CAP,
@@ -3984,7 +3984,7 @@ def analyze_wc_game(
     base_total = WC_BASE_TOTAL
     alt_home = alt_away = 0.0
     fixtures = wc_ctx.get("fixtures", {}) or {}
-    venue_info = fixtures.get((home_raw.lower(), away_raw.lower()))
+    venue_info = fixtures.get((_wc_canon(home_raw), _wc_canon(away_raw)))
     if venue_info:
         if venue_info.get("altitude_m", 0) >= WC_ALT_HIGH_M:
             def _is_native(team):

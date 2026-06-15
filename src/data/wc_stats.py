@@ -294,7 +294,12 @@ def _fetch_fixtures_with_venues(target_date: date, venues: List[Dict]) -> Dict:
         vname = venue.get("fullName", "")
         city = (venue.get("address", {}) or {}).get("city", "")
         if home and away:
-            fixtures[(home.lower(), away.lower())] = _match_venue(vname, city, venues)
+            # Key by canonicalised names under BOTH orderings, so the lookup
+            # reconciles Odds-API vs ESPN spellings (accents/aliases) and doesn't
+            # depend on which side each feed calls "home".
+            vinfo = _match_venue(vname, city, venues)
+            fixtures[(_canon(home), _canon(away))] = vinfo
+            fixtures[(_canon(away), _canon(home))] = vinfo
     return fixtures
 
 
