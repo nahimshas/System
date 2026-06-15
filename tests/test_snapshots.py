@@ -356,3 +356,33 @@ class TestInjuryCompoundCombination:
         # compound = 1-(1-0.03)^2 = 0.0591, below naive sum 0.060
         assert abs(adj - 0.0591) < 1e-4
         assert adj < 0.060
+
+
+class TestInjuryStatusNormalization:
+    """MLB IL designations must map to 'out' (were being dropped entirely)."""
+
+    def test_il_maps_to_out(self):
+        from src.data.injuries import _normalize_status
+        assert _normalize_status("10-Day-IL") == "out"
+        assert _normalize_status("60-Day-IL") == "out"
+        assert _normalize_status("IR") == "out"          # NFL injured reserve
+
+    def test_known_statuses_passthrough(self):
+        from src.data.injuries import _normalize_status
+        assert _normalize_status("Day-To-Day") == "day-to-day"
+        assert _normalize_status("Questionable") == "questionable"
+        assert _normalize_status("Out") == "out"
+
+    def test_active_or_unknown_skipped(self):
+        from src.data.injuries import _normalize_status
+        assert _normalize_status("Active") is None
+        assert _normalize_status("") is None
+
+    def test_il_injury_now_counts(self):
+        from src.data.injuries import _parse_injuries
+        raw = [{"displayName": "Team A", "injuries": [
+            {"status": "60-Day-IL", "athlete": {"displayName": "Star",
+             "position": {"abbreviation": "SS"}}},
+        ]}]
+        parsed = _parse_injuries(raw)
+        assert parsed["Team A"][0]["status"] == "out"   # was dropped before

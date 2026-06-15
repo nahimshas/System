@@ -21,6 +21,26 @@ def _fetch(url: str) -> List[Dict]:
         return []
 
 
+def _normalize_status(raw_status: str):
+    """
+    Normalise an ESPN injury status to one of STATUS_WEIGHT's keys, or None to
+    skip (active / unknown).
+
+    Critically: MLB reports injuries as IL designations ("10-Day-IL",
+    "15-Day-IL", "60-Day-IL") and almost never "Out" — any IL stint means the
+    player is unavailable for today's game, so it maps to "out". (NFL "IR" too.)
+    Without this, every IL player — i.e. essentially all real MLB injuries — was
+    silently dropped, leaving only Day-To-Day guys at the lowest weight.
+    """
+    s = (raw_status or "").lower().strip()
+    tokens = s.replace("-", " ").split()
+    if "il" in tokens or "ir" in tokens:        # injured list / injured reserve
+        return "out"
+    if s in ("out", "doubtful", "questionable", "day-to-day"):
+        return s
+    return None
+
+
 def _parse_injuries(raw: List[Dict]) -> Dict[str, List[Dict]]:
     """Returns {team_name: [{player, status, detail}]}"""
     team_injuries: Dict[str, List[Dict]] = {}
@@ -28,15 +48,14 @@ def _parse_injuries(raw: List[Dict]) -> Dict[str, List[Dict]]:
         team = entry.get("displayName", entry.get("team", {}).get("displayName", "Unknown"))
         for athlete in entry.get("injuries", []):
             athlete_info = athlete.get("athlete", {})
-            status = athlete.get("status", "")
             detail = athlete.get("shortComment", athlete.get("longComment", ""))
             position = athlete_info.get("position", {}).get("abbreviation", "")
-            # Only flag significant statuses
-            if status.lower() in ("out", "doubtful", "questionable", "day-to-day"):
+            norm_status = _normalize_status(athlete.get("status", ""))
+            if norm_status is not None:
                 team_injuries.setdefault(team, []).append({
                     "player": athlete_info.get("displayName", "Unknown"),
                     "position": position,
-                    "status": status,
+                    "status": norm_status,
                     "detail": detail,
                 })
     return team_injuries
