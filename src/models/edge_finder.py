@@ -3448,7 +3448,7 @@ def analyze_wnba_game(
         "home_recent_net": _lv.get("home_recent_net"), "away_recent_net": _lv.get("away_recent_net"),
         "net_diff": _lv.get("net_diff"), "win_prob_adj": _lv.get("adj"),
         "home_sos": _lv.get("home_sos"), "away_sos": _lv.get("away_sos"),
-        "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
+        "home_lineup_pen": _lv.get("home_lineup_pen"), "away_lineup_pen": _lv.get("away_lineup_pen"),
         "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
         "stats_available": stats_available,
     }, [
