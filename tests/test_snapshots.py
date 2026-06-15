@@ -395,11 +395,16 @@ class TestInjuryStatusNormalization:
         assert _normalize_status("Active") is None
         assert _normalize_status("") is None
 
-    def test_il_injury_now_counts(self):
+    def test_10day_il_counts_60day_skipped(self):
         from src.data.injuries import _parse_injuries
         raw = [{"displayName": "Team A", "injuries": [
-            {"status": "60-Day-IL", "athlete": {"displayName": "Star",
+            {"status": "10-Day-IL", "athlete": {"displayName": "Recent",
              "position": {"abbreviation": "SS"}}},
+            {"status": "60-Day-IL", "athlete": {"displayName": "Ancient",
+             "position": {"abbreviation": "SP"}}},
         ]}]
         parsed = _parse_injuries(raw)
-        assert parsed["Team A"][0]["status"] == "out"   # was dropped before
+        # 10-day IL: game-relevant injury, included
+        assert any(p["player"] == "Recent" for p in parsed["Team A"])
+        # 60-day IL: fully priced into odds, skipped
+        assert not any(p["player"] == "Ancient" for p in parsed.get("Team A", []))
