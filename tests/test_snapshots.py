@@ -121,6 +121,26 @@ class TestPitcherQualityScore:
                     "bb_per_9": 2.0, "k_per_9": 9.0, "innings_pitched": 80.0}
         assert _pitcher_quality_score(tiny_ip) < _pitcher_quality_score(full_ip)
 
+    def test_short_leash_penalty_applied(self):
+        from src.models.edge_finder import _pitcher_quality_score
+        # A starter averaging 3.0 IP/start over 3+ starts should score worse than
+        # an identical pitcher with a normal 6.0 IP/start avg.
+        base = {"innings_pitched": 9.0, "xfip": 4.20, "fip": 4.20,
+                "games_started": 3, "k_per_9": 8.5, "bb_per_9": 3.0}
+        normal_ip = {**base, "avg_ip_per_start": 6.0}
+        short_leash = {**base, "avg_ip_per_start": 3.0}
+        assert _pitcher_quality_score(short_leash) < _pitcher_quality_score(normal_ip)
+
+    def test_short_leash_requires_min_3_starts(self):
+        from src.models.edge_finder import _pitcher_quality_score
+        # Fewer than 3 starts — early exit is not yet a pattern, no penalty
+        one_start  = {"innings_pitched": 3.0, "xfip": 4.20, "fip": 4.20,
+                      "games_started": 1, "avg_ip_per_start": 3.0}
+        two_starts = {**one_start, "games_started": 2, "innings_pitched": 6.0}
+        three_starts = {**one_start, "games_started": 3, "innings_pitched": 9.0}
+        assert _pitcher_quality_score(one_start) == _pitcher_quality_score(two_starts)
+        assert _pitcher_quality_score(three_starts) < _pitcher_quality_score(two_starts)
+
 
 class TestEraTrapSeverity:
     def test_no_era_returns_zero(self):
