@@ -1920,6 +1920,10 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             "away_sp_xfip": _ap.get("xfip"),
             "home_sp_fip": _hp.get("fip"),
             "away_sp_fip": _ap.get("fip"),
+            "home_sp_era": _hp.get("era"),
+            "away_sp_era": _ap.get("era"),
+            "home_sp_bb9": _hp.get("bb_per_9"),
+            "away_sp_bb9": _ap.get("bb_per_9"),
             "home_sp_k9": _hp.get("k_per_9"),
             "away_sp_k9": _ap.get("k_per_9"),
             # Pitcher quality + weighting (directly drives how much the starter
