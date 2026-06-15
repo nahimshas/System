@@ -22,6 +22,7 @@ Data source:
 import json
 import logging
 import math
+import unicodedata
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -29,6 +30,32 @@ from typing import Dict, List, Optional
 import requests
 
 logger = logging.getLogger(__name__)
+
+# Country-name aliases for matching the Odds API / ESPN spelling to the Elo seed
+# keys. Keyed by the canonicalised (accent/punctuation-stripped, lowercased) form.
+_WC_ALIASES = {
+    "czechia": "czech republic",
+    "korea republic": "south korea",
+    "korea dpr": "north korea",
+    "ir iran": "iran",
+    "turkiye": "turkey",
+    "cabo verde": "cape verde",
+    "usa": "united states",
+    "united states of america": "united states",
+}
+
+
+def _canon(s: str) -> str:
+    """Canonicalise a country name for matching: strip accents (Curaçao→curacao),
+    drop punctuation (Bosnia & Herzegovina / Bosnia-Herzegovina → bosnia
+    herzegovina; Côte d'Ivoire → cote divoire), lowercase, then apply aliases.
+    Fixes silent default-Elo assignment from name-spelling mismatches."""
+    if not s:
+        return ""
+    s = "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
+    s = "".join(ch if (ch.isalnum() or ch.isspace()) else " " for ch in s.lower())
+    s = " ".join(s.split())
+    return _WC_ALIASES.get(s, s)
 
 ESPN_WC_SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard"
 _SEED_PATH  = Path(__file__).parent / "wc_elo_seed.json"
@@ -39,20 +66,31 @@ _REQUEST_TIMEOUT = 15
 
 
 def normalize(name: str, ctx_dict: dict) -> str:
-    """Return the closest key in ctx_dict matching name, or name itself."""
+    """Return the closest key in ctx_dict matching name, or name itself.
+
+    Matching is accent/punctuation/alias-insensitive (via _canon) so Odds API /
+    ESPN spellings reconcile with the Elo-seed keys — e.g. Curaçao↔Curacao,
+    Bosnia & Herzegovina↔Bosnia-Herzegovina, Türkiye↔Turkey, Czechia↔Czech
+    Republic. Without this, a spelling mismatch silently fell through to the
+    default Elo rating, leaving the model unable to tell that team apart.
+    """
     if not name:
         return name
-    name_lower = name.lower()
+    nc = _canon(name)
+    # exact canonical match
     for key in ctx_dict:
-        if key.lower() == name_lower:
+        if _canon(key) == nc:
             return key
+    # substring canonical match
     for key in ctx_dict:
-        if name_lower in key.lower() or key.lower() in name_lower:
+        kc = _canon(key)
+        if nc and (nc in kc or kc in nc):
             return key
-    name_words = set(name_lower.split())
+    # token-overlap fallback
+    name_words = set(nc.split())
     best, best_score = name, 0
     for key in ctx_dict:
-        score = len(name_words & set(key.lower().split()))
+        score = len(name_words & set(_canon(key).split()))
         if score > best_score:
             best, best_score = key, score
     return best if best_score > 0 else name
