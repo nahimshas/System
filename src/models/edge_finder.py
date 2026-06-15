@@ -1022,7 +1022,20 @@ def _pitcher_quality_score(stats: Dict) -> float:
            + 1.5  * eff_k9
            + era_trap)
 
-    return (raw - FORMULA_BASELINE) / FORMULA_SCALE
+    quality = (raw - FORMULA_BASELINE) / FORMULA_SCALE
+
+    # Short-leash penalty: a starter who is consistently pulled before facing the
+    # lineup twice is performing below what xFIP captures. Stat-based regression
+    # gives them league-average quality; persistent early exits are an additional
+    # signal that their stuff isn't working in game contexts.
+    # Penalty = (avg_ip - 4.0) / 4.0 — ranges from 0 at 4 IP to -0.25 at 3 IP.
+    # Requires ≥ 3 starts so the pattern is established, not a one-off.
+    gs   = int(stats.get("games_started", 0) or 0)
+    avip = stats.get("avg_ip_per_start")
+    if gs >= 3 and avip is not None and float(avip) < 4.0:
+        quality += (float(avip) - 4.0) / 4.0
+
+    return quality
 
 
 def _era_trap_severity(stats: Dict) -> float:
