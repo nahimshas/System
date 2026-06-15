@@ -53,7 +53,7 @@ SPORT_ACTIVE_MONTHS = {
 # --- Betting parameters ---
 DAILY_BUDGET: float = float(os.environ.get("DAILY_BUDGET", "100"))
 ROBINHOOD_COMMISSION: float = 0.02   # $0.02 per contract bought
-KELLY_FRACTION: float = 0.25          # 1/4 Kelly to reduce variance
+KELLY_FRACTION: float = 0.50          # 1/2 Kelly
 MIN_EDGE: float = 0.03                # minimum 3% edge to recommend
 MAX_SINGLE_BETS: int = 5              # max single-game bets per day
 MAX_PARLAYS: int = 2                  # max 2-leg parlay recommendations
