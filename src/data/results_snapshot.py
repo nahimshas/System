@@ -13,6 +13,7 @@ is deterministic Python instead of an LLM agent executing code blocks.
 """
 import json
 import logging
+import os
 import sys
 import requests
 from datetime import date, datetime, timedelta, timezone
