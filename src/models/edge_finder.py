@@ -2593,6 +2593,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             )
 
         # Back-to-back (NHL plays many B2Bs — 1 day rest is common)
+        rest_diff = home_rest - away_rest
         if home_rest == 1:
             adj -= NHL_B2B_PENALTY
             signals.append(f"{home} on back-to-back (-{NHL_B2B_PENALTY*100:.0f}%)")
