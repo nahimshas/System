@@ -29,6 +29,7 @@ jobs:
       - name: Resolve today's picks against ESPN (+ CLV capture)
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          DISABLE_CLV_STAMPING: ${{ vars.DISABLE_CLV_STAMPING || 'false' }}
         run: python -m src.data.results_snapshot
 
       - name: Commit snapshot
