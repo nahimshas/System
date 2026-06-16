@@ -2806,7 +2806,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             expected_total = exp_home + exp_away
 
             market_line = total["line"]
-            total_std = NHL_PLAYOFF_TOTAL_STD if playoff else NHL_TOTAL_STD
+            total_std = NHL_TOTAL_STD
             blended_total = (1 - _TOTAL_MARKET_ANCHOR) * expected_total + _TOTAL_MARKET_ANCHOR * market_line
             model_over_prob  = float(1 - norm.cdf(market_line, blended_total, total_std))
             market_over_prob  = total["over_prob"]
