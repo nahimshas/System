@@ -205,21 +205,25 @@ def main() -> int:
     # its CLV. Historical archive data persists, so a failed night here is
     # automatically repaired on the next run (or the morning run). Non-fatal.
     clv_lookup = {}
-    try:
-        from src.data.closing_lines import (
-            update_shadow_log_clv, update_decision_log_clv,
-            repair_missing_commence_times, clv_lookup_for_date,
-        )
-        repair_missing_commence_times(max_credits=20)
-        clv_summary = update_shadow_log_clv(max_credits=600, lookback_days=7)
-        logger.info(f"CLV capture summary: {clv_summary}")
-        # Decision-log candidate CLV — second, so it reuses the shadow pass's
-        # cached snapshots (overlapping waves cost 0 extra credits).
-        dec_clv_summary = update_decision_log_clv(max_credits=400, lookback_days=7)
-        logger.info(f"Decision-log CLV summary: {dec_clv_summary}")
-        clv_lookup = clv_lookup_for_date(picks_date)
-    except Exception as e:
-        logger.warning(f"CLV capture failed (non-fatal): {e}")
+    _clv_disabled = os.environ.get("DISABLE_CLV_STAMPING", "").lower() in ("1", "true", "yes")
+    if _clv_disabled:
+        logger.info("CLV stamping disabled via DISABLE_CLV_STAMPING — skipping capture")
+    else:
+        try:
+            from src.data.closing_lines import (
+                update_shadow_log_clv, update_decision_log_clv,
+                repair_missing_commence_times, clv_lookup_for_date,
+            )
+            repair_missing_commence_times(max_credits=20)
+            clv_summary = update_shadow_log_clv(max_credits=600, lookback_days=7)
+            logger.info(f"CLV capture summary: {clv_summary}")
+            # Decision-log candidate CLV — second, so it reuses the shadow pass's
+            # cached snapshots (overlapping waves cost 0 extra credits).
+            dec_clv_summary = update_decision_log_clv(max_credits=400, lookback_days=7)
+            logger.info(f"Decision-log CLV summary: {dec_clv_summary}")
+            clv_lookup = clv_lookup_for_date(picks_date)
+        except Exception as e:
+            logger.warning(f"CLV capture failed (non-fatal): {e}")
 
     # Collect every pick list the debrief shows
     singles = state.get("singles", [])
