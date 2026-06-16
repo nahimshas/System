@@ -177,6 +177,7 @@ def get_wnba_context(today: date, team_names: List[str]) -> Dict:
         for team_name, bpi in bpi_map.items():
             if team_name in ctx["season_stats"]:
                 ctx["season_stats"][team_name]["net_rtg"] = bpi
+                ctx["season_stats"][team_name]["net_rtg_source"] = "bpi"
         logger.info(f"WNBA BPI loaded for {len(bpi_map)} teams")
     else:
         logger.warning("WNBA BPI unavailable — using schedule net_rtg (edges may be inflated)")
