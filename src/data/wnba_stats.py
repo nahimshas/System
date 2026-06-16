@@ -60,6 +60,46 @@ def _score_val(competitor: dict) -> float:
         return 0.0
 
 
+def _fetch_bpi(tid_to_display: Dict[str, str]) -> Dict[str, float]:
+    """
+    Fetch ESPN BPI (Basketball Power Index) for all WNBA teams.
+    Returns {display_name: bpi_value}. Empty dict on failure — caller falls
+    back to schedule-computed net_rtg so the model degrades gracefully.
+
+    BPI = expected point margin vs average opponent on neutral court.
+    It is opponent-adjusted and preseason-informed, making it a far more
+    stable team-strength signal than raw cumulative point differential —
+    especially early in the season when sample sizes are small.
+    """
+    out: Dict[str, float] = {}
+    try:
+        season = date.today().year
+        r = requests.get(
+            f"https://sports.core.api.espn.com/v2/sports/basketball/leagues/wnba"
+            f"/seasons/{season}/powerindex",
+            timeout=12,
+        )
+        r.raise_for_status()
+        data = r.json()
+        for item in data.get("items", []):
+            team_ref = item.get("team", {}).get("$ref", "")
+            if "/teams/" not in team_ref:
+                continue
+            team_id = team_ref.split("/teams/")[1].split("?")[0]
+            display = tid_to_display.get(team_id)
+            if not display:
+                continue
+            bpi = next(
+                (s["value"] for s in item.get("stats", []) if s.get("name") == "bpi"),
+                None,
+            )
+            if bpi is not None:
+                out[display] = round(float(bpi), 3)
+    except Exception as e:
+        logger.warning(f"WNBA BPI fetch failed (using schedule net_rtg): {e}")
+    return out
+
+
 def get_wnba_context(today: date, team_names: List[str]) -> Dict:
     """
     Returns {season_stats, recent_form, rest_days} for all requested teams.
