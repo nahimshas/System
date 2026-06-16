@@ -119,14 +119,16 @@ def get_wnba_context(today: date, team_names: List[str]) -> Dict:
         logger.error(f"WNBA teams fetch failed: {e}")
         return ctx
 
-    # Build name→id map
+    # Build name→id map and reverse id→display map
     team_id_map: Dict[str, str] = {}
+    tid_to_display: Dict[str, str] = {}
     for entry in teams_list:
         tm = entry.get("team", {})
         tid = tm.get("id", "")
         display = tm.get("displayName", "")
         if tid and display:
             team_id_map[normalize(display)] = tid
+            tid_to_display[tid] = display
             if tm.get("abbreviation"):
                 team_id_map[normalize(tm["abbreviation"])] = tid
 
