@@ -3321,7 +3321,7 @@
   restoreSettledResults();   // populate Today's Profit immediately from cache
   updatePerformance();       // re-run with restored results before first ESPN poll
   refresh();
-  setInterval(refresh, 30000);
+  setInterval(refresh, 15000);
 
   // ── Chart details toggle arrow ───────────────────────────────────────────
   document.querySelectorAll("details").forEach(function (el) {
