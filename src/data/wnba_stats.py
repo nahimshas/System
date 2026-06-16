@@ -154,11 +154,10 @@ def get_wnba_context(today: date, team_names: List[str]) -> Dict:
     for display_name, tid in resolved.items():
         _fetch_team_stats(display_name, tid, today, ctx)
 
-    # ── Strength of schedule ──────────────────────────────────────────────────
-    # One standings call gives every team's season net rating (avg points for −
-    # against). SOS for a team = the average net rating of the opponents it has
-    # faced (captured per team above). The model nudges each team's blended
-    # rating by SOS × WNBA_SOS_WEIGHT, so beating a tough slate counts for more.
+    # ── Strength of schedule ─────────────────────────────────────────────────
+    # Kept for informational logging but zero-weighted in the model (see
+    # WNBA_SOS_WEIGHT = 0.0 in config/wnba.py) because BPI below already
+    # encodes opponent quality — applying SOS on top would double-count it.
     league_net = _fetch_league_net()
     ctx["sos"] = {}
     if league_net:
@@ -166,6 +165,21 @@ def get_wnba_context(today: date, team_names: List[str]) -> Dict:
             opp_nets = [league_net[o] for o in opp_ids if o in league_net]
             if opp_nets:
                 ctx["sos"][display_name] = round(sum(opp_nets) / len(opp_nets), 2)
+
+    # ── BPI override ──────────────────────────────────────────────────────────
+    # Replace schedule-computed net_rtg with ESPN BPI for each team that has it.
+    # BPI is opponent-adjusted and preseason-informed — it eliminates the
+    # small-sample inflation that makes raw early-season net_rtg produce extreme
+    # win probabilities and inflated edges. Falls back to schedule net_rtg if the
+    # BPI endpoint is unavailable (non-fatal).
+    bpi_map = _fetch_bpi(tid_to_display)
+    if bpi_map:
+        for team_name, bpi in bpi_map.items():
+            if team_name in ctx["season_stats"]:
+                ctx["season_stats"][team_name]["net_rtg"] = bpi
+        logger.info(f"WNBA BPI loaded for {len(bpi_map)} teams")
+    else:
+        logger.warning("WNBA BPI unavailable — using schedule net_rtg (edges may be inflated)")
 
     return ctx
 
