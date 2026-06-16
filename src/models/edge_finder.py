@@ -3512,6 +3512,7 @@ def analyze_wnba_game(
     )
     _stamp_decision(game, _min, {
         "home_net": _lv.get("home_net"), "away_net": _lv.get("away_net"),
+        "net_rtg_source": home_stats.get("net_rtg_source", "schedule"),
         "home_recent_net": _lv.get("home_recent_net"), "away_recent_net": _lv.get("away_recent_net"),
         "net_diff": _lv.get("net_diff"), "win_prob_adj": _lv.get("adj"),
         "home_sos": _lv.get("home_sos"), "away_sos": _lv.get("away_sos"),
