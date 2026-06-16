@@ -97,6 +97,7 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           DAILY_BUDGET: ${{ vars.DAILY_BUDGET || '100' }}
+          DISABLE_CLV_STAMPING: ${{ vars.DISABLE_CLV_STAMPING || 'false' }}
         run: |
           LEAGUE_ARG=""
           if [ -n "${{ github.event.inputs.league }}" ]; then
