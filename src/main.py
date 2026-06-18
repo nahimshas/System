@@ -458,15 +458,10 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         logger.info("CLV stamping disabled via DISABLE_CLV_STAMPING — skipping self-heal")
     else:
         try:
-            from src.data.closing_lines import update_shadow_log_clv, update_decision_log_clv
-            _clv_summary = update_shadow_log_clv(max_credits=400, lookback_days=7)
+            from src.data.closing_lines import update_all_clv
+            _clv_summary = update_all_clv(max_credits=800, lookback_days=7)
             if _clv_summary.get("stamped"):
                 logger.info(f"CLV self-heal: {_clv_summary}")
-            # Decision-log candidate CLV — runs second so it reuses the snapshots the
-            # shadow pass just cached (overlapping waves cost 0 extra credits).
-            _dlv = update_decision_log_clv(max_credits=400, lookback_days=7)
-            if _dlv.get("stamped"):
-                logger.info(f"Decision-log CLV self-heal: {_dlv}")
         except Exception as _e_clv:
             logger.warning(f"CLV self-heal failed (non-fatal): {_e_clv}")
 
