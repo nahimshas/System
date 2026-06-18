@@ -517,6 +517,160 @@ def update_shadow_log_clv(
 
 
 # ---------------------------------------------------------------------------
+# Merged single-pass CLV — stamps BOTH shadow log and decision log
+# ---------------------------------------------------------------------------
+
+def update_all_clv(
+    *,
+    max_credits: int = 1000,
+    lookback_days: int = 7,
+    since: Optional[str] = None,
+) -> Dict[str, int]:
+    """Single-pass CLV stamp for both shadow log and decision log.
+
+    Merges both logs' unstamped entries into shared waves, computes the UNION
+    of market_keys per wave, fetches once, then stamps both logs.  This
+    eliminates the cache-miss cost that occurs when the two separate passes
+    each build their own market_keys list: shadow may only need ['totals'] for
+    a wave while decision needs ['h2h', 'spreads', 'totals'] — a guaranteed
+    miss even though totals was already fetched.
+
+    Replaces calling update_shadow_log_clv + update_decision_log_clv
+    sequentially.  Those functions are kept intact for backfill scripts.
+    """
+    summary = {"stamped": 0, "credits_spent": 0, "waves": 0, "unmatched": 0}
+    try:
+        from src.state import decision_log as _dl
+
+        now = datetime.now(timezone.utc)
+        floor = since or (now - timedelta(days=lookback_days)).date().isoformat()
+
+        def _collect(shard_dir, load_fn, shards_out):
+            waves: Dict[Tuple[str, str], list] = defaultdict(list)
+            if not shard_dir.exists():
+                return waves
+            for shard_path in sorted(shard_dir.glob("*.json")):
+                shard = load_fn(shard_path)
+                shards_out[shard_path] = shard
+                for entry in shard.get("entries", {}).values():
+                    if entry.get("market_prob_at_close") is not None:
+                        continue
+                    if entry.get("clv_fetch_attempts", 0) >= _MAX_FETCH_ATTEMPTS:
+                        continue
+                    if (entry.get("date") or "") < floor:
+                        continue
+                    sport = (entry.get("sport") or "").upper()
+                    if sport not in _SPORT_KEYS:
+                        continue
+                    ct = entry.get("commence_time", "")
+                    ct_dt = _parse_iso(ct)
+                    if ct_dt is None or ct_dt > now:
+                        continue
+                    if entry.get("market_type") not in _MARKET_KEYS:
+                        continue
+                    waves[_wave_key(sport, ct)].append((shard_path, entry))
+            return waves
+
+        shadow_shards: Dict = {}
+        dec_shards: Dict = {}
+        shadow_waves = _collect(SHADOW_LOG_DIR, _load_shard, shadow_shards)
+        dec_waves    = _collect(_dl.DECISION_LOG_DIR, _dl._load_shard, dec_shards)
+
+        all_keys = set(shadow_waves) | set(dec_waves)
+        if not all_keys:
+            return summary
+
+        logger.info(
+            f"CLV (merged): {sum(len(v) for v in shadow_waves.values())} shadow + "
+            f"{sum(len(v) for v in dec_waves.values())} decision entries across "
+            f"{len(all_keys)} wave(s) (floor {floor})"
+        )
+
+        ordered = sorted(all_keys, key=lambda k: k[1], reverse=True)
+        shadow_modified: set = set()
+        dec_modified: set = set()
+
+        for wave_key in ordered:
+            sport, wave_iso = wave_key
+            s_items = shadow_waves.get(wave_key, [])
+            d_items = dec_waves.get(wave_key, [])
+            market_keys = sorted({
+                _MARKET_KEYS[e.get("market_type")] for _, e in s_items + d_items
+            })
+            cached = snapshot_cache_hit(_SPORT_KEYS[sport], wave_iso, market_keys)
+            cost = 0 if cached else _HIST_COST_PER_MARKET * len(market_keys)
+            if summary["credits_spent"] + cost > max_credits:
+                logger.info(
+                    f"CLV (merged): budget reached ({summary['credits_spent']}/{max_credits})"
+                    f" — remaining waves self-heal next run"
+                )
+                break
+
+            events = _fetch_historical_snapshot(_SPORT_KEYS[sport], wave_iso, market_keys)
+            summary["credits_spent"] += cost
+            summary["waves"] += 1
+            if events is None:
+                continue
+
+            now_iso = datetime.now(timezone.utc).isoformat()
+
+            for shard_path, entry in s_items:
+                away, home = _split_game(entry.get("game", ""))
+                event = _find_event(events, home, away, entry.get("commence_time", ""))
+                result = _closing_prob_for_entry(event, entry) if event else None
+                if result is None:
+                    entry["clv_fetch_attempts"] = entry.get("clv_fetch_attempts", 0) + 1
+                    summary["unmatched"] += 1
+                    shadow_modified.add(shard_path)
+                    continue
+                open_prob = entry.get("market_prob_at_first_pick")
+                entry["market_prob_at_close"] = round(result["prob"], 4)
+                entry["clv"] = (
+                    round(result["prob"] - float(open_prob), 4) if open_prob is not None else None
+                )
+                entry["close_point"]         = result["close_point"]
+                entry["close_point_differs"] = bool(result["point_differs"])
+                entry["clv_captured_at"]     = now_iso
+                summary["stamped"] += 1
+                shadow_modified.add(shard_path)
+
+            for shard_path, entry in d_items:
+                away, home = _split_game(entry.get("game", ""))
+                event = _find_event(events, home, away, entry.get("commence_time", ""))
+                res = _closing_prob_for_decision(event, entry) if event else None
+                if res is None:
+                    entry["clv_fetch_attempts"] = entry.get("clv_fetch_attempts", 0) + 1
+                    summary["unmatched"] += 1
+                    dec_modified.add(shard_path)
+                    continue
+                open_prob = entry.get("market_prob_at_first_pick")
+                entry["market_prob_at_close"] = round(res["prob"], 4)
+                entry["clv"] = (
+                    round(res["prob"] - float(open_prob), 4) if open_prob is not None else None
+                )
+                entry["close_point"]   = res.get("close_point")
+                entry["clv_captured_at"] = now_iso
+                summary["stamped"] += 1
+                dec_modified.add(shard_path)
+
+        for sp in shadow_modified:
+            _save_shard_atomic(sp, shadow_shards[sp])
+        for sp in dec_modified:
+            _dl._save_shard_atomic(sp, dec_shards[sp])
+
+        logger.info(
+            f"CLV (merged): {summary['stamped']} entries stamped, "
+            f"{summary['unmatched']} unmatched, ~{summary['credits_spent']} credits "
+            f"across {summary['waves']} snapshot(s)"
+        )
+        return summary
+
+    except Exception as e:
+        logger.error(f"CLV merged pass failed (non-fatal): {e}")
+        return summary
+
+
+# ---------------------------------------------------------------------------
 # Decision-log CLV — stamp closing prob on EVERY candidate (rejected too)
 # ---------------------------------------------------------------------------
 
