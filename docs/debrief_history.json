@@ -6526,6 +6526,514 @@
         "World Cup Elo Edge: Argentina's 460-pt edge produced a Messi hat-trick but CLV -8.2% on -1.5 spread and -4.0% on ML suggests the model got in before the market moved; early-pick timing is an advantage here",
         "Model Projection accuracy: MIN 12-2 blowout and LAA 7-0 shutout exceeded projections significantly; Norway 4-1 also beat model (projected 1.6-1.0); projections under-capture outlier performances"
       ]
+    },
+    {
+      "date": "2026-06-17",
+      "generated_at": "2026-06-18T05:59:01Z",
+      "headline": "0-7 budget (-$41.22 P&L), avg CLV -1.0%; watchlist 7/14; WC Colombia 2-0 avg CLV +3.3%; 2 picks pending",
+      "budget_record": "0-7",
+      "watchlist_record": "7-7 (2 pending)",
+      "budget_pnl": -41.22,
+      "avg_budget_clv": -1.0,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "New York Mets @ Cincinnati Reds",
+          "sport": "MLB",
+          "pick": "Cincinnati Reds +1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "New York Mets 9, Cincinnati Reds 1",
+          "pnl": "-$8.79",
+          "why_picked": "Reds' Lodolo had a heavily inflated ERA vs low xFIP, and the model projected a near-coin-flip (2.9-2.9) giving a 9.7% edge on the +1.5 cushion.",
+          "what_happened": "Nolan McLean was masterful, striking out nine in seven innings while the Mets erupted for 15 hits \u2014 Juan Soto, Francisco Alvarez, and Bo Bichette each had three hits, and New York scored seven by the fifth inning to put it out of reach.",
+          "signals": [
+            "Pitcher Matchup",
+            "Park Factor",
+            "Injury Impact",
+            "Schedule Load"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.7%)",
+          "key_insight": "McLean's xFIP (3.07) predicted his dominance; model should more heavily penalize home-team starter quality when opponent SP xFIP is sub-3.20.",
+          "in_budget": true,
+          "clv_pct": -0.7
+        },
+        {
+          "game": "Pittsburgh Pirates @ Athletics",
+          "sport": "MLB",
+          "pick": "Athletics +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Pittsburgh Pirates 12, Athletics 4",
+          "pnl": "-$9.48",
+          "why_picked": "Braxton Ashcraft's elite xFIP (2.88) vs Civale's moderate xFIP (4.62) gave a pitching edge; ERA trap flagged Civale's surface ERA as inflating Oakland's ML price.",
+          "what_happened": "Ryan O'Hearn powered Pittsburgh with a career-high 6 RBI in a 12-4 blowout \u2014 the Athletics surrendered multiple big innings and Ashcraft failed to replicate his xFIP metrics on the day.",
+          "signals": [
+            "ERA Trap",
+            "Pitching Edge",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -3.1% against us",
+          "key_insight": "CLV of -3.1% suggests the market moved against Oakland before first pitch \u2014 O'Hearn's recent power surge may not be fully captured in the model.",
+          "in_budget": true,
+          "clv_pct": -3.1
+        },
+        {
+          "game": "Colorado Rockies @ Chicago Cubs",
+          "sport": "MLB",
+          "pick": "Colorado Rockies +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Colorado Rockies 6, Chicago Cubs 8",
+          "pnl": "-$7.21",
+          "why_picked": "Sean Sullivan's FIP (1.87) vs xFIP (4.47) gap flagged him as overdue for regression; model projected Colorado 3.3-3.1 and the +1.5 cushion added further margin.",
+          "what_happened": "The Cubs scored 8 runs at Wrigley consistent with Sullivan's inflated xFIP; Colorado managed 6 but fell 2 short of covering the spread.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Weather Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -2.9% against us",
+          "key_insight": "Sullivan's FIP (1.87) was small-sample noise; xFIP (4.47) was closer to reality. The model should weight xFIP more heavily for starters with under 50 IP.",
+          "in_budget": true,
+          "clv_pct": -2.9
+        },
+        {
+          "game": "Chicago White Sox @ New York Yankees",
+          "sport": "MLB",
+          "pick": "Chicago White Sox +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Chicago White Sox 5, New York Yankees 10",
+          "pnl": "-$6.25",
+          "why_picked": "SEVERE ERA trap on Rodon (ERA 3.19 vs xFIP 4.26) \u2014 market appeared to overprice Yankees ML; White Sox +1.5 offered a 7.5% edge.",
+          "what_happened": "Paul Goldschmidt, Jazz Chisholm, and Cody Bellinger each homered for New York as the Yankees won 10-5; Rodon won despite the ERA trap flag, while Colson Montgomery hit two solo shots for Chicago.",
+          "signals": [
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.7%), lost on variance",
+          "key_insight": "ERA trap confirmed valid (+1.7% CLV) \u2014 the market agreed Rodon's ERA was inflated. This is a variance loss on a correctly-priced bet; signal worth continuing to monitor.",
+          "in_budget": true,
+          "clv_pct": 1.7
+        },
+        {
+          "game": "Miami Marlins @ Philadelphia Phillies",
+          "sport": "MLB",
+          "pick": "Philadelphia Phillies +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Miami Marlins 12, Philadelphia Phillies 4",
+          "pnl": "-$7.15",
+          "why_picked": "Sandy Alcantara's FIP edge (4.05 vs Painter's 5.14) and Phillies' strong recent form (6-4 last 10) drove the thesis for PHI to cover +1.5 at Citizens Bank Park.",
+          "what_happened": "Kyle Stowers homered twice and drove in five runs as Miami pounded Painter for six runs in two innings before he was optioned to Triple-A; the Marlins ran to a 12-4 rout.",
+          "signals": [
+            "Pitcher Matchup",
+            "Injury Impact",
+            "Park Factor",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.0%)",
+          "key_insight": "Painter's 7.06 ERA (now in Triple-A) was a red flag the model underweighted \u2014 home team's SP quality should gate the pick more carefully.",
+          "in_budget": true,
+          "clv_pct": -0.0
+        },
+        {
+          "pick": "Washington Nationals (ML) + Los Angeles Dodgers (ML)",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "game": "Washington Nationals (ML) + Los Angeles Dodgers (ML)",
+          "result": "LOST",
+          "pnl": "-$1.39",
+          "legs": [
+            {
+              "game": "Kansas City Royals @ Washington Nationals",
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "pick": "Washington Nationals",
+              "result": "LOST",
+              "score": "Kansas City Royals 6, Washington Nationals 2",
+              "clv": -0.0068,
+              "clv_pct": -0.7,
+              "market_prob_at_close": 0.5469
+            },
+            {
+              "game": "Tampa Bay Rays @ Los Angeles Dodgers",
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "pick": "Los Angeles Dodgers",
+              "result": "WON",
+              "score": "Tampa Bay Rays 4, Los Angeles Dodgers 5",
+              "clv": -0.0042,
+              "clv_pct": -0.4,
+              "market_prob_at_close": 0.5885
+            }
+          ],
+          "why_picked": "Two-leg ML parlay on home favorites with favorable model probabilities.",
+          "what_happened": "Legs: Washington Nationals: LOST, Los Angeles Dodgers: WON.",
+          "signals": [
+            "Home Advantage",
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 parlay failed; losing leg(s): Washington Nationals",
+          "key_insight": "Parlay failed; consider whether reducing to single-game exposure yields better EV on tight ML matchups.",
+          "in_budget": true
+        },
+        {
+          "pick": "St. Louis Cardinals (ML) + Seattle Mariners (ML)",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "game": "St. Louis Cardinals (ML) + Seattle Mariners (ML)",
+          "result": "LOST",
+          "pnl": "-$0.95",
+          "legs": [
+            {
+              "game": "San Diego Padres @ St. Louis Cardinals",
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "pick": "St. Louis Cardinals",
+              "result": "LOST",
+              "score": "San Diego Padres 6, St. Louis Cardinals 1",
+              "clv": -0.0009,
+              "clv_pct": -0.1,
+              "market_prob_at_close": 0.5392
+            },
+            {
+              "game": "Baltimore Orioles @ Seattle Mariners",
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "pick": "Seattle Mariners",
+              "result": "LOST",
+              "score": "Baltimore Orioles 5, Seattle Mariners 3",
+              "clv": -0.0018,
+              "clv_pct": -0.2,
+              "market_prob_at_close": 0.5444
+            }
+          ],
+          "why_picked": "Two-leg ML parlay on home favorites with favorable model probabilities.",
+          "what_happened": "Legs: St. Louis Cardinals: LOST, Seattle Mariners: LOST.",
+          "signals": [
+            "Home Advantage",
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 parlay failed; losing leg(s): St. Louis Cardinals, Seattle Mariners",
+          "key_insight": "Parlay failed; consider whether reducing to single-game exposure yields better EV on tight ML matchups.",
+          "in_budget": true
+        },
+        {
+          "game": "Los Angeles Angels @ Arizona Diamondbacks",
+          "sport": "MLB",
+          "pick": "Los Angeles Angels +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Los Angeles Angels 1, Arizona Diamondbacks 8",
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.1% against us",
+          "what_happened": "Arizona beat the Angels 8-1; the +1.5 was not covered.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -1.1
+        },
+        {
+          "game": "Tampa Bay Rays @ Los Angeles Dodgers",
+          "sport": "MLB",
+          "pick": "Los Angeles Dodgers",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Tampa Bay Rays 4, Los Angeles Dodgers 5",
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.4%, noise range)",
+          "what_happened": "Dodgers edged the Rays 5-4 in a close contest; the LA bullpen held on in the final innings to secure the narrow ML win.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.4
+        },
+        {
+          "game": "San Francisco Giants @ Atlanta Braves",
+          "sport": "MLB",
+          "pick": "San Francisco Giants +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "San Francisco Giants 7, Atlanta Braves 5",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.3%)",
+          "what_happened": "Robbie Ray dominated with 6.1 scoreless innings and Devers hit a back-to-back homer with Jung Hoo Lee; Giants won 7-5 (Spread) in the suspended-game makeup at Truist Park.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 1.3
+        },
+        {
+          "game": "Kansas City Royals @ Washington Nationals",
+          "sport": "MLB",
+          "pick": "Washington Nationals",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Kansas City Royals 6, Washington Nationals 2",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.7%)",
+          "what_happened": "Kansas City beat Washington 6-2; the Nationals ML did not cover.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.7
+        },
+        {
+          "game": "Baltimore Orioles @ Seattle Mariners",
+          "sport": "MLB",
+          "pick": "Seattle Mariners",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Baltimore Orioles 5, Seattle Mariners 3",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.2%)",
+          "what_happened": "Baltimore edged Seattle 5-3; Mariners ML was lost.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.2
+        },
+        {
+          "game": "San Diego Padres @ St. Louis Cardinals",
+          "sport": "MLB",
+          "pick": "St. Louis Cardinals",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "San Diego Padres 6, St. Louis Cardinals 1",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.1%)",
+          "what_happened": "San Diego beat St. Louis 6-1; Cardinals ML was not covered.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.1
+        },
+        {
+          "game": "Detroit Tigers @ Houston Astros",
+          "sport": "MLB",
+          "pick": "Detroit Tigers",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Detroit Tigers 2, Houston Astros 4",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.4%)",
+          "what_happened": "Houston beat Detroit 4-2; Tigers ML was not covered.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.4
+        },
+        {
+          "game": "Cleveland Guardians @ Milwaukee Brewers",
+          "sport": "MLB",
+          "pick": "Cleveland Guardians",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Cleveland Guardians 4, Milwaukee Brewers 9",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.4%)",
+          "what_happened": "Milwaukee beat Cleveland 9-4; Guardians ML was not covered.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.4
+        },
+        {
+          "game": "Toronto Blue Jays @ Boston Red Sox",
+          "sport": "MLB",
+          "pick": "Toronto Blue Jays +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Toronto Blue Jays 3, Boston Red Sox 0",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.3%)",
+          "what_happened": "Blue Jays shut out Boston 3-0 \u2014 a dominant pitching performance that made the +1.5 cover straightforward.",
+          "signals": [
+            "Pitching Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 1.3
+        },
+        {
+          "game": "Las Vegas Aces @ Phoenix Mercury",
+          "sport": "WNBA",
+          "pick": "Phoenix Mercury",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Las Vegas Aces 86, Phoenix Mercury 76",
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (0.9%)",
+          "what_happened": "Las Vegas Aces beat Phoenix Mercury 86-76; the Mercury fell short as Vegas outscored them in the second half.",
+          "signals": [
+            "Rating Edge",
+            "Recent Form"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.9
+        },
+        {
+          "game": "Seattle Storm @ Portland Fire",
+          "sport": "WNBA",
+          "pick": "Portland Fire",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Seattle Storm 89, Portland Fire 94",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+2.6%)",
+          "what_happened": "Portland Fire won 94-89 over the struggling Seattle Storm (8-game losing streak entering); Fire covered at Moda Center.",
+          "signals": [
+            "Rating Edge",
+            "Recent Form"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 2.6
+        },
+        {
+          "game": "New York Liberty @ Chicago Sky",
+          "sport": "WNBA",
+          "pick": "New York Liberty",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "New York Liberty 96, Chicago Sky 95",
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.2% against this pick",
+          "what_happened": "New York Liberty edged Chicago Sky 96-95 in a one-possession finish; the ML held by a single point.",
+          "signals": [
+            "Rating Edge",
+            "Recent Form"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -1.2
+        },
+        {
+          "game": "Colombia @ Uzbekistan",
+          "sport": "WC",
+          "pick": "Colombia -1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Colombia 3, Uzbekistan 1",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+3.5%)",
+          "what_happened": "Luis Diaz and Jaminton Campaz starred as Colombia beat Uzbekistan 3-1 at Estadio Azteca; Uzbekistan leveled in the 60th with a historic first WC goal but Colombia pulled clear.",
+          "signals": [
+            "Elo Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 3.5
+        },
+        {
+          "game": "Colombia @ Uzbekistan",
+          "sport": "WC",
+          "pick": "Colombia",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Colombia 3, Uzbekistan 1",
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+3.0%)",
+          "what_happened": "Colombia controlled the match \u2014 Munoz opened scoring, Fayzullaev equalized (historic first WC goal for Uzbekistan), then Diaz and Campaz sealed a 3-1 win.",
+          "signals": [
+            "Elo Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 3.0
+        },
+        {
+          "game": "DR Congo @ Portugal",
+          "sport": "WC",
+          "pick": "Portugal -1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "signal_verdict": "PENDING",
+          "what_happened": "Portugal vs DR Congo \u2014 result pending (CLV captured).",
+          "signals": [
+            "Elo Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": 0.3
+        },
+        {
+          "game": "DR Congo @ Portugal",
+          "sport": "WC",
+          "pick": "Portugal",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "signal_verdict": "PENDING",
+          "what_happened": "Portugal vs DR Congo \u2014 result pending (CLV captured).",
+          "signals": [
+            "Elo Edge",
+            "Model Projection"
+          ],
+          "key_insight": "",
+          "in_budget": false,
+          "clv_pct": -0.4
+        }
+      ],
+      "patterns": [
+        "MLB underdog spreads (+1.5): 0-5 on the card \u2014 all 5 games decided by 3+ runs, no cover",
+        "ERA Trap signal: 1 positive CLV (CWS +1.7%) vs 1 deeply negative (ATH -3.1%) \u2014 inconclusive tonight",
+        "Budget parlays: 0-2 (Nationals lost in both; Cardinals and Mariners also lost in P2)",
+        "World Cup: Colombia 2-0 with avg CLV +3.3% \u2014 model sharpest on WC picks",
+        "WNBA watchlist: 2-1 (Portland Fire WON CLV +2.6%; NY Liberty WON; Phoenix Mercury LOST CLV +0.9%)",
+        "MLB watchlist: 3-6 settled \u2014 model underprojected run totals across the board tonight"
+      ],
+      "model_observations": [
+        "ERA Trap picks: 0-2 with avg CLV -0.7% \u2014 CWS beat the close (+1.7%) confirming the signal; ATH was deeply negative (-3.1%) suggesting market had different info",
+        "Pitcher Matchup picks: 0-2 with avg CLV -0.35% \u2014 market agreed on PHI direction (flat) but both games ended as blowouts",
+        "Model projected tight games (2.9-3.3 R/G each) but actual scores were 9-1, 12-4, 10-5, 12-4 \u2014 systematic run-total underestimation tonight",
+        "Sullivan FIP (1.87) vs xFIP (4.47) gap was not adequately penalized \u2014 small-sample FIP outliers should defer to xFIP for starters under 50 IP",
+        "Colombia WC picks: 2-0 avg CLV +3.3% \u2014 Elo Edge and Model Projection cross-validated by result and market movement",
+        "WNBA Rating Edge: Portland Fire WON (CLV +2.6%) and NY Liberty WON (CLV -1.2%) \u2014 underdog expansions (Portland is a new franchise) reward rating-edge plays",
+        "All 5 budget singles were MLB +1.5 spread plays; consider mixing bet types to avoid concentration risk"
+      ]
     }
   ]
 }
