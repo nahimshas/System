@@ -425,6 +425,8 @@ with urllib.request.urlopen(req, timeout=30) as r:
 
 ## Step 7 — Write Cloudflare KV key to trigger push notification
 
+There is no built-in PushNotification tool. The ONLY way to trigger the push notification is the Python script below — run it exactly as written. Do not attempt to use any other tool or method.
+
 Skip this step entirely if snapshot_timeout is True AND every pick is PENDING — don't ping the user for a report with no information; the morning run will cover it.
 
 ```python
