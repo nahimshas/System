@@ -2014,6 +2014,9 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             "weather_run_adj": _lv.get("wx_adj"),
             "playoff": _lv.get("playoff"),
             "stats_available": stats_available,
+            "is_coors": _lv.get("_is_coors"),
+            "coors_ops_deflator_applied": _lv.get("_COORS_OPS_DEFLATOR") if (_lv.get("_is_coors") is False and ("Colorado Rockies" in [home, away])) else None,
+            "coors_visitor_inflator_applied": _lv.get("_COORS_VISITOR_INFLATOR") if _lv.get("_is_coors") else None,
         }
         _mlb_rh = _lv.get("_mlb_raw_home")
         _mlb_ro = _lv.get("_mlb_total_raw_over")
