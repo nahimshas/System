@@ -1508,7 +1508,11 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     # When opponents pitch AT Coors, their stats are similarly inflated.
     # The park_factor (1.30) already adjusts run totals for the venue, but
     # the Rockies' season batting stats need correcting before that step.
-    _COORS_OPS_DEFLATOR = 0.92    # Rockies road OPS ≈ 92% of season OPS
+    # Road/season OPS ratio from ESPN splits 2022-2025: 0.872, 0.910, 0.908, 0.870 → avg 0.89
+    _COORS_OPS_DEFLATOR = 0.87    # Rockies road OPS ≈ 87% of season OPS (empirical 4-yr avg ~0.89, conservative)
+    # Visiting teams hit ~10% better at altitude than their neutral-park season OPS suggests.
+    # Derived from Coors OPS park factor (~1.15); conservative estimate pending decision-log validation.
+    _COORS_VISITOR_INFLATOR = 1.10
     _is_coors = "Coors" in venue
     if "Colorado Rockies" == away and not _is_coors:
         # Rockies batting away from Coors — deflate their inflated season OPS
@@ -1516,6 +1520,9 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     if "Colorado Rockies" == home and not _is_coors:
         # Shouldn't happen (Rockies always home at Coors) but guard anyway
         home_ops = home_ops * _COORS_OPS_DEFLATOR
+    if _is_coors and away != "Colorado Rockies":
+        # Visiting team batting at Coors — inflate their neutral-park season OPS
+        away_ops = away_ops * _COORS_VISITOR_INFLATOR
 
     # Lowered 4.5 → 4.35 (Jun 2026): 4.5 R/G per team (9.0 baseline) sat ~0.3 runs
     # above current MLB scoring (~4.35 R/G / ~8.7 total), giving every total a
