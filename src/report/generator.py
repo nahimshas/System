@@ -485,7 +485,7 @@ def build_report(
             "contracts":     rec["num_contracts"],
             "cost":          rec["total_cost"],
             "profit_if_win": rec["profit_if_win"],
-            "pct_of_budget": round(rec["total_cost"] / DAILY_BUDGET * 100, 1),
+            "pct_of_budget": round(rec["total_cost"] / _current_bankroll * 100, 1),
             "confidence":    rec.get("kelly_fraction", 0),
             "locked":        rec.get("locked", False),
             "commence_time": rec.get("commence_time", ""),
