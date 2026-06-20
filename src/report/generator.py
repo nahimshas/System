@@ -463,7 +463,12 @@ def build_report(
     total_allocated  = sum(r["total_cost"] for r in all_singles)
     parlay_allocated = sum(p["total_cost"] for p in parlays)
     grand_total      = total_allocated + parlay_allocated
-    reserve          = max(0.0, DAILY_BUDGET - grand_total)
+    try:
+        from src.state.bankroll import load_bankroll as _load_br
+        _current_bankroll = _load_br()
+    except Exception:
+        _current_bankroll = DAILY_BUDGET
+    reserve          = max(0.0, _current_bankroll - grand_total)
 
     # ── Allocation table rows ────────────────────────────────────────────────
     allocation_rows = []
