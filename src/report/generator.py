@@ -531,7 +531,7 @@ def build_report(
             "contracts":     par["num_contracts"],
             "cost":          par["total_cost"],
             "profit_if_win": par["profit_if_win"],
-            "pct_of_budget": round(par["total_cost"] / DAILY_BUDGET * 100, 1),
+            "pct_of_budget": round(par["total_cost"] / _current_bankroll * 100, 1),
             "confidence":    0,
             "locked":        par.get("locked", False),
             "commence_time": min((l.get("commence_time", "") for l in par.get("legs", [])), default=""),
