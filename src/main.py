@@ -182,8 +182,8 @@ def _resize_with_calibrated_probs(recs) -> None:
             eff = _effective_edge_safe(r)
             cal_prob = min(1.0, max(0.0, float(r.market_prob) + eff))
             r.model_prob_calibrated = round(cal_prob, 4)
-            if abs(cal_prob - float(r.model_prob)) < 1e-9:
-                continue   # no correction — keep the analyzer's sizing
+            # Always resize with rolling bankroll — even Phase 0 (cal_prob == model_prob)
+            # so stakes scale with the compounded bankroll, not the fixed DAILY_BUDGET.
             r.sizing = robinhood_kelly(cal_prob, float(r.market_prob), budget=_bankroll)
         except Exception:
             continue
