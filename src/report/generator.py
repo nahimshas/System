@@ -639,7 +639,7 @@ def build_report(
     return {
         "generated_at":       _now_pacific_str(),
         "run_date":           run_date.strftime("%A, %B %d, %Y"),
-        "daily_budget":       DAILY_BUDGET,
+        "daily_budget":       _current_bankroll,
         "nba_game_count":     nba_game_count,
         "mlb_game_count":     mlb_game_count,
         "nba_singles":        nba_singles,
