@@ -360,7 +360,8 @@ def effective_edge(rec: Any) -> float:
     """
     Compute the calibration-adjusted edge for a BetRecommendation.
 
-    Phase 0:  returns raw edge unchanged
+    Phase 0:  returns raw_edge × credibility-weighted partial ratio (1.0 at n=0,
+              ramps to full single_ratio at PHASE_A_MIN)
     Phase A+: returns raw_edge × calibration_ratio (single or bucket)
 
     This is the chokepoint used by the slot-ranking logic. The raw edge
