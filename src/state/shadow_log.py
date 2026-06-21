@@ -469,7 +469,7 @@ def settle_shadow_from_espn(today: date) -> int:
 
     # Sports that have ESPN paths we can use
     MAIN_SPORTS      = {"NBA", "MLB"}               # _fetch_espn_final_scores
-    WATCHLIST_SPORTS = {"NHL", "WNBA", "MLS"}       # _fetch_watchlist_final_scores
+    WATCHLIST_SPORTS = {"NHL", "WNBA", "MLS", "WC"} # _fetch_watchlist_final_scores
     IPL_SPORTS       = {"IPL"}                      # Cricbuzz via _settle_ipl_pick
     SUPPORTED        = MAIN_SPORTS | WATCHLIST_SPORTS | IPL_SPORTS
 
