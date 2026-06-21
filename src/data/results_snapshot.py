@@ -274,35 +274,6 @@ def main() -> int:
 
     singles_out = [resolve_pick(p) for p in singles]
 
-    # Update rolling bankroll from today's settled singles.
-    # P&L compunds day-over-day: tomorrow's budget = today's bankroll ± results.
-    try:
-        from src.state.bankroll import load_bankroll, save_bankroll
-        bankroll = load_bankroll()
-        pnl = 0.0
-        settled_count = 0
-        for orig, resolved in zip(singles, singles_out):
-            result = resolved["result"]
-            if result == "WON":
-                pnl += float(orig.get("profit_if_win", 0))
-                settled_count += 1
-            elif result == "LOST":
-                pnl -= float(orig.get("loss_if_lose", 0))
-                settled_count += 1
-        if settled_count > 0:
-            new_bankroll = max(10.0, bankroll + pnl)
-            save_bankroll(new_bankroll,
-                          note=f"After {picks_date}: P&L {pnl:+.2f} ({settled_count} settled)")
-            logger.info(f"Bankroll updated: ${bankroll:.2f} → ${new_bankroll:.2f} "
-                        f"(P&L {pnl:+.2f}, {settled_count} settled)")
-    except Exception as _br_err:
-        logger.warning(f"Bankroll update failed (non-fatal): {_br_err}")
-
-    watchlist_out = [
-        resolve_pick(p) for p in display_pools
-        if (p.get("game"), p.get("bet_type"), p.get("pick")) not in budget_keys
-    ]
-
     parlays_out = []
     for par in parlays:
         legs_out = []
@@ -325,6 +296,43 @@ def main() -> int:
             "void_legs":  leg_results.count("VOID"),
             "legs":       legs_out,
         })
+
+    # Update rolling bankroll from today's settled singles AND parlays.
+    # P&L compounds day-over-day: tomorrow's budget = today's bankroll ± results.
+    try:
+        from src.state.bankroll import load_bankroll, save_bankroll
+        bankroll = load_bankroll()
+        pnl = 0.0
+        settled_count = 0
+        for orig, resolved in zip(singles, singles_out):
+            result = resolved["result"]
+            if result == "WON":
+                pnl += float(orig.get("profit_if_win", 0))
+                settled_count += 1
+            elif result == "LOST":
+                pnl -= float(orig.get("loss_if_lose", 0))
+                settled_count += 1
+        for orig, resolved in zip(parlays, parlays_out):
+            result = resolved["result"]
+            if result == "WON":
+                pnl += float(orig.get("profit_if_win", 0))
+                settled_count += 1
+            elif result == "LOST":
+                pnl -= float(orig.get("total_cost", 0))
+                settled_count += 1
+        if settled_count > 0:
+            new_bankroll = max(10.0, bankroll + pnl)
+            save_bankroll(new_bankroll,
+                          note=f"After {picks_date}: P&L {pnl:+.2f} ({settled_count} settled)")
+            logger.info(f"Bankroll updated: ${bankroll:.2f} → ${new_bankroll:.2f} "
+                        f"(P&L {pnl:+.2f}, {settled_count} settled)")
+    except Exception as _br_err:
+        logger.warning(f"Bankroll update failed (non-fatal): {_br_err}")
+
+    watchlist_out = [
+        resolve_pick(p) for p in display_pools
+        if (p.get("game"), p.get("bet_type"), p.get("pick")) not in budget_keys
+    ]
 
     snapshot = {
         "date":         picks_date.isoformat(),
