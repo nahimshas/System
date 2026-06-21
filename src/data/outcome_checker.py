@@ -625,8 +625,10 @@ def _determine_outcome(
         if spread != 0 and spread % 1 == 0:
             spread = spread - 0.5 if spread > 0 else spread + 0.5
 
-        # Determine which team the spread applies to
-        pick_team = re.sub(r"[+-][\d.]+\s*$", "", pick).strip().lower()
+        # Determine which team the spread applies to.
+        # De-accent pick_team so accented names like "Curaçao" match the normed
+        # home/away strings (e.g. "curacao") that _determine_mls_outcome passes in.
+        pick_team = _norm_country(re.sub(r"[+-][\d.]+\s*$", "", pick).strip())
         home_lower = home_team.lower()
         away_lower = away_team.lower()
 
