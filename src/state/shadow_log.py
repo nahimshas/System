@@ -629,7 +629,7 @@ def settle_shadow_from_espn(today: date) -> int:
                 espn_home = score_data.get("home_name", home_abbr)
                 espn_away = score_data.get("away_name", away_abbr)
 
-                if sport == "MLS":
+                if sport in ("MLS", "WC"):
                     result = _determine_mls_outcome(
                         pick, bet_type, espn_home, espn_away,
                         score_data["home_score"], score_data["away_score"],
