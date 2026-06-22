@@ -8593,6 +8593,568 @@
         "Injury model gap: Ohtani's paternity leave wasn't in the injury feed \u2014 non-medical roster absences need a separate data source",
         "LAD ML had best budget CLV (+2.8%) but lost \u2014 confirms the model found real value; Trevor Rogers was the variance event"
       ]
+    },
+    {
+      "date": "2026-06-21",
+      "generated_at": "2026-06-22T05:58:36Z",
+      "headline": "1-6 on Today's Card (-$59.81); watchlist 8-9.",
+      "budget_record": "1-6",
+      "watchlist_record": "8-9",
+      "budget_pnl": -59.81,
+      "avg_budget_clv": null,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "Pittsburgh Pirates @ Colorado Rockies",
+          "sport": "MLB",
+          "pick": "Colorado Rockies +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Pittsburgh Pirates 8, Colorado Rockies 6",
+          "pnl": "-$23.07",
+          "why_picked": "Coors Field park factor (1.30, hitter-friendly) combined with favorable xFIP matchup, giving the Rockies run-scoring upside for the cover.",
+          "what_happened": "Nick Gonzalez and Bryan Reynolds homered to lead Pittsburgh's 8-6 win at Coors Field. Pittsburgh broke it open with four straight hits in the 6th and a 433-foot Reynolds homer in the 7th; Jared Jones was also struck by a comebacker and exited after the 3rd, leaving Colorado's bullpen exposed.",
+          "signals": [
+            "xFIP Projection",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "Both pitchers were replaced mid-game (Jones hit by comebacker, Lorenzen pulled early); park factor projected scoring materialized (combined 14 runs) but Pittsburgh hit the bigger shots.",
+          "in_budget": true
+        },
+        {
+          "game": "Cincinnati Reds @ New York Yankees",
+          "sport": "MLB",
+          "pick": "New York Yankees +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Cincinnati Reds 4, New York Yankees 1",
+          "pnl": "-$13.02",
+          "why_picked": "Coors Field park factor (1.30, hitter-friendly) combined with favorable xFIP matchup, giving the Rockies run-scoring upside for the cover.",
+          "what_happened": "Chase Burns was dominant again, allowing just 1 run over 5 innings for his 8th straight win (now 9-1) as Cincinnati won 4-1. Tyler Stephenson's 3-run homer off rookie Elmer Rodriguez was the key blow; New York went 0-for-9 with runners in scoring position.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "ERA trap on Burns failed \u2014 he continues to outperform his xFIP with elite command. Consider adding a consecutive-wins/hot-streak filter before flagging Chase Burns as an ERA trap.",
+          "in_budget": true
+        },
+        {
+          "game": "Milwaukee Brewers @ Atlanta Braves",
+          "sport": "MLB",
+          "pick": "Atlanta Braves +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Milwaukee Brewers 9, Atlanta Braves 4",
+          "pnl": "-$12.41",
+          "why_picked": "Coors Field park factor (1.30, hitter-friendly) combined with favorable xFIP matchup, giving the Rockies run-scoring upside for the cover.",
+          "what_happened": "Milwaukee erupted for an 8-run second inning \u2014 William Contreras went 4-for-4 with a 3-run homer \u2014 and coasted to a 9-4 win. Bryce Elder was hammered early and Gasser pitched 6 strong innings; Atlanta never recovered from the historic second-inning outburst.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "8-run innings are unpredictable by pitching models; the ERA trap on Elder correctly predicted he'd allow runs, but the Brewers' offensive concentration made a spread cover impossible.",
+          "in_budget": true
+        },
+        {
+          "game": "Baltimore Orioles @ Los Angeles Dodgers",
+          "sport": "MLB",
+          "pick": "Los Angeles Dodgers",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Baltimore Orioles 12, Los Angeles Dodgers 1",
+          "pnl": "-$13.88",
+          "why_picked": "Coors Field park factor (1.30, hitter-friendly) combined with favorable xFIP matchup, giving the Rockies run-scoring upside for the cover.",
+          "what_happened": "Baltimore demolished the Dodgers 12-1, chasing Sheehan in the 4th inning with a barrage of extra-base hits. Colton Cowser had a solo homer and 2-run single, Taylor Ward and Pete Alonso (18th HR) added blasts, and Blaze Alexander hit a two-run shot \u2014 an all-out offensive clinic.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Chicago White Sox @ Detroit Tigers",
+          "sport": "MLB",
+          "pick": "Detroit Tigers +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Chicago White Sox 4, Detroit Tigers 5",
+          "pnl": "+$5.78",
+          "why_picked": "Coors Field park factor (1.30, hitter-friendly) combined with favorable xFIP matchup, giving the Rockies run-scoring upside for the cover.",
+          "what_happened": "Detroit walked off in extras 5-4 as Matt Vierling's bloop single in the 10th completed a comeback. Dillon Dingler tied it with a homer in the 8th; the Tigers trailed twice but never quit, sweeping the White Sox series.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "Walk-off extras win shows Tiger resilience. ERA trap on Montero (moderate) correctly flagged run-scoring potential; Detroit's +1.5 was the right bet type even if ML was uncertain.",
+          "in_budget": true
+        },
+        {
+          "pick": "Los Angeles Dodgers (ML) + Philadelphia Phillies (ML)",
+          "game": "Baltimore Orioles @ Los Angeles Dodgers / New York Mets @ Philadelphia Phillies",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "pnl": "-$2.20",
+          "legs": [
+            {
+              "pick": "Los Angeles Dodgers",
+              "game": "Baltimore Orioles @ Los Angeles Dodgers",
+              "sport": "MLB",
+              "result": "LOST"
+            },
+            {
+              "pick": "Philadelphia Phillies",
+              "game": "New York Mets @ Philadelphia Phillies",
+              "sport": "MLB",
+              "result": "WON"
+            }
+          ],
+          "why_picked": "Combined edge on Dodgers ML (ERA trap on BAL pitcher) and Phillies ML (strong Wheeler vs. Mets); combined edge 7.3%.",
+          "what_happened": "Dodgers leg was crushed (12-1 blowout by Baltimore); Phillies leg WON 6-2. One busted leg sank the parlay.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 parlay busted; one leg lost",
+          "key_insight": "Parlay exposure was dominated by the Dodgers leg \u2014 when one side gets blown out 12-1, parlay risk becomes binary in the worst way.",
+          "in_budget": true
+        },
+        {
+          "pick": "Texas Rangers (ML) + Athletics (ML)",
+          "game": "San Diego Padres @ Texas Rangers / Los Angeles Angels @ Athletics",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "pnl": "-$1.01",
+          "legs": [
+            {
+              "pick": "Texas Rangers",
+              "game": "San Diego Padres @ Texas Rangers",
+              "sport": "MLB",
+              "result": "WON"
+            },
+            {
+              "pick": "Athletics",
+              "game": "Los Angeles Angels @ Athletics",
+              "sport": "MLB",
+              "result": "LOST"
+            }
+          ],
+          "why_picked": "Rangers ML (Eovaldi edge over Padres) and Athletics ML (Jack Perkins' xFIP 3.10 edge vs. Angels); combined edge 5.5%.",
+          "what_happened": "Rangers leg WON 4-3; Athletics leg LOST 9-7 when the Angels rallied. One busted leg killed the parlay.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 parlay busted; one leg lost",
+          "key_insight": "Athletics ML was the weaker leg (edge 5.4%) \u2014 Athletics bullpen allowed the Angels to rally, underscoring the risk of 2-leggers with one marginal pick.",
+          "in_budget": true
+        },
+        {
+          "game": "New York Mets @ Philadelphia Phillies",
+          "sport": "MLB",
+          "pick": "Philadelphia Phillies",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "New York Mets 2, Philadelphia Phillies 6",
+          "pnl": "",
+          "why_picked": "ERA trap on opposing pitcher; model found value on Philadelphia Phillies.",
+          "what_happened": "Philadelphia won 6-2 behind Zack Wheeler's strong start, giving the Phillies their second straight win over the Mets.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "San Diego Padres @ Texas Rangers",
+          "sport": "MLB",
+          "pick": "Texas Rangers",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "San Diego Padres 3, Texas Rangers 4",
+          "pnl": "",
+          "why_picked": "ERA trap on opposing pitcher; model found value on Texas Rangers.",
+          "what_happened": "Texas edged San Diego 4-3 on Nathan Eovaldi's solid outing; the Rangers' lineup did just enough to support their starter.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Los Angeles Angels @ Athletics",
+          "sport": "MLB",
+          "pick": "Athletics",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Los Angeles Angels 9, Athletics 7",
+          "pnl": "",
+          "why_picked": "xFIP pitching edge on Athletics.",
+          "what_happened": "Los Angeles Angels rallied to beat the Athletics 9-7 in what was a high-scoring affair; Jack Perkins couldn't hold a lead late.",
+          "signals": [
+            "xFIP Projection",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "St. Louis Cardinals @ Kansas City Royals",
+          "sport": "MLB",
+          "pick": "St. Louis Cardinals",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "St. Louis Cardinals 12, Kansas City Royals 10",
+          "pnl": "",
+          "why_picked": "ERA trap on opposing pitcher; model found value on St. Louis Cardinals.",
+          "what_happened": "St. Louis outlasted Kansas City 12-10 in a wild offensive shootout at Kauffman Stadium; Dustin May got the win while the Cardinals' bats stayed hot.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "San Francisco Giants @ Miami Marlins",
+          "sport": "MLB",
+          "pick": "Miami Marlins +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "San Francisco Giants 1, Miami Marlins 2",
+          "pnl": "",
+          "why_picked": "Park factor and pitching matchup edge.",
+          "what_happened": "Miami edged San Francisco 2-1; Logan Webb pitched well for the Giants but the Marlins scraped out the narrow win at home.",
+          "signals": [
+            "xFIP Projection",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Minnesota Twins @ Arizona Diamondbacks",
+          "sport": "MLB",
+          "pick": "Minnesota Twins +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Minnesota Twins 4, Arizona Diamondbacks 2",
+          "pnl": "",
+          "why_picked": "Park factor and pitching matchup edge.",
+          "what_happened": "Minnesota held off Arizona 4-2 to take the road win; the Twins' bats provided just enough run support for their starter.",
+          "signals": [
+            "xFIP Projection",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "San Francisco Giants @ Miami Marlins",
+          "sport": "MLB",
+          "pick": "San Francisco Giants",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "San Francisco Giants 1, Miami Marlins 2",
+          "pnl": "",
+          "why_picked": "Park factor and pitching matchup edge.",
+          "what_happened": "Miami edged San Francisco 2-1; Logan Webb pitched well for the Giants but the Marlins scraped out the narrow win at home.",
+          "signals": [
+            "xFIP Projection",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Baltimore Orioles @ Los Angeles Dodgers",
+          "sport": "MLB",
+          "pick": "Baltimore Orioles +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Baltimore Orioles 12, Los Angeles Dodgers 1",
+          "pnl": "",
+          "why_picked": "ERA trap on opposing pitcher; model found value on Baltimore Orioles +1.5.",
+          "what_happened": "Baltimore demolished the Dodgers 12-1, chasing Sheehan in the 4th inning with a barrage of extra-base hits. Colton Cowser had a solo homer and 2-run single, Taylor Ward and Pete Alonso (18th HR) added blasts, and Blaze Alexander hit a two-run shot \u2014 an all-out offensive clinic.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Cleveland Guardians @ Houston Astros",
+          "sport": "MLB",
+          "pick": "Cleveland Guardians +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Cleveland Guardians 1, Houston Astros 2",
+          "pnl": "",
+          "why_picked": "xFIP pitching edge on Cleveland Guardians +1.5.",
+          "what_happened": "Houston edged Cleveland 2-1 in a tight pitcher's duel; Cleveland kept it close to cover the +1.5 spread despite the narrow loss.",
+          "signals": [
+            "xFIP Projection",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Toronto Blue Jays @ Chicago Cubs",
+          "sport": "MLB",
+          "pick": "Chicago Cubs +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "VOID",
+          "score": "Postponed",
+          "pnl": "",
+          "why_picked": "Park factor and pitching matchup edge.",
+          "what_happened": "Score: Postponed.",
+          "signals": [
+            "xFIP Projection",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "VOID \u2014 game postponed",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Washington Nationals @ Tampa Bay Rays",
+          "sport": "MLB",
+          "pick": "Washington Nationals",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Washington Nationals 3, Tampa Bay Rays 4",
+          "pnl": "",
+          "why_picked": "ERA trap on opposing pitcher; model found value on Washington Nationals.",
+          "what_happened": "Tampa Bay beat Washington 4-3 in a close contest; the Nationals couldn't overcome a late Rays rally.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Park Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "St. Louis Cardinals @ Kansas City Royals",
+          "sport": "MLB",
+          "pick": "Kansas City Royals +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "St. Louis Cardinals 12, Kansas City Royals 10",
+          "pnl": "",
+          "why_picked": "ERA trap on opposing pitcher; model found value on Kansas City Royals +1.5.",
+          "what_happened": "St. Louis outlasted Kansas City 12-10 in a wild offensive shootout at Kauffman Stadium; Dustin May got the win while the Cardinals' bats stayed hot.",
+          "signals": [
+            "xFIP Projection",
+            "ERA Trap",
+            "Pitching Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "New York Liberty @ Los Angeles Sparks",
+          "sport": "WNBA",
+          "pick": "New York Liberty",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "New York Liberty 97, Los Angeles Sparks 98",
+          "pnl": "",
+          "why_picked": "Rating edge on New York Liberty identified by model.",
+          "what_happened": "Nneka Ogwumike scored 24 points including 12 in the fourth quarter with a walk-off game-winner to shock the Liberty 98-97 on the road.",
+          "signals": [
+            "Rating Edge",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Golden State Valkyries @ Las Vegas Aces",
+          "sport": "WNBA",
+          "pick": "Golden State Valkyries",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Golden State Valkyries 73, Las Vegas Aces 92",
+          "pnl": "",
+          "why_picked": "Rating edge on Golden State Valkyries identified by model.",
+          "what_happened": "Jackie Young (21 pts) and A'Ja Wilson (19 pts, 9 reb) led the Aces to a dominant 92-73 win; Las Vegas buried the Valkyries with 11 three-pointers.",
+          "signals": [
+            "Rating Edge",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Cape Verde @ Uruguay",
+          "sport": "WC",
+          "pick": "Uruguay",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Cape Verde 2, Uruguay 2",
+          "pnl": "",
+          "why_picked": "Elo edge and model projection favor Uruguay.",
+          "what_happened": "Score: Cape Verde 2, Uruguay 2.",
+          "signals": [
+            "Elo Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Cape Verde @ Uruguay",
+          "sport": "WC",
+          "pick": "Uruguay -1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Cape Verde 2, Uruguay 2",
+          "pnl": "",
+          "why_picked": "Elo edge and model projection favor Uruguay -1.5.",
+          "what_happened": "Same 2-2 draw \u2014 Uruguay could not win by 2 or more to cover -1.5, failing to convert a goal disallowed for offside.",
+          "signals": [
+            "Elo Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Saudi Arabia @ Spain",
+          "sport": "WC",
+          "pick": "Saudi Arabia +2.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Saudi Arabia 0, Spain 4",
+          "pnl": "",
+          "why_picked": "Elo edge and model projection favor Saudi Arabia +2.5.",
+          "what_happened": "Spain ran riot 4-0 in Atlanta \u2014 Lamine Yamal scored his first World Cup goal, Oyarzabal netted twice in the first half, and an Al-Tambakti own goal added the fourth; Saudi Arabia +2.5 was blown out of the water.",
+          "signals": [
+            "Elo Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Iran @ Belgium",
+          "sport": "WC",
+          "pick": "Iran +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Iran 0, Belgium 0",
+          "pnl": "",
+          "why_picked": "Elo edge and model projection favor Iran +1.5.",
+          "what_happened": "Belgium and Iran played out a goalless draw 0-0 in Los Angeles \u2014 Alireza Beiranvand made seven saves including a point-blank stop off De Cuyper, while Belgium's 53-shot scoreless World Cup streak continues; Iran +1.5 covered easily.",
+          "signals": [
+            "Elo Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no CLV available",
+          "key_insight": "",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "MEDIUM confidence: 1-4 on budget singles (0-2 on parlays)",
+        "ERA Trap picks: 1-3 on budget singles tonight (signal fired on 4 of 5 picks)",
+        "Park Factor pick: 0-1 (Rockies +1.5 at Coors \u2014 Pittsburgh scored 8)",
+        "MLB run-line +1.5: 1-3 on budget (Tigers survived in extras; Braves, Yankees, Rockies couldn't cover)",
+        "World Cup picks: 1-3 (Iran +1.5 covered 0-0 draw; Uruguay and Saudi Arabia failed to cover)",
+        "WNBA picks: 0-2 (Liberty upset at Sparks; Valkyries blown out by Aces)",
+        "Watchlist MLB: 6-4 with 1 VOID \u2014 far better than budget singles on the same slate"
+      ],
+      "model_observations": [
+        "ERA Trap signal went 1-3 on budget picks tonight \u2014 Chase Burns (9-1) continued to outperform his xFIP, and Bryce Elder's severe trap (severity 0.94) didn't matter after Milwaukee scored 8 in the 2nd; a hot-streak or velocity-trend filter before firing ERA trap should be tested.",
+        "Pitching Edge / xFIP Projection: Emmet Sheehan had a strong xFIP (3.13) but was knocked out in the 4th \u2014 strong xFIP alone cannot override an offense this hot; consider adding an offensive rating weight to pitcher-edge picks.",
+        "Park Factor at Coors Field: Combined 14 runs scored (8+6) confirms the park factor signal about run-scoring environment, but Pittsburgh won the 'bigger hits' battle \u2014 the model should disaggregate park factor by team offensive profile.",
+        "No CLV data available tonight \u2014 all signal grades are result-only, which is a small and noisy sample. CLV capture is critical for calibrating model signals over time.",
+        "Watchlist MLB (6-4) dramatically outperformed budget MLB singles (1-4) on the same night; the model's top-5 picks happened to cluster on picks that all went cold \u2014 examining the edge ranking vs. actual result correlation is worth a deeper review.",
+        "Walk-off resilience: Detroit Tigers +1.5 covered via walk-off in extras \u2014 late-inning comebacks are unlikely to be predicted by pitcher metrics; this pick worked because +1.5 is forgiving enough to absorb tight games."
+      ]
     }
   ]
 }
