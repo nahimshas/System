@@ -9155,6 +9155,591 @@
         "Watchlist MLB (6-4) dramatically outperformed budget MLB singles (1-4) on the same night; the model's top-5 picks happened to cluster on picks that all went cold \u2014 examining the edge ranking vs. actual result correlation is worth a deeper review.",
         "Walk-off resilience: Detroit Tigers +1.5 covered via walk-off in extras \u2014 late-inning comebacks are unlikely to be predicted by pitcher metrics; this pick worked because +1.5 is forgiving enough to absorb tight games."
       ]
+    },
+    {
+      "date": "2026-06-22",
+      "generated_at": "2026-06-23T05:59:36Z",
+      "headline": "5-2 budget night (+$27.92); ERA trap warning validated (Angels blowout loss); 0 picks pending",
+      "budget_record": "5-2",
+      "watchlist_record": "9-8",
+      "budget_pnl": 27.92,
+      "avg_budget_clv": null,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "Boston Red Sox @ Colorado Rockies",
+          "sport": "MLB",
+          "pick": "Colorado Rockies +1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Boston Red Sox 2, Colorado Rockies 3",
+          "pnl": "+$11.52",
+          "why_picked": "Jake Bennett (FIP 3.3 / xFIP 3.88) was meaningfully better than Ryan Feltner (FIP 4.98 / xFIP 4.06), and Coors Field (park factor 1.30) ensures high-run environments that keep +1.5 very coverable.",
+          "what_happened": "Jake Bennett held Boston to two runs while Ryan Feltner coughed up a lead; Colorado won outright 3-2 at Coors Field in a tight pitchers' duel played in the thin Denver air.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no closing line available to confirm via CLV",
+          "key_insight": "Bennett's FIP (3.3) dramatically outperforming Feltner's (4.98) proved decisive \u2014 Pitching Edge signal worked cleanly on a spread pick at Coors.",
+          "in_budget": true
+        },
+        {
+          "game": "Milwaukee Brewers @ Cincinnati Reds",
+          "sport": "MLB",
+          "pick": "Cincinnati Reds +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Milwaukee Brewers 2, Cincinnati Reds 1",
+          "pnl": "+$13.06",
+          "why_picked": "Milwaukee's injury load (-15.0%) was the heaviest of any team analyzed today, and Brady Singer's xFIP (4.15) showed his FIP was inflated by bad luck \u2014 both factors pointed toward a tight, coverable game for Cincinnati.",
+          "what_happened": "Brandon Woodruff was near-perfect in his return (10 strikeouts through 5\u2154 innings), but Milwaukee needed extras \u2014 Joey Ortiz's sacrifice fly in the 10th gave the Brewers a 2-1 win, while Cincinnati covered +1.5 by keeping it within one run.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no closing line available to confirm via CLV",
+          "key_insight": "Milwaukee's heavy injury load (-15%) may have delayed their offense, forcing extras. Model-vs-market edge on Cincinnati's pitching metrics was validated.",
+          "in_budget": true
+        },
+        {
+          "game": "Los Angeles Dodgers @ Minnesota Twins",
+          "sport": "MLB",
+          "pick": "Minnesota Twins +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Los Angeles Dodgers 2, Minnesota Twins 1",
+          "pnl": "+$12.56",
+          "why_picked": "Eric Lauer's poor metrics (FIP 6.48 / xFIP 4.85) vs. Zebby Matthews' solid profile (FIP 4.66 / xFIP 3.85) gave Minnesota a clear pitching edge, and the Twins' 7-3 recent form confirmed the upward trend.",
+          "what_happened": "Eric Lauer's shaky metrics proved accurate as LA managed only a narrow 2-1 victory; Zebby Matthews (xFIP 3.85) kept the Twins competitive throughout, and Minnesota covered the +1.5.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no closing line available to confirm via CLV",
+          "key_insight": "Lauer's FIP 6.48 vs. xFIP 4.85 gap (HR-driven) played out as Dodgers won narrowly \u2014 model accurately projected a tight game where +1.5 covered easily.",
+          "in_budget": true
+        },
+        {
+          "game": "Baltimore Orioles @ Los Angeles Angels",
+          "sport": "MLB",
+          "pick": "Los Angeles Angels +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Baltimore Orioles 6, Los Angeles Angels 1",
+          "pnl": "-$14.11",
+          "why_picked": "Kyle Bradish's elite xFIP (3.55) vs. Sam Aldegheri's ERA trap (ERA 4.50 vs. xFIP 5.42) pointed to a close contest; the model projected only a 0.4-run Orioles edge, keeping Angels +1.5 highly viable.",
+          "what_happened": "Kyle Bradish was immaculate \u2014 eight shutout innings \u2014 and Taylor Ward homered against his former team; Baltimore rolled 6-1 in a blowout that exposed the Aldegheri ERA trap risk the model had flagged.",
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; no closing line data to diagnose via CLV",
+          "key_insight": "The ERA trap warning on Aldegheri (severity 0.46, ERA 4.50 vs xFIP 5.42) was valid \u2014 he was lit up for 6 runs. When ERA trap severity is moderate and the starter is the run-preventing anchor, consider the trap a red flag rather than a tolerable noise signal on spread picks.",
+          "in_budget": true
+        },
+        {
+          "game": "Arizona Diamondbacks @ St. Louis Cardinals",
+          "sport": "MLB",
+          "pick": "St. Louis Cardinals",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Arizona Diamondbacks 2, St. Louis Cardinals 3",
+          "pnl": "+$3.73",
+          "why_picked": "Andre Pallante's strong xFIP (3.68) vs. Merrill Kelly's inflated FIP (6.02) gave St. Louis a clear pitching edge, with the model projecting Cardinals to win 4.5-3.0.",
+          "what_happened": "Andre Pallante was superb over six innings (1 ER), rookies JJ Wetherholt and Nathan Church drove in runs, and the Cardinals held on for a 3-2 win; Nolan Arenado received a standing ovation in his first return to Busch Stadium since his January trade.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; no closing line available to confirm via CLV",
+          "key_insight": "Pallante's metrics were accurately predictive (6 IP, 1 ER). Kelly's FIP-xFIP gap (6.02 vs 4.91) showed he's been getting lucky on contact; Cardinals' pitching edge was clean.",
+          "in_budget": true
+        },
+        {
+          "game": "Houston Astros @ Toronto Blue Jays / Arizona Diamondbacks @ St. Louis Cardinals",
+          "sport": "PARLAY",
+          "pick": "Toronto Blue Jays (ML) + St. Louis Cardinals (ML)",
+          "bet_type": "Parlay",
+          "confidence": "",
+          "result": "WON",
+          "score": "Multiple games",
+          "pnl": "+$2.03",
+          "why_picked": "ERA trap on Hunter Brown (ERA 1.10 vs xFIP 3.52 \u2014 SEVERE) meant Astros were likely overpriced; Dylan Cease (xFIP 2.33) provided Toronto a strong counter, paired with Cardinals' pitching edge (Pallante) for a high-confidence two-legger.",
+          "what_happened": "Both legs delivered: Toronto won 4-2 as Hunter Brown's ERA trap materialized (4 ER), and St. Louis won 3-2 behind Pallante's six strong innings.",
+          "signals": [
+            "ERA Trap",
+            "Pitching Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 both legs won; severe ERA trap on Astros starter played out exactly as flagged",
+          "key_insight": "The ERA trap (SEVERE, severity 0.37) on Brown proved highly diagnostic \u2014 this parlay's best argument was the Hunter Brown xFIP flag, not the Cardinals piece. Validated.",
+          "in_budget": true,
+          "legs": [
+            {
+              "game": "Houston Astros @ Toronto Blue Jays",
+              "sport": "MLB",
+              "pick": "Toronto Blue Jays",
+              "result": "WON"
+            },
+            {
+              "game": "Arizona Diamondbacks @ St. Louis Cardinals",
+              "sport": "MLB",
+              "pick": "St. Louis Cardinals",
+              "result": "WON"
+            }
+          ]
+        },
+        {
+          "game": "Chicago Cubs @ New York Mets / Cleveland Guardians @ Chicago White Sox",
+          "sport": "PARLAY",
+          "pick": "Chicago Cubs (ML) + Cleveland Guardians (ML)",
+          "bet_type": "Parlay",
+          "confidence": "",
+          "result": "LOST",
+          "score": "Multiple games",
+          "pnl": "-$0.87",
+          "why_picked": "Gavin Williams' strong metrics (xFIP 2.97) anchored the Cleveland leg, while Chicago Cubs had a pitching edge (Imanaga xFIP 3.45 vs Senga xFIP 4.40). The 61% rain risk at Citi Field was flagged but the parlay was run anyway.",
+          "what_happened": "Cubs/Mets was postponed due to heavy rain at Citi Field (61% precipitation chance materialized). The parlay reduced to the Cleveland leg only, which lost 5-6 as Gavin Williams struggled with 7 runs allowed in 5 innings.",
+          "signals": [
+            "Weather Factor",
+            "Pitching Edge",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 Cubs leg voided (PPD), surviving CLE leg lost; Williams' bad start sealed the loss",
+          "key_insight": "When a parlay includes a game with >50% precipitation probability, the risk of partial void is meaningful. If a single leg becomes the only active leg and it loses, the whole parlay loses. Consider excluding high-rain-risk games from parlays, or treating weather flags as veto criteria.",
+          "in_budget": true,
+          "legs": [
+            {
+              "game": "Chicago Cubs @ New York Mets",
+              "sport": "MLB",
+              "pick": "Chicago Cubs",
+              "result": "VOID (PPD)"
+            },
+            {
+              "game": "Cleveland Guardians @ Chicago White Sox",
+              "sport": "MLB",
+              "pick": "Cleveland Guardians",
+              "result": "LOST"
+            }
+          ]
+        },
+        {
+          "game": "Houston Astros @ Toronto Blue Jays",
+          "sport": "MLB",
+          "pick": "Toronto Blue Jays",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Houston Astros 2, Toronto Blue Jays 4",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Dylan Cease was solid for Toronto and the Blue Jays pulled away for a 4-2 win; Hunter Brown's severe ERA trap (ERA 1.10 vs xFIP 3.52) was exposed as Toronto batters tagged him for four runs.",
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Chicago Cubs @ New York Mets",
+          "sport": "MLB",
+          "pick": "Chicago Cubs",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "VOID",
+          "score": "Postponed",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Game postponed due to rain at Citi Field (61% precipitation chance) \u2014 will be rescheduled.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor"
+          ],
+          "signal_verdict": "VOID \u2014 game postponed",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Cleveland Guardians @ Chicago White Sox",
+          "sport": "MLB",
+          "pick": "Cleveland Guardians",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Cleveland Guardians 5, Chicago White Sox 6",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Gavin Williams labored \u2014 surrendering seven runs and seven hits in five innings \u2014 as the White Sox rallied to beat the Guardians 6-5, handing Cleveland a divisional stumble.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "New York Yankees @ Detroit Tigers",
+          "sport": "MLB",
+          "pick": "Detroit Tigers +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "New York Yankees 3, Detroit Tigers 5",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Framber Valdez earned the win while Gerrit Cole (ERA 2.57 vs xFIP 3.91) took the loss; Riley Greene homered for Detroit in a 5-3 Tigers win that validated the severe ERA trap on Cole.",
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Atlanta Braves @ San Diego Padres",
+          "sport": "MLB",
+          "pick": "Atlanta Braves",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Atlanta Braves 0, San Diego Padres 1",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Manny Machado's 14th homer in the fourth inning was the only run Michael King needed; King worked 7 strong innings (5 Ks, 0 BBs) as the Padres shut out Atlanta 1-0, sending the Braves to their 8th loss in 11 games.",
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Philadelphia Phillies @ Washington Nationals",
+          "sport": "MLB",
+          "pick": "Philadelphia Phillies",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Philadelphia Phillies 1, Washington Nationals 4",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Foster Griffin was excellent (7\u2153 innings, 1 ER, 9 Ks) and Dylan Crews sparked Washington; Luis Garcia Jr. and Curtis Mead homered in a dominant 4-1 Nationals win after a 90-minute rain delay.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "New York Yankees @ Detroit Tigers",
+          "sport": "MLB",
+          "pick": "New York Yankees",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "New York Yankees 3, Detroit Tigers 5",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Framber Valdez earned the win while Gerrit Cole (ERA 2.57 vs xFIP 3.91) took the loss; Riley Greene homered for Detroit in a 5-3 Tigers win that validated the severe ERA trap on Cole.",
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Kansas City Royals @ Tampa Bay Rays",
+          "sport": "MLB",
+          "pick": "Kansas City Royals +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Kansas City Royals 2, Tampa Bay Rays 1",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Michael Wacha allowed just one run over seven innings while Lane Thomas and Carter Jensen drove in runs; Alex Lange closed it out as Kansas City beat Tampa Bay 2-1 for their fourth win in five games.",
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Chicago Cubs @ New York Mets",
+          "sport": "MLB",
+          "pick": "New York Mets +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "VOID",
+          "score": "Postponed",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Game postponed due to rain at Citi Field (61% precipitation chance) \u2014 will be rescheduled.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor"
+          ],
+          "signal_verdict": "VOID \u2014 game postponed",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Philadelphia Phillies @ Washington Nationals",
+          "sport": "MLB",
+          "pick": "Washington Nationals +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Philadelphia Phillies 1, Washington Nationals 4",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Foster Griffin was excellent (7\u2153 innings, 1 ER, 9 Ks) and Dylan Crews sparked Washington; Luis Garcia Jr. and Curtis Mead homered in a dominant 4-1 Nationals win after a 90-minute rain delay.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Texas Rangers @ Miami Marlins",
+          "sport": "MLB",
+          "pick": "Miami Marlins",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Texas Rangers 4, Miami Marlins 3",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Texas scored the go-ahead run on Alejandro Osuna's RBI double and held on for a 4-3 win; Miami's Tyler Phillips (severe ERA trap) gave up runs despite the model projecting a Marlins edge.",
+          "signals": [
+            "Pitching Edge",
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Cleveland Guardians @ Chicago White Sox",
+          "sport": "MLB",
+          "pick": "Chicago White Sox +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Cleveland Guardians 5, Chicago White Sox 6",
+          "pnl": "",
+          "why_picked": "Model-identified watchlist edge.",
+          "what_happened": "Gavin Williams labored \u2014 surrendering seven runs and seven hits in five innings \u2014 as the White Sox rallied to beat the Guardians 6-5, handing Cleveland a divisional stumble.",
+          "signals": [
+            "Pitching Edge",
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Phoenix Mercury @ Indiana Fever",
+          "sport": "WNBA",
+          "pick": "Indiana Fever",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Phoenix Mercury 77, Indiana Fever 86",
+          "pnl": "",
+          "why_picked": "Model-identified WNBA edge.",
+          "what_happened": "Indiana dominated Phoenix 86-77 behind another strong performance; the Fever continue their impressive 2026 run.",
+          "signals": [
+            "Home Advantage"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Chicago Sky @ Connecticut Sun",
+          "sport": "WNBA",
+          "pick": "Connecticut Sun",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Chicago Sky 63, Connecticut Sun 92",
+          "pnl": "",
+          "why_picked": "Model-identified WNBA edge.",
+          "what_happened": "Connecticut routed Chicago 92-63 in a dominant home performance, the Sun's balanced attack too much for the Sky.",
+          "signals": [
+            "Home Advantage"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Austria @ Argentina",
+          "sport": "WC",
+          "pick": "Argentina",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Austria 0, Argentina 2",
+          "pnl": "",
+          "why_picked": "Model-identified World Cup edge.",
+          "what_happened": "Lionel Messi scored his 17th and 18th career World Cup goals (both all-time records) in Argentina's 2-0 victory at AT&T Stadium; Argentina advance to the knockout stage and Messi surpassed Klose as the all-time WC leading scorer.",
+          "signals": [
+            "Elo Edge",
+            "Model Projection"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Austria @ Argentina",
+          "sport": "WC",
+          "pick": "Argentina -1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Austria 0, Argentina 2",
+          "pnl": "",
+          "why_picked": "Model-identified World Cup edge.",
+          "what_happened": "Lionel Messi scored his 17th and 18th career World Cup goals (both all-time records) in Argentina's 2-0 victory at AT&T Stadium; Argentina advance to the knockout stage and Messi surpassed Klose as the all-time WC leading scorer.",
+          "signals": [
+            "Elo Edge",
+            "Model Projection"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Senegal @ Norway",
+          "sport": "WC",
+          "pick": "Senegal +0.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Senegal 2, Norway 3",
+          "pnl": "",
+          "why_picked": "Model-identified World Cup edge.",
+          "what_happened": "Erling Haaland scored twice (bringing his WC tally to four) and Marcus Pedersen added one as Norway beat Senegal 3-2 at Gillette Stadium; Isma\u00efla Sarr's brace gave Senegal hope but no miracle was in store.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Senegal @ Norway",
+          "sport": "WC",
+          "pick": "Senegal",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Senegal 2, Norway 3",
+          "pnl": "",
+          "why_picked": "Model-identified World Cup edge.",
+          "what_happened": "Erling Haaland scored twice (bringing his WC tally to four) and Marcus Pedersen added one as Norway beat Senegal 3-2 at Gillette Stadium; Isma\u00efla Sarr's brace gave Senegal hope but no miracle was in store.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Iraq @ France",
+          "sport": "WC",
+          "pick": "Iraq +2.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Iraq 0, France 3",
+          "pnl": "",
+          "why_picked": "Model-identified World Cup edge.",
+          "what_happened": "Kylian Mbapp\u00e9 scored twice and Ousmane Demb\u00e9l\u00e9 added one as France routed Iraq 3-0 despite a two-hour weather delay; France advance to the knockouts while Iraq remain winless.",
+          "signals": [
+            "Elo Edge",
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; CLV unavailable",
+          "key_insight": "",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "TODAY'S CARD: 5-2 (5 singles + 2 parlays)",
+        "Spread picks: 3-1 (Colorado, Cincinnati, Twins covered; Angels failed badly)",
+        "Moneyline singles: 1-0 (Cardinals ML)",
+        "Parlays: 1-1 (TOR+STL hit; CHC+CLE voided to single leg, lost)",
+        "ERA trap warning correctly predicted Angels blowout loss",
+        "Weather flag (61% rain) materialized in Cubs/Mets postponement",
+        "Watchlist: 9-8 (+2 VOID) \u2014 WC went 2-3, WNBA 2-0, MLB watchlist 5-5",
+        "All budget picks settled \u2014 0 pending"
+      ],
+      "model_observations": [
+        "Pitching Edge signal: 3-0 in budget spread picks (Colorado, Cincinnati, Twins) \u2014 cleanly predictive when xFIP gap \u2265 0.75 between starters",
+        "ERA Trap: appeared in Angels (LOST) and Yankees parlay context (DET won watchlist) \u2014 every ERA-trap-flagged pick on the home pitcher went the model's way except the Angels, where the model bet through the warning rather than treating it as a veto",
+        "Weather Factor: 61% precipitation flag at Citi Field correctly anticipated a postponement \u2014 this led to the CHC parlay leg voiding and the whole parlay collapsing on the CLE leg",
+        "Model Projection accuracy: Cardinals 4.5-3.0 projected, actual 3-2 (direction correct); Angels 3.4-3.8 projected, actual 1-6 (direction correct but magnitude badly off \u2014 Aldegheri's ERA trap explains the gap)",
+        "Injury Impact: Milwaukee -15% and Arizona -10.5% (heaviest loads today) both went against their teams \u2014 Brewers needed extras to win 2-1, Arizona lost 2-3. High injury load teams underperforming is a consistent pattern.",
+        "WC model: Argentina win nailed (Messi +record goals 2-0) and France dominant (3-0); model missed on Iraq +2.5 badly (Iraq 0, France 3), and Senegal bets both lost (Norway won 3-2 with Haaland brace)",
+        "Schedule Load flags: all six picks with dual-team schedule load warnings (6 games in 7 days) still saw decisive outcomes \u2014 schedule load may be a noise signal at this sample size"
+      ]
     }
   ]
 }
