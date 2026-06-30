@@ -1,12 +1,20 @@
 name: Results Snapshot
 
 # Resolves TODAY's picks against ESPN and commits state/results_snapshot.json.
-# Triggered via workflow_dispatch by the nightly debrief routine right before
-# it builds the report — score resolution runs as deterministic Python on
-# GitHub's runners (which ESPN doesn't block) instead of inside the LLM agent.
+# Triggered by the nightly debrief routine right before it builds the report —
+# score resolution runs as deterministic Python on GitHub's runners (which
+# ESPN doesn't block) instead of inside the LLM agent.
+#
+# Two trigger paths because the debrief routine's sandboxed network proxy
+# intermittently blocks api.github.com (workflow_dispatch) while plain git
+# push to github.com keeps working. The push trigger on state/.snapshot_trigger
+# is the reliable fallback: the routine just commits a timestamp to that file.
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'state/.snapshot_trigger'
 
 permissions:
   contents: write
