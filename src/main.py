@@ -172,8 +172,8 @@ def _resize_with_calibrated_probs(recs) -> None:
     Failures leave the original sizing untouched.
     """
     from src.models.kelly import robinhood_kelly
-    from src.state.bankroll import load_bankroll
-    _bankroll = load_bankroll()
+    from src.state.bankroll import reconcile_bankroll_from_history
+    _bankroll = reconcile_bankroll_from_history()
     for r in recs:
         try:
             sz = getattr(r, "sizing", None)
