@@ -1,517 +1,467 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nightly Debrief — 2026-06-29</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #050507;
-      color: #e2e8f0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
-      padding: 16px;
-    }
-    .container { max-width: 600px; margin: 0 auto; }
-    h2 {
-      color: #38bdf8;
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin: 24px 0 12px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #1e293b;
-    }
-    .header-card {
-      background: #1a1d27;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 14px;
-      border-left: 4px solid #38bdf8;
-    }
-    .header-date { color: #64748b; font-size: 13px; margin-bottom: 6px; }
-    .header-title { color: #38bdf8; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .chip {
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 5px;
-      font-weight: 600;
-    }
-    .footer {
-      text-align: center;
-      color: #64748b;
-      font-size: 12px;
-      margin-top: 28px;
-      padding-top: 12px;
-      border-top: 1px solid #1e293b;
-    }
-    .footer a { color: #38bdf8; text-decoration: none; }
-    ul { padding-left: 18px; }
-    .obs-card {
-      background: #1a1d27;
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 14px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nightly Debrief — 2026-07-01</title>
+<style>
+  * { box-sizing:border-box;margin:0;padding:0; }
+  body { background:#050507;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;padding:16px; }
+  .wrap { max-width:600px;margin:0 auto; }
+  h1 { font-size:1.3rem;font-weight:700;color:#e2e8f0;margin-bottom:4px; }
+  h2 { font-size:1rem;font-weight:700;color:#38bdf8;margin:24px 0 8px;text-transform:uppercase;letter-spacing:0.06em; }
+  ul { padding-left:18px;color:#94a3b8;font-size:0.85rem; }
+  li { margin:4px 0; }
+  a { color:#38bdf8;text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .header-card { background:#1a1d27;border-radius:10px;padding:16px;margin-bottom:16px; }
+  .date-line { color:#64748b;font-size:0.8rem;margin-bottom:6px; }
+  .headline { color:#94a3b8;font-size:0.88rem;margin-top:8px; }
+  footer { color:#475569;font-size:0.78rem;margin-top:32px;padding-top:12px;border-top:1px solid #1e293b;text-align:center; }
+</style>
 </head>
 <body>
-  <div class="container">
+<div class="wrap">
 
-    <!-- HEADER -->
-    <div class="header-card">
-      <div class="header-date">2026-06-29</div>
-      <div class="header-title">Nightly Debrief</div>
-      <div style="color:#94a3b8;font-size:14px;line-height:1.5;">Snapshot timeout — 7 budget picks + 13 watchlist all PENDING; Results Snapshot workflow unreachable (GitHub API blocked). Morning run will settle.</div>
-      <div class="chips">
-        <span class="chip" style="background:#1e293b;color:#e2e8f0;">Today's Card: 0-0</span>
-        <span class="chip" style="background:#1e293b;color:#e2e8f0;">Watchlist: 0-0</span>
-        <span class="chip" style="background:#1e293b;color:#22c55e;">Budget P&amp;L: +$0.00</span>
-        <span style="background:#94a3b822;color:#94a3b8;font-size:12px;padding:3px 8px;border-radius:4px;">Avg CLV n/a</span>
-      </div>
-    </div>
+<div class="header-card">
+  <div class="date-line">Nightly Debrief · 2026-07-01</div>
+  <h1>Sports Betting Model</h1>
+  
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;">
+  <span style="background:#22c55e22;color:#22c55e;border:1px solid #22c55e44;padding:4px 10px;border-radius:16px;font-size:0.78rem;">Card 3-4 record</span>
+  <span style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;padding:4px 10px;border-radius:16px;font-size:0.78rem;">Watchlist 6-5</span>
+  <span style="background:#38bdf822;color:#38bdf8;border:1px solid #38bdf844;padding:4px 10px;border-radius:16px;font-size:0.78rem;">P&amp;L +$17.50</span>
+  <span style="background:#94a3b822;color:#94a3b8;border:1px solid #94a3b844;padding:4px 10px;border-radius:16px;font-size:0.78rem;">Avg CLV +0.2%</span>
+</div>
+  <div class="headline">3-2 on budget singles, 0-2 on parlays (+$17.50 net), avg CLV +0.2%; 6-5 on watchlist MLB; 4 WC picks pending</div>
+</div>
 
-    <!-- SNAPSHOT TIMEOUT BANNER -->
-    
-  <div style="background:#1a1d27;border-left:4px solid #f59e0b;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
-    <span style="color:#f59e0b;font-weight:600;">&#9888; Results snapshot didn't arrive tonight</span>
-    <span style="color:#94a3b8;font-size:13px;"> — results and CLV are PENDING and will settle in tomorrow's morning run. This is a delay, not lost data.</span>
-  </div>
 
-    <!-- TODAY'S CARD — BUDGET PICKS -->
-    <h2>Today's Card — Budget Picks</h2>
-    
-  <div style="background:#1a1d27;border-radius:12px;padding:18px;margin-bottom:14px;border-left:4px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #f59e0b;color:#f59e0b;font-size:10px;padding:1px 6px;border-radius:3px;">HIGH</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:15px;">Detroit Tigers</span>
-      <span style="color:#64748b;font-size:13px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:13px;margin-bottom:4px;">Detroit Tigers @ New York Yankees</div>
-    <div style="display:flex;gap:16px;font-size:12px;color:#64748b;margin:4px 0;">
-          <span>Model: <b style="color:#e2e8f0">60.1%</b></span>
-          <span>Market: <b style="color:#e2e8f0">45.1%</b></span>
-          <span>Edge: <b style="color:#22c55e">+15.0%</b></span>
-          <span>Win: <b style="color:#22c55e">+$14.82</b></span>
-          <span>Risk: <b style="color:#ef4444">$13.18</b></span>
-        </div>
-    
-    <div style="margin-top:10px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">WHY PICKED</div>
-      <div style="font-size:13px;color:#cbd5e1;">Ryan Weathers FIP 4.24 / xFIP 3.13 | K/9: 9.9; New York Yankees injury impact (-10.7%)</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SCORE</div>
-      <div style="font-size:13px;color:#e2e8f0;">Score not available</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SIGNAL VERDICT</div>
-      <div style="font-size:13px;color:#cbd5e1;">PENDING — no results yet</div>
-    </div>
-    <div style="margin-top:8px;"><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Recent Form</span></div>
-  </div>
-  <div style="background:#1a1d27;border-radius:12px;padding:18px;margin-bottom:14px;border-left:4px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:15px;">Los Angeles Angels +1.5</span>
-      <span style="color:#64748b;font-size:13px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:13px;margin-bottom:4px;">Los Angeles Angels @ Seattle Mariners</div>
-    <div style="display:flex;gap:16px;font-size:12px;color:#64748b;margin:4px 0;">
-          <span>Model: <b style="color:#e2e8f0">61.1%</b></span>
-          <span>Market: <b style="color:#e2e8f0">52.5%</b></span>
-          <span>Edge: <b style="color:#22c55e">+8.7%</b></span>
-          <span>Win: <b style="color:#22c55e">+$7.29</b></span>
-          <span>Risk: <b style="color:#ef4444">$8.71</b></span>
-        </div>
-    
-    <div style="margin-top:10px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">WHY PICKED</div>
-      <div style="font-size:13px;color:#cbd5e1;">George Kirby FIP 3.39 / xFIP 3.33 | K/9: 7.9; Seattle Mariners injury impact (-3.8%)</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SCORE</div>
-      <div style="font-size:13px;color:#e2e8f0;">Score not available</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SIGNAL VERDICT</div>
-      <div style="font-size:13px;color:#cbd5e1;">PENDING — no results yet</div>
-    </div>
-    <div style="margin-top:8px;"><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Recent Form</span></div>
-  </div>
-  <div style="background:#1a1d27;border-radius:12px;padding:18px;margin-bottom:14px;border-left:4px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:15px;">Colorado Rockies +1.5</span>
-      <span style="color:#64748b;font-size:13px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:13px;margin-bottom:4px;">Miami Marlins @ Colorado Rockies</div>
-    <div style="display:flex;gap:16px;font-size:12px;color:#64748b;margin:4px 0;">
-          <span>Model: <b style="color:#e2e8f0">61.8%</b></span>
-          <span>Market: <b style="color:#e2e8f0">53.2%</b></span>
-          <span>Edge: <b style="color:#22c55e">+8.6%</b></span>
-          <span>Win: <b style="color:#22c55e">+$7.16</b></span>
-          <span>Risk: <b style="color:#ef4444">$8.84</b></span>
-        </div>
-    
-    <div style="margin-top:10px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">WHY PICKED</div>
-      <div style="font-size:13px;color:#cbd5e1;">Sandy Alcantara FIP 3.88 / xFIP 3.81 | K/9: 6.6; Colorado Rockies injury impact (-5.7%)</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SCORE</div>
-      <div style="font-size:13px;color:#e2e8f0;">Score not available</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SIGNAL VERDICT</div>
-      <div style="font-size:13px;color:#cbd5e1;">PENDING — no results yet</div>
-    </div>
-    <div style="margin-top:8px;"><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Weather Factor</span></div>
-  </div>
-  <div style="background:#1a1d27;border-radius:12px;padding:18px;margin-bottom:14px;border-left:4px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:15px;">Athletics +1.5</span>
-      <span style="color:#64748b;font-size:13px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:13px;margin-bottom:4px;">Los Angeles Dodgers @ Athletics</div>
-    <div style="display:flex;gap:16px;font-size:12px;color:#64748b;margin:4px 0;">
-          <span>Model: <b style="color:#e2e8f0">67.6%</b></span>
-          <span>Market: <b style="color:#e2e8f0">59.2%</b></span>
-          <span>Edge: <b style="color:#22c55e">+8.4%</b></span>
-          <span>Win: <b style="color:#22c55e">+$6.21</b></span>
-          <span>Risk: <b style="color:#ef4444">$9.79</b></span>
-        </div>
-    
-    <div style="margin-top:10px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">WHY PICKED</div>
-      <div style="font-size:13px;color:#cbd5e1;">⚠ ERA trap [SEVERE] — Gage Jump: ERA 2.04 vs xFIP 3.65 over 35 IP (severity 1.61) — Athletics ML may be overpriced by market</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SCORE</div>
-      <div style="font-size:13px;color:#e2e8f0;">Score not available</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SIGNAL VERDICT</div>
-      <div style="font-size:13px;color:#cbd5e1;">PENDING — no results yet</div>
-    </div>
-    <div style="margin-top:8px;"><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Weather Factor</span></div>
-  </div>
-  <div style="background:#1a1d27;border-radius:12px;padding:18px;margin-bottom:14px;border-left:4px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:15px;">Philadelphia Phillies +1.5</span>
-      <span style="color:#64748b;font-size:13px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:13px;margin-bottom:4px;">Pittsburgh Pirates @ Philadelphia Phillies</div>
-    <div style="display:flex;gap:16px;font-size:12px;color:#64748b;margin:4px 0;">
-          <span>Model: <b style="color:#e2e8f0">69.2%</b></span>
-          <span>Market: <b style="color:#e2e8f0">62.1%</b></span>
-          <span>Edge: <b style="color:#22c55e">+7.1%</b></span>
-          <span>Win: <b style="color:#22c55e">+$4.67</b></span>
-          <span>Risk: <b style="color:#ef4444">$8.33</b></span>
-        </div>
-    
-    <div style="margin-top:10px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">WHY PICKED</div>
-      <div style="font-size:13px;color:#cbd5e1;">Aaron Nola FIP 4.92 / xFIP 3.49 | K/9: 9.2; Philadelphia Phillies injury impact (-2.5%)</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SCORE</div>
-      <div style="font-size:13px;color:#e2e8f0;">Score not available</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SIGNAL VERDICT</div>
-      <div style="font-size:13px;color:#cbd5e1;">PENDING — no results yet</div>
-    </div>
-    <div style="margin-top:8px;"><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Recent Form</span></div>
-  </div>
 
-    <!-- BUDGET PARLAYS -->
-    <h2>Budget Parlays</h2>
+<h2>Today's Card — Budget Picks</h2>
+
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span><span style="background:#22c55e;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +1.5%</span>&nbsp;&nbsp;<span style="color:#22c55e;font-weight:700;">+$11.08</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">HIGH</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Colorado Rockies +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Miami Marlins 3, Colorado Rockies 6</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Schedule Load</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> ERA trap on Max Meyer (ERA 2.60 vs xFIP 3.33 over 97 IP) flagged Miami ML as overpriced; Coors Field park factor (1.30) boosted Colorado's run-covering probability.</div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">What happened:</strong> Mickey Moniak had a near-cycle night (HR, double, triple) and Hunter Goodman hit his 27th homer as part of a four-run fifth inning that broke the game open. Rockies starter Kyle Freeland went five innings with seven strikeouts, while Max Meyer was tagged for five runs — only one earned — after an error by Javier Sanoja unraveled his outing.</div>
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won and beat the close (+1.5%)</span>
+  </div>
+  <div style="color:#64748b;font-size:0.78rem;margin-top:5px;font-style:italic;">ERA trap fired correctly — Meyer's sub-3 ERA didn't reflect his true regression risk; Coors amplified the run-scoring environment.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span><span style="background:#22c55e;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +2.1%</span>&nbsp;&nbsp;<span style="color:#22c55e;font-weight:700;">+$15.20</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Detroit Tigers</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Moneyline · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Detroit Tigers 6, New York Yankees 2</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Schedule Load</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Yankees missing Judge, Stanton, Fried, and Ryan McMahon — a −9.0% injury impact combined with a 2-8 recent form stretch and 7-game schedule grind made this a high-conviction spot for Detroit.</div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">What happened:</strong> Troy Melton dominated with just two hits over 6⅓ innings, defying his high xFIP. Detroit pulled away with a four-run 11th inning as Yankees reliever Camilo Doval issued three consecutive walks before Zach McKinstry laced a two-run single. The Yankees' losing streak extended to seven games, their longest in three years.</div>
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won and beat the close (+2.1%)</span>
+  </div>
+  <div style="color:#64748b;font-size:0.78rem;margin-top:5px;font-style:italic;">Heavy Yankees injury load was the decisive factor. Melton pitched like his ERA (not his xFIP), but the pick was grounded in team-context signals — not the pitcher — so the ERA trap warning was irrelevant here.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +0.2%</span>&nbsp;&nbsp;<span style="color:#22c55e;font-weight:700;">+$7.18</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Athletics +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Los Angeles Dodgers 1, Athletics 7</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Schedule Load</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Dodgers starter TBD (bullpen game risk) combined with Athletics +1.5 run cushion; J.T. Ginn's ERA overstates his regression risk, making the A's line value.</div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">What happened:</strong> The Athletics dominated with 12 hits and three home runs from Jonah Heim, Lawrence Butler, and Henry Bolte, winning 7-1 against a Dodgers bullpen game — the Dodgers pushed Shohei Ohtani back for extra rest, leaving no ace on the mound. Oakland moved within three games of first place.</div>
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won; line movement flat (+0.2%, noise range)</span>
+  </div>
+  <div style="color:#64748b;font-size:0.78rem;margin-top:5px;font-style:italic;">Flat CLV (+0.2%) means the market didn't strongly anticipate this outcome. The win was clean but driven more by Dodgers' rotation decision than by a model edge — a result to note.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span><span style="background:#ef4444;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -2.6%</span>&nbsp;&nbsp;<span style="color:#ef4444;font-weight:700;">-$6.29</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Kansas City Royals +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Tampa Bay Rays 4, Kansas City Royals 0</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Schedule Load</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Mild ERA trap on McClanahan (ERA 3.30 vs xFIP 3.61) suggested Rays ML was slightly overpriced; Royals at +1.5 provided a run buffer against a strong but injury-hobbled KC lineup.</div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">What happened:</strong> McClanahan was sharp — six innings, three hits, no walks, four strikeouts. Cedric Mullins added a solo homer in the sixth off Seth Lugo. Tampa Bay's bullpen finished off a clean shutout as the Royals couldn't generate any offense.</div>
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#ef4444;font-size:0.82rem;font-weight:600;">⚡ INCORRECT — lost AND the market moved 2.6% against us</span>
+  </div>
+  <div style="color:#64748b;font-size:0.78rem;margin-top:5px;font-style:italic;">Most concerning result of the night — both the outcome AND CLV (−2.6%) went against us. McClanahan pitched like his ERA, not his xFIP. The Royals' heavy injury list (Pasquantino, Garcia, Isbel out) proved decisive. CLV confirms this was a genuine miss, not variance.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -0.2%</span>&nbsp;&nbsp;<span style="color:#ef4444;font-weight:700;">-$6.04</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Chicago White Sox +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Chicago White Sox 1, Baltimore Orioles 6</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Schedule Load</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> White Sox showing strong recent offensive form (6.1 R/G last 10 games). Dean Kremer returning from injury after only 11 IP — too small a sample for his xFIP to be reliable.</div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">What happened:</strong> Kremer made a successful return from a quad injury, spinning six innings of one-run ball with just four hits. Tyler O'Neill and Leody Taveras homered, capping a four-run fifth that put the game away. White Sox starter Noah Schultz no-hit Baltimore through four frames before being pulled, as the Orioles dominated.</div>
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#ef4444;font-size:0.82rem;font-weight:600;">⚡ INCORRECT — lost; line movement flat (-0.2%)</span>
+  </div>
+  <div style="color:#64748b;font-size:0.78rem;margin-top:5px;font-style:italic;">Flat CLV (−0.2%) confirms this was variance — the market agreed with our assessment. Kremer's 'first game back from injury' effect (often sharp and controlled) held true. White Sox's hot streak didn't translate offensively. Acceptable LOST on this one.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span>&nbsp;&nbsp;<span style="color:#ef4444;font-weight:700;">-$2.82</span>
     
-  <div style="background:#1a1d27;border-radius:12px;padding:18px;margin-bottom:14px;border-left:4px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <span style="background:#a855f722;color:#a855f7;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">PARLAY</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      
-      <span style="color:#38bdf8;font-weight:600;font-size:15px;">Detroit Tigers (ML) + Boston Red Sox (ML)</span>
-      <span style="color:#64748b;font-size:13px;">(Parlay)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:13px;margin-bottom:4px;">Detroit Tigers @ New York Yankees / Washington Nationals @ Boston Red Sox</div>
-    <div style="font-size:12px;color:#64748b;margin:4px 0;">
-          Win: <b style="color:#22c55e">+$6.34</b> &nbsp; Risk: <b style="color:#ef4444">$2.66</b>
-        </div>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Detroit Tigers (ML) + Los Angeles Dodgers (ML)</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Parlay · PARLAY</div>
+  <table style="width:100%;border-collapse:collapse;margin:8px 0;"><tr><td style="padding:3px 8px 3px 0;color:#94a3b8;font-size:0.8rem;">Detroit Tigers @ New York Yankees</td><td style="padding:3px 0 3px 8px;color:#38bdf8;font-size:0.8rem;">Detroit Tigers</td><td style="padding:3px 0;"><span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span></td></tr><tr><td style="padding:3px 8px 3px 0;color:#94a3b8;font-size:0.8rem;">Los Angeles Dodgers @ Athletics</td><td style="padding:3px 0 3px 8px;color:#38bdf8;font-size:0.8rem;">Los Angeles Dodgers</td><td style="padding:3px 0;"><span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span></td></tr></table>
+  
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">ERA Trap</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Two highest-edge budget picks combined — Tigers vs injury-depleted Yankees (+2.1% CLV on Tigers single) paired with Dodgers as presumed heavy favorites.</div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">What happened:</strong> Tigers leg hit cleanly (6-2 win), but Dodgers pushed Ohtani back for a bullpen game and were blown out 7-1 by the Athletics. Parlay busted on the Dodgers leg.</div>
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#f59e0b;font-size:0.82rem;font-weight:600;">⚡ MIXED — Tigers leg correct (WON, CLV +2.1%), but Dodgers ML failed as they lost 7-1 in a bullpen game</span>
+  </div>
+  <div style="color:#64748b;font-size:0.78rem;margin-top:5px;font-style:italic;">Dodgers' rotation decision (pushing Ohtani) was unknowable at pick time — a legitimate reason the ML bust happened. Worth noting for future parlay structuring when starters are TBD.</div>
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span>&nbsp;&nbsp;<span style="color:#ef4444;font-weight:700;">-$0.81</span>
     
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #0f172a;">
-            <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-            <span style="color:#cbd5e1;font-size:13px;">Detroit Tigers @ New York Yankees</span>
-            <span style="color:#94a3b8;font-size:12px;">→ Detroit Tigers</span>
-            <span style="background:#f59e0b;color:#000;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:auto;">PENDING</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #0f172a;">
-            <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-            <span style="color:#cbd5e1;font-size:13px;">Washington Nationals @ Boston Red Sox</span>
-            <span style="color:#94a3b8;font-size:12px;">→ Boston Red Sox</span>
-            <span style="background:#f59e0b;color:#000;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:auto;">PENDING</span>
-          </div>
-    <div style="margin-top:10px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">WHY PICKED</div>
-      <div style="font-size:13px;color:#cbd5e1;">Multi-leg parlay combining two high-edge MLB home-favorite plays.</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SCORE</div>
-      <div style="font-size:13px;color:#e2e8f0;">N/A</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SIGNAL VERDICT</div>
-      <div style="font-size:13px;color:#cbd5e1;">PENDING — no results yet</div>
-    </div>
-    <div style="margin-top:8px;"><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Recent Form</span></div>
   </div>
-  <div style="background:#1a1d27;border-radius:12px;padding:18px;margin-bottom:14px;border-left:4px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-      <span style="background:#a855f722;color:#a855f7;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">PARLAY</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      
-      <span style="color:#38bdf8;font-weight:600;font-size:15px;">Cleveland Guardians (ML) + Chicago Cubs (ML)</span>
-      <span style="color:#64748b;font-size:13px;">(Parlay)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:13px;margin-bottom:4px;">Texas Rangers @ Cleveland Guardians / San Diego Padres @ Chicago Cubs</div>
-    <div style="font-size:12px;color:#64748b;margin:4px 0;">
-          Win: <b style="color:#22c55e">+$1.94</b> &nbsp; Risk: <b style="color:#ef4444">$1.06</b>
-        </div>
-    
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #0f172a;">
-            <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-            <span style="color:#cbd5e1;font-size:13px;">Texas Rangers @ Cleveland Guardians</span>
-            <span style="color:#94a3b8;font-size:12px;">→ Cleveland Guardians</span>
-            <span style="background:#f59e0b;color:#000;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:auto;">PENDING</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #0f172a;">
-            <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-            <span style="color:#cbd5e1;font-size:13px;">San Diego Padres @ Chicago Cubs</span>
-            <span style="color:#94a3b8;font-size:12px;">→ Chicago Cubs</span>
-            <span style="background:#f59e0b;color:#000;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:auto;">PENDING</span>
-          </div>
-    <div style="margin-top:10px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">WHY PICKED</div>
-      <div style="font-size:13px;color:#cbd5e1;">Multi-leg parlay combining two high-edge MLB home-favorite plays.</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SCORE</div>
-      <div style="font-size:13px;color:#e2e8f0;">N/A</div>
-    </div>
-    <div style="margin-top:8px;">
-      <div style="font-size:12px;color:#94a3b8;margin-bottom:2px;">SIGNAL VERDICT</div>
-      <div style="font-size:13px;color:#cbd5e1;">PENDING — no results yet</div>
-    </div>
-    <div style="margin-top:8px;"><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span></div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">St. Louis Cardinals (ML) + Houston Astros (ML)</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Parlay · PARLAY</div>
+  <table style="width:100%;border-collapse:collapse;margin:8px 0;"><tr><td style="padding:3px 8px 3px 0;color:#94a3b8;font-size:0.8rem;">St. Louis Cardinals @ Atlanta Braves</td><td style="padding:3px 0 3px 8px;color:#38bdf8;font-size:0.8rem;">St. Louis Cardinals</td><td style="padding:3px 0;"><span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span></td></tr><tr><td style="padding:3px 8px 3px 0;color:#94a3b8;font-size:0.8rem;">Minnesota Twins @ Houston Astros</td><td style="padding:3px 0 3px 8px;color:#38bdf8;font-size:0.8rem;">Houston Astros</td><td style="padding:3px 0;"><span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span></td></tr></table>
+  
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Small-stake speculative parlay combining two medium-edge underdog/neutral plays.</div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">What happened:</strong> Cardinals were blown out 1-5 by Atlanta. Astros lost 8-3 to Minnesota as Taj Bradley struck out 11. Both legs lost on a rough night for both sides.</div>
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#ef4444;font-size:0.82rem;font-weight:600;">⚡ INCORRECT — both legs lost; Cardinals and Astros shut down offensively</span>
   </div>
+  <div style="color:#64748b;font-size:0.78rem;margin-top:5px;font-style:italic;">Taj Bradley's dominant 11-strikeout performance (10 consecutive outs via K) was exceptional variance. Astros ML at CLV +3.2% (watchlist) confirms our model was right directionally — the market agreed — this was outcome variance.</div>
+</div>
 
-    <!-- WATCHLIST -->
-    <h2>Watchlist — All Sport Tabs</h2>
-    <h3 style="color:#64748b;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px;">MLB</h3>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Chicago Cubs</span>
-      <span style="color:#64748b;font-size:12px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">San Diego Padres @ Chicago Cubs</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 64.0% / Mkt 58.2% / Edge +5.8%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Weather Factor</span></div>
+<h2>Watchlist — All Sports</h2>
+<h3 style="color:#64748b;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.08em;margin:18px 0 6px;">MLB</h3>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -0.2%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Cleveland Guardians</span>
-      <span style="color:#64748b;font-size:12px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Texas Rangers @ Cleveland Guardians</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 63.0% / Mkt 57.3% / Edge +5.7%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span></div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Washington Nationals +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Washington Nationals 10, Boston Red Sox 2</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Nationals shown competitive recent form; Boston's injury list supported a +1.5 cushion play.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won; line movement flat (-0.2%, noise range)</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Cincinnati Reds +1.5</span>
-      <span style="color:#64748b;font-size:12px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Cincinnati Reds @ Milwaukee Brewers</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 65.6% / Mkt 60.8% / Edge +4.9%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Recent Form</span></div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Chicago White Sox +1.5</span>
-      <span style="color:#64748b;font-size:12px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Chicago White Sox @ Baltimore Orioles</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 66.3% / Mkt 61.6% / Edge +4.7%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Recent Form</span></div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Cleveland Guardians +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Texas Rangers 4, Cleveland Guardians 9</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Home Advantage</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Guardians at home with run-line cushion against Texas on a travel night.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won (no CLV available)</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">San Francisco Giants +1.5</span>
-      <span style="color:#64748b;font-size:12px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">San Francisco Giants @ Arizona Diamondbacks</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 66.2% / Mkt 61.5% / Edge +4.6%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span></div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +0.3%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Minnesota Twins +1.5</span>
-      <span style="color:#64748b;font-size:12px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Minnesota Twins @ Houston Astros</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 66.0% / Mkt 61.4% / Edge +4.6%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Recent Form</span></div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">St. Louis Cardinals +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> St. Louis Cardinals 1, Atlanta Braves 5</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">ERA Trap</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Cardinals underdog value play with +1.5 run cushion vs Atlanta.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#ef4444;font-size:0.82rem;font-weight:600;">⚡ INCORRECT — lost; line movement flat (+0.3%)</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Boston Red Sox</span>
-      <span style="color:#64748b;font-size:12px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Washington Nationals @ Boston Red Sox</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 66.2% / Mkt 61.1% / Edge +5.0%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Recent Form</span></div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -0.3%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">New York Mets</span>
-      <span style="color:#64748b;font-size:12px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">New York Mets @ Toronto Blue Jays</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 51.2% / Mkt 46.6% / Edge +4.7%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span></div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Los Angeles Dodgers</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Moneyline · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Los Angeles Dodgers 1, Athletics 7</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Dodgers heavy favorite with J.T. Ginn ERA trap on the A's starter.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#ef4444;font-size:0.82rem;font-weight:600;">⚡ INCORRECT — lost; line movement flat (-0.3%)</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Miami Marlins</span>
-      <span style="color:#64748b;font-size:12px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Miami Marlins @ Colorado Rockies</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 59.9% / Mkt 56.3% / Edge +3.5%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Weather Factor</span></div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span><span style="background:#22c55e;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +3.2%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#3b82f622;color:#3b82f6;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">MLB</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">San Diego Padres +1.5</span>
-      <span style="color:#64748b;font-size:12px;">(Spread)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">San Diego Padres @ Chicago Cubs</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 59.6% / Mkt 57.1% / Edge +2.6%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Pitcher Matchup</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Park Factor</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Weather Factor</span></div>
-  </div><h3 style="color:#64748b;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px;">WC</h3>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#38bdf822;color:#38bdf8;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">WC</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #f59e0b;color:#f59e0b;font-size:10px;padding:1px 6px;border-radius:3px;">HIGH</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Brazil</span>
-      <span style="color:#64748b;font-size:12px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Japan @ Brazil</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 64.6% / Mkt 54.9% / Edge +9.7%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Rest Advantage</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Elo Edge</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Model Projection</span></div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Houston Astros</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Moneyline · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Minnesota Twins 8, Houston Astros 3</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Home Advantage</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Astros as home favorites with Twins travel and model edge.</div>
+  
+  <p style="color:#f59e0b;font-size:0.82rem;margin:6px 0 0;">Good bet, bad result — the line moved our way after we picked (+3.2%).</p>
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — beat the close (+3.2%), lost on variance</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#38bdf822;color:#38bdf8;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">WC</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #f59e0b;color:#f59e0b;font-size:10px;padding:1px 6px;border-radius:3px;">HIGH</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Netherlands</span>
-      <span style="color:#64748b;font-size:12px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Morocco @ Netherlands</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 49.8% / Mkt 41.7% / Edge +8.1%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Rest Advantage</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Elo Edge</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Model Projection</span></div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span><span style="background:#22c55e;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +3.3%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
   </div>
-  <div style="background:#1a1d27;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid #f59e0b;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="background:#38bdf822;color:#38bdf8;font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;">WC</span>
-      <span style="background:#f59e0b;color:#000;font-weight:700;font-size:11px;padding:2px 8px;border-radius:4px;">PENDING</span>
-      <span style="border:1px solid #38bdf8;color:#38bdf8;font-size:10px;padding:1px 6px;border-radius:3px;">MEDIUM</span>
-      <span style="color:#38bdf8;font-weight:600;font-size:14px;">Germany</span>
-      <span style="color:#64748b;font-size:12px;">(Moneyline)</span>
-    </div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;">Paraguay @ Germany</div>
-    <div style="color:#94a3b8;font-size:12px;margin-bottom:4px;"><span style="color:#64748b;font-size:12px;">Model 74.1% / Mkt 70.7% / Edge +3.4%</span> &nbsp;<span style="color:#cbd5e1;font-size:12px;">Score not available</span></div>
-    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">PENDING</div>
-    <div><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Elo Edge</span><span style="background:#1e293b;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:3px;margin:2px 2px 0 0;display:inline-block;">Model Projection</span></div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Tampa Bay Rays</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Moneyline · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Tampa Bay Rays 4, Kansas City Royals 0</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">ERA Trap</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Rays ML backed by McClanahan's legitimate ERA quality and strong recent form.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won and beat the close (+3.3%)</span>
   </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -0.3%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">San Francisco Giants +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> San Francisco Giants 6, Arizona Diamondbacks 4</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Giants solid recent form with run-line buffer vs Arizona.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won; line movement flat (-0.3%, noise range)</span>
+  </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span><span style="background:#ef4444;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -2.4%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">New York Mets</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Moneyline · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> New York Mets 3, Toronto Blue Jays 9</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Pitching Edge</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Mets with edge play at Toronto.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#ef4444;font-size:0.82rem;font-weight:600;">⚡ INCORRECT — lost AND the market moved 2.4% against us</span>
+  </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #ef4444;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#ef4444;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">LOST</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -0.6%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Cincinnati Reds +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> Cincinnati Reds 2, Milwaukee Brewers 4</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Injury Impact</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Reds underdog with +1.5 cushion vs Milwaukee.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#ef4444;font-size:0.82rem;font-weight:600;">⚡ INCORRECT — lost; line movement flat (-0.6%)</span>
+  </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -0.3%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Chicago Cubs</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Moneyline · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> San Diego Padres 3, Chicago Cubs 23</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Home Advantage</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">ERA Trap</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Cubs at home; Padres Walker Buehler ERA metrics favorable to Cubs.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won; line movement flat (-0.3%, noise range)</span>
+  </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#22c55e;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">WON</span><span style="background:#22c55e;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +2.3%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Toronto Blue Jays +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · MLB</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> New York Mets 3, Toronto Blue Jays 9</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Home Advantage</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Recent Form</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Blue Jays at home with run-line cushion.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#22c55e;font-size:0.82rem;font-weight:600;">⚡ CORRECT — won and beat the close (+2.3%)</span>
+  </div>
+  
+</div><h3 style="color:#64748b;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.08em;margin:18px 0 6px;">WC</h3>
+<div style="background:#1a1d27;border-left:4px solid #f59e0b;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">PENDING</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +0.9%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">England -1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · WC</div>
+  
+  
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Elo Edge</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Model Projection</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> England heavy favorite with significant Elo gap over DR Congo in World Cup group play.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#f59e0b;font-size:0.82rem;font-weight:600;">⚡ PENDING — result not yet available</span>
+  </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #f59e0b;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">PENDING</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -0.1%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">England</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Moneyline · WC</div>
+  
+  
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Elo Edge</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Host Nation Advantage</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> England ML in a dominant group-stage matchup.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#f59e0b;font-size:0.82rem;font-weight:600;">⚡ PENDING — result not yet available</span>
+  </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #f59e0b;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">PENDING</span><span style="background:#22c55e;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV +4.5%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Belgium</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Moneyline · WC</div>
+  
+  <div style="color:#94a3b8;font-size:0.85rem;margin:6px 0;"><strong style="color:#e2e8f0;">Score:</strong> In progress (Senegal 2, Belgium 3)</div>
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Elo Edge</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Model Projection</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Belgium's model edge over Senegal in group play.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#f59e0b;font-size:0.82rem;font-weight:600;">⚡ PENDING — result not yet available</span>
+  </div>
+  
+</div>
+<div style="background:#1a1d27;border-left:4px solid #f59e0b;border-radius:8px;padding:14px 16px;margin:10px 0;">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+    <span style="background:#f59e0b;color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;">PENDING</span><span style="background:#94a3b8;color:#000;padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:6px;">CLV -0.6%</span>
+    <span style="color:#94a3b8;font-size:0.75rem;margin-left:8px;">MEDIUM</span>
+  </div>
+  <div style="color:#38bdf8;font-weight:600;font-size:0.95rem;">Bosnia & Herzegovina +1.5</div>
+  <div style="color:#64748b;font-size:0.78rem;margin:2px 0;">Spread · WC</div>
+  
+  
+  <div style="margin:6px 0;"><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Elo Edge</span><span style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:2px 8px;border-radius:12px;font-size:0.72rem;margin:2px 3px 2px 0;display:inline-block;">Rest Advantage</span></div>
+  <div style="color:#94a3b8;font-size:0.82rem;margin:6px 0;"><strong style="color:#e2e8f0;">Why picked:</strong> Bosnia +1.5 against the USA; cushion pick on potential upset spot.</div>
+  
+  
+  <div style="border-top:1px solid #1e293b;margin-top:8px;padding-top:8px;">
+    <span style="color:#f59e0b;font-size:0.82rem;font-weight:600;">⚡ PENDING — result not yet available</span>
+  </div>
+  
+</div>
 
-    <!-- PATTERNS -->
-    <h2>Patterns Today</h2>
-    <div class="obs-card">
-      <ul><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>ERA Trap flagged on 4 games today (Athletics, Guardians, Giants, Mets) — highest single-day ERA trap count</li><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>Schedule Load warnings on 9 MLB teams playing 6-8 games in 7 days</li><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>Weather Factor active: Coors Field wind 16 mph blowing out; Athletics at Sacramento cool 60°F</li><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>3 World Cup picks: Brazil, Netherlands, Germany — all strong Elo favorites</li><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>HIGH confidence: 1 pick (Detroit Tigers ML, +15.0% edge vs market)</li></ul>
-    </div>
+<h2>Patterns Today</h2>
+<ul><li>HIGH confidence: 1-0 today (Rockies +1.5 ✓)</li>
+<li>MEDIUM confidence singles: 2-2 (Tigers ✓, Athletics ✓, Royals ✗, White Sox ✗)</li>
+<li>Spread plays: 2-2 budget (Rockies ✓, Athletics ✓, Royals ✗, CWS ✗)</li>
+<li>Moneyline budget: 1-0 (Tigers ML ✓)</li>
+<li>Parlays: 0-2 — single leg failures busted both cards</li>
+<li>Watchlist MLB: 6-5 — Cubs 23-3 blowout, Nationals 10-2 blowout</li>
+<li>WC picks: 4 PENDING (Belgium leading 3-2 at time of snapshot)</li></ul>
 
-    <!-- MODEL OBSERVATIONS -->
-    <h2>Model Observations</h2>
-    <div class="obs-card">
-      <ul><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>ERA Trap is the most prominent signal today — 4 budget/watchlist picks rely on it; can't grade CLV without snapshot</li><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>Yankees have the largest single injury impact seen this season (-10.7%) — core of Tigers ML case</li><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>Gage Jump ERA trap rated SEVERE (severity 1.61) — model may be properly discounting his perceived edge</li><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>WC bracket: Brazil vs Japan and Germany vs Paraguay are heavy Elo mismatches (195+ Elo pts gap)</li><li style='color:#94a3b8;font-size:13px;margin-bottom:6px;'>All picks PENDING; no CLV data — snapshot timeout prevents signal grading tonight</li></ul>
-    </div>
+<h2>Model Observations</h2>
+<ul><li>ERA Trap signal: mixed tonight. Correctly identified Max Meyer's inflation (Rockies WON, CLV +1.5%). McClanahan's mild trap didn't hold — he pitched like his ERA, and CLV (−2.6% on Royals +1.5) confirmed market agreement. Kremer flat CLV (−0.2%) = variance.</li>
+<li>Injury Impact: the strongest signal of the night — both wins driven by severely injured opponents (Yankees −9.0% with Judge/Stanton/Fried out; Marlins −6.7%). 2-for-2 correlation tonight.</li>
+<li>Watchlist Astros ML (Houston): LOST but CLV +3.2% — model was directionally correct, market agreed, Taj Bradley's 11-strikeout performance was exceptional variance. Good bet, bad result.</li>
+<li>Watchlist Mets ML (Toronto): LOST, CLV −2.4% — genuine miss. Both outcome and market movement went against this pick. Blue Jays won convincingly 9-3.</li>
+<li>Cubs ML (watchlist): Won 23-3 in a historic blowout. CLV flat (−0.3%) — the market didn't anticipate the margin but had the winner right. Dansby Swanson (3 HR, 8 RBI) was exceptional.</li>
+<li>Parlays: Dodgers ML leg busted on a Ohtani rest/bullpen game decision unknowable at pick time. Future parlay consideration: avoid ML legs when starter is TBD.</li>
+<li>Schedule Load signal: 6 games in 7 days flagged on most teams — not determinative given both teams shared the load in most matchups.</li></ul>
 
-    <div class="footer">
-      Generated 2026-06-30 05:57 UTC &nbsp;&middot;&nbsp; <a href="/index_spa.html">&larr; Back to Picks</a>
-    </div>
+<footer>
+  Generated 2026-07-02T05:59:08Z &nbsp;·&nbsp; <a href="/index_spa.html">← Back to Picks</a>
+</footer>
 
-  </div>
+</div>
 </body>
 </html>
