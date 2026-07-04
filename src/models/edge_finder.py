@@ -1677,12 +1677,14 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
         signals.append("🏆 Playoffs: ace starters, shorter leash, lower scoring applied")
         research.append(f"Playoff adjustment: runs scaled by {MLB_PLAYOFF_SCORING_FACTOR} | starter IP capped at {MLB_PLAYOFF_STARTER_IP}")
 
-    # --- Injury run adjustment ---
-    # Route injury drag through expected runs (not win probability) so it is
-    # consistent with how pitching and offense are modelled and so the projected
-    # score shown in research correctly reflects the depleted lineup.
-    # Conversion: each 1% injury drag ≈ 0.08 fewer expected runs (rough empirical).
-    _INJ_RUNS_PER_PCT = 0.08
+    # --- Injury run adjustment: DISABLED (Jul 4 2026 optimization) ---
+    # _INJ_RUNS_PER_PCT 0.08 → 0.0. Injury-driven picks won 38% over 126 samples
+    # with FLAT CLV — the market already prices injuries into the line, so
+    # subtracting runs for them double-counted the information and manufactured
+    # phantom edges on the healthy side. The injury CREDIBILITY CAP below is
+    # intentionally kept: it only anchors the model toward market (safety),
+    # never creates edge. Injury data still flows into signals/logs unchanged.
+    _INJ_RUNS_PER_PCT = 0.0
     if home_inj > 0.01:
         home_inj_runs = home_inj * _INJ_RUNS_PER_PCT * 100   # inj is a fraction, e.g. 0.025
         expected_home_runs = max(1.5, expected_home_runs - home_inj_runs)
