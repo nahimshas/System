@@ -23,14 +23,21 @@
       }
     },
     "mlb.credibility": {
-      "current_value": 0.15,
-      "default_value": 0.15,
+      "current_value": 0.1,
+      "default_value": 0.1,
       "min_value": 0.05,
       "max_value": 0.3,
       "current_mode": 0,
-      "last_adjusted_at": null,
+      "last_adjusted_at": "2026-07-04T00:00:00+00:00",
       "last_mode_change_at": null,
-      "adjustment_history": [],
+      "adjustment_history": [
+        {
+          "at": "2026-07-04T00:00:00+00:00",
+          "from": 0.15,
+          "to": 0.1,
+          "reason": "manual: Jul 4 2026 optimization package — model-market disagreements beyond 10pp were noise (decision-log sweep); tightened with MLB_CRED_CAP constant"
+        }
+      ],
       "mode_change_history": [],
       "current_counterfactual": {
         "recommendation": "insufficient",
