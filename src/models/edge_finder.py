@@ -1879,18 +1879,27 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                                      own_trap_sev=away_trap_sev, opp_trap_sev=home_trap_sev,
                                      injury_capped=away_injury_capped,
                                      tbd_capped=away_tbd_cap)
+                    _sp_signals = signals[:]
+                    if away_dog_better_sp:
+                        _sp_signals.append(
+                            f"✅ Validated pattern: {away} +1.5 with the stronger starter "
+                            f"(SP score edge {away_sp_score - home_sp_score:+.2f})"
+                        )
+                        if conf != "HIGH" and not (away_injury_capped or away_tbd_cap):
+                            conf = "HIGH"
                     _mlb_sp_rec = BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{away} {away_spread_line:+.1f}",
                         market_prob=market_away_cover, model_prob=model_away_cover,
                         edge=away_rl_edge, contract_price=market_away_cover,
                         sizing=sizing, confidence=conf,
-                        signals=signals[:], research=research[:],
+                        signals=_sp_signals, research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
                     )
                     _mlb_sp_rec.model_prob_raw = _mlb_sp_raw_away
                     _mlb_sp_rec.credibility_cap_fired = _mlb_sp_cred_away
+                    _mlb_sp_rec.dog_better_starter = away_dog_better_sp
                     recs.append(_mlb_sp_rec)
 
     # --- Total ---
