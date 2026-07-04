@@ -1828,6 +1828,20 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             home_rl_edge = model_home_cover - market_home_cover
             away_rl_edge = model_away_cover - market_away_cover
 
+            # ── Dog-with-better-starter pattern (Jul 4 2026) ─────────────────
+            # Validated on the decision log: run-line dogs (+1.5) whose starter
+            # outscores the favorite's by > 0.1 (composite sp_score) ran 39-18
+            # (68%) Jun 13-30. Promote to HIGH so the confidence-first slot
+            # ranking prioritizes them for budget. Promotion is skipped when an
+            # injury/TBD cap fired (those caps exist because the model's read
+            # is unreliable there). Flag is stamped for shadow/decision-log
+            # tracking so the pattern keeps being measured.
+            _SP_ADV_THRESHOLD = 0.1
+            home_dog_better_sp = (home_spread_line > 0
+                                  and (home_sp_score - away_sp_score) > _SP_ADV_THRESHOLD)
+            away_dog_better_sp = (away_spread_line > 0
+                                  and (away_sp_score - home_sp_score) > _SP_ADV_THRESHOLD)
+
             if home_rl_edge >= _min and has_positive_ev(model_home_cover, market_home_cover):
                 sizing = robinhood_kelly(model_home_cover, market_home_cover)
                 if sizing.num_contracts > 0:
@@ -1835,18 +1849,27 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
                                      own_trap_sev=home_trap_sev, opp_trap_sev=away_trap_sev,
                                      injury_capped=home_injury_capped,
                                      tbd_capped=home_tbd_cap)
+                    _sp_signals = signals[:]
+                    if home_dog_better_sp:
+                        _sp_signals.append(
+                            f"✅ Validated pattern: {home} +1.5 with the stronger starter "
+                            f"(SP score edge {home_sp_score - away_sp_score:+.2f})"
+                        )
+                        if conf != "HIGH" and not (home_injury_capped or home_tbd_cap):
+                            conf = "HIGH"
                     _mlb_sp_rec = BetRecommendation(
                         sport="MLB", game=label, bet_type="Spread",
                         pick=f"{home} {home_spread_line:+.1f}",
                         market_prob=market_home_cover, model_prob=model_home_cover,
                         edge=home_rl_edge, contract_price=market_home_cover,
                         sizing=sizing, confidence=conf,
-                        signals=signals[:], research=research[:],
+                        signals=_sp_signals, research=research[:],
                         home_team=home, away_team=away, game_time=game_time,
                         commence_time=commence_time,
                     )
                     _mlb_sp_rec.model_prob_raw = _mlb_sp_raw_home
                     _mlb_sp_rec.credibility_cap_fired = _mlb_sp_cred_home
+                    _mlb_sp_rec.dog_better_starter = home_dog_better_sp
                     recs.append(_mlb_sp_rec)
 
             if away_rl_edge >= _min and has_positive_ev(model_away_cover, market_away_cover):
