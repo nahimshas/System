@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 # MLB: std of 1.8 keeps the 60–70% probability range well-calibrated (confirmed by backtest).
 #      The tanh cap below handles overconfidence at the high end without touching mid-range picks.
 NBA_SPREAD_STD  = 12.0  # model uncertainty for point margin; 14.0 was too wide (suppressed all edges)
-MLB_SPREAD_STD  = 1.8   # calibrated via backtest — do not change without re-running calibration
+MLB_SPREAD_STD  = 2.2   # Jul 4 2026 optimization: 1.8 → 2.2 — flatter run_diff→prob mapping; 1.8 produced systematically overconfident mid-range probabilities (validated via decision-log reconstruction sweep)
 
 # Probability→margin conversion for the NBA model. The residual adjustments
 # (home court, B2B, rest, schedule load, injuries) are tuned as probability
