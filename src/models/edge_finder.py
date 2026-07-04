@@ -2052,6 +2052,11 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
             "weather_run_adj": _lv.get("wx_adj"),
             "playoff": _lv.get("playoff"),
             "stats_available": stats_available,
+            # Jul 4 2026: dog-with-better-starter pattern flags (confidence
+            # promotion) — logged per side so the pattern's hit rate keeps
+            # being measured from the day it went live.
+            "home_dog_better_sp": _lv.get("home_dog_better_sp"),
+            "away_dog_better_sp": _lv.get("away_dog_better_sp"),
             "is_coors": _lv.get("_is_coors"),
             "coors_ops_deflator_applied": _lv.get("_COORS_OPS_DEFLATOR") if (_lv.get("_is_coors") is False and ("Colorado Rockies" in [home, away])) else None,
             "coors_visitor_inflator_applied": _lv.get("_COORS_VISITOR_INFLATOR") if _lv.get("_is_coors") else None,
