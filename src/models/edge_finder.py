@@ -393,6 +393,7 @@ class BetRecommendation:
     hardcap_fired:         bool = False          # [lo, hi] hard prob bound fired
     stats_available:       bool = True           # sport stats were available for this game
     game_pk:               str  = ""            # MLB game primary key — for live pitcher/batter lookup
+    dog_better_starter:    bool = False          # MLB run-line dog backed by the stronger starter (validated pattern — confidence-promoted; tracked in shadow/decision logs)
     game_type:             str  = ""            # per-game season type (regular/play_in/postseason/superbowl)
 
 
