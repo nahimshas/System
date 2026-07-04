@@ -226,6 +226,23 @@ Both sections are wrapped in a collapsible `card-insight` panel (clickable "Why 
 
 ---
 
+## Jul 4 2026 — MLB Optimization Package (data-driven constants reset)
+
+Derived from a full reconstruction sweep over the decision log (June, 231 games, exact formula re-run per candidate with daily top-5 budget re-selection), validated out-of-sample and against actual recorded P&L. Current constants ran −12% ROI at realistic costs; the package simulated ~breakeven-to-positive (+10pp relative).
+
+**Changes (all effective from the Jul 5 2026 morning run):**
+1. `_INJ_RUNS_PER_PCT` 0.08 → **0.0** (`edge_finder.py`) — injury-driven picks won 38% over 126 samples with flat CLV: the market already prices injuries; subtracting runs double-counted them. Injury credibility cap KEPT (anchors toward market, never creates edge). Injury data still logged/displayed as context.
+2. Offense weight 0.6 → **0.4** (`_OFF_W`, `edge_finder.py`) — season-OPS deviations over-projected run differences.
+3. `MLB_SPREAD_STD` 1.8 → **2.2** — flatter run_diff→probability mapping (mid-range probs were systematically overconfident: model 55–65% buckets realized 45–47%).
+4. `MLB_CRED_CAP` 0.15 → **0.10** + `state/cap_state.json` mlb.credibility* current/default values — disagreements beyond 10pp were noise.
+5. **`BUDGET_MIN_EDGE` = 0.05** (new, `config/base.py`) — real-money entry now requires ≥5% effective edge (display/watchlist/logs keep `MIN_EDGE` 0.03). Applied in `main.py` budget routing; parlays inherit it via `all_singles_raw`.
+6. **Dog-with-better-starter confidence promotion** (`edge_finder.py` MLB spread section): run-line dog whose starter outscores the favorite's by >0.1 composite sp_score → promoted to HIGH (skipped when injury/TBD-capped) → floats to top of confidence-first slot ranking. Validated 39-18 (68%) Jun 13–30. New `dog_better_starter` flag on recs → shadow log field + decision-log features (`home/away_dog_better_sp`) so the pattern keeps being measured. Exempt from the `_recalibrate_confidence` edge-based downgrade.
+7. Card narratives (`card_context.py`): injuries reworded as market-priced context (never "primary driver"); new lead narrative for promoted pattern picks.
+
+**Expected visible effects:** fewer budget singles on thin days (floor), spread-dog-heavy card, smaller displayed edges (5–10% range), promoted picks labeled HIGH with the "validated pattern" signal. **Review checkpoint: ~2 weeks (mid-July)** — budget CLV should be ≥ 0; promoted picks ≥ ~58% → keep; ≤ ~55% → demote pattern.
+
+---
+
 ## How to continue in a future session
 
 Tell Claude: **"Continue work on the sports betting system. Check `docs/DEVELOPMENT_PLAN.md` for the roadmap."**
