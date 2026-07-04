@@ -274,6 +274,7 @@ def _update_entry(existing: Dict[str, Any], rec: Any, now_iso: str) -> Dict[str,
     existing["effective_edge"]                  = float(getattr(rec, "edge", 0.0))
     existing["signal_count"]                    = len(getattr(rec, "signals", []) or [])
     existing["final_confidence_label"]          = getattr(rec, "confidence", "")
+    existing["dog_better_starter"]              = bool(getattr(rec, "dog_better_starter", False))
     existing["last_updated_at"]                 = now_iso
     _gt = getattr(rec, "game_type", "")
     if _gt:
