@@ -18,7 +18,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
-    MAX_SINGLE_BETS, MAX_PROPS_PER_SPORT, MIN_EDGE,
+    MAX_SINGLE_BETS, MAX_PROPS_PER_SPORT, MIN_EDGE, BUDGET_MIN_EDGE,
     PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR,
 )
 from src.data.odds_client import get_last_api_error, get_api_credits
