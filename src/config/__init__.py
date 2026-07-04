@@ -34,6 +34,7 @@ from src.config.base import (
     ROBINHOOD_COMMISSION,
     KELLY_FRACTION,
     MIN_EDGE,
+    BUDGET_MIN_EDGE,
     MAX_SINGLE_BETS,
     MAX_PARLAYS,
     MAX_PROPS_PER_SPORT,
