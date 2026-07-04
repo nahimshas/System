@@ -99,7 +99,7 @@ _INJURY_MARGIN = 0.10    # model allowed at most market_prob × (1 + 10%) for in
 #
 # Tighter for MLS due to small-sample noise in early-season xG data.
 NBA_CRED_CAP  = 0.15
-MLB_CRED_CAP  = 0.15
+MLB_CRED_CAP  = 0.10   # Jul 4 2026 optimization: 0.15 → 0.10 — tighter market anchor (MLB model-market disagreements beyond 10pp were noise, not edge)
 NFL_CRED_CAP  = 0.15
 NHL_CRED_CAP  = 0.15
 WNBA_CRED_CAP = 0.15
