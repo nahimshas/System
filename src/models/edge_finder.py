@@ -1559,15 +1559,18 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
 
     # A better pitcher (positive score) REDUCES the opponent's expected runs → subtract.
     # A worse pitcher (negative score) INCREASES the opponent's expected runs → subtract negative = add.
+    # Offense weight 0.6 → 0.4 (Jul 4 2026 optimization): season OPS deviations
+    # were over-projecting run differences the market had already discounted.
+    _OFF_W = 0.4
     expected_home_runs = max(1.5, league_avg_runs
                              - away_sp_score     * away_sp_coeff   # away SP quality
                              - away_bullpen_score * away_bp_coeff  # away bullpen quality
-                             + home_offense_adj  * 0.6
+                             + home_offense_adj  * _OFF_W
                              + MLB_HOME_ADVANTAGE * 5)
     expected_away_runs = max(1.5, league_avg_runs
                              - home_sp_score     * home_sp_coeff   # home SP quality
                              - home_bullpen_score * home_bp_coeff  # home bullpen quality
-                             + away_offense_adj  * 0.6)
+                             + away_offense_adj  * _OFF_W)
 
     # --- Strikeout matchup adjustment ---
     # High-K% offense facing a strikeout pitcher is a run-suppression signal the
