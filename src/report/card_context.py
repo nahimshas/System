@@ -310,6 +310,24 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
                 f"over {t.group(5)} IP is an ERA trap signal that may affect run distribution."
             )
 
+    elif pattern_m and bet_type == "Spread":
+        parts.append(
+            f"This pick fits the model's strongest validated profile: {pattern_m.group(1)} "
+            f"gets +1.5 runs while sending the better starting pitcher to the mound. "
+            f"Run-line dogs backed by the superior starter have been the model's "
+            f"most reliable bet type, so this setup is prioritized for the card."
+        )
+        if score_m:
+            t1, r1, t2, r2 = score_m.groups()
+            parts.append(f"Model projects a tight game ({t1} {r1} — {t2} {r2}) — exactly the script where the +1.5 cushion wins.")
+        if supporting_traps:
+            t = supporting_traps[0]
+            parts.append(
+                f"Adding to the case: an ERA trap on {t.group(2)} "
+                f"({t.group(3)} ERA vs {t.group(4)} xFIP) suggests the market is "
+                f"overrating the favorite's starter."
+            )
+
     elif supporting_traps:
         t = supporting_traps[0]
         sev = "significant" if t.group(1) == "SEVERE" else "moderate"
