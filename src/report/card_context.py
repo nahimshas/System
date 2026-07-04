@@ -337,8 +337,11 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
             f"in {t.group(5)} innings suggests regression risk the market hasn't fully priced."
         )
         if big_injuries:
-            inj = " and ".join(f"{team} is depleted ({abs(pct):.1f}% impact)" for team, pct in big_injuries)
-            parts.append(f"{inj}.")
+            # Injuries are CONTEXT, not a driver: since Jul 2026 the model does
+            # not adjust its probability for injuries (the market already prices
+            # them) — mention them as roster context only.
+            inj = " and ".join(f"{team} ({abs(pct):.1f}% of lineup value)" for team, pct in big_injuries)
+            parts.append(f"Roster watch: {inj} — already reflected in the market line.")
         if score_m:
             t1, r1, t2, r2 = score_m.groups()
             leader = t1 if float(r1) > float(r2) else t2
@@ -353,7 +356,7 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
         )
         if big_injuries:
             inj = " and ".join(f"{team} ({abs(pct):.1f}%)" for team, pct in big_injuries)
-            parts.append(f"Injury drag further tilts the matchup: {inj}.")
+            parts.append(f"Roster watch: {inj} — noted as context; the market line already prices these absences.")
         if score_m:
             t1, r1, t2, r2 = score_m.groups()
             leader = t1 if float(r1) > float(r2) else t2
@@ -361,13 +364,15 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
             parts.append(f"Model projects {leader} by {diff:.1f} runs ({t1} {r1} — {t2} {r2}).")
 
     elif big_injuries:
-        inj = " and ".join(
-            f"{team} ({abs(pct):.1f}% win probability impact)" for team, pct in big_injuries
-        )
+        # No trap/mismatch driver — describe the edge honestly (pitching/situational
+        # projection) and keep injuries as context. Since Jul 2026 injuries do NOT
+        # move the model's probability; never present them as the edge source.
         parts.append(
-            f"The primary driver is injury context — {inj}, "
-            f"which the model believes is only partially reflected in current market pricing."
+            f"The model builds a {ew} edge from its run projection — pitching quality, "
+            f"offensive form, and situational factors."
         )
+        inj = " and ".join(f"{team} ({abs(pct):.1f}% of lineup value)" for team, pct in big_injuries)
+        parts.append(f"Roster watch: {inj} — treated as context the market has already priced, not as edge.")
         if score_m:
             t1, r1, t2, r2 = score_m.groups()
             leader = t1 if float(r1) > float(r2) else t2
@@ -377,7 +382,7 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
     else:
         parts.append(
             f"The model builds a {ew} edge from a combination of pitching quality, "
-            f"roster health, and situational factors."
+            f"offensive form, and situational factors."
         )
         if score_m:
             t1, r1, t2, r2 = score_m.groups()
