@@ -223,6 +223,7 @@ def _build_entry(
         "credibility_cap_fired":  bool(getattr(rec, "credibility_cap_fired", False)),
         "injury_cap_fired":       bool(getattr(rec, "injury_cap_fired",      False)),
         "hardcap_fired":          bool(getattr(rec, "hardcap_fired",         False)),
+        "dog_better_starter":     bool(getattr(rec, "dog_better_starter",    False)),
 
         # Market data
         "market_prob_at_first_pick":     float(getattr(rec, "market_prob", 0.0)),
