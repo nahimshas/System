@@ -589,9 +589,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 # num_contracts > 0 mirrors the analyzers' own creation gate —
                 # a pick whose calibrated-prob resize zeroed its stake carries
                 # no money and must not occupy a budget slot.
+                # BUDGET_MIN_EDGE (Jul 4 2026): real money requires a larger
+                # effective edge than display — sub-5% edges showed no
+                # win-rate relationship. Display pools keep MIN_EDGE.
                 all_singles_raw.extend(
                     r for r in qualifying
-                    if _clv_gate_safe(r) and getattr(r.sizing, "num_contracts", 0) > 0
+                    if _effective_edge_safe(r) >= BUDGET_MIN_EDGE
+                    and _clv_gate_safe(r) and getattr(r.sizing, "num_contracts", 0) > 0
                     and _pwa_display_eligible(r)
                 )
         else:
