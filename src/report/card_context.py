@@ -260,6 +260,13 @@ def _mlb_narrative(pick: str, bet_type: str, signals: List[str], research: List[
     severe_traps = [t for t in era_traps if t.group(1) in ("SEVERE", "MODERATE")]
     big_injuries = [(team, pct) for team, pct in injuries if abs(pct) >= 2.5]
 
+    # Validated dog-with-better-starter pattern (Jul 2026): the signal is emitted
+    # by the analyzer when a run-line dog is backed by the stronger starter and
+    # the pick was confidence-promoted. Lead with it — it IS the story.
+    pattern_m = _search_first(
+        r"✅ Validated pattern: (.+?) \+[\d.]+ with the stronger starter", signals
+    )
+
     # The team we're actually backing (strip any spread suffix like " +1.5").
     picked_team = re.sub(r"\s[+-]?\d+(?:\.\d+)?$", "", pick).strip()
 
