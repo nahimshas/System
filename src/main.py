@@ -204,6 +204,11 @@ def _recalibrate_confidence(recs) -> None:
     """
     for r in recs:
         if getattr(r, "confidence", "") == "HIGH" and _effective_edge_safe(r) < _HIGH_CONF_EDGE:
+            # Pattern-promoted picks (dog + better starter) earned HIGH from a
+            # validated result pattern, not from edge magnitude — the edge-based
+            # downgrade doesn't apply to them (Jul 4 2026).
+            if getattr(r, "dog_better_starter", False):
+                continue
             r.confidence = "MEDIUM"
 
 
