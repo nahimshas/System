@@ -1,0 +1,74 @@
+{
+  "_readme": "Pre-registered model-change evaluations. Each checkpoint has an explicit pass/fail rule and an evaluate_after date. The weekly health routine (docs/health_routine_prompt.md) evaluates these via tools/analysis/health_report.py and reports status — it NEVER implements changes itself. Add a checkpoint here whenever a model change ships or a candidate tweak is queued; mark resolved ones with status + resolution instead of deleting them.",
+  "checkpoints": [
+    {
+      "id": "package_health",
+      "title": "Jul 4 optimization package health",
+      "created": "2026-07-04",
+      "evaluate_after": "2026-07-18",
+      "data_window_start": "2026-07-05",
+      "type": "health",
+      "rules": {
+        "budget_clv_pct_min": 0.0,
+        "promoted_wr_keep_pct": 58.0,
+        "promoted_wr_demote_pct": 55.0,
+        "min_promoted_n": 25
+      },
+      "on_pass": "Package confirmed — keep all Jul 4 constants and the promotion.",
+      "on_fail": "If budget CLV < 0 persistently or promoted wr <= demote threshold: demote the dog_better_starter promotion and re-run the constants backtest on the fresh window.",
+      "status": "open"
+    },
+    {
+      "id": "ha_zero",
+      "title": "Candidate: MLB_HOME_ADVANTAGE 0.015 -> 0.0",
+      "created": "2026-07-04",
+      "evaluate_after": "2026-07-18",
+      "data_window_start": "2026-07-05",
+      "type": "backtest_variant",
+      "overrides": {"HA": 0.0},
+      "rules": {"min_picks": 40, "pass_if_roi_delta_gt": 0.0},
+      "rationale": "Market prices home advantage; adding it double-counts (same mechanism as the refuted injury adjustment). Survived June split-half (+5.0/+4.2pp vs shipped) but is a second-generation tweak mined from June data — this out-of-sample window is its honest test.",
+      "on_pass": "Ship MLB_HOME_ADVANTAGE = 0.0 (src/config/mlb.py).",
+      "on_fail": "Discard; keep 0.015.",
+      "status": "open"
+    },
+    {
+      "id": "rlsig_30",
+      "title": "Candidate: MLB_RUNLINE_SIGMA 3.5 -> 3.0",
+      "created": "2026-07-04",
+      "evaluate_after": "2026-07-18",
+      "data_window_start": "2026-07-05",
+      "type": "backtest_variant",
+      "overrides": {"RLSIG": 3.0},
+      "rules": {"min_picks": 40, "pass_if_roi_delta_gt": 0.0},
+      "rationale": "Empirical MLB final-margin SD ~3.1; 3.5 over-flattens run-line probabilities. Survived June split-half (+5.6/+7.2pp) but same second-generation caveat as ha_zero.",
+      "on_pass": "Ship MLB_RUNLINE_SIGMA = 3.0 (src/models/edge_finder.py).",
+      "on_fail": "Discard; keep 3.5.",
+      "status": "open"
+    },
+    {
+      "id": "pattern_card",
+      "title": "Pattern-concentrated card (bet the patterns, skip the rest)",
+      "created": "2026-07-04",
+      "evaluate_after": "2026-07-18",
+      "data_window_start": "2026-06-13",
+      "type": "backtest_pattern_only",
+      "rules": {"min_picks": 60, "pass_if_roi_gt": 0.0},
+      "rationale": "No constants combo makes a forced full 5-pick MLB slate profitable at 4.5% friction; the profitable pockets are the promoted pattern and large edges. Budget = promoted picks + edges >= 0.08, variable card size.",
+      "on_pass": "Propose to user as budget policy (display/watchlist unchanged): budget accepts only promoted picks and edges >= 0.08; skip thin days.",
+      "on_fail": "Keep the current 5-pick card with the 0.05 floor.",
+      "status": "open"
+    },
+    {
+      "id": "era_trap_fip_bonus",
+      "title": "ERA-trap bonus: should it use ERA-FIP instead of ERA-xFIP?",
+      "created": "2026-07-05",
+      "evaluate_after": "2026-09-01",
+      "data_window_start": "2026-06-14",
+      "type": "note",
+      "rules": {"min_n_per_bucket": 100},
+      "rationale": "FIP-blend hypothesis REFUTED Jul 5 (backing FIP-xFIP>1.0 starters is the BEST segment: 58.1% wr, +6.6% ROI, n=105 — never blend FIP into the quality score). Residual: within own-starter ERA-xFIP>1.0 picks, HR-driven gaps ran worse than sequencing-driven (52.3%/-4.4% vs 58.1%/+5.0%) at n=43 — re-test when both buckets reach ~100.",
+      "status": "open"
+    }
+  ]
+}
