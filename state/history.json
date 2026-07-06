@@ -10878,5 +10878,93 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-07-05",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Philadelphia Phillies @ Kansas City Royals",
+    "bet_type": "Moneyline",
+    "pick": "Philadelphia Phillies",
+    "home_team": "Kansas City Royals",
+    "away_team": "Philadelphia Phillies",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 66.2,
+    "market_prob_pct": 56.2,
+    "cost": 12.22,
+    "profit_if_win": 8.78,
+    "result": "LOST",
+    "actual_pnl": -12.22,
+    "actual_home_score": 5.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-07-05",
+    "type": "single",
+    "sport": "MLB",
+    "game": "San Francisco Giants @ Colorado Rockies",
+    "bet_type": "Spread",
+    "pick": "Colorado Rockies +1.5",
+    "home_team": "Colorado Rockies",
+    "away_team": "San Francisco Giants",
+    "edge_pct": 10.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 66.4,
+    "market_prob_pct": 56.4,
+    "cost": 12.86,
+    "profit_if_win": 9.14,
+    "result": "WON",
+    "actual_pnl": 9.14,
+    "actual_home_score": 7.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-07-05",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Chicago White Sox @ Cleveland Guardians",
+    "bet_type": "Moneyline",
+    "pick": "Chicago White Sox",
+    "home_team": "Cleveland Guardians",
+    "away_team": "Chicago White Sox",
+    "edge_pct": 8.1,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 52.7,
+    "market_prob_pct": 44.6,
+    "cost": 6.99,
+    "profit_if_win": 8.01,
+    "result": "WON",
+    "actual_pnl": 8.01,
+    "actual_home_score": 6.0,
+    "actual_away_score": 7.0
+  },
+  {
+    "date": "2026-07-05",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Chicago White Sox (ML) + Philadelphia Phillies (ML)",
+    "bet_type": "Parlay",
+    "pick": "Chicago White Sox (ML) + Philadelphia Phillies (ML)",
+    "edge_pct": 8.1,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 33.1,
+    "market_prob_pct": 0,
+    "cost": 1.89,
+    "profit_if_win": 5.11,
+    "result": "LOST",
+    "actual_pnl": -1.89,
+    "legs": [
+      {
+        "game": "Chicago White Sox @ Cleveland Guardians",
+        "pick": "Chicago White Sox",
+        "result": "WON"
+      },
+      {
+        "game": "Philadelphia Phillies @ Kansas City Royals",
+        "pick": "Philadelphia Phillies",
+        "result": "LOST"
+      }
+    ]
   }
 ]
