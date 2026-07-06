@@ -52,29 +52,22 @@ class ParlayRecommendation:
 
 def _parlay_valid(leg_a: BetRecommendation, leg_b: BetRecommendation) -> bool:
     """
-    Returns True only if the leg combination is allowed on Robinhood.
+    Returns True if the leg combination is allowed.
 
-    ML + Spread is never allowed (same game or cross-game).
-    Cross-game: only ML + ML is valid.
-    Same-game:  any combo except ML + Spread is valid.
+    Robinhood no longer restricts combinations (Jul 2026), so the only
+    remaining rule is the model's own: same-game ML + Spread is blocked
+    because the two legs are nearly the same event and the independence
+    assumption in the combined-probability math (p_a × p_b) would badly
+    misprice it. Cross-game, any combination is valid — including
+    Spread + Spread, which lets two dog-with-better-starter picks
+    (the model's best-performing bet type) be parlayed together.
     """
-    type_a = leg_a.bet_type
-    type_b = leg_b.bet_type
-
-    # ML + Spread is invalid in all contexts
-    types = {type_a, type_b}
-    if types == {"Moneyline", "Spread"}:
-        return False
-
     same_game = (leg_a.game == leg_b.game)
 
-    if same_game:
-        # All remaining combos valid as SGP:
-        # ML+Total, ML+Prop, Spread+Total, Spread+Prop, Total+Prop
-        return True
+    if same_game and {leg_a.bet_type, leg_b.bet_type} == {"Moneyline", "Spread"}:
+        return False
 
-    # Cross-game: only ML + ML is allowed
-    return type_a == "Moneyline" and type_b == "Moneyline"
+    return True
 
 
 def build_parlays(singles: List[BetRecommendation]) -> List[ParlayRecommendation]:
