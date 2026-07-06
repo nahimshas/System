@@ -1,16 +1,21 @@
 """
 Builds 2-leg parlays from top single-game recommendations.
 
-Robinhood parlay rules enforced here:
+Leg-combination rules (updated Jul 2026 — Robinhood lifted its parlay
+restrictions, so any combination is now PLATFORM-legal; the remaining
+rules here are the MODEL's own):
 
   Cross-game parlays (different games / leagues):
-    - ML + ML only.  Spread + anything cross-game is not allowed.
-      Total + anything cross-game is not allowed.
+    - Any bet-type combination is allowed (ML+ML, ML+Spread, Spread+Spread,
+      etc.). Legs from different games are treated as independent, so the
+      combined probability math (p_a × p_b) is sound.
 
   Same-game parlays (SGP — both legs from the same game):
-    - Any combination is valid EXCEPT ML + Spread.
-    - Valid: ML+Total, ML+Prop, Spread+Total, Spread+Prop, Total+Prop.
-    - Invalid: ML+Spread (same game or cross-game).
+    - Any combination EXCEPT ML + Spread. This is a model-correctness rule,
+      not a platform rule: a team's ML and its run line are nearly the same
+      event, so multiplying their probabilities as if independent badly
+      misprices the parlay. Until a correlation adjustment exists, SGP
+      ML+Spread stays blocked.
 """
 from dataclasses import dataclass, field
 from itertools import combinations
