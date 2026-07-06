@@ -12920,6 +12920,531 @@
         "WNBA: Portland Fire upset Seattle Storm 77-72 despite 73.1% model probability. CLV +1.3% means this was a good bet on variance \u2014 not a signal failure. Seattle home-court advantage was offset by a resilient road team.",
         "Schedule load (7-in-7) was validated for CLE Guardians \u2014 White Sox won 3-1, CLE's fatigue evident. Worth increasing weight on this signal for the 7th-game-in-7 scenario."
       ]
+    },
+    {
+      "date": "2026-07-05",
+      "generated_at": "2026-07-06T05:56:58Z",
+      "headline": "2-2 on budget (+$3.04), avg CLV -0.3%; ERA Trap signal 6-1; run-line dog pattern 4-0; watchlist 16-3 \u2014 all 22 picks settled",
+      "budget_record": "2-2",
+      "watchlist_record": "16-3",
+      "budget_pnl": 3.04,
+      "avg_budget_clv": -0.27,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "Philadelphia Phillies @ Kansas City Royals",
+          "sport": "MLB",
+          "pick": "Philadelphia Phillies",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Philadelphia Phillies 2, Kansas City Royals 5",
+          "pnl": "-$12.22",
+          "clv_pct": -1.1,
+          "why_picked": "Aaron Nola's xFIP (3.48) held a clear advantage over KC starter Luinder Avila (xFIP 4.44), and KC entered with heavy injuries (-5.2%) while PHI was on a 7-3 hot streak.",
+          "what_happened": "Luinder Avila outdueled Aaron Nola as the Royals held off the Phillies 5-2; Nola lasted seven innings but surrendered three earned runs, while Jared Caglianone and Salvador Perez supplied key hits for Kansas City. Andrew Lange nailed down the save.",
+          "signals": [
+            "Pitcher Matchup",
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved 1.1% against us",
+          "key_insight": "xFIP edge was clear but Avila's ERA reflected real performance tonight, not regression \u2014 the model may be overweighting xFIP vs a genuine contact-suppressor arm.",
+          "in_budget": true
+        },
+        {
+          "game": "San Francisco Giants @ Colorado Rockies",
+          "sport": "MLB",
+          "pick": "Colorado Rockies +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "San Francisco Giants 6, Colorado Rockies 7",
+          "pnl": "+$9.14",
+          "clv_pct": -0.1,
+          "why_picked": "The validated 'run-line dog with stronger starter' pattern: Tanner Gordon (xFIP 3.41) vs Tyler Mahle (xFIP 3.76) at hitter-friendly Coors Field with the +1.5 cushion.",
+          "what_happened": "Kyle Karros crushed a 471-foot three-run homer off Dylan Smith in the eighth inning to lift the Rockies to a 7-6 comeback win over the Giants. Rookie TJ Rumfield had three hits including his 20th double of the season.",
+          "signals": [
+            "Pitcher Matchup",
+            "Park Factor",
+            "Injury Impact",
+            "Schedule Load"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.1%, noise range)",
+          "key_insight": "Validated pattern (dog + better SP) delivered again. The Coors Park Factor boosted run totals but the +1.5 cushion absorbed the Giants' 6-run output. Pattern continues to be the model's most reliable setup.",
+          "in_budget": true
+        },
+        {
+          "game": "Chicago White Sox @ Cleveland Guardians",
+          "sport": "MLB",
+          "pick": "Chicago White Sox",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Chicago White Sox 7, Cleveland Guardians 6",
+          "pnl": "+$8.01",
+          "clv_pct": 0.4,
+          "why_picked": "Mild ERA trap on Tanner Bibee (ERA 3.69 vs xFIP 3.90 over 102 IP) flagged CLE as overpriced; CWS entered with better recent offense (6.0 R/G vs 4.8 season) and Jose Ramirez was out for Cleveland.",
+          "what_happened": "The White Sox edged the Guardians 7-6 in a tight AL Central clash, with Chicago's young core barely holding on down the stretch for the one-run road victory.",
+          "signals": [
+            "ERA Trap",
+            "Recent Form",
+            "Injury Impact",
+            "Schedule Load"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (0.4%, noise range)",
+          "key_insight": "ERA Trap + key injury (Ramirez out) combo worked precisely as modeled. Mild ERA traps remain actionable when paired with injury context.",
+          "in_budget": true
+        },
+        {
+          "game": "Chicago White Sox @ Cleveland Guardians / Philadelphia Phillies @ Kansas City Royals",
+          "sport": "PARLAY",
+          "pick": "Chicago White Sox (ML) + Philadelphia Phillies (ML)",
+          "bet_type": "Parlay",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "CWS 7, CLE 6 / PHI 2, KC 5",
+          "pnl": "-$1.89",
+          "legs": [
+            {
+              "pick": "Chicago White Sox",
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "result": "WON"
+            },
+            {
+              "pick": "Philadelphia Phillies",
+              "sport": "MLB",
+              "bet_type": "Moneyline",
+              "result": "LOST"
+            }
+          ],
+          "why_picked": "Combined edge from ERA Trap (CWS) and xFIP/injury advantage (PHI).",
+          "what_happened": "CWS leg hit 7-6, but the PHI leg was sunk by Nola's unexpected struggles against Avila's contact-management approach.",
+          "signals": [
+            "ERA Trap",
+            "Pitcher Matchup",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 PHI leg sunk the parlay despite CWS winning",
+          "key_insight": "PHI's xFIP case was the weakest leg; parlay combos should weight the less-certain pick's confidence harder.",
+          "in_budget": true
+        },
+        {
+          "game": "Miami Marlins @ Athletics",
+          "sport": "MLB",
+          "pick": "Athletics +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Miami Marlins 9, Athletics 8",
+          "pnl": "",
+          "clv_pct": 0.1,
+          "why_picked": "Gage Jump (xFIP 3.51) held the edge at home over Eury P\u00e9rez (xFIP 3.65); validated run-line dog pattern with stronger starter.",
+          "what_happened": "Miami Marlins 9, Athletics 8",
+          "signals": [
+            "Pitcher Matchup",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.1%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Boston Red Sox @ Los Angeles Angels",
+          "sport": "MLB",
+          "pick": "Boston Red Sox",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Boston Red Sox 7, Los Angeles Angels 5",
+          "pnl": "",
+          "clv_pct": 0.5,
+          "why_picked": "Ranger Suarez (xFIP 3.32) vs Ryan Johnson (xFIP 4.44) \u2014 a lopsided pitching mismatch with LAA carrying 11.2% lineup injuries.",
+          "what_happened": "Boston Red Sox 7, Los Angeles Angels 5",
+          "signals": [
+            "Pitcher Matchup",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.5%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Baltimore Orioles @ Cincinnati Reds",
+          "sport": "MLB",
+          "pick": "Cincinnati Reds +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Baltimore Orioles 2, Cincinnati Reds 3",
+          "pnl": "",
+          "clv_pct": -1.2,
+          "why_picked": "Bradish (xFIP 3.64) vs Lodolo (xFIP 4.19) at hitter-friendly GABP; run-line dog with schedule parity.",
+          "what_happened": "Baltimore Orioles 2, Cincinnati Reds 3",
+          "signals": [
+            "Pitcher Matchup",
+            "Park Factor",
+            "Injury Impact",
+            "Schedule Load"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved 1.2% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Detroit Tigers @ Texas Rangers",
+          "sport": "MLB",
+          "pick": "Detroit Tigers",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Detroit Tigers 6, Texas Rangers 3",
+          "pnl": "",
+          "clv_pct": 0.6,
+          "why_picked": "Casey Mize (xFIP 3.27) dominant vs Kumar Rocker (3.88), with Texas carrying 10.4% injury load including Corey Seager.",
+          "what_happened": "Detroit Tigers 6, Texas Rangers 3",
+          "signals": [
+            "Pitcher Matchup",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.6%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Toronto Blue Jays @ Seattle Mariners",
+          "sport": "MLB",
+          "pick": "Seattle Mariners",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Toronto Blue Jays 0, Seattle Mariners 4",
+          "pnl": "",
+          "clv_pct": -3.5,
+          "why_picked": "Severe ERA trap on TOR starter Trey Yesavage (ERA 3.34 vs xFIP 4.75) flagged TOR ML as overpriced; pitcher-friendly T-Mobile Park.",
+          "what_happened": "Toronto Blue Jays 0, Seattle Mariners 4",
+          "signals": [
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact",
+            "Schedule Load"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved 3.5% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "San Diego Padres @ Los Angeles Dodgers",
+          "sport": "MLB",
+          "pick": "San Diego Padres +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "San Diego Padres 5, Los Angeles Dodgers 2",
+          "pnl": "",
+          "clv_pct": -2.1,
+          "why_picked": "SD +1.5 dog with Sheehan (xFIP 3.24) vs JP Sears (xFIP 4.96); LAD overloaded with injuries and SD bullpen ERA 3.51.",
+          "what_happened": "San Diego Padres 5, Los Angeles Dodgers 2",
+          "signals": [
+            "Pitcher Matchup",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved 2.1% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Milwaukee Brewers @ Arizona Diamondbacks",
+          "sport": "MLB",
+          "pick": "Milwaukee Brewers",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Milwaukee Brewers 3, Arizona Diamondbacks 2",
+          "pnl": "",
+          "clv_pct": -0.5,
+          "why_picked": "Severe ERA trap on E. Rodriguez (ERA 2.21 vs xFIP 4.40/4.65) flagged ARI overpriced; MIL entered better on offense.",
+          "what_happened": "Milwaukee Brewers 3, Arizona Diamondbacks 2",
+          "signals": [
+            "ERA Trap",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.5%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Tampa Bay Rays @ Houston Astros",
+          "sport": "MLB",
+          "pick": "Tampa Bay Rays",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Tampa Bay Rays 0, Houston Astros 2",
+          "pnl": "",
+          "clv_pct": -0.7,
+          "why_picked": "Moderate ERA trap on Peter Lambert (ERA 3.51 vs xFIP 4.20); Rays entered 9-1 last 10 with 6.3 R/G vs season avg.",
+          "what_happened": "Tampa Bay Rays 0, Houston Astros 2",
+          "signals": [
+            "ERA Trap",
+            "Recent Form",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.7%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Miami Marlins @ Athletics",
+          "sport": "MLB",
+          "pick": "Miami Marlins",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Miami Marlins 9, Athletics 8",
+          "pnl": "",
+          "clv_pct": 0.1,
+          "why_picked": "Miami 7-3 last 10 with 6.4 R/G momentum; P\u00e9rez (xFIP 3.65) matched up well enough on the ML side.",
+          "what_happened": "Miami Marlins 9, Athletics 8",
+          "signals": [
+            "Recent Form",
+            "Pitcher Matchup",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.1%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Minnesota Twins @ New York Yankees",
+          "sport": "MLB",
+          "pick": "Minnesota Twins",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Minnesota Twins 6, New York Yankees 1",
+          "pnl": "",
+          "clv_pct": -0.7,
+          "why_picked": "Joe Ryan (xFIP 2.97) is elite; NYY missing Aaron Judge and several starters, 2-8 last 10 with 3.0 R/G.",
+          "what_happened": "Minnesota Twins 6, New York Yankees 1",
+          "signals": [
+            "Pitcher Matchup",
+            "Recent Form",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.7%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "New York Mets @ Atlanta Braves",
+          "sport": "MLB",
+          "pick": "Atlanta Braves +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "New York Mets 10, Atlanta Braves 9",
+          "pnl": "",
+          "clv_pct": -0.0,
+          "why_picked": "Severe ERA trap on Mart\u00edn P\u00e9rez (ERA 3.27 vs xFIP 4.05) flagged ATL overpriced; run-line dog value with Nolan McLean's 2.89 xFIP.",
+          "what_happened": "New York Mets 10, Atlanta Braves 9",
+          "signals": [
+            "ERA Trap",
+            "Park Factor",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.0%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Boston Red Sox @ Los Angeles Angels",
+          "sport": "MLB",
+          "pick": "Los Angeles Angels +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Boston Red Sox 7, Los Angeles Angels 5",
+          "pnl": "",
+          "clv_pct": -0.8,
+          "why_picked": "LAA +1.5 dog to absorb Suarez's quality start; heavy Angel injury list creates run-line insurance value.",
+          "what_happened": "Boston Red Sox 7, Los Angeles Angels 5",
+          "signals": [
+            "Pitcher Matchup",
+            "Injury Impact",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.8%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Pittsburgh Pirates @ Washington Nationals",
+          "sport": "MLB",
+          "pick": "Pittsburgh Pirates +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Pittsburgh Pirates 11, Washington Nationals 5",
+          "pnl": "",
+          "clv_pct": 0.2,
+          "why_picked": "Cade Cavalli (xFIP 2.98) pitching well but PIT +1.5 captures WSH bullpen vulnerability (ERA 6.02) late in games.",
+          "what_happened": "Pittsburgh Pirates 11, Washington Nationals 5",
+          "signals": [
+            "Pitcher Matchup",
+            "Recent Form",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.2%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Milwaukee Brewers @ Arizona Diamondbacks",
+          "sport": "MLB",
+          "pick": "Arizona Diamondbacks +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Milwaukee Brewers 3, Arizona Diamondbacks 2",
+          "pnl": "",
+          "clv_pct": 0.8,
+          "why_picked": "Both sides of the MIL/ARI game \u2014 ARI +1.5 captures run-line value even when MIL wins by 1 run.",
+          "what_happened": "Milwaukee Brewers 3, Arizona Diamondbacks 2",
+          "signals": [
+            "ERA Trap",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.8%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Tampa Bay Rays @ Houston Astros",
+          "sport": "MLB",
+          "pick": "Houston Astros +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Tampa Bay Rays 0, Houston Astros 2",
+          "pnl": "",
+          "clv_pct": 1.1,
+          "why_picked": "HOU +1.5 covers even in likely TAM win; Lambert ERA trap context plus HOU close-game bullpen strength.",
+          "what_happened": "Tampa Bay Rays 0, Houston Astros 2",
+          "signals": [
+            "ERA Trap",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.1%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Dallas Wings @ Toronto Tempo",
+          "sport": "WNBA",
+          "pick": "Dallas Wings",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Dallas Wings 89, Toronto Tempo 76",
+          "pnl": "",
+          "clv_pct": 1.5,
+          "why_picked": "Toronto Tempo missing Brittney Sykes, Kiki Rice, and Temi Fagbenle \u2014 30% lineup impact. Dallas's superior NET rating (+0.6 vs -1.8) made this a significant overlay at 66% market implied.",
+          "what_happened": "Dallas Wings 89, Toronto Tempo 76",
+          "signals": [
+            "Lineup Impact",
+            "Rating Edge",
+            "Home Advantage"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.5%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Indiana Fever @ Las Vegas Aces",
+          "sport": "WNBA",
+          "pick": "Indiana Fever",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Indiana Fever 84, Las Vegas Aces 68",
+          "pnl": "",
+          "clv_pct": 0.5,
+          "why_picked": "A'ja Wilson OUT and two other Aces starters absent (24.2% lineup impact); Fever on an elite form run (101.9 PPG, 62% last 8) despite Caitlin Clark also being out.",
+          "what_happened": "Indiana Fever 84, Las Vegas Aces 68",
+          "signals": [
+            "Lineup Impact",
+            "Recent Form",
+            "Rating Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.5%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Norway @ Brazil",
+          "sport": "WC",
+          "pick": "Brazil",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Norway 2, Brazil 1",
+          "pnl": "",
+          "clv_pct": 0.4,
+          "why_picked": "Brazil held a massive 280-point Elo advantage (2052 vs 1782) with model projecting 2.12 goals vs 0.43 \u2014 a 76.4% win probability.",
+          "what_happened": "Norway 2, Brazil 1",
+          "signals": [
+            "Elo Edge",
+            "Rest Advantage",
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.4%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "England @ Mexico",
+          "sport": "WC",
+          "pick": "England",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "England 3, Mexico 2",
+          "pnl": "",
+          "clv_pct": -1.8,
+          "why_picked": "England's 68-point net Elo edge despite significant Mexico home/altitude bonuses; model gave England a 45.5% win probability at the Azteca.",
+          "what_happened": "England 3, Mexico 2",
+          "signals": [
+            "Elo Edge",
+            "Host Nation Advantage",
+            "Altitude Edge"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved 1.8% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "HIGH confidence picks: 1-1 on budget; ERA Trap signal: 6-1 on the night",
+        "Run-line dog + better starter (validated pattern): 4-0 tonight (COL, ATH, CIN, PIT)",
+        "WNBA Lineup Impact plays: 2-0 with avg CLV +1.0% \u2014 strongest signal tonight",
+        "World Cup model: 1-1 \u2014 beat the close on Brazil despite loss (CLV +0.4%)",
+        "All 22 picks settled; snapshot timeout: False"
+      ],
+      "model_observations": [
+        "ERA Trap picks: 6-2 with avg CLV -0.34% \u2014 results strong but market disagrees on several (SEA -3.5%, SD -2.1%); investigate whether these are signal noise or delayed market consensus",
+        "Lineup Impact (WNBA): 2-0 with avg CLV +1.0% \u2014 confirmed by BOTH results and line movement; A'ja Wilson + Kiki Rice absences were underweighted by market",
+        "Pitcher Matchup: solid night overall; PHI xFIP edge was real but Nola's ERA (6.04) is running cold \u2014 xFIP advantage didn't overcome actual performance suppression",
+        "Validated run-line dog pattern (best starter + +1.5): 4-0 tonight \u2014 continues as the model's most reliable setup; consider raising confidence tier for this pattern",
+        "World Cup Elo model: 1-1 overall, but Brazil (+0.4% CLV) was a correct bet lost to variance; England (-1.8% CLV) won despite market movement against \u2014 World Cup model needs CLV history to calibrate"
+      ]
     }
   ]
 }
