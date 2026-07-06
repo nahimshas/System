@@ -243,6 +243,20 @@ Derived from a full reconstruction sweep over the decision log (June, 231 games,
 
 ---
 
+## Jul 6 2026 — Analysis toolkit + weekly health loop
+
+Turned the manual "user notices → session investigates" pattern into a scheduled loop.
+
+**Files:**
+- `tools/analysis/backtest.py` — canonical decision-log backtest engine (reconstructs MLB probs from logged features, daily top-5 sim with promotion + conf-first ranking, 4.5% vig). CLI: `--set KEY=VAL` variants, `--since/--until`, `--pattern-only`. `LIVE` dict at top must be kept in sync with shipped constants.
+- `tools/analysis/health_report.py` — read-only weekly health checks: bankroll-vs-ledger drift, budget record/P&L/CLV, promoted-pattern record, governor/calibration/cap state, and automatic evaluation of every due checkpoint. `--json` for machines.
+- `tools/analysis/checkpoints.json` — pre-registered evaluations with explicit pass/fail rules + dates (package_health, ha_zero, rlsig_30, pattern_card due Jul 18; era_trap_fip_bonus Sep 1). Convention: every future model change registers a checkpoint here; resolved ones get status+resolution, never deleted.
+- `docs/health_routine_prompt.md` — canonical prompt for the weekly `model-health-weekly` Claude routine (Sundays 8am PT; git-clone I/O like the debrief; publishes docs/health_latest.html + health_history.json; notifies via KV only when ACTION NEEDED).
+
+**Contract:** the routine measures and recommends; it never changes model code/constants/state. Implementation of a PASSed checkpoint happens in a normal session.
+
+---
+
 ## How to continue in a future session
 
 Tell Claude: **"Continue work on the sports betting system. Check `docs/DEVELOPMENT_PLAN.md` for the roadmap."**
