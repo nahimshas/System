@@ -1,6 +1,9 @@
 name = "picks-notifications"
 main = "src/worker.js"
 compatibility_date = "2024-09-23"
+# Pinned so wrangler doesn't call /memberships (the scoped API token has only
+# KV Storage + Workers Scripts permissions — no membership read).
+account_id = "b51b845c017bc54f5ee1faa65a55bb03"
 
 [triggers]
 crons = ["* * * * *"]
