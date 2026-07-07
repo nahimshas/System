@@ -9,9 +9,10 @@ def _rec(game, bet_type, pick, edge=0.06, prob=0.60, market=0.54):
     return BetRecommendation(
         sport="MLB", game=game, bet_type=bet_type, pick=pick,
         market_prob=market, model_prob=prob, edge=edge, contract_price=market,
-        sizing=BetSizing(num_contracts=10, dollar_allocation=5.0,
-                         expected_value=0.5, kelly_fraction=0.05,
-                         contract_price=market, potential_profit=4.0),
+        sizing=BetSizing(dollar_allocation=5.0, num_contracts=10,
+                         contract_price=market, total_cost=5.2,
+                         profit_if_win=4.0, loss_if_lose=5.2,
+                         expected_value=0.5, kelly_fraction=0.05),
         confidence="MEDIUM",
     )
 
