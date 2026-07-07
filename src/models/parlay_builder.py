@@ -64,8 +64,13 @@ def _parlay_valid(leg_a: BetRecommendation, leg_b: BetRecommendation) -> bool:
     """
     same_game = (leg_a.game == leg_b.game)
 
-    if same_game and {leg_a.bet_type, leg_b.bet_type} == {"Moneyline", "Spread"}:
-        return False
+    if same_game:
+        # Same market twice in one game is never a real parlay: identical picks
+        # (duplicate rec after a line move) or opposite sides of the same line.
+        if leg_a.bet_type == leg_b.bet_type:
+            return False
+        if {leg_a.bet_type, leg_b.bet_type} == {"Moneyline", "Spread"}:
+            return False
 
     return True
 
