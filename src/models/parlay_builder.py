@@ -80,7 +80,16 @@ def build_parlays(singles: List[BetRecommendation]) -> List[ParlayRecommendation
     Takes the top single-game recommendations and builds valid 2-leg parlays.
     Returns up to MAX_PARLAYS sorted by edge descending.
     """
-    eligible = [s for s in singles if s.edge >= MIN_PARLAY_LEG_EDGE]
+    # Dedupe identical bets first (the raw budget pool can carry the same pick
+    # twice after a line move — keep the higher-edge copy). Without this, a
+    # duplicated pick could parlay with itself (bit us Jul 7 2026:
+    # "Cardinals +1.5 + Cardinals +1.5").
+    _best: dict = {}
+    for s in singles:
+        k = (s.game, s.bet_type, s.pick)
+        if k not in _best or s.edge > _best[k].edge:
+            _best[k] = s
+    eligible = [s for s in _best.values() if s.edge >= MIN_PARLAY_LEG_EDGE]
     parlays: List[ParlayRecommendation] = []
 
     for leg_a, leg_b in combinations(eligible, 2):
