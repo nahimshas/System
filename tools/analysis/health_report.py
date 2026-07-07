@@ -423,6 +423,9 @@ def main():
         "checkpoints": evaluate_checkpoints(),
     }
     report["alerts"] = compute_alerts(report)
+    if args.publish:
+        publish(report)
+        return
     if args.json:
         print(json.dumps(report, indent=2))
         return
