@@ -40,16 +40,19 @@ as the finding — do not improvise numbers.
 
 ## Step 2 — Interpret
 
-Read /tmp/health.json. Classify the week:
+Read /tmp/health.json. The `alerts` array is computed deterministically by the
+script (bankroll drift, 7-day drawdown floor, dead logging, settlement lag,
+CLV coverage collapse) — treat it as authoritative. Classify the week:
 
-- **ALL NORMAL** — bankroll ok, no checkpoint due or all verdicts
-  `not_due`/`insufficient_data`, no new CLV gates, promoted pattern not below
-  its demote threshold.
-- **ACTION NEEDED** — any of: bankroll drift flagged; a checkpoint verdict is
-  PASS or FAIL (a decision is now due); a NEW CLV gate fired vs last week's
-  report; promoted pattern wr at/below its demote threshold with sufficient n.
-- **DEGRADED** — scripts errored or data looks stale (e.g. no settled picks in
-  7 days when sports are in season).
+- **ALL NORMAL** — `alerts` is empty, no checkpoint verdict is PASS/FAIL
+  (all `not_due`/`insufficient_data`/`resolved`), no NEW CLV gate vs last
+  week's history entry.
+- **ACTION NEEDED** — `alerts` is non-empty (exception: a CLV-coverage-only
+  alert when stamping was deliberately disabled — report it, don't page), OR
+  any checkpoint verdict is PASS or FAIL (a decision is now due), OR a new
+  CLV gate fired.
+- **DEGRADED** — the scripts themselves errored, or the log_liveness check
+  reports dead logs (no rows in 3 days).
 
 For each due checkpoint, state the verdict in one plain-English sentence and
 what the user should say to act on it (e.g. "Reply 'implement HA=0' in a
