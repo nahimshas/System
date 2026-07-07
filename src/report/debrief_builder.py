@@ -26,8 +26,10 @@ Exit 0 always intended for workflow use; failures print and exit 0 (non-fatal).
 import json
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import date as _date, datetime, timedelta, timezone
 from pathlib import Path
+
+import requests
 
 SNAPSHOT = Path("state/results_snapshot.json")
 DOCS = Path("docs")
