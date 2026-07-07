@@ -409,6 +409,9 @@ def _card(p, brief=False):
             h.append(f'<div style="font-size:0.78rem;margin-top:4px;">• {_esc(l["pick"])} '
                      f'<span style="color:{lc};font-weight:700;">{l.get("result","")}</span></div>')
     if not brief:
+        wh = p.get("what_happened", "")
+        if wh and not wh.startswith("Final:"):   # score line already shown above
+            h.append(f'<div style="color:#e2e8f0;font-size:0.78rem;margin-top:6px;font-style:italic;">{_esc(wh)}</div>')
         if p.get("why_picked"):
             h.append(f'<div style="color:#94a3b8;font-size:0.76rem;margin-top:6px;">{_esc(p["why_picked"])}</div>')
         if p.get("signal_verdict"):
