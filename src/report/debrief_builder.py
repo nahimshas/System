@@ -200,6 +200,9 @@ def build(today=None):
     watchlist = [p for p in display_pools
                  if (p.get("game"), p.get("bet_type"), p.get("pick")) not in budget_keys]
 
+    sports_needed = {p.get("sport", "") for p in singles + watchlist if p.get("sport")}
+    narratives = _fetch_narratives(sports_needed, date)
+
     picks_out = []
     budget_results = []
     budget_clvs = []
