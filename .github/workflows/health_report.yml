@@ -1,0 +1,87 @@
+name: Weekly Model Health
+
+# Deterministic weekly health report (added Jul 7 2026). Replaces the
+# publishing half of the model-health-weekly Claude routine, which lost all
+# write access when the platform started redacting prompt secrets and
+# blocking sandbox writes. Runs the repo's own health scripts, publishes
+# docs/health_latest.html + docs/health_history.json, and writes the push-
+# notification KV key ONLY when the status is ACTION_NEEDED or DEGRADED.
+#
+# The Claude routine may still run for narrative interpretation (read-only,
+# artifact output) — nothing depends on it.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Sundays 15:00 UTC = 8:00 AM PDT (7:00 AM PST in winter).
+    - cron: '0 15 * * 0'
+
+permissions:
+  contents: write
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # tools/analysis is stdlib-only — no pip install needed.
+      - name: Build health report + publish page
+        id: health
+        run: |
+          python -m tools.analysis.health_report --publish | tee /tmp/health_out.txt
+          STATUS=$(grep -o 'HEALTH_STATUS=.*' /tmp/health_out.txt | cut -d= -f2)
+          echo "status=${STATUS:-DEGRADED}" >> "$GITHUB_OUTPUT"
+          python -m tools.analysis.health_report   # human-readable copy in the log
+
+      - name: Commit report
+        run: |
+          git config user.name "health-report-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/health_latest.html docs/health_history.json
+          git diff --cached --quiet || git commit -m "Health report: $(date -u +'%Y-%m-%d')"
+          git pull --rebase
+          git push
+
+      - name: Push notification (only when action needed)
+        if: steps.health.outputs.status != 'ALL_NORMAL'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PICKS_KV_NAMESPACE: "673db77b785c4b4b8fd4d8b9d545b490"
+          HEALTH_STATUS: ${{ steps.health.outputs.status }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, urllib.request, urllib.parse, datetime
+          try:
+              from zoneinfo import ZoneInfo
+              today = datetime.datetime.now(ZoneInfo('America/Los_Angeles')).date().isoformat()
+          except Exception:
+              today = datetime.date.today().isoformat()
+          token = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          acct  = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '').strip()
+          ns    = os.environ.get('PICKS_KV_NAMESPACE', '')
+          status = os.environ.get('HEALTH_STATUS', 'ACTION_NEEDED')
+          if not token or not acct or not ns:
+              print('Missing Cloudflare credentials — skipping')
+              raise SystemExit(0)
+          body = ('Health checks could not run cleanly — tap to review'
+                  if status == 'DEGRADED' else
+                  'A model decision is due — tap to review')
+          payload = {'title': '🩺 Model health: attention needed', 'body': body,
+                     'url': '/health_latest.html', 'notified': False}
+          key = urllib.parse.quote(f'debrief_notify:{today}', safe='')
+          url = (f'https://api.cloudflare.com/client/v4/accounts/{acct}'
+                 f'/storage/kv/namespaces/{ns}/values/{key}')
+          req = urllib.request.Request(url, data=json.dumps(payload).encode(),
+              headers={'Authorization': f'Bearer {token}',
+                       'Content-Type': 'application/json'}, method='PUT')
+          with urllib.request.urlopen(req, timeout=15) as r:
+              print(json.loads(r.read()))
+          PYEOF
