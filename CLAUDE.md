@@ -81,6 +81,10 @@ Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_ga
 | `state/clv_state.json` | Per-market CLV snapshot — read by the CLV panels (classic report + PWA Analytics tab) |
 | `src/state/decision_log.py` | Full candidate + feature archive (both sides of every market, made + rejected) → `state/decision_log/YYYY-MM.json`. Pure analysis layer, separate from the shadow log. `record_candidates()`, `update_decision_log_clv` (in closing_lines), `settle_decision_from_scores()`. See "Decision log" below — **has a maintenance rule**. |
 | `docs/debrief_routine_prompt.md` | Canonical CLV-aware nightly debrief routine prompt (credential placeholders — real tokens live only in the user's routine) |
+| `tools/analysis/backtest.py` | **Canonical backtest engine** — reconstructs MLB probs from decision-log features, sims daily budget selection at realistic 4.5% vig. `--set KEY=VAL` variants, `--pattern-only`. ⚠️ Its `LIVE` dict must match shipped constants (guarded by `tests/test_backtest_live_sync.py`). NEVER rebuild backtests in scratchpads — use/extend this. |
+| `tools/analysis/health_report.py` | Read-only health checks + automatic checkpoint evaluation + deterministic alerts (drawdown, log liveness, bankroll drift). Run any time: `python3 -m tools.analysis.health_report` |
+| `tools/analysis/checkpoints.json` | **Pre-registered model-change evaluations** with explicit pass/fail rules + dates. ⚠️ RULE: every model change ships with a checkpoint entry here; resolved ones get `status`+`resolution`, never deleted. |
+| `docs/health_routine_prompt.md` | Canonical prompt for the weekly `model-health-weekly` Claude routine (Sundays 8am PT — publishes docs/health_latest.html, notifies only on ACTION NEEDED, never implements changes) |
 | `docs/DEVELOPMENT_PLAN.md` | Feature roadmap + model change log |
 
 ---
