@@ -186,7 +186,10 @@ for attempt in range(20):           # up to ~6.5 minutes
         gen = snap.get("generated_at", "")
         try:
             gen_dt = datetime.fromisoformat(gen.replace("Z", "+00:00"))
-            if gen_dt >= dispatch_time - timedelta(minutes=2):
+            # Accept any snapshot from the last 30 minutes — covers both our own
+            # trigger AND the 10:45 PM PDT scheduled failsafe run (the sandbox
+            # sometimes cannot push the trigger; the cron covers those nights).
+            if gen_dt >= dispatch_time - timedelta(minutes=30):
                 snapshot = snap
                 break
         except Exception:
