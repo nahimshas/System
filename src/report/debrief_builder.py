@@ -288,7 +288,8 @@ def build(today=None):
             "result": result, "score": r.get("score", ""), "pnl": "",
             **({"clv_pct": clv_pct} if clv_pct is not None else {}),
             "why_picked": _why(p, canon),
-            "what_happened": (f"Final: {r.get('score','')}." if result in ("WON", "LOST") else ""),
+            "what_happened": ((_narrative_for(p, narratives) or f"Final: {r.get('score','')}.")
+                              if result in ("WON", "LOST") else ""),
             "signals": canon,
             "signal_verdict": _verdict(result, clv_pct),
             "key_insight": "", "in_budget": False,
