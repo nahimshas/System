@@ -304,6 +304,10 @@ def main():
     pp = report["promoted_pattern"]
     print(f"[--] Promoted pattern: {pp.get('record')} ({pp.get('wr_pct')}%) "
           f"CLV {pp.get('avg_clv_pct')}% (flagged {pp.get('n_flagged')})")
+    lv = report["log_liveness"]
+    print(f"[{'OK' if lv.get('ok') else '⚠ DEAD'}] Logs: decision rows(3d)={lv.get('decision_rows_recent')} "
+          f"shadow(3d)={lv.get('shadow_rows_recent')} settled={lv.get('settlement_rate_pct')}% "
+          f"clv_cov={lv.get('clv_coverage_pct')}%")
     g = report["governors"]
     print(f"[--] CLV gates: {g.get('clv_gates') or 'none'}")
     print(f"[--] Calibration phases beyond 0: {g.get('calibration_phases') or 'none'}")
