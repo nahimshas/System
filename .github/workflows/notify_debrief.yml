@@ -36,6 +36,19 @@ jobs:
           kv_key = urllib.parse.quote(f'debrief_notify:{today}', safe='')
           kv_url = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/storage/kv/namespaces/{ns_id}/values/{kv_key}'
 
+          # Dedupe: if today's key already exists (fired or pending), skip —
+          # same-day republishes of the debrief page would otherwise ping the
+          # user twice for one debrief.
+          try:
+              chk = urllib.request.Request(kv_url, headers={'Authorization': f'Bearer {token}'})
+              with urllib.request.urlopen(chk, timeout=15) as r:
+                  existing = json.loads(r.read())
+              if isinstance(existing, dict) and 'title' in existing:
+                  print(f'debrief_notify:{today} already exists (notified={existing.get("notified")}) — skipping duplicate')
+                  exit(0)
+          except Exception:
+              pass   # key absent (404) or unreadable → proceed with the write
+
           payload = {
               'title':    '📊 Nightly Debrief ready',
               'body':     "Today's picks analyzed — tap to review",
