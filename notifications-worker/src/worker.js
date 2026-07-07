@@ -366,6 +366,32 @@ async function runCron(env) {
   const dateStr = todayDateStr();
   const isoDate = todayIso();
 
+  // ── Debrief notification — checked BEFORE the picks-store gate ────────────
+  // The debrief can publish when today's picks aren't in KV yet (e.g. an
+  // after-midnight re-publish: debrief key is dated today, picks arrive at
+  // 9am). Handling it here means the notification never waits on the picks.
+  // The duplicate block further down is harmless (notified flag dedupes).
+  try {
+    const debriefKeyEarly = `debrief_notify:${isoDate}`;
+    const debriefRawEarly = await env.PICKS_STORE.get(debriefKeyEarly);
+    if (debriefRawEarly) {
+      const debrief = JSON.parse(debriefRawEarly);
+      if (!debrief.notified) {
+        await broadcastFiltered({
+          title: debrief.title || '📊 Nightly Debrief ready',
+          body:  debrief.body  || "Today's picks analyzed — tap to review",
+          tag:   `debrief-${isoDate}`,
+          url:   debrief.url  || '/debrief_latest.html',
+        }, { isPicksReady: true }, env);
+        debrief.notified = true;
+        await env.PICKS_STORE.put(debriefKeyEarly, JSON.stringify(debrief), { expirationTtl: 86400 });
+        console.log(`Debrief notification fired (early path) for ${isoDate}`);
+      }
+    }
+  } catch (e) {
+    console.log(`Debrief early-path error (non-fatal): ${e}`);
+  }
+
   const raw = await env.PICKS_STORE.get(`picks:${isoDate}`);
   if (!raw) return;
 
