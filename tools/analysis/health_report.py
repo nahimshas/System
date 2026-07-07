@@ -277,14 +277,21 @@ def main():
         "budget_performance": check_budget_perf(),
         "budget_clv": check_budget_clv(),
         "promoted_pattern": check_promoted_pattern(),
+        "log_liveness": check_log_liveness(),
         "governors": check_governors(),
         "checkpoints": evaluate_checkpoints(),
     }
+    report["alerts"] = compute_alerts(report)
     if args.json:
         print(json.dumps(report, indent=2))
         return
 
     print(f"=== MODEL HEALTH REPORT — {report['generated_for']} ===\n")
+    if report["alerts"]:
+        print("🚨 ALERTS:")
+        for a in report["alerts"]:
+            print(f"  - {a}")
+        print()
     b = report["bankroll"]
     print(f"[{'OK' if b.get('ok') else '⚠ DRIFT'}] Bankroll: ${b.get('bankroll')} "
           f"vs ledger ${b.get('ledger_value')} (drift {b.get('drift')})")
