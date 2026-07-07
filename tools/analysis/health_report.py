@@ -116,6 +116,72 @@ def check_promoted_pattern(since=PACKAGE_START):
     return out
 
 
+def check_log_liveness(recent_days=3, clv_window_days=14):
+    """The improvement engine dies silently if logging breaks — check pulse.
+
+    - decision log: rows written in the last `recent_days` (feature stamping alive)
+    - shadow log:   rows written in the last `recent_days`
+    - settlement:   share of shadow entries >=2 days old that have an outcome
+    - CLV coverage: share of settled entries in the last `clv_window_days` with
+      a stamped clv (collapsing coverage = stamping off/broken/out of credits)
+    """
+    out = {"name": "log_liveness"}
+    try:
+        cutoff_recent = (date.today() - timedelta(days=recent_days)).isoformat()
+        cutoff_settle = (date.today() - timedelta(days=2)).isoformat()
+        cutoff_clv = (date.today() - timedelta(days=clv_window_days)).isoformat()
+
+        dl_recent = 0
+        for p in sorted(glob.glob(os.path.join(_ROOT, "state/decision_log/*.json"))):
+            data = json.load(open(p))
+            e = data.get("entries", data) if isinstance(data, dict) else data
+            if isinstance(e, dict):
+                e = list(e.values())
+            dl_recent += sum(1 for r in e if r.get("date", "") >= cutoff_recent)
+
+        shadow = _shadow_entries()
+        sl_recent = sum(1 for r in shadow if r.get("date", "") >= cutoff_recent)
+        old_enough = [r for r in shadow if cutoff_clv <= r.get("date", "") <= cutoff_settle]
+        settled = [r for r in old_enough if r.get("outcome") in ("win", "loss", "push")]
+        with_clv = [r for r in settled if r.get("clv") is not None]
+
+        out.update(
+            decision_rows_recent=dl_recent,
+            shadow_rows_recent=sl_recent,
+            settlement_rate_pct=round(len(settled) / len(old_enough) * 100, 1) if old_enough else None,
+            clv_coverage_pct=round(len(with_clv) / len(settled) * 100, 1) if settled else None,
+            ok=dl_recent > 0 and sl_recent > 0,
+        )
+    except Exception as e:
+        out.update(ok=False, error=str(e))
+    return out
+
+
+# Deterministic ACTION NEEDED triggers beyond checkpoints — the routine treats
+# a non-empty alerts list as ACTION NEEDED (or DEGRADED for liveness failures).
+DRAWDOWN_ALERT_7D = -40.0     # last-7-days budget P&L below this → alert
+SETTLEMENT_RATE_MIN = 60.0    # % of 2+ day-old shadow entries settled
+CLV_COVERAGE_MIN = 40.0       # % of settled entries carrying CLV (14d window)
+
+
+def compute_alerts(report):
+    alerts = []
+    b = report["bankroll"]
+    if not b.get("ok"):
+        alerts.append(f"bankroll drift: ${b.get('drift')} vs ledger — investigate before next sizing run")
+    p7 = report["budget_performance"].get("last_7d", {})
+    if p7 and p7.get("pnl") is not None and p7["pnl"] < DRAWDOWN_ALERT_7D:
+        alerts.append(f"drawdown: last-7d budget P&L ${p7['pnl']:+.2f} below ${DRAWDOWN_ALERT_7D} floor ({p7['record']})")
+    lv = report["log_liveness"]
+    if not lv.get("ok"):
+        alerts.append("logging stopped: no decision/shadow rows in the last 3 days — feature stamping or the morning run is broken")
+    if lv.get("settlement_rate_pct") is not None and lv["settlement_rate_pct"] < SETTLEMENT_RATE_MIN:
+        alerts.append(f"settlement lag: only {lv['settlement_rate_pct']}% of mature shadow entries settled")
+    if lv.get("clv_coverage_pct") is not None and lv["clv_coverage_pct"] < CLV_COVERAGE_MIN:
+        alerts.append(f"CLV coverage {lv['clv_coverage_pct']}% (14d) — stamping disabled/broken/out of credits (informational if deliberately disabled)")
+    return alerts
+
+
 def check_governors():
     """Active CLV gates, calibration phases, current cap values."""
     out = {"name": "governors"}
