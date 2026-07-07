@@ -60,6 +60,27 @@
       "status": "open"
     },
     {
+      "id": "flip_totals",
+      "title": "FLIP TOTALS idea (Jun 14) — bet the opposite of the model's totals pick",
+      "created": "2026-06-14",
+      "evaluate_after": "2026-07-05",
+      "type": "note",
+      "rationale": "Original idea: fade the model's totals picks (+5.3% ROI backtested pre-fix). Deferred because the Jun 13 source fix (league_avg_runs 4.5->4.35) could change the bias direction.",
+      "status": "resolved",
+      "resolution": "RESOLVED Jul 6 2026: the Jul 2 input-by-input analysis answered the deciding question — the source fix OVERSHOT. The model now has an UNDER bias (~99% of made totals are Unders, projected total avg 1.7 runs below the line, CLV still -2.1%). Flipping is NOT validated in either direction (unders still WIN 52.5% — they lose on price, not direction; and pre-fix flip evidence was for fading OVERS which barely exist now). Decision: totals stay CLV-gated out of the budget; the real fix is the run-expectation level (league_avg_runs / xFIP deflation / _TOTAL_MARKET_ANCHOR) — a candidate for a future registered checkpoint if totals are ever worth un-gating."
+    },
+    {
+      "id": "nba_reaudit",
+      "title": "NBA constants re-audit with full logging infrastructure",
+      "created": "2026-07-06",
+      "evaluate_after": "2026-11-10",
+      "data_window_start": "2026-10-20",
+      "type": "note",
+      "rules": {"min_games_logged": 100},
+      "rationale": "NBA was the historical profit engine (+21.7% ROI in-season) but its constants have NEVER been audited with the decision-log infrastructure (no logged model inputs existed before Jun 13 2026 — NBA season ended Jun 13). When NBA returns (~late Oct), the decision log will capture full features from day one. After ~2-3 weeks of games: run the same reconstruction sweep MLB got Jul 3-4 (tools/analysis/backtest.py needs an NBA variant — reconstruct from NBA features), validate rating-edge weights, rest/B2B, injury handling (NBA injury adjustment is position-only — the MLB value-weighting fix was never ported), and credibility cap. Also verify the hot-streak question: was +21.7% real edge or variance? CLV data will now answer it.",
+      "status": "open"
+    },
+    {
       "id": "era_trap_fip_bonus",
       "title": "ERA-trap bonus: should it use ERA-FIP instead of ERA-xFIP?",
       "created": "2026-07-05",
