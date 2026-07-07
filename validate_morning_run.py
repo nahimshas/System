@@ -305,6 +305,28 @@ def run_checks(today: date):
                  "See the dropped_bet findings above for specifics; if none, a game may be "
                  "postponed/not yet final.")
 
+    # ── Check 10: weekly health routine liveness (dead-man's switch) ──────────
+    # The Sunday model-health routine publishes docs/health_history.json. If it
+    # silently dies (token expiry, sandbox loses repo access, proxy change),
+    # nothing else would notice — this check surfaces staleness in the banner.
+    try:
+        _hh = _load(Path("docs/health_history.json"), None)
+        if _hh is not None:
+            _entries = _hh.get("entries", _hh) if isinstance(_hh, dict) else _hh
+            _last = max((e.get("date", "") for e in _entries), default="")
+            if _last:
+                _age = (today - date.fromisoformat(_last)).days
+                if _age > 8:
+                    fail("health_routine_stale", "warn",
+                         f"Last weekly health report is {_age} days old ({_last}) — the "
+                         f"model-health-weekly routine appears to have stopped running.",
+                         "The health routine evaluates model checkpoints and watches for drift; "
+                         "if it dies silently, pending evaluations (and drift alarms) never fire.",
+                         "Open the model-health-weekly routine in the Claude app and run it "
+                         "manually — check for 403 push errors (repo selector) or token expiry.")
+    except Exception:
+        pass   # liveness check must never break validation itself
+
     stats = {
         "date_checked": y,
         "settled_singles": len([r for r in hist_y if r.get("type") == "single"]),
