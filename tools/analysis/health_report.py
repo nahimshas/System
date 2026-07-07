@@ -266,9 +266,150 @@ def evaluate_checkpoints(today=None):
     return results
 
 
+def classify(report):
+    """Deterministic weekly status. ACTION_NEEDED when a human decision is due."""
+    if any(not report[k].get("ok", True) and report[k].get("error")
+           for k in ("bankroll", "budget_performance", "budget_clv",
+                     "promoted_pattern", "log_liveness", "governors")):
+        return "DEGRADED"
+    if not report["log_liveness"].get("ok"):
+        return "DEGRADED"
+    if report["alerts"]:
+        return "ACTION_NEEDED"
+    for c in report["checkpoints"]:
+        v = c.get("verdict", "")
+        if v.startswith("PASS") or v.startswith("FAIL"):
+            return "ACTION_NEEDED"
+    return "ALL_NORMAL"
+
+
+_STATUS_STYLE = {
+    "ALL_NORMAL":    ("#22c55e", "✅ All normal — no decisions needed this week"),
+    "ACTION_NEEDED": ("#f59e0b", "⚠ Action needed — a decision is due (see below)"),
+    "DEGRADED":      ("#ef4444", "❌ Degraded — health checks could not run cleanly"),
+}
+
+
+def _esc(s):
+    return str(s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _render_health_html(report, status):
+    col, banner = _STATUS_STYLE[status]
+    p = report["budget_performance"]
+    c = report["budget_clv"]
+    pp = report["promoted_pattern"]
+    b = report["bankroll"]
+    lv = report["log_liveness"]
+    g = report["governors"]
+
+    def chip(k, v):
+        return (f'<div style="background:#1a1d27;border-radius:8px;padding:8px 10px;text-align:center;">'
+                f'<div style="color:#64748b;font-size:0.6rem;text-transform:uppercase;">{k}</div>'
+                f'<div style="color:#e2e8f0;font-weight:800;font-size:0.88rem;">{v}</div></div>')
+
+    sp = p.get("since_package", {})
+    l7 = p.get("last_7d", {})
+    chips = (chip("Bankroll", f"${b.get('bankroll')}")
+             + chip("Last 7d", f"{l7.get('record','?')} (${l7.get('pnl',0):+.0f})")
+             + chip("Since pkg", f"{sp.get('record','?')} (${sp.get('pnl',0):+.0f})")
+             + chip("Budget CLV", f"{c.get('avg_clv_pct')}%" if c.get("avg_clv_pct") is not None else "n/a")
+             + chip("Pattern", f"{pp.get('record','?')}"))
+
+    alerts_html = ""
+    if report["alerts"]:
+        items = "".join(f"<li>{_esc(a)}</li>" for a in report["alerts"])
+        alerts_html = (f'<div style="background:#1a1d27;border-left:3px solid #ef4444;'
+                       f'border-radius:10px;padding:12px 14px;margin:12px 0;">'
+                       f'<div style="color:#ef4444;font-weight:700;font-size:0.8rem;">🚨 ALERTS</div>'
+                       f'<ul style="color:#e2e8f0;font-size:0.78rem;margin:6px 0 0;padding-left:18px;">{items}</ul></div>')
+
+    cp_rows = ""
+    for r in report["checkpoints"]:
+        v = r.get("verdict", "")
+        vcol = "#22c55e" if v.startswith("PASS") else ("#ef4444" if v.startswith("FAIL") else "#94a3b8")
+        extra = ""
+        if "roi_delta_pp" in r:
+            extra = (f'<div style="color:#64748b;font-size:0.7rem;margin-top:2px;">live '
+                     f'{r["live"]["roi"]:+.1f}% vs variant {r["variant"]["roi"]:+.1f}% '
+                     f'(Δ{r["roi_delta_pp"]:+.1f}pp, n={r["live"]["n"]})</div>')
+        if "metrics" in r:
+            m = r["metrics"]
+            extra = (f'<div style="color:#64748b;font-size:0.7rem;margin-top:2px;">n={m["n"]} '
+                     f'wr={m["wr"]}% roi={m["roi"]:+.1f}%</div>')
+        cp_rows += (f'<div style="background:#1a1d27;border-radius:8px;padding:9px 12px;margin-bottom:6px;">'
+                    f'<div style="display:flex;justify-content:space-between;gap:10px;">'
+                    f'<span style="color:#38bdf8;font-size:0.76rem;font-weight:600;">{_esc(r["id"])}</span>'
+                    f'<span style="color:{vcol};font-size:0.72rem;text-align:right;">{_esc(v)}</span></div>'
+                    f'{extra}</div>')
+
+    gov = (f"CLV gates: {', '.join(g.get('clv_gates') or []) or 'none'} · "
+           f"Phases: {', '.join(f'{k}={v}' for k, v in (g.get('calibration_phases') or {}).items()) or 'none'} · "
+           f"Logs: decision(3d)={lv.get('decision_rows_recent')} settled={lv.get('settlement_rate_pct')}% "
+           f"clv_cov={lv.get('clv_coverage_pct')}%")
+
+    return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model Health — {report['generated_for']}</title></head>
+<body style="background:#050507;color:#e2e8f0;font-family:-apple-system,system-ui,sans-serif;margin:0;padding:16px;">
+<div style="max-width:600px;margin:0 auto;">
+<div style="background:#1a1d27;border-left:4px solid {col};border-radius:12px;padding:16px;margin-bottom:14px;">
+<div style="font-size:1.02rem;font-weight:800;">🩺 Model Health — {report['generated_for']}</div>
+<div style="color:{col};font-weight:700;font-size:0.84rem;margin-top:6px;">{banner}</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px;">{chips}</div>
+</div>
+{alerts_html}
+<div style="color:#64748b;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:18px 0 8px;">Checkpoints</div>
+{cp_rows}
+<div style="color:#64748b;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:18px 0 8px;">Governors & Logs</div>
+<div style="background:#1a1d27;border-radius:8px;padding:10px 12px;color:#94a3b8;font-size:0.74rem;line-height:1.6;">{_esc(gov)}</div>
+<div style="color:#64748b;font-size:0.66rem;text-align:center;margin:22px 0 8px;">
+Generated automatically (deterministic) · <a href="/System/index_spa.html" style="color:#38bdf8;">← Back to Picks</a></div>
+</div></body></html>"""
+
+
+def publish(report):
+    """Write docs/health_latest.html + append docs/health_history.json.
+    Idempotent per date. Prints the status so the workflow can gate the
+    notification step on it."""
+    status = classify(report)
+    docs = os.path.join(_ROOT, "docs")
+    with open(os.path.join(docs, "health_latest.html"), "w") as f:
+        f.write(_render_health_html(report, status))
+
+    hist_path = os.path.join(docs, "health_history.json")
+    try:
+        with open(hist_path) as f:
+            hist = json.load(f)
+    except Exception:
+        hist = {"entries": []}
+    entries = hist.get("entries", hist) if isinstance(hist, dict) else hist
+    d = report["generated_for"]
+    entries = [e for e in entries if e.get("date") != d]
+    entries.append({
+        "date": d,
+        "status": status,
+        "headline": (report["alerts"][0] if report["alerts"] else
+                     "Bankroll ok, logs alive, no checkpoint decisions due."),
+        "checkpoint_verdicts": {r["id"]: r.get("verdict", "") for r in report["checkpoints"]},
+        "budget_clv_pct": report["budget_clv"].get("avg_clv_pct"),
+        "promoted_record": report["promoted_pattern"].get("record"),
+        "bankroll_drift": report["bankroll"].get("drift"),
+        "generated_by": "workflow",
+    })
+    hist = {"entries": entries[-26:]}
+    with open(hist_path, "w") as f:
+        json.dump(hist, f, indent=2)
+    print(f"HEALTH_STATUS={status}")
+    return status
+
+
 def main():
     ap = argparse.ArgumentParser(description="Model health report")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--publish", action="store_true",
+                    help="write docs/health_latest.html + docs/health_history.json")
     args = ap.parse_args()
 
     report = {
