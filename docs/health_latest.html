@@ -1,99 +1,19 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Model Health — 2026-07-07</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#050507;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;padding:16px;max-width:600px;margin:0 auto;line-height:1.5}
-a{color:#38bdf8;text-decoration:none}
-a:hover{text-decoration:underline}
-h1{font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:4px}
-h2{font-size:13px;font-weight:600;color:#94a3b8;letter-spacing:.1em;text-transform:uppercase;margin:24px 0 10px}
-.header-card{background:#1a1d27;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid #1e2433}
-.banner{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.04em;margin-top:8px}
-.banner-normal{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
-.banner-action{background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44}
-.banner-degraded{background:#ef444422;color:#ef4444;border:1px solid #ef444444}
-.card{background:#1a1d27;border-radius:8px;padding:14px;margin-bottom:10px;border:1px solid #1e2433}
-.row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;border-bottom:1px solid #1e2433}
-.row:last-child{border-bottom:none}
-.row .label{color:#94a3b8}
-.row .value{font-weight:600;color:#e2e8f0;text-align:right}
-.green{color:#22c55e}
-.red{color:#ef4444}
-.amber{color:#f59e0b}
-.neutral{color:#94a3b8}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;color:#64748b;font-weight:600;padding:6px 4px;border-bottom:1px solid #2d3444;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-td{padding:7px 4px;border-bottom:1px solid #1e2433;color:#cbd5e1;vertical-align:top}
-tr:last-child td{border-bottom:none}
-.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;display:inline-block}
-.pill-notdue{background:#1e2433;color:#94a3b8;border:1px solid #2d3444}
-.pill-pass{background:#22c55e22;color:#22c55e;border:1px solid #22c55e44}
-.pill-fail{background:#ef444422;color:#ef4444;border:1px solid #ef444444}
-.pill-insuff{background:#1e2433;color:#94a3b8;border:1px solid #2d3444}
-.pill-resolved{background:#38bdf822;color:#38bdf8;border:1px solid #38bdf844}
-.gov-item{font-size:12px;color:#94a3b8;margin:4px 0;line-height:1.4}
-.gov-item .k{color:#64748b}
-.footer{text-align:center;color:#334155;font-size:11px;margin-top:24px;padding-top:12px;border-top:1px solid #1e2433}
-@media(prefers-color-scheme:light){
-  body{background:#f8fafc;color:#1e293b}
-  .header-card,.card{background:#fff;border-color:#e2e8f0}
-  th{color:#64748b;border-color:#e2e8f0}
-  td{color:#334155;border-color:#f1f5f9}
-  .pill-notdue,.pill-insuff{background:#f1f5f9;border-color:#e2e8f0;color:#64748b}
-  .row{border-color:#f1f5f9}
-  .row .label{color:#64748b}
-  .gov-item{color:#475569}
-  .gov-item .k{color:#94a3b8}
-  .footer{border-color:#e2e8f0;color:#94a3b8}
-}
-</style>
-</head>
-<body>
-<div class="header-card">
-  <h1>Model Health Report</h1>
-  <div style="color:#64748b;font-size:13px">2026-07-07</div>
-  <div class="banner banner-normal">ALL NORMAL</div>
-  <div style="font-size:12px;color:#94a3b8;margin-top:8px;line-height:1.4">Bankroll matches ledger, no checkpoint decisions are due (soonest Jul 18), and no new alerts or CLV gates since the baseline run earlier today. This check picks up two checkpoint-registry entries added by today's logging/alerting hardening (flip_totals, nba_reaudit) — both informational only.</div>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model Health — 2026-07-07</title></head>
+<body style="background:#050507;color:#e2e8f0;font-family:-apple-system,system-ui,sans-serif;margin:0;padding:16px;">
+<div style="max-width:600px;margin:0 auto;">
+<div style="background:#1a1d27;border-left:4px solid #22c55e;border-radius:12px;padding:16px;margin-bottom:14px;">
+<div style="font-size:1.02rem;font-weight:800;">🩺 Model Health — 2026-07-07</div>
+<div style="color:#22c55e;font-weight:700;font-size:0.84rem;margin-top:6px;">✅ All normal — no decisions needed this week</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px;"><div style="background:#1a1d27;border-radius:8px;padding:8px 10px;text-align:center;"><div style="color:#64748b;font-size:0.6rem;text-transform:uppercase;">Bankroll</div><div style="color:#e2e8f0;font-weight:800;font-size:0.88rem;">$169.37</div></div><div style="background:#1a1d27;border-radius:8px;padding:8px 10px;text-align:center;"><div style="color:#64748b;font-size:0.6rem;text-transform:uppercase;">Last 7d</div><div style="color:#e2e8f0;font-weight:800;font-size:0.88rem;">23-21 ($+33)</div></div><div style="background:#1a1d27;border-radius:8px;padding:8px 10px;text-align:center;"><div style="color:#64748b;font-size:0.6rem;text-transform:uppercase;">Since pkg</div><div style="color:#e2e8f0;font-weight:800;font-size:0.88rem;">5-4 ($+8)</div></div><div style="background:#1a1d27;border-radius:8px;padding:8px 10px;text-align:center;"><div style="color:#64748b;font-size:0.6rem;text-transform:uppercase;">Budget CLV</div><div style="color:#e2e8f0;font-weight:800;font-size:0.88rem;">-0.82%</div></div><div style="background:#1a1d27;border-radius:8px;padding:8px 10px;text-align:center;"><div style="color:#64748b;font-size:0.6rem;text-transform:uppercase;">Pattern</div><div style="color:#e2e8f0;font-weight:800;font-size:0.88rem;">4-1</div></div></div>
 </div>
 
-<h2>Scoreboard</h2>
-<div class="card">
-  <div class="row"><span class="label">Bankroll</span><span class="value green">$164.36 (vs ledger $164.36, drift 0.0)</span></div>
-  <div class="row"><span class="label">Budget — since package (Jul 5)</span><span class="value">2-2 &nbsp; <span class="green">+$3.04</span></span></div>
-  <div class="row"><span class="label">Budget — last 7d</span><span class="value">20-19 &nbsp; <span class="green">+$28.47</span></span></div>
-  <div class="row"><span class="label">Budget CLV — since package</span><span class="value amber">-0.43% (n=8)</span></div>
-  <div class="row"><span class="label">Promoted pattern</span><span class="value green">3-0 (100.0%), CLV -0.12% (n=5 flagged, 3 settled)</span></div>
-</div>
-
-<h2>Checkpoints</h2>
-<div class="card">
-  <table>
-    <tr><th>ID</th><th>Verdict</th><th>Meaning</th></tr>
-    <tr><td>package_health</td><td><span class="pill pill-notdue">NOT DUE</span></td><td>Jul 4 optimization package — too early to judge; re-check after Jul 18.</td></tr>
-    <tr><td>ha_zero</td><td><span class="pill pill-notdue">NOT DUE</span></td><td>MLB home-advantage candidate (0.015→0.0) — needs more picks; re-check after Jul 18.</td></tr>
-    <tr><td>rlsig_30</td><td><span class="pill pill-notdue">NOT DUE</span></td><td>MLB run-line sigma candidate (3.5→3.0) — needs more picks; re-check after Jul 18.</td></tr>
-    <tr><td>pattern_card</td><td><span class="pill pill-notdue">NOT DUE</span></td><td>Pattern-concentrated card idea — too early; re-check after Jul 18.</td></tr>
-    <tr><td>flip_totals</td><td><span class="pill pill-resolved">RESOLVED</span></td><td>FLIP TOTALS idea (Jun 14) — already resolved, no action.</td></tr>
-    <tr><td>nba_reaudit</td><td><span class="pill pill-notdue">NOT DUE</span></td><td>NBA constants re-audit with full logging infrastructure — re-check after Nov 10.</td></tr>
-    <tr><td>era_trap_fip_bonus</td><td><span class="pill pill-notdue">NOT DUE</span></td><td>ERA-trap FIP vs xFIP question — both buckets need ~100 picks; re-check after Sep 1.</td></tr>
-  </table>
-</div>
-<div style="font-size:11px;color:#64748b;margin:-4px 0 16px">No decisions are due this week — nothing for you to reply to. Next check-in: same time next week.</div>
-
-<h2>Governors</h2>
-<div class="card">
-  <div class="gov-item"><span class="k">Active CLV gates:</span> MLB Total (avg -2.06%, n=431), NBA Total (avg -2.19%, n=32)</div>
-  <div class="gov-item"><span class="k">Calibration phases (beyond 0):</span> MLB Moneyline A, MLB Spread A, MLB Total A, WNBA Moneyline A</div>
-  <div class="gov-item"><span class="k">MLB credibility caps:</span> overall 0.10, moneyline 0.10, spread 0.10, total 0.10, prop 0.15</div>
-</div>
-<div style="font-size:11px;color:#64748b;margin:-4px 0 16px">Both gates are budget-routing only (display/watchlist untouched) and self-heal automatically as CLV recovers — no action needed. Unchanged from the baseline run earlier today.</div>
-
-<div class="footer">
-  Generated 2026-07-07 UTC &nbsp;&middot;&nbsp; <a href="/index_spa.html">&larr; Back to Picks</a>
-</div>
-</body>
-</html>
+<div style="color:#64748b;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:18px 0 8px;">Checkpoints</div>
+<div style="background:#1a1d27;border-radius:8px;padding:9px 12px;margin-bottom:6px;"><div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#38bdf8;font-size:0.76rem;font-weight:600;">package_health</span><span style="color:#94a3b8;font-size:0.72rem;text-align:right;">not_due (evaluate after 2026-07-18)</span></div></div><div style="background:#1a1d27;border-radius:8px;padding:9px 12px;margin-bottom:6px;"><div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#38bdf8;font-size:0.76rem;font-weight:600;">ha_zero</span><span style="color:#94a3b8;font-size:0.72rem;text-align:right;">not_due (evaluate after 2026-07-18)</span></div></div><div style="background:#1a1d27;border-radius:8px;padding:9px 12px;margin-bottom:6px;"><div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#38bdf8;font-size:0.76rem;font-weight:600;">rlsig_30</span><span style="color:#94a3b8;font-size:0.72rem;text-align:right;">not_due (evaluate after 2026-07-18)</span></div></div><div style="background:#1a1d27;border-radius:8px;padding:9px 12px;margin-bottom:6px;"><div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#38bdf8;font-size:0.76rem;font-weight:600;">pattern_card</span><span style="color:#94a3b8;font-size:0.72rem;text-align:right;">not_due (evaluate after 2026-07-18)</span></div></div><div style="background:#1a1d27;border-radius:8px;padding:9px 12px;margin-bottom:6px;"><div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#38bdf8;font-size:0.76rem;font-weight:600;">flip_totals</span><span style="color:#94a3b8;font-size:0.72rem;text-align:right;">resolved</span></div></div><div style="background:#1a1d27;border-radius:8px;padding:9px 12px;margin-bottom:6px;"><div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#38bdf8;font-size:0.76rem;font-weight:600;">nba_reaudit</span><span style="color:#94a3b8;font-size:0.72rem;text-align:right;">not_due (evaluate after 2026-11-10)</span></div></div><div style="background:#1a1d27;border-radius:8px;padding:9px 12px;margin-bottom:6px;"><div style="display:flex;justify-content:space-between;gap:10px;"><span style="color:#38bdf8;font-size:0.76rem;font-weight:600;">era_trap_fip_bonus</span><span style="color:#94a3b8;font-size:0.72rem;text-align:right;">not_due (evaluate after 2026-09-01)</span></div></div>
+<div style="color:#64748b;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:18px 0 8px;">Governors & Logs</div>
+<div style="background:#1a1d27;border-radius:8px;padding:10px 12px;color:#94a3b8;font-size:0.74rem;line-height:1.6;">CLV gates: MLB Total (avg -0.0206, n=434), NBA Total (avg -0.0219, n=32) · Phases: MLB Moneyline=A, MLB Spread=A, MLB Total=A, WNBA Moneyline=A · Logs: decision(3d)=386 settled=98.0% clv_cov=99.8%</div>
+<div style="color:#64748b;font-size:0.66rem;text-align:center;margin:22px 0 8px;">
+Generated automatically (deterministic) · <a href="/System/index_spa.html" style="color:#38bdf8;">← Back to Picks</a></div>
+</div></body></html>

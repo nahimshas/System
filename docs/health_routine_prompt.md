@@ -1,10 +1,17 @@
 # Weekly Model Health Routine — canonical prompt
 
-> Paste this into a Claude Code scheduled routine (suggested: Sundays 8:00 AM PT,
-> name `model-health-weekly`). Attach the `nahimshas/System` repository in the
-> routine's repository selector — pushes fail with 403 without it.
-> Replace `<GITHUB_TOKEN>` with the real token when pasting; the placeholder
-> never leaves this file.
+> ⚠️ SUPERSEDED FOR PUBLISHING (Jul 7 2026): the `.github/workflows/health_report.yml`
+> workflow now runs the health scripts, publishes docs/health_latest.html +
+> health_history.json, and sends the notification on ACTION_NEEDED — every
+> Sunday 8am PT, on GitHub's runners, with no routine dependency. This happened
+> because the platform revoked all write access from routine sandboxes (prompt
+> secrets are redacted; git/MCP/HTTP writes are policy-blocked).
+>
+> The Claude routine is now OPTIONAL: keep it only if you want a narrative
+> interpretation on top of the deterministic page (its output can only be an
+> in-app artifact — it cannot publish anywhere). It is safe to disable/delete
+> the routine entirely; nothing depends on it. If kept, remove Steps 3–4
+> (publish/notify) — they will always fail — and end after the interpretation.
 
 ---
 

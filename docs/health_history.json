@@ -1,34 +1,22 @@
-[
-  {
-    "date": "2026-07-07",
-    "status": "ALL_NORMAL",
-    "headline": "Bankroll ok, no checkpoint decisions due, promoted pattern 3-0 well clear of demote threshold. Baseline run.",
-    "checkpoint_verdicts": {
-      "package_health": "not_due",
-      "ha_zero": "not_due",
-      "rlsig_30": "not_due",
-      "pattern_card": "not_due",
-      "era_trap_fip_bonus": "not_due"
-    },
-    "budget_clv_pct": -0.43,
-    "promoted_record": "3-0",
-    "bankroll_drift": 0.0
-  },
-  {
-    "date": "2026-07-07",
-    "status": "ALL_NORMAL",
-    "headline": "Follow-up check after registry hardening: same CLV gates (MLB Total, NBA Total) and no alerts as the baseline run; checkpoint list grew by 2 (flip_totals resolved, nba_reaudit not due) with no behavior change.",
-    "checkpoint_verdicts": {
-      "package_health": "not_due",
-      "ha_zero": "not_due",
-      "rlsig_30": "not_due",
-      "pattern_card": "not_due",
-      "flip_totals": "resolved",
-      "nba_reaudit": "not_due",
-      "era_trap_fip_bonus": "not_due"
-    },
-    "budget_clv_pct": -0.43,
-    "promoted_record": "3-0",
-    "bankroll_drift": 0.0
-  }
-]
+{
+  "entries": [
+    {
+      "date": "2026-07-07",
+      "status": "ALL_NORMAL",
+      "headline": "Bankroll ok, logs alive, no checkpoint decisions due.",
+      "checkpoint_verdicts": {
+        "package_health": "not_due (evaluate after 2026-07-18)",
+        "ha_zero": "not_due (evaluate after 2026-07-18)",
+        "rlsig_30": "not_due (evaluate after 2026-07-18)",
+        "pattern_card": "not_due (evaluate after 2026-07-18)",
+        "flip_totals": "resolved",
+        "nba_reaudit": "not_due (evaluate after 2026-11-10)",
+        "era_trap_fip_bonus": "not_due (evaluate after 2026-09-01)"
+      },
+      "budget_clv_pct": -0.82,
+      "promoted_record": "4-1",
+      "bankroll_drift": 0.0,
+      "generated_by": "workflow"
+    }
+  ]
+}
