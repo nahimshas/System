@@ -103,6 +103,59 @@ def _pnl_str(v):
     return f"{'+' if v >= 0 else '-'}${abs(v):.2f}"
 
 
+def _fetch_narratives(sports, date_str):
+    """Game narratives from ESPN scoreboard headlines — the deterministic
+    replacement for the retired routine's WebSearch recaps. Returns
+    {sport: [(event_name_lower, headline), ...]}. Fully non-fatal."""
+    try:
+        from src.data.outcome_checker import ESPN_BASE, ESPN_SPORT_PATHS, ESPN_WATCHLIST_PATHS
+        paths = {**ESPN_SPORT_PATHS, **ESPN_WATCHLIST_PATHS}
+    except Exception:
+        return {}
+    d = _date.fromisoformat(date_str)
+    out = {}
+    for sport in sports:
+        path = paths.get(sport)
+        if not path:
+            continue
+        # Soccer is UTC-dated on ESPN — evening Pacific games roll to the next date.
+        ds = (f"{d.strftime('%Y%m%d')}-{(d + timedelta(days=1)).strftime('%Y%m%d')}"
+              if sport in ("MLS", "WC") else d.strftime("%Y%m%d"))
+        try:
+            r = requests.get(f"{ESPN_BASE}/{path}/scoreboard",
+                             params={"dates": ds}, timeout=15)
+            r.raise_for_status()
+            rows = []
+            for ev in r.json().get("events", []):
+                comps = ev.get("competitions", [])
+                heads = comps[0].get("headlines", []) if comps else []
+                if heads:
+                    text = heads[0].get("shortLinkText") or heads[0].get("description") or ""
+                    if text:
+                        rows.append(((ev.get("name") or "").lower(), text.strip()))
+            out[sport] = rows
+        except Exception:
+            continue
+    return out
+
+
+def _narrative_for(pick, narratives):
+    """Match a pick's teams against ESPN event names; return the headline."""
+    rows = narratives.get(pick.get("sport", ""), [])
+    home = (pick.get("home_team") or "").lower()
+    away = (pick.get("away_team") or "").lower()
+    if not rows or not (home or away):
+        return None
+    def toks(s):
+        return {t for t in re.split(r"[^a-z0-9]+", s) if len(t) > 2}
+    ht, at = toks(home), toks(away)
+    for name, headline in rows:
+        nt = toks(name)
+        if (ht & nt or not ht) and (at & nt or not at) and (ht & nt or at & nt):
+            return headline if headline.endswith((".", "!", "?")) else headline + "."
+    return None
+
+
 def _why(pick_meta, canon):
     lead = canon[0] if canon else "Model Projection"
     raw = ""
