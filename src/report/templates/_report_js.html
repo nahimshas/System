@@ -1004,13 +1004,30 @@
   }
 
   // ── Find the ESPN event matching a bet card ──────────────────────────────
-  function findEvent(allEvents, homeTeam, awayTeam) {
+  function findEvent(allEvents, homeTeam, awayTeam, commenceTime) {
+    // Doubleheader-safe (Jul 8 2026): the same two teams can play twice in one
+    // day. Collect ALL team matches, then — when the card supplies its
+    // commence time — return the game starting closest to it. Without a
+    // commence time, fall back to the first match (old behaviour).
+    var matches = [];
     for (var i = 0; i < allEvents.length; i++) {
       var ev = allEvents[i];
-      if (teamMatch(ev.home, homeTeam) && teamMatch(ev.away, awayTeam)) return ev;
-      if (teamMatch(ev.home, awayTeam) && teamMatch(ev.away, homeTeam)) return ev; // flipped
+      if ((teamMatch(ev.home, homeTeam) && teamMatch(ev.away, awayTeam)) ||
+          (teamMatch(ev.home, awayTeam) && teamMatch(ev.away, homeTeam))) {
+        matches.push(ev);
+      }
     }
-    return null;
+    if (!matches.length) return null;
+    if (matches.length === 1 || !commenceTime) return matches[0];
+    var target = Date.parse(commenceTime);
+    if (isNaN(target)) return matches[0];
+    var best = matches[0], bestGap = Infinity;
+    for (var m = 0; m < matches.length; m++) {
+      var evT = Date.parse(matches[m].date || "");
+      var gap = isNaN(evT) ? Infinity : Math.abs(evT - target);
+      if (gap < bestGap) { best = matches[m]; bestGap = gap; }
+    }
+    return best;
   }
 
   // ── Apply live state to a parlay card ───────────────────────────────────
