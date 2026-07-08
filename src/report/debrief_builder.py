@@ -301,6 +301,24 @@ def build(today=None):
     if won + lost == 0:
         print(f"nothing settled yet for {date} — not publishing (morning run will cover)")
         return
+
+    # Never downgrade: if an already-published entry for this date has MORE
+    # settled picks than this rebuild (e.g. the 11:45 retry ran during an ESPN
+    # outage and games came back PENDING), keep the better version.
+    try:
+        prev = json.loads(HISTORY.read_text())
+        for e in prev.get("entries", []):
+            if e.get("date") == date:
+                prev_settled = sum(1 for p in e.get("picks", [])
+                                   if p.get("result") in ("WON", "LOST", "PUSH"))
+                new_settled = sum(1 for p in picks_out
+                                  if p.get("result") in ("WON", "LOST", "PUSH"))
+                if new_settled < prev_settled:
+                    print(f"rebuild knows less than published entry "
+                          f"({new_settled} vs {prev_settled} settled) — keeping existing")
+                    return
+    except Exception:
+        pass
     budget_pnl = round(sum((profit if r == "WON" else -cost if r == "LOST" else 0.0)
                            for r, profit, cost in budget_results), 2)
     avg_clv = round(sum(budget_clvs) / len(budget_clvs), 2) if budget_clvs else None
