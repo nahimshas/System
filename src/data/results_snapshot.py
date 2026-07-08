@@ -143,14 +143,37 @@ def _within_hours(iso_a: str, iso_b: str, hours: float = 8.0) -> bool:
         return True
 
 
+def _time_delta_hours(iso_a: str, iso_b: str):
+    """Absolute hour gap between two ISO timestamps; None if unparseable."""
+    if not iso_a or not iso_b:
+        return None
+    try:
+        a = datetime.fromisoformat(iso_a.replace("Z", "+00:00"))
+        b = datetime.fromisoformat(iso_b.replace("Z", "+00:00"))
+        return abs((a - b).total_seconds()) / 3600.0
+    except Exception:
+        return None
+
+
 def _find_event(events: list, home_team: str, away_team: str, commence_time: str):
-    """Find the event matching a pick's teams AND start time (8h guard)."""
+    """Find the event matching a pick's teams AND start time.
+
+    DOUBLEHEADER-SAFE (fixed Jul 8 2026): the same two teams can play twice in
+    one day ~5h apart, both inside the old first-match-within-8h rule — which
+    graded the Jul 7 Cardinals G2 pick against G1's score. Among team matches,
+    prefer the event CLOSEST in start time to the pick's commence_time."""
+    best, best_gap = None, None
     for e in events:
         if (_names_match(home_team, e["home_name"]) and _names_match(away_team, e["away_name"])) or \
            (_names_match(home_team, e["away_name"]) and _names_match(away_team, e["home_name"])):
-            if _within_hours(e["event_date"], commence_time):
-                return e
-    return None
+            if not _within_hours(e["event_date"], commence_time):
+                continue
+            gap = _time_delta_hours(e["event_date"], commence_time)
+            if gap is None:
+                gap = 8.0   # unparseable → worst acceptable, real timestamps win
+            if best is None or gap < best_gap:
+                best, best_gap = e, gap
+    return best
 
 
 def _resolve(sport: str, pick: str, bet_type: str, home_team: str, away_team: str,
