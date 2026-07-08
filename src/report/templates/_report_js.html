@@ -1053,8 +1053,9 @@
       var sport     = legEl.getAttribute("data-sport")     || "";
       var modelProb = parseFloat(legEl.getAttribute("data-model-prob") || "50") / 100;
       var scoreEl   = legEl.querySelector(".leg-score-live");
+      var legCT     = legEl.getAttribute("data-commence-time") || "";
 
-      var ev = (homeTeam || awayTeam) ? findEvent(allEvents, homeTeam, awayTeam) : null;
+      var ev = (homeTeam || awayTeam) ? findEvent(allEvents, homeTeam, awayTeam, legCT) : null;
 
       // Pre-game or not yet in ESPN feed — use model probability
       if (!ev || ev.stateId === "1") {
