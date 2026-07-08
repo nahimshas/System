@@ -482,7 +482,8 @@ async function runCron(env) {
 
       const gamePicks = picks.filter(p =>
         p.espnEventId === espnId ||
-        (!p.espnEventId && gameMatchesPick(event, p.homeTeam, p.awayTeam))
+        (!p.espnEventId && gameMatchesPick(event, p.homeTeam, p.awayTeam) &&
+         eventTimeMatchesPick(event, p))
       );
       if (!gamePicks.length) continue;
 
