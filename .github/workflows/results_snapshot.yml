@@ -58,10 +58,16 @@ jobs:
         # Publishes docs/debrief_latest.html + docs/debrief_history.json from the
         # fresh snapshot — no LLM required. The Claude routine lost all write
         # access (platform redacts prompt secrets + blocks sandbox writes), so
-        # this is the path that keeps the PWA debrief + Signal Scorecard +
-        # push notification (notify_debrief.yml fires on the HTML push) alive.
+        # this is the path that keeps the PWA debrief + Signal Scorecard alive.
         # Skips (exit 0) when nothing has settled yet.
-        run: python -m src.report.debrief_builder
+        id: debrief
+        run: |
+          python -m src.report.debrief_builder | tee /tmp/debrief_out.txt
+          if grep -q "debrief built" /tmp/debrief_out.txt; then
+            echo "built=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "built=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit snapshot
         run: |
