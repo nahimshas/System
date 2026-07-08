@@ -21,7 +21,14 @@ on:
     # no longer reliably push the .snapshot_trigger. This cron guarantees the
     # snapshot + CLV capture run nightly regardless of the routine's health.
     # 05:45 UTC = 10:45 PM PDT (9:45 PM PST in winter — still after most games).
+    #
+    # Second cron (added Jul 8): GitHub delays/skips scheduled runs under load
+    # (Jul 7's 05:45 cron started 07:59 — 2h14m late). The 06:45 retry makes a
+    # severely-delayed or skipped first run a 1-hour delay instead of a no-show.
+    # Both passes are idempotent (snapshot re-resolves, CLV skips stamped rows,
+    # debrief republish is deduped, notification is deduped by KV key).
     - cron: '45 5 * * *'
+    - cron: '45 6 * * *'
 
 permissions:
   contents: write
