@@ -77,3 +77,52 @@ jobs:
           git diff --cached --quiet || git commit -m "Results snapshot: $(date -u +'%Y-%m-%d %H:%M UTC')"
           git pull --rebase
           git push
+
+      - name: Debrief push notification
+        # Sent from THIS workflow because pushes made with the built-in
+        # GITHUB_TOKEN do not trigger other workflows (GitHub anti-recursion) —
+        # notify_debrief.yml never fires for our own push. Dedupe: skips if
+        # today's key already exists, so re-runs/republishes ping only once.
+        if: steps.debrief.outputs.built == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          PICKS_KV_NAMESPACE: "673db77b785c4b4b8fd4d8b9d545b490"
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, urllib.request, urllib.parse, datetime
+          try:
+              from zoneinfo import ZoneInfo
+              today = datetime.datetime.now(ZoneInfo('America/Los_Angeles')).date().isoformat()
+          except Exception:
+              today = datetime.date.today().isoformat()
+          token = os.environ.get('CLOUDFLARE_API_TOKEN', '')
+          acct  = os.environ.get('CLOUDFLARE_ACCOUNT_ID', '').strip()
+          ns    = os.environ.get('PICKS_KV_NAMESPACE', '')
+          if not token or not acct or not ns:
+              print('Missing Cloudflare credentials — skipping')
+              raise SystemExit(0)
+          key = urllib.parse.quote(f'debrief_notify:{today}', safe='')
+          url = (f'https://api.cloudflare.com/client/v4/accounts/{acct}'
+                 f'/storage/kv/namespaces/{ns}/values/{key}')
+          try:
+              chk = urllib.request.Request(url, headers={'Authorization': f'Bearer {token}'})
+              with urllib.request.urlopen(chk, timeout=15) as r:
+                  existing = json.loads(r.read())
+              if isinstance(existing, dict) and 'title' in existing:
+                  print(f'debrief_notify:{today} already exists — skipping duplicate')
+                  raise SystemExit(0)
+          except SystemExit:
+              raise
+          except Exception:
+              pass
+          payload = {'title': '\U0001f4ca Nightly Debrief ready',
+                     'body': "Today's picks analyzed — tap to review",
+                     'url': '/debrief_latest.html', 'notified': False}
+          req = urllib.request.Request(url, data=json.dumps(payload).encode(),
+              headers={'Authorization': f'Bearer {token}',
+                       'Content-Type': 'application/json'}, method='PUT')
+          with urllib.request.urlopen(req, timeout=15) as r:
+              print(json.loads(r.read()))
+          print(f'debrief_notify:{today} written — worker fires within ~1 min')
+          PYEOF
