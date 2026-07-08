@@ -534,14 +534,35 @@ def _team_token_overlap_match(query: str, key: str) -> bool:
     return matched >= 2
 
 
+def _pick_closest_variant(entry: Dict, commence_time: str) -> Dict:
+    """Doubleheader disambiguation: when an entry carries "_alts" (the same
+    teams played more than once that day), return the variant whose ESPN start
+    time is closest to the pick's commence_time. Without a commence_time (or
+    parseable dates) the primary entry is returned unchanged."""
+    alts = entry.get("_alts")
+    if not alts or not commence_time:
+        return entry
+    def gap(e):
+        try:
+            a = datetime.fromisoformat((e.get("event_date") or "").replace("Z", "+00:00"))
+            b = datetime.fromisoformat(commence_time.replace("Z", "+00:00"))
+            return abs((a - b).total_seconds())
+        except Exception:
+            return float("inf")
+    return min([entry] + alts, key=gap)
+
+
 def _find_game_score(
     scores: Dict,
     home_team: str,
     away_team: str,
+    commence_time: str = "",
 ) -> Optional[Dict]:
     """
     Match a pick's home/away team pair against ESPN score data.
     Returns the score entry or None if not found / not yet final.
+    When commence_time is provided and the teams played a doubleheader,
+    the game closest in start time is returned.
     """
     if not scores:
         return None
@@ -550,11 +571,11 @@ def _find_game_score(
     for query in [home_team.lower(), away_team.lower()]:
         entry = scores.get(query)
         if entry:
-            return entry
+            return _pick_closest_variant(entry, commence_time)
         # Partial match: check if query is a substring of any key
         for key, val in scores.items():
             if query and (query in key or key in query):
-                return val
+                return _pick_closest_variant(val, commence_time)
 
     # Token-overlap fallback — handles reordered / singular-vs-plural names
     # (e.g. ESPN "Red Bull New York" ↔ Odds API "New York Red Bulls").
@@ -563,7 +584,7 @@ def _find_game_score(
             continue
         for key, val in scores.items():
             if _team_token_overlap_match(query, key):
-                return val
+                return _pick_closest_variant(val, commence_time)
 
     return None
 
