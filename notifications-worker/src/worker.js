@@ -289,6 +289,18 @@ function gameMatchesPick(event, homeTeam, awayTeam) {
   return names.some(n => hits(n, hn)) && names.some(n => hits(n, an));
 }
 
+// Doubleheader guard (Jul 8 2026): same teams can play twice in one day
+// (~5h apart). When a pick carries its commence time, only bind it to an
+// event starting within 2.5h of it — so each half of a doubleheader gets
+// the right game. Picks without a commence time keep the old behaviour.
+function eventTimeMatchesPick(event, pick) {
+  if (!pick?.commenceTime || !event?.date) return true;
+  const evT = Date.parse(event.date);
+  const pkT = Date.parse(pick.commenceTime);
+  if (isNaN(evT) || isNaN(pkT)) return true;
+  return Math.abs(evT - pkT) <= 2.5 * 3600 * 1000;
+}
+
 function gameScores(event) {
   let home = 0, away = 0;
   for (const c of (event.competitions?.[0]?.competitors || [])) {

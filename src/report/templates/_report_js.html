@@ -1279,7 +1279,7 @@
       if (_seenGames[_gameKey]) continue;
       _seenGames[_gameKey] = true;
       var lev = (lgl.home_team || lgl.away_team)
-                ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
+                ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "", lgl.commence_time || "")
                 : null;
       if (!lev || lev.stateId === "1") {
         // Pre-game: show local start time with timezone
@@ -1376,7 +1376,7 @@
     if (!homeTeam && !awayTeam) return;
     if (betType === "Parlay" || betType === "Prop") return;
 
-    var ev = findEvent(allEvents, homeTeam, awayTeam);
+    var ev = findEvent(allEvents, homeTeam, awayTeam, card.getAttribute("data-commence-time") || "");
     if (!ev) {
       // ESPN's fifa.world feed omits some matchups (friendlies / qualifiers the
       // Odds API still lists under the World Cup). Without an event there's no
@@ -1539,7 +1539,7 @@
           var legPick   = leg.pick      || "";
           var legSport  = leg.sport     || "";
           var legModel  = (leg.model_prob_pct || 50) / 100;
-          var legEv     = (legHT || legAT) ? findEvent(allEvents, legHT, legAT) : null;
+          var legEv     = (legHT || legAT) ? findEvent(allEvents, legHT, legAT, leg.commence_time || "") : null;
 
           if (!legEv || legEv.stateId === "1") {
             // Pre-game — use model probability
@@ -1580,7 +1580,7 @@
           if (_seenGames[_gameKey]) continue;
           _seenGames[_gameKey] = true;
           var lev = (lgl.home_team || lgl.away_team)
-                    ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
+                    ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "", lgl.commence_time || "")
                     : null;
           if (!lev || lev.stateId === "1") {
             // Pre-game: show local start time if available
@@ -1638,7 +1638,7 @@
 
       if (!homeTeam && !awayTeam) return;
 
-      var ev = findEvent(allEvents, homeTeam, awayTeam);
+      var ev = findEvent(allEvents, homeTeam, awayTeam, row.getAttribute("data-commence-time") || "");
       if (!ev) return;
 
       var ourTeam  = (betType === "Moneyline" || betType === "Spread") ? pick : homeTeam;
@@ -2729,7 +2729,7 @@
 
       if (!liveDiv || !player || !propType) return;
 
-      var ev = findEvent(allEvents, homeTeam, awayTeam);
+      var ev = findEvent(allEvents, homeTeam, awayTeam, card.getAttribute("data-commence-time") || "");
       if (!ev) return;
 
       // Pre-game delay / postponement — show ⏸ badge even though game hasn't started
