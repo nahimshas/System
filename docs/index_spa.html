@@ -3111,7 +3111,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">July 08, 2026 at 02:33 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">July 08, 2026 at 02:51 PM PDT</div>
         </div>
         
       </div>
@@ -5130,6 +5130,7 @@ function toggleCtx(el) {
 
     return {
       id: event.id || "",
+      date: event.date || "",
       home: homeName, away: awayName,
       homeAbbr: homeAbbr, awayAbbr: awayAbbr,
       homeLogo: homeLogo, awayLogo: awayLogo,
@@ -5147,13 +5148,30 @@ function toggleCtx(el) {
   }
 
   // ── Find the ESPN event matching a bet card ──────────────────────────────
-  function findEvent(allEvents, homeTeam, awayTeam) {
+  function findEvent(allEvents, homeTeam, awayTeam, commenceTime) {
+    // Doubleheader-safe (Jul 8 2026): the same two teams can play twice in one
+    // day. Collect ALL team matches, then — when the card supplies its
+    // commence time — return the game starting closest to it. Without a
+    // commence time, fall back to the first match (old behaviour).
+    var matches = [];
     for (var i = 0; i < allEvents.length; i++) {
       var ev = allEvents[i];
-      if (teamMatch(ev.home, homeTeam) && teamMatch(ev.away, awayTeam)) return ev;
-      if (teamMatch(ev.home, awayTeam) && teamMatch(ev.away, homeTeam)) return ev; // flipped
+      if ((teamMatch(ev.home, homeTeam) && teamMatch(ev.away, awayTeam)) ||
+          (teamMatch(ev.home, awayTeam) && teamMatch(ev.away, homeTeam))) {
+        matches.push(ev);
+      }
     }
-    return null;
+    if (!matches.length) return null;
+    if (matches.length === 1 || !commenceTime) return matches[0];
+    var target = Date.parse(commenceTime);
+    if (isNaN(target)) return matches[0];
+    var best = matches[0], bestGap = Infinity;
+    for (var m = 0; m < matches.length; m++) {
+      var evT = Date.parse(matches[m].date || "");
+      var gap = isNaN(evT) ? Infinity : Math.abs(evT - target);
+      if (gap < bestGap) { best = matches[m]; bestGap = gap; }
+    }
+    return best;
   }
 
   // ── Apply live state to a parlay card ───────────────────────────────────
@@ -5179,8 +5197,9 @@ function toggleCtx(el) {
       var sport     = legEl.getAttribute("data-sport")     || "";
       var modelProb = parseFloat(legEl.getAttribute("data-model-prob") || "50") / 100;
       var scoreEl   = legEl.querySelector(".leg-score-live");
+      var legCT     = legEl.getAttribute("data-commence-time") || "";
 
-      var ev = (homeTeam || awayTeam) ? findEvent(allEvents, homeTeam, awayTeam) : null;
+      var ev = (homeTeam || awayTeam) ? findEvent(allEvents, homeTeam, awayTeam, legCT) : null;
 
       // Pre-game or not yet in ESPN feed — use model probability
       if (!ev || ev.stateId === "1") {
@@ -5359,7 +5378,7 @@ function toggleCtx(el) {
       var legPick  = leg.pick      || "";
       var legSport = leg.sport     || "";
       var legModel = (leg.model_prob_pct || 50) / 100;
-      var legEv    = (legHT || legAT) ? findEvent(allEvents, legHT, legAT) : null;
+      var legEv    = (legHT || legAT) ? findEvent(allEvents, legHT, legAT, leg.commence_time || "") : null;
 
       if (!legEv || legEv.stateId === "1") {
         combined *= legModel;
@@ -5404,7 +5423,7 @@ function toggleCtx(el) {
       if (_seenGames[_gameKey]) continue;
       _seenGames[_gameKey] = true;
       var lev = (lgl.home_team || lgl.away_team)
-                ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
+                ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "", lgl.commence_time || "")
                 : null;
       if (!lev || lev.stateId === "1") {
         // Pre-game: show local start time with timezone
@@ -5501,7 +5520,7 @@ function toggleCtx(el) {
     if (!homeTeam && !awayTeam) return;
     if (betType === "Parlay" || betType === "Prop") return;
 
-    var ev = findEvent(allEvents, homeTeam, awayTeam);
+    var ev = findEvent(allEvents, homeTeam, awayTeam, card.getAttribute("data-commence-time") || "");
     if (!ev) {
       // ESPN's fifa.world feed omits some matchups (friendlies / qualifiers the
       // Odds API still lists under the World Cup). Without an event there's no
@@ -5664,7 +5683,7 @@ function toggleCtx(el) {
           var legPick   = leg.pick      || "";
           var legSport  = leg.sport     || "";
           var legModel  = (leg.model_prob_pct || 50) / 100;
-          var legEv     = (legHT || legAT) ? findEvent(allEvents, legHT, legAT) : null;
+          var legEv     = (legHT || legAT) ? findEvent(allEvents, legHT, legAT, leg.commence_time || "") : null;
 
           if (!legEv || legEv.stateId === "1") {
             // Pre-game — use model probability
@@ -5705,7 +5724,7 @@ function toggleCtx(el) {
           if (_seenGames[_gameKey]) continue;
           _seenGames[_gameKey] = true;
           var lev = (lgl.home_team || lgl.away_team)
-                    ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "")
+                    ? findEvent(allEvents, lgl.home_team || "", lgl.away_team || "", lgl.commence_time || "")
                     : null;
           if (!lev || lev.stateId === "1") {
             // Pre-game: show local start time if available
@@ -5763,7 +5782,7 @@ function toggleCtx(el) {
 
       if (!homeTeam && !awayTeam) return;
 
-      var ev = findEvent(allEvents, homeTeam, awayTeam);
+      var ev = findEvent(allEvents, homeTeam, awayTeam, row.getAttribute("data-commence-time") || "");
       if (!ev) return;
 
       var ourTeam  = (betType === "Moneyline" || betType === "Spread") ? pick : homeTeam;
@@ -6854,7 +6873,7 @@ function toggleCtx(el) {
 
       if (!liveDiv || !player || !propType) return;
 
-      var ev = findEvent(allEvents, homeTeam, awayTeam);
+      var ev = findEvent(allEvents, homeTeam, awayTeam, card.getAttribute("data-commence-time") || "");
       if (!ev) return;
 
       // Pre-game delay / postponement — show ⏸ badge even though game hasn't started
