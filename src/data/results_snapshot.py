@@ -299,8 +299,21 @@ def main() -> int:
 
     # Update rolling bankroll from today's settled singles AND parlays.
     # P&L compounds day-over-day: tomorrow's budget = today's bankroll ± results.
+    # IDEMPOTENT PER DATE: the workflow runs on two nightly crons (10:45pm +
+    # 11:45pm retry), and without a guard the second pass would apply the same
+    # night's P&L twice. The save note records the applied date — if it already
+    # names tonight's picks_date, skip. (The morning ledger reconciliation
+    # would self-heal a double-apply anyway, but it should never occur.)
     try:
-        from src.state.bankroll import load_bankroll, save_bankroll
+        from src.state.bankroll import load_bankroll, save_bankroll, BANKROLL_PATH
+        _already = False
+        try:
+            _prev_note = json.loads(BANKROLL_PATH.read_text()).get("note", "")
+            _already = f"After {picks_date}" in _prev_note
+        except Exception:
+            pass
+        if _already:
+            raise RuntimeError(f"already applied for {picks_date} (retry pass) — skipping")
         bankroll = load_bankroll()
         pnl = 0.0
         settled_count = 0
