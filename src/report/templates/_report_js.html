@@ -1234,7 +1234,7 @@
       var legPick  = leg.pick      || "";
       var legSport = leg.sport     || "";
       var legModel = (leg.model_prob_pct || 50) / 100;
-      var legEv    = (legHT || legAT) ? findEvent(allEvents, legHT, legAT) : null;
+      var legEv    = (legHT || legAT) ? findEvent(allEvents, legHT, legAT, leg.commence_time || "") : null;
 
       if (!legEv || legEv.stateId === "1") {
         combined *= legModel;
