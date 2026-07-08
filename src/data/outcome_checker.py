@@ -118,6 +118,7 @@ def check_and_settle(today: date) -> int:
             score_cache.get(sport, {}),
             pick.get("home_team", ""),
             pick.get("away_team", ""),
+            commence_time=pick.get("commence_time", ""),
         )
         if not score_data:
             if _is_postponed(pick.get("home_team", ""), pick.get("away_team", ""),
