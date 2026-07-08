@@ -427,14 +427,24 @@ def _fetch_espn_final_scores(sport: str, game_date: date) -> Dict:
             "away_abbr":  away_abbr,
             "home_score": home_score,
             "away_score": away_score,
+            "event_date": event.get("date", ""),
         }
-        # Index by both name variants for flexible lookup
-        scores[home_name.lower()] = entry
-        scores[away_name.lower()] = entry
-        if home_abbr:
-            scores[home_abbr.lower()] = entry
-        if away_abbr:
-            scores[away_abbr.lower()] = entry
+        # Index by both name variants for flexible lookup.
+        # DOUBLEHEADER-SAFE (Jul 8 2026): the same key can already hold the
+        # day's OTHER game between these teams — chain it in "_alts" instead of
+        # silently overwriting, so _find_game_score can pick by start time.
+        # (Jul 7 bit us: both Cardinals picks graded against whichever game
+        # ESPN listed last.)
+        for k in {home_name.lower(), away_name.lower(),
+                  home_abbr.lower() if home_abbr else "",
+                  away_abbr.lower() if away_abbr else ""}:
+            if not k:
+                continue
+            prev = scores.get(k)
+            if prev is not None and prev is not entry:
+                entry.setdefault("_alts", []).extend([p for p in [prev] + prev.get("_alts", [])
+                                                      if p is not entry and p not in entry.get("_alts", [])])
+            scores[k] = entry
 
     logger.debug(f"ESPN {sport} {game_date}: {len(scores)//4} completed game(s) found")
     return scores
