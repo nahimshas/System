@@ -10,6 +10,9 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Write debrief_notify key to Cloudflare KV
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -64,6 +67,7 @@ jobs:
               'body':     "Today's picks analyzed — tap to review",
               'url':      '/debrief_latest.html',
               'notified': False,
+              'debrief_date': debrief_date,
           }
 
           req = urllib.request.Request(
