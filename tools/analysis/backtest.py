@@ -210,9 +210,10 @@ def simulate(overrides: dict = None, since: str = "0000-00-00",
             ae = _cap(1 - phc, mac, P["CRED"]) - mac
             h_promo = P["PROMO"] and line > 0 and (hs - as_) > 0.1
             a_promo = P["PROMO"] and line < 0 and (as_ - hs) > 0.1
-            if he >= P["MINE"]:
+            _bypass = P.get("PROMO_BYPASS", False)
+            if he >= P["MINE"] or (_bypass and h_promo and he > 0):
                 cands.append((he, sh, h_promo))
-            if ae >= P["MINE"]:
+            if ae >= P["MINE"] or (_bypass and a_promo and ae > 0):
                 cands.append((ae, sa, a_promo))
 
         for edge, row, promo in cands:
