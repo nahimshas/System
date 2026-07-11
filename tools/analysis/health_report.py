@@ -21,6 +21,7 @@ import argparse
 import glob
 import json
 import os
+import re
 from datetime import date, timedelta
 
 from tools.analysis import backtest
@@ -182,7 +183,7 @@ CLV_COVERAGE_MIN = 40.0       # % of settled entries carrying CLV (14d window)
 def compute_alerts(report):
     alerts = []
     b = report["bankroll"]
-    if not b.get("ok"):
+    if not b.get("ok"):   # in_transit overnight P&L sets ok=True — no alert
         alerts.append(f"bankroll drift: ${b.get('drift')} vs ledger — investigate before next sizing run")
     p7 = report["budget_performance"].get("last_7d", {})
     if p7 and p7.get("pnl") is not None and p7["pnl"] < DRAWDOWN_ALERT_7D:
