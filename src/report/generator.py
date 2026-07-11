@@ -370,17 +370,19 @@ def build_report(
         # since BUDGET_MIN_EDGE (5%) diverged the budget from the display top-5,
         # counting pins against the cap let 5 locked budget picks evict every
         # display-only pick on evening re-renders — the promoted-but-sub-floor
-        # Padres pick vanished from the MLB tab mid-game. The tab now always
-        # shows the top MAX_SINGLE_BETS display picks PLUS any locked budget
-        # picks that aren't already among them.
-        _n_pinned = len(out)
+        # Padres pick vanished from the MLB tab mid-game. The tab is now the
+        # UNION of (top MAX_SINGLE_BETS display picks) + (locked budget picks):
+        # identical to before on days the lists coincide, and never evicts a
+        # top-5 display pick when they diverge.
+        _rank = 0
         for s in sorted(
             [s for s in _display if s.get("sport") == sport and _pwa_show(s)],
             key=lambda r: (0 if r["confidence"] == "HIGH" else 1,
                            -r.get("effective_edge", r["edge"]),
                            -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
         ):
-            if len(out) - _n_pinned >= MAX_SINGLE_BETS:
+            _rank += 1
+            if _rank > MAX_SINGLE_BETS:
                 break
             k = (s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
             if k not in seen:
