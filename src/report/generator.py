@@ -362,16 +362,25 @@ def build_report(
             if k not in seen:
                 seen.add(k)
                 out.append(s)
-        # 2. Fill remaining slots with display pool (sorted by confidence + effective edge).
+        # 2. Fill with display pool (sorted by confidence + effective edge).
         # Uses effective_edge (calibration-adjusted) for consistency with slot selection —
         # a MEDIUM MLB ML at 15% raw edge is only ~13% effective (MLB ratio ≈ 0.87).
+        #
+        # Locked budget pins DON'T count against the display cap (Jul 10 2026):
+        # since BUDGET_MIN_EDGE (5%) diverged the budget from the display top-5,
+        # counting pins against the cap let 5 locked budget picks evict every
+        # display-only pick on evening re-renders — the promoted-but-sub-floor
+        # Padres pick vanished from the MLB tab mid-game. The tab now always
+        # shows the top MAX_SINGLE_BETS display picks PLUS any locked budget
+        # picks that aren't already among them.
+        _n_pinned = len(out)
         for s in sorted(
             [s for s in _display if s.get("sport") == sport and _pwa_show(s)],
             key=lambda r: (0 if r["confidence"] == "HIGH" else 1,
                            -r.get("effective_edge", r["edge"]),
                            -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
         ):
-            if len(out) >= MAX_SINGLE_BETS:
+            if len(out) - _n_pinned >= MAX_SINGLE_BETS:
                 break
             k = (s.get("home_team", ""), s.get("away_team", ""), s.get("bet_type", ""))
             if k not in seen:
