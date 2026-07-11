@@ -60,6 +60,20 @@
       "status": "open"
     },
     {
+      "id": "promo_bypass_floor",
+      "title": "Candidate: promoted pattern picks bypass the 5% budget edge floor",
+      "created": "2026-07-10",
+      "evaluate_after": "2026-07-18",
+      "data_window_start": "2026-07-05",
+      "type": "backtest_variant",
+      "overrides": {"PROMO_BYPASS": true},
+      "rules": {"min_picks": 40, "pass_if_roi_delta_gt": 0.0},
+      "rationale": "Design tension surfaced Jul 10 (user-observed live case): SD Padres +1.5 was a promoted dog-with-better-starter pick at 4.8% edge - ranked 3rd on the MLB tab (confidence-first) but vetoed from the budget by BUDGET_MIN_EDGE=0.05; its replacement (Royals +1.5, 6.1% generic spread) lost while the Padres pick led. The promotion's qualification is the PATTERN, not the edge size - if the pattern validates at the package_health checkpoint, sub-floor promoted picks may be exactly the bets the floor should not veto. This variant lets promoted picks with any positive edge enter the budget.",
+      "on_pass": "Ship: budget routing admits promoted (dog_better_starter) picks with edge > 0 regardless of BUDGET_MIN_EDGE (implement in main.py budget filter; stamp behavior into decision log features).",
+      "on_fail": "Keep the floor absolute; promoted picks below 5% stay display-only.",
+      "status": "open"
+    },
+    {
       "id": "flip_totals",
       "title": "FLIP TOTALS idea (Jun 14) — bet the opposite of the model's totals pick",
       "created": "2026-06-14",
