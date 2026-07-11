@@ -46,17 +46,32 @@ def _shadow_entries():
 
 
 def check_bankroll():
-    """Drift between bankroll.json and the history.json ledger."""
+    """Drift between bankroll.json and the history.json ledger.
+
+    OVERNIGHT WINDOW (fixed Jul 10 2026, first health alert was this false
+    positive): the nightly snapshot applies a night's P&L to bankroll.json
+    hours before the morning run settles that date into history.json — so
+    between ~10:45pm and ~9am the two legitimately disagree by one night's
+    P&L. If the bankroll note says "After <date>" and <date> has no ledger
+    entries yet, the gap is in-transit, not drift."""
     out = {"name": "bankroll_integrity"}
     try:
-        br = _load("state/bankroll.json")["bankroll"]
+        bj = _load("state/bankroll.json")
+        br = bj["bankroll"]
         hist = _load("state/history.json")
         pnl = sum(float(e.get("actual_pnl", 0) or 0)
                   for e in hist if e.get("result") in ("WON", "LOST", "PUSH"))
         correct = max(10.0, round(100.0 + pnl, 2))
-        out.update(bankroll=br, ledger_value=correct,
-                   drift=round(br - correct, 2),
-                   ok=abs(br - correct) < 0.01)
+        drift = round(br - correct, 2)
+        in_transit = False
+        m = re.search(r"After (\d{4}-\d{2}-\d{2})", bj.get("note", ""))
+        if m and drift != 0:
+            applied_date = m.group(1)
+            if not any(e.get("date") == applied_date for e in hist):
+                in_transit = True
+        out.update(bankroll=br, ledger_value=correct, drift=drift,
+                   in_transit=in_transit,
+                   ok=abs(drift) < 0.01 or in_transit)
     except Exception as e:
         out.update(ok=False, error=str(e))
     return out
