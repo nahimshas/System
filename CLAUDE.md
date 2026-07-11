@@ -84,7 +84,8 @@ Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_ga
 | `tools/analysis/backtest.py` | **Canonical backtest engine** — reconstructs MLB probs from decision-log features, sims daily budget selection at realistic 4.5% vig. `--set KEY=VAL` variants, `--pattern-only`. ⚠️ Its `LIVE` dict must match shipped constants (guarded by `tests/test_backtest_live_sync.py`). NEVER rebuild backtests in scratchpads — use/extend this. |
 | `tools/analysis/health_report.py` | Read-only health checks + automatic checkpoint evaluation + deterministic alerts (drawdown, log liveness, bankroll drift). Run any time: `python3 -m tools.analysis.health_report` |
 | `tools/analysis/checkpoints.json` | **Pre-registered model-change evaluations** with explicit pass/fail rules + dates. ⚠️ RULE: every model change ships with a checkpoint entry here; resolved ones get `status`+`resolution`, never deleted. |
-| `docs/health_routine_prompt.md` | Canonical prompt for the weekly `model-health-weekly` Claude routine (Sundays 8am PT — publishes docs/health_latest.html, notifies only on ACTION NEEDED, never implements changes) |
+| `src/report/debrief_builder.py` | Deterministic nightly debrief page (docs/debrief_latest.html + debrief_history.json) built from the results snapshot inside `results_snapshot.yml` — verdict templates, canonical-signal regex map, ESPN-headline narratives, no-downgrade guard. The Claude routines are PAUSED (lost write access Jul 2026); workflows are the entire automation surface. |
+| `docs/health_routine_prompt.md` | Canonical prompt for the (PAUSED) weekly Claude routine — publishing now lives in `.github/workflows/health_report.yml` (Sundays 8am PT + external cron) |
 | `docs/DEVELOPMENT_PLAN.md` | Feature roadmap + model change log |
 
 ---
