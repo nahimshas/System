@@ -51,6 +51,8 @@ LIVE = dict(
     RDCAP=1.8,    # MLB_RUN_DIFF_CAP
     KPEN=True,    # K-matchup penalty on
     PROMO=True,   # dog-with-better-starter HIGH promotion
+    PROMO_BYPASS=False,   # promoted picks ignore the MINE budget floor (candidate rule,
+                          # not shipped — see checkpoints.json promo_bypass_floor)
 )
 
 
