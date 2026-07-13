@@ -110,7 +110,13 @@ def _fetch_events(sport: str, game_date: date) -> list:
             if ok90:
                 home_score, away_score = h90, a90
             else:
-                completed = False
+                # WC scoreboard omits linescores — try the summary endpoint
+                from src.data.outcome_checker import _summary_90min_scores
+                _s90 = _summary_90min_scores(path, event.get("id", ""))
+                if _s90 is not None:
+                    home_score, away_score = _s90
+                else:
+                    completed = False
 
         entries.append({
             "home_name":  home.get("team", {}).get("displayName", ""),
