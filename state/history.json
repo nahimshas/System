@@ -11846,5 +11846,141 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-07-12",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Philadelphia Phillies @ Detroit Tigers",
+    "bet_type": "Moneyline",
+    "pick": "Detroit Tigers",
+    "home_team": "Detroit Tigers",
+    "away_team": "Philadelphia Phillies",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 64.1,
+    "market_prob_pct": 54.1,
+    "cost": 8.97,
+    "profit_if_win": 7.03,
+    "result": "LOST",
+    "actual_pnl": -8.97,
+    "actual_home_score": 0.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-07-12",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Arizona Diamondbacks @ Los Angeles Dodgers",
+    "bet_type": "Spread",
+    "pick": "Arizona Diamondbacks +1.5",
+    "home_team": "Los Angeles Dodgers",
+    "away_team": "Arizona Diamondbacks",
+    "edge_pct": 9.1,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 58.5,
+    "market_prob_pct": 49.4,
+    "cost": 7.71,
+    "profit_if_win": 7.29,
+    "result": "WON",
+    "actual_pnl": 7.29,
+    "actual_home_score": 3.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-07-12",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Boston Red Sox @ New York Mets",
+    "bet_type": "Spread",
+    "pick": "New York Mets +1.5",
+    "home_team": "New York Mets",
+    "away_team": "Boston Red Sox",
+    "edge_pct": 7.6,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 68.4,
+    "market_prob_pct": 60.8,
+    "cost": 7.54,
+    "profit_if_win": 4.46,
+    "result": "WON",
+    "actual_pnl": 4.46,
+    "actual_home_score": 2.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-07-12",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Cleveland Guardians @ Miami Marlins",
+    "bet_type": "Spread",
+    "pick": "Miami Marlins +1.5",
+    "home_team": "Miami Marlins",
+    "away_team": "Cleveland Guardians",
+    "edge_pct": 6.1,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 69.1,
+    "market_prob_pct": 63.0,
+    "cost": 5.85,
+    "profit_if_win": 3.15,
+    "result": "LOST",
+    "actual_pnl": -5.85,
+    "actual_home_score": 2.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-07-12",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Mets +1.5 + Detroit Tigers (ML)",
+    "bet_type": "Parlay",
+    "pick": "New York Mets +1.5 + Detroit Tigers (ML)",
+    "edge_pct": 9.4,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 42.3,
+    "market_prob_pct": 0,
+    "cost": 2.79,
+    "profit_if_win": 5.21,
+    "result": "LOST",
+    "actual_pnl": -2.79,
+    "legs": [
+      {
+        "game": "Boston Red Sox @ New York Mets",
+        "pick": "New York Mets +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Philadelphia Phillies @ Detroit Tigers",
+        "pick": "Detroit Tigers",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-12",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Miami Marlins +1.5 + Arizona Diamondbacks +1.5",
+    "bet_type": "Parlay",
+    "pick": "Miami Marlins +1.5 + Arizona Diamondbacks +1.5",
+    "edge_pct": 8.2,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 39.4,
+    "market_prob_pct": 0,
+    "cost": 2.32,
+    "profit_if_win": 4.68,
+    "result": "LOST",
+    "actual_pnl": -2.32,
+    "legs": [
+      {
+        "game": "Cleveland Guardians @ Miami Marlins",
+        "pick": "Miami Marlins +1.5",
+        "result": "LOST"
+      },
+      {
+        "game": "Arizona Diamondbacks @ Los Angeles Dodgers",
+        "pick": "Arizona Diamondbacks +1.5",
+        "result": "WON"
+      }
+    ]
   }
 ]
