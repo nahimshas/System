@@ -1385,6 +1385,35 @@ def _soccer_90min_scores(comp: Dict, home_comp: Dict, away_comp: Dict):
     return h90, a90, True
 
 
+def _summary_90min_scores(league_path: str, event_id: str):
+    """Recover a soccer game's 90-minute score from ESPN's per-event SUMMARY
+    endpoint. The World Cup SCOREBOARD feed omits linescores entirely (learned
+    Jul 13 2026 — six R16 ET/pens games sat unsettled), but the summary
+    endpoint carries per-period linescores (displayValue only). Returns
+    (home_90, away_90) or None. Fail-open: any error → None → pick stays
+    PENDING for manual review."""
+    try:
+        r = requests.get(f"{ESPN_BASE}/{league_path}/summary",
+                         params={"event": event_id}, timeout=15)
+        r.raise_for_status()
+        comp = (r.json().get("header", {}).get("competitions") or [{}])[0]
+        out = {}
+        for c in comp.get("competitors", []):
+            ls = c.get("linescores") or []
+            if len(ls) < 2:
+                return None
+            total = 0.0
+            for x in ls[:2]:
+                v = x.get("value", x.get("displayValue"))
+                total += float(v or 0)
+            out[c.get("homeAway")] = total
+        if "home" in out and "away" in out:
+            return out["home"], out["away"]
+    except Exception as e:
+        logger.warning(f"summary 90' fetch failed for event {event_id}: {e}")
+    return None
+
+
 def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
     """
     Fetch completed game scores for watchlist sports (NHL, IPL) from ESPN.
