@@ -1463,11 +1463,19 @@ def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
         if sport in _SOCCER_90MIN_SPORTS:
             home_score, away_score, _ok = _soccer_90min_scores(comp, home_comp, away_comp)
             if not _ok:
-                logger.warning(
-                    f"{sport} {home_name} vs {away_name}: went past regulation but 90' "
-                    f"linescores unavailable — leaving unsettled (manual review)"
-                )
-                continue
+                # Scoreboard had no half-by-half data (WC feed omits linescores)
+                # — try the per-event summary endpoint before giving up.
+                _s90 = _summary_90min_scores(path, event.get("id", ""))
+                if _s90 is not None:
+                    home_score, away_score = _s90
+                    logger.info(f"{sport} {home_name} vs {away_name}: 90' score "
+                                f"recovered from summary endpoint ({away_score:.0f}-{home_score:.0f})")
+                else:
+                    logger.warning(
+                        f"{sport} {home_name} vs {away_name}: went past regulation but 90' "
+                        f"linescores unavailable — leaving unsettled (manual review)"
+                    )
+                    continue
         else:
             home_score = _parse_score_str(home_comp.get("score", 0))
             away_score = _parse_score_str(away_comp.get("score", 0))
