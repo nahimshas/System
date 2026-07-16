@@ -3961,10 +3961,18 @@ def analyze_mls_game(
             model_away_sp, market_away_sp, _cred_cap("mls", MLS_CRED_CAP, "credibility_spread"), "mls", "credibility_spread"
         )
         away_point = -home_point
-        for pick_str, model_p, market_p, raw_p, cap_fired in [
+        # Bettable-line guard (Jul 16 2026, user rule): Robinhood only offers
+        # soccer spreads at half-goal lines of magnitude >= 1.5 (plus ML/Draw).
+        # The odds-API consensus averages book points into Asian/quarter lines
+        # (+0.0, +0.2, +1.2, +1.25) that CANNOT be placed — displaying them
+        # produced unbettable cards (Whitecaps +0.0, Timbers +1.2). Only emit
+        # spread recs when the line is a real half-goal line >= 1.5.
+        _sp_bettable = (abs(home_point) >= 1.5
+                        and float(round(abs(home_point) * 2, 6)).is_integer())
+        for pick_str, model_p, market_p, raw_p, cap_fired in ([
             (f"{home_raw} {home_point:+.1f}", model_home_sp, market_home_sp, _mls_sp_raw_home, _mls_sp_cred_home),
             (f"{away_raw} {away_point:+.1f}", model_away_sp, market_away_sp, _mls_sp_raw_away, _mls_sp_cred_away),
-        ]:
+        ] if _sp_bettable else []):
             r = _make_rec(pick_str, "Spread", model_p, market_p)
             if r:
                 r.model_prob_raw = raw_p
