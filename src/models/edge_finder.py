@@ -255,6 +255,9 @@ def _apply_credibility_cap_dispatched(
 
 # Totals model helpers
 _NBA_INJ_TO_PTS    = 75.0  # converts win-prob injury_adj → expected pts reduction in totals
+_WNBA_INJ_TO_PTS   = 28.0  # WNBA lineup penalty (prob units) → projected-score pts
+                           # (margin-consistent: WNBA margin σ≈11 → 1% win prob ≈ 0.28 pts;
+                           # capped at 6 pts. Display-only — used in the projected score line.)
 _TOTAL_MARKET_ANCHOR = 0.40  # 40% weight toward market line — was 0.20; raised to neutralise
                              # the systematic upward (Over) projection bias measured in MLB totals
                              # (model "Over 66%" realised ~39%). The market total line is essentially
