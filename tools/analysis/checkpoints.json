@@ -1,5 +1,5 @@
 {
-  "_readme": "Pre-registered model-change evaluations. Each checkpoint has an explicit pass/fail rule and an evaluate_after date. The weekly health routine (docs/health_routine_prompt.md) evaluates these via tools/analysis/health_report.py and reports status — it NEVER implements changes itself. Add a checkpoint here whenever a model change ships or a candidate tweak is queued; mark resolved ones with status + resolution instead of deleting them.",
+  "_readme": "Pre-registered model-change evaluations. Each checkpoint has an explicit pass/fail rule and an evaluate_after date. The weekly health routine (docs/health_routine_prompt.md) evaluates these via tools/analysis/health_report.py and reports status \u2014 it NEVER implements changes itself. Add a checkpoint here whenever a model change ships or a candidate tweak is queued; mark resolved ones with status + resolution instead of deleting them.",
   "checkpoints": [
     {
       "id": "package_health",
@@ -14,7 +14,7 @@
         "promoted_wr_demote_pct": 55.0,
         "min_promoted_n": 25
       },
-      "on_pass": "Package confirmed — keep all Jul 4 constants and the promotion.",
+      "on_pass": "Package confirmed \u2014 keep all Jul 4 constants and the promotion.",
       "on_fail": "If budget CLV < 0 persistently or promoted wr <= demote threshold: demote the dog_better_starter promotion and re-run the constants backtest on the fresh window.",
       "status": "open"
     },
@@ -25,9 +25,14 @@
       "evaluate_after": "2026-07-18",
       "data_window_start": "2026-07-05",
       "type": "backtest_variant",
-      "overrides": {"HA": 0.0},
-      "rules": {"min_picks": 40, "pass_if_roi_delta_gt": 0.0},
-      "rationale": "Market prices home advantage; adding it double-counts (same mechanism as the refuted injury adjustment). Survived June split-half (+5.0/+4.2pp vs shipped) but is a second-generation tweak mined from June data — this out-of-sample window is its honest test.",
+      "overrides": {
+        "HA": 0.0
+      },
+      "rules": {
+        "min_picks": 40,
+        "pass_if_roi_delta_gt": 0.0
+      },
+      "rationale": "Market prices home advantage; adding it double-counts (same mechanism as the refuted injury adjustment). Survived June split-half (+5.0/+4.2pp vs shipped) but is a second-generation tweak mined from June data \u2014 this out-of-sample window is its honest test.",
       "on_pass": "Ship MLB_HOME_ADVANTAGE = 0.0 (src/config/mlb.py).",
       "on_fail": "Discard; keep 0.015.",
       "status": "open"
@@ -39,8 +44,13 @@
       "evaluate_after": "2026-07-18",
       "data_window_start": "2026-07-05",
       "type": "backtest_variant",
-      "overrides": {"RLSIG": 3.0},
-      "rules": {"min_picks": 40, "pass_if_roi_delta_gt": 0.0},
+      "overrides": {
+        "RLSIG": 3.0
+      },
+      "rules": {
+        "min_picks": 40,
+        "pass_if_roi_delta_gt": 0.0
+      },
       "rationale": "Empirical MLB final-margin SD ~3.1; 3.5 over-flattens run-line probabilities. Survived June split-half (+5.6/+7.2pp) but same second-generation caveat as ha_zero.",
       "on_pass": "Ship MLB_RUNLINE_SIGMA = 3.0 (src/models/edge_finder.py).",
       "on_fail": "Discard; keep 3.5.",
@@ -53,7 +63,10 @@
       "evaluate_after": "2026-07-18",
       "data_window_start": "2026-06-13",
       "type": "backtest_pattern_only",
-      "rules": {"min_picks": 60, "pass_if_roi_gt": 0.0},
+      "rules": {
+        "min_picks": 60,
+        "pass_if_roi_gt": 0.0
+      },
       "rationale": "No constants combo makes a forced full 5-pick MLB slate profitable at 4.5% friction; the profitable pockets are the promoted pattern and large edges. Budget = promoted picks + edges >= 0.08, variable card size.",
       "on_pass": "Propose to user as budget policy (display/watchlist unchanged): budget accepts only promoted picks and edges >= 0.08; skip thin days.",
       "on_fail": "Keep the current 5-pick card with the 0.05 floor.",
@@ -66,8 +79,13 @@
       "evaluate_after": "2026-07-18",
       "data_window_start": "2026-07-05",
       "type": "backtest_variant",
-      "overrides": {"PROMO_BYPASS": true},
-      "rules": {"min_picks": 40, "pass_if_roi_delta_gt": 0.0},
+      "overrides": {
+        "PROMO_BYPASS": true
+      },
+      "rules": {
+        "min_picks": 40,
+        "pass_if_roi_delta_gt": 0.0
+      },
       "rationale": "Design tension surfaced Jul 10 (user-observed live case): SD Padres +1.5 was a promoted dog-with-better-starter pick at 4.8% edge - ranked 3rd on the MLB tab (confidence-first) but vetoed from the budget by BUDGET_MIN_EDGE=0.05; its replacement (Royals +1.5, 6.1% generic spread) lost while the Padres pick led. The promotion's qualification is the PATTERN, not the edge size - if the pattern validates at the package_health checkpoint, sub-floor promoted picks may be exactly the bets the floor should not veto. This variant lets promoted picks with any positive edge enter the budget.",
       "on_pass": "Ship: budget routing admits promoted (dog_better_starter) picks with edge > 0 regardless of BUDGET_MIN_EDGE (implement in main.py budget filter; stamp behavior into decision log features).",
       "on_fail": "Keep the floor absolute; promoted picks below 5% stay display-only.",
@@ -75,13 +93,13 @@
     },
     {
       "id": "flip_totals",
-      "title": "FLIP TOTALS idea (Jun 14) — bet the opposite of the model's totals pick",
+      "title": "FLIP TOTALS idea (Jun 14) \u2014 bet the opposite of the model's totals pick",
       "created": "2026-06-14",
       "evaluate_after": "2026-07-05",
       "type": "note",
       "rationale": "Original idea: fade the model's totals picks (+5.3% ROI backtested pre-fix). Deferred because the Jun 13 source fix (league_avg_runs 4.5->4.35) could change the bias direction.",
       "status": "resolved",
-      "resolution": "RESOLVED Jul 6 2026: the Jul 2 input-by-input analysis answered the deciding question — the source fix OVERSHOT. The model now has an UNDER bias (~99% of made totals are Unders, projected total avg 1.7 runs below the line, CLV still -2.1%). Flipping is NOT validated in either direction (unders still WIN 52.5% — they lose on price, not direction; and pre-fix flip evidence was for fading OVERS which barely exist now). Decision: totals stay CLV-gated out of the budget; the real fix is the run-expectation level (league_avg_runs / xFIP deflation / _TOTAL_MARKET_ANCHOR) — a candidate for a future registered checkpoint if totals are ever worth un-gating."
+      "resolution": "RESOLVED Jul 6 2026: the Jul 2 input-by-input analysis answered the deciding question \u2014 the source fix OVERSHOT. The model now has an UNDER bias (~99% of made totals are Unders, projected total avg 1.7 runs below the line, CLV still -2.1%). Flipping is NOT validated in either direction (unders still WIN 52.5% \u2014 they lose on price, not direction; and pre-fix flip evidence was for fading OVERS which barely exist now). Decision: totals stay CLV-gated out of the budget; the real fix is the run-expectation level (league_avg_runs / xFIP deflation / _TOTAL_MARKET_ANCHOR) \u2014 a candidate for a future registered checkpoint if totals are ever worth un-gating."
     },
     {
       "id": "nba_reaudit",
@@ -90,8 +108,10 @@
       "evaluate_after": "2026-11-10",
       "data_window_start": "2026-10-20",
       "type": "note",
-      "rules": {"min_games_logged": 100},
-      "rationale": "NBA was the historical profit engine (+21.7% ROI in-season) but its constants have NEVER been audited with the decision-log infrastructure (no logged model inputs existed before Jun 13 2026 — NBA season ended Jun 13). When NBA returns (~late Oct), the decision log will capture full features from day one. After ~2-3 weeks of games: run the same reconstruction sweep MLB got Jul 3-4 (tools/analysis/backtest.py needs an NBA variant — reconstruct from NBA features), validate rating-edge weights, rest/B2B, injury handling (NBA injury adjustment is position-only — the MLB value-weighting fix was never ported), and credibility cap. Also verify the hot-streak question: was +21.7% real edge or variance? CLV data will now answer it.",
+      "rules": {
+        "min_games_logged": 100
+      },
+      "rationale": "NBA was the historical profit engine (+21.7% ROI in-season) but its constants have NEVER been audited with the decision-log infrastructure (no logged model inputs existed before Jun 13 2026 \u2014 NBA season ended Jun 13). When NBA returns (~late Oct), the decision log will capture full features from day one. After ~2-3 weeks of games: run the same reconstruction sweep MLB got Jul 3-4 (tools/analysis/backtest.py needs an NBA variant \u2014 reconstruct from NBA features), validate rating-edge weights, rest/B2B, injury handling (NBA injury adjustment is position-only \u2014 the MLB value-weighting fix was never ported), and credibility cap. Also verify the hot-streak question: was +21.7% real edge or variance? CLV data will now answer it. EXECUTION NOTE (Jul 15): run this audit with dynamic workflows + adversarial review (user pre-approved \u2014 parallel sweep segments, independent agent attacks the methodology for overfit/look-ahead/vig errors before conclusions are presented). Also suggest the user runs /code-review ultra on whatever package ships from it.",
       "status": "open"
     },
     {
@@ -101,8 +121,10 @@
       "evaluate_after": "2026-09-01",
       "data_window_start": "2026-06-14",
       "type": "note",
-      "rules": {"min_n_per_bucket": 100},
-      "rationale": "FIP-blend hypothesis REFUTED Jul 5 (backing FIP-xFIP>1.0 starters is the BEST segment: 58.1% wr, +6.6% ROI, n=105 — never blend FIP into the quality score). Residual: within own-starter ERA-xFIP>1.0 picks, HR-driven gaps ran worse than sequencing-driven (52.3%/-4.4% vs 58.1%/+5.0%) at n=43 — re-test when both buckets reach ~100.",
+      "rules": {
+        "min_n_per_bucket": 100
+      },
+      "rationale": "FIP-blend hypothesis REFUTED Jul 5 (backing FIP-xFIP>1.0 starters is the BEST segment: 58.1% wr, +6.6% ROI, n=105 \u2014 never blend FIP into the quality score). Residual: within own-starter ERA-xFIP>1.0 picks, HR-driven gaps ran worse than sequencing-driven (52.3%/-4.4% vs 58.1%/+5.0%) at n=43 \u2014 re-test when both buckets reach ~100.",
       "status": "open"
     }
   ]
