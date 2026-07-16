@@ -327,9 +327,13 @@ def build(today=None):
     avg_clv = round(sum(budget_clvs) / len(budget_clvs), 2) if budget_clvs else None
     clv_str = f"{avg_clv:+.2f}%" if avg_clv is not None else "n/a"
 
-    headline = (f"{won}-{lost} on budget ({_pnl_str(budget_pnl)})"
-                + (f", avg CLV {clv_str}" if avg_clv is not None else "")
-                + (f"; {pending} pending" if pending else ""))
+    if won + lost > 0:
+        headline = (f"{won}-{lost} on budget ({_pnl_str(budget_pnl)})"
+                    + (f", avg CLV {clv_str}" if avg_clv is not None else "")
+                    + (f"; {pending} pending" if pending else ""))
+    else:
+        headline = (f"No budget card today — watchlist went {wl_w}-{wl_l}"
+                    + (f"; {pending} budget pick(s) pending" if pending else ""))
 
     # Patterns + per-signal observations (settled budget singles only)
     settled_singles = [p for p in picks_out
