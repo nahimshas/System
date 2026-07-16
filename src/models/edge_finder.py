@@ -4321,6 +4321,8 @@ def analyze_wc_game(
         ]:
             if disp_line == -0.5:
                 continue  # "must win" — identical to ML, skip
+            if abs(disp_line) < 1.5:
+                continue  # unbettable: Robinhood soccer spreads start at ±1.5 (Jul 16 2026)
             r = _make_rec(pick_str, "Spread", model_p, market_p)
             if r:
                 r.model_prob_raw = raw_p
