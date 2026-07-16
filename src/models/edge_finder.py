@@ -3852,7 +3852,11 @@ def analyze_mls_game(
     research.append(
         f"Win probs: H {p_home_win:.1%} | D {p_draw:.1%} | A {p_away_win:.1%}"
     )
-    signals.append(f"xG projection: {lam_home:.2f} – {lam_away:.2f} goals")
+    # "Model projected score:" prefix is load-bearing — the PWA card template
+    # keys the teal expandable projected-score toggle on this exact wording
+    # (same as every other sport; MLS was the last one still saying
+    # "xG projection", which left its cards on the plain "Details" toggle).
+    signals.append(f"Model projected score: {home_raw} {lam_home:.1f} — {away_raw} {lam_away:.1f}")
 
     # Calibration capture: raw 3-way probabilities (pre-cred-cap).
     # No hard cap is applied in MLS (probs come from Poisson matrix and sum to 1),
