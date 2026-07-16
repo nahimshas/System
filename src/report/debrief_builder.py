@@ -298,7 +298,10 @@ def build(today=None):
     won = sum(1 for r, _, _ in budget_results if r == "WON")
     lost = sum(1 for r, _, _ in budget_results if r == "LOST")
     pending = sum(1 for r, _, _ in budget_results if r == "PENDING")
-    if won + lost == 0:
+    # Publish when ANYTHING settled — budget OR watchlist. (Was budget-only,
+    # which silently skipped every watchlist-only night, e.g. the All-Star
+    # break with WNBA/WC games active — user noticed the missing debriefs.)
+    if won + lost == 0 and wl_w + wl_l == 0:
         print(f"nothing settled yet for {date} — not publishing (morning run will cover)")
         return
 
