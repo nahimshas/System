@@ -3472,6 +3472,29 @@ def analyze_wnba_game(
     home_lineup_pen = _lineup_penalty(home, home_raw)
     away_lineup_pen = _lineup_penalty(away, away_raw)
 
+    # ── Projected score (quality/pace-aware, additive offense-vs-defense) ──────
+    # Standard ratings combination: a team's expected output = its offense + the
+    # opponent's points-allowed − league average. This correctly spreads the
+    # projection for tempo/quality mismatches (strong offense vs leaky defense
+    # projects high; vs elite defense projects low) instead of regressing to the
+    # mean like a simple average. Uses the real opp_ppg now available (Tier 1).
+    #
+    # INJURY-AWARE (Jul 15 2026): scoring rates were earned with the full
+    # roster, so the raw projection contradicted the win probability whenever
+    # the lineup penalty was large (Indiana@GSV: card said "Indiana 64% to win"
+    # while projecting GSV by 7 — GSV's 91 assumed their injured scorers
+    # played). Subtract each side's lineup penalty converted to points, same
+    # treatment the NBA analyzer applies (_NBA_INJ_TO_PTS). Display-only:
+    # win probabilities and edges are untouched.
+    _wnba_avg = 82.0
+    _away_def_allowed = away_recent.get("recent_opp_ppg", away_stats.get("opp_ppg", _wnba_avg))
+    _home_def_allowed = home_recent.get("recent_opp_ppg", home_stats.get("opp_ppg", _wnba_avg))
+    _proj_home_pts = max(50.0, min(120.0, home_ppg + _away_def_allowed - _wnba_avg))
+    _proj_away_pts = max(50.0, min(120.0, away_ppg + _home_def_allowed - _wnba_avg))
+    _proj_home_pts -= min(home_lineup_pen * _WNBA_INJ_TO_PTS, 6.0)
+    _proj_away_pts -= min(away_lineup_pen * _WNBA_INJ_TO_PTS, 6.0)
+    signals.append(f"Model projected score: {home_raw} {_proj_home_pts:.0f} — {away_raw} {_proj_away_pts:.0f}")
+
     # Injury research lines
     for key, inj_list in wnba_injuries.items():
         if _name_match(home, key) or _name_match(home_raw, key):
