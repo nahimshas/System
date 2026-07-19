@@ -55,6 +55,25 @@
       "promoted_record": "11-9",
       "bankroll_drift": 0.0,
       "generated_by": "workflow"
+    },
+    {
+      "date": "2026-07-19",
+      "status": "ACTION_NEEDED",
+      "headline": "Bankroll ok, logs alive, no checkpoint decisions due.",
+      "checkpoint_verdicts": {
+        "package_health": "insufficient_data (promoted n=24)",
+        "ha_zero": "FAIL \u2014 Discard; keep 0.015.",
+        "rlsig_30": "FAIL \u2014 Discard; keep 3.5.",
+        "pattern_card": "PASS \u2014 Propose to user as budget policy (display/watchlist unchanged): budget accepts only promoted picks and edges >= 0.08; skip thin days.",
+        "promo_bypass_floor": "FAIL \u2014 Keep the floor absolute; promoted picks below 5% stay display-only.",
+        "flip_totals": "resolved",
+        "nba_reaudit": "not_due (evaluate after 2026-11-10)",
+        "era_trap_fip_bonus": "not_due (evaluate after 2026-09-01)"
+      },
+      "budget_clv_pct": -0.43,
+      "promoted_record": "13-11",
+      "bankroll_drift": 0.84,
+      "generated_by": "workflow"
     }
   ]
 }
