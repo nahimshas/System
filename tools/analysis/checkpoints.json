@@ -5,7 +5,7 @@
       "id": "package_health",
       "title": "Jul 4 optimization package health",
       "created": "2026-07-04",
-      "evaluate_after": "2026-07-18",
+      "evaluate_after": "2026-08-02",
       "data_window_start": "2026-07-05",
       "type": "health",
       "rules": {
@@ -16,7 +16,8 @@
       },
       "on_pass": "Package confirmed \u2014 keep all Jul 4 constants and the promotion.",
       "on_fail": "If budget CLV < 0 persistently or promoted wr <= demote threshold: demote the dog_better_starter promotion and re-run the constants backtest on the fresh window.",
-      "status": "open"
+      "status": "open",
+      "rationale": " Jul 19 eval: FAIL on budget CLV (-0.43%) but promoted wr 56% above demote line; demotion NOT executed (the on_fail clause predates better evidence \u2014 pattern holding, package at -4% vs old -12%). Keep monitoring; re-evaluate Aug 2 with pattern_card."
     },
     {
       "id": "ha_zero",
@@ -35,7 +36,8 @@
       "rationale": "Market prices home advantage; adding it double-counts (same mechanism as the refuted injury adjustment). Survived June split-half (+5.0/+4.2pp vs shipped) but is a second-generation tweak mined from June data \u2014 this out-of-sample window is its honest test.",
       "on_pass": "Ship MLB_HOME_ADVANTAGE = 0.0 (src/config/mlb.py).",
       "on_fail": "Discard; keep 0.015.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "FAILED out-of-sample Jul 19 (see health report): variant worse than live on Jul 5+ window. Discarded per on_fail."
     },
     {
       "id": "rlsig_30",
@@ -54,20 +56,21 @@
       "rationale": "Empirical MLB final-margin SD ~3.1; 3.5 over-flattens run-line probabilities. Survived June split-half (+5.6/+7.2pp) but same second-generation caveat as ha_zero.",
       "on_pass": "Ship MLB_RUNLINE_SIGMA = 3.0 (src/models/edge_finder.py).",
       "on_fail": "Discard; keep 3.5.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "FAILED out-of-sample Jul 19 (see health report): variant worse than live on Jul 5+ window. Discarded per on_fail."
     },
     {
       "id": "pattern_card",
       "title": "Pattern-concentrated card (bet the patterns, skip the rest)",
       "created": "2026-07-04",
-      "evaluate_after": "2026-07-18",
-      "data_window_start": "2026-06-13",
+      "evaluate_after": "2026-08-02",
+      "data_window_start": "2026-07-05",
       "type": "backtest_pattern_only",
       "rules": {
-        "min_picks": 60,
+        "min_picks": 80,
         "pass_if_roi_gt": 0.0
       },
-      "rationale": "No constants combo makes a forced full 5-pick MLB slate profitable at 4.5% friction; the profitable pockets are the promoted pattern and large edges. Budget = promoted picks + edges >= 0.08, variable card size.",
+      "rationale": "No constants combo makes a forced full 5-pick MLB slate profitable at 4.5% friction; the profitable pockets are the promoted pattern and large edges. Budget = promoted picks + edges >= 0.08, variable card size. \u26a0\ufe0f CORRECTED Jul 19: original window (2026-06-13) included the pattern's DISCOVERY data \u2014 the Jul 18 'PASS' (58.5%/+2.1%) was in-sample contamination; the July-only out-of-sample slice was 48.6%/-15.8% (n=37, worse than live). Window reset to Jul 5+, min_picks raised to 80, re-evaluate Aug 2. Lesson: a checkpoint's data window must NEVER include the data that generated the hypothesis.",
       "on_pass": "Propose to user as budget policy (display/watchlist unchanged): budget accepts only promoted picks and edges >= 0.08; skip thin days.",
       "on_fail": "Keep the current 5-pick card with the 0.05 floor.",
       "status": "open"
@@ -89,7 +92,8 @@
       "rationale": "Design tension surfaced Jul 10 (user-observed live case): SD Padres +1.5 was a promoted dog-with-better-starter pick at 4.8% edge - ranked 3rd on the MLB tab (confidence-first) but vetoed from the budget by BUDGET_MIN_EDGE=0.05; its replacement (Royals +1.5, 6.1% generic spread) lost while the Padres pick led. The promotion's qualification is the PATTERN, not the edge size - if the pattern validates at the package_health checkpoint, sub-floor promoted picks may be exactly the bets the floor should not veto. This variant lets promoted picks with any positive edge enter the budget.",
       "on_pass": "Ship: budget routing admits promoted (dog_better_starter) picks with edge > 0 regardless of BUDGET_MIN_EDGE (implement in main.py budget filter; stamp behavior into decision log features).",
       "on_fail": "Keep the floor absolute; promoted picks below 5% stay display-only.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "FAILED out-of-sample Jul 19 (see health report): variant worse than live on Jul 5+ window. Discarded per on_fail."
     },
     {
       "id": "flip_totals",
