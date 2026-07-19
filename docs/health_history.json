@@ -61,7 +61,7 @@
       "status": "ACTION_NEEDED",
       "headline": "Bankroll ok, logs alive, no checkpoint decisions due.",
       "checkpoint_verdicts": {
-        "package_health": "insufficient_data (promoted n=24)",
+        "package_health": "FAIL \u2014 If budget CLV < 0 persistently or promoted wr <= demote threshold: demote the dog_better_starter promotion and re-run the constants backtest on the fresh window.",
         "ha_zero": "FAIL \u2014 Discard; keep 0.015.",
         "rlsig_30": "FAIL \u2014 Discard; keep 3.5.",
         "pattern_card": "PASS \u2014 Propose to user as budget policy (display/watchlist unchanged): budget accepts only promoted picks and edges >= 0.08; skip thin days.",
@@ -71,8 +71,8 @@
         "era_trap_fip_bonus": "not_due (evaluate after 2026-09-01)"
       },
       "budget_clv_pct": -0.43,
-      "promoted_record": "13-11",
-      "bankroll_drift": 0.84,
+      "promoted_record": "14-11",
+      "bankroll_drift": 0.0,
       "generated_by": "workflow"
     }
   ]
