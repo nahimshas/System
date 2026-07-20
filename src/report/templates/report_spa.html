@@ -2823,14 +2823,44 @@ if ('serviceWorker' in navigator) {
 
   // On page load: show all bells and restore states from localStorage
   navigator.serviceWorker.ready.then(function (reg) {
-    reg.pushManager.getSubscription().then(function (sub) {
+    reg.pushManager.getSubscription().then(async function (sub) {
       document.querySelectorAll('.tab-bell-btn').forEach(function (btn) {
         btn.style.display = '';
       });
       if (!sub) {
-        // Not subscribed — clear stale prefs, all bells off
-        savePrefs({});
-        return;
+        // iOS silently revokes PWA push subscriptions (updates, storage
+        // cleanup, home-screen re-add). If permission is still granted and
+        // the user had prefs saved, RE-SUBSCRIBE silently instead of wiping
+        // their bells — this was the "my bells keep turning off" bug (Jul 2026).
+        var savedPrefs = getPrefs();
+        var hadPrefs = Object.keys(savedPrefs).some(function (k) { return savedPrefs[k]; });
+        if (hadPrefs && typeof Notification !== 'undefined' &&
+            Notification.permission === 'granted') {
+          try {
+            sub = await reg.pushManager.subscribe({
+              userVisibleOnly:      true,
+              applicationServerKey: urlB64ToUint8(VAPID_PUBLIC_KEY),
+            });
+            await fetch(WORKER_URL + '/subscribe', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(sub.toJSON()),
+            });
+            await fetch(WORKER_URL + '/update-prefs', {
+              method: 'PUT', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ endpoint: sub.endpoint, prefs: savedPrefs }),
+            });
+            console.log('Push subscription auto-restored after OS revocation');
+          } catch (e) {
+            console.error('Auto-resubscribe failed:', e);
+            savePrefs({});
+            return;
+          }
+        } else {
+          // Genuinely not subscribed (no permission / never enabled) —
+          // clear stale prefs, all bells off
+          savePrefs({});
+          return;
+        }
       }
       // Subscribed — restore each bell from saved prefs
       var prefs = getPrefs();
