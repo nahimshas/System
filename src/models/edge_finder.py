@@ -4366,3 +4366,196 @@ def analyze_wc_game(
         ("Spread", away_raw, _lv.get("model_away_sp"), _lv.get("_wc_sp_raw_away"), _lv.get("market_away_sp"), _lv.get("away_disp_line")),
     ], recs)
     return recs
+
+
+def analyze_ligamx_game(
+    game: Dict,
+    ligamx_ctx: Dict,
+    ligamx_injuries: Dict,
+    min_edge: float = None,
+) -> List[BetRecommendation]:
+    """
+    Elo-driven edge finder for Liga MX (watchlist, no budget).
+
+    No free club-xG feed exists for Liga MX, so strength is Elo (bootstrapped by
+    replaying ~1yr of results, then self-updated). Elo supremacy → Poisson goal
+    expectations → Dixon-Coles scoreline grid → 3-way probabilities.
+
+    Robinhood offers Win / Tie / Don't-Win. This launch produces Win (Moneyline,
+    both sides) and Tie (Draw) — both settle via the existing soccer settler.
+    Don't-Win (double chance = 1 − Win) is a planned fast-follow.
+    """
+    from src.data.ligamx_stats import normalize as lmx_normalize
+    from src.config import (
+        LIGAMX_ELO_DEFAULT, LIGAMX_BASE_TOTAL, LIGAMX_ELO_PER_GOAL,
+        LIGAMX_MAX_SUPREMACY, LIGAMX_DC_RHO, LIGAMX_HOME_ELO_BONUS,
+        LIGAMX_CRED_CAP, LIGAMX_LOWCONF_CAP_FACTOR,
+    )
+
+    _zero_sizing = BetSizing(
+        dollar_allocation=0, num_contracts=0, contract_price=0,
+        total_cost=0, profit_if_win=0, loss_if_lose=0,
+        expected_value=0, kelly_fraction=0,
+    )
+
+    home_raw = game["home_team"]
+    away_raw = game["away_team"]
+    label    = f"{away_raw} @ {home_raw}"
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
+    _min = min_edge if min_edge is not None else MIN_EDGE
+    recs: List[BetRecommendation] = []
+
+    ml = game.get("moneyline")
+    if not ml or "draw_prob" not in ml:
+        return recs  # soccer moneyline must carry 3-way probs
+
+    market_home_prob = ml["home_prob"]
+    market_draw_prob = ml["draw_prob"]
+    market_away_prob = ml["away_prob"]
+
+    elo_map = ligamx_ctx.get("elo", {}) or {}
+    home_key = lmx_normalize(home_raw, elo_map)
+    away_key = lmx_normalize(away_raw, elo_map)
+    r_home = elo_map.get(home_key, LIGAMX_ELO_DEFAULT)
+    r_away = elo_map.get(away_key, LIGAMX_ELO_DEFAULT)
+    home_known = home_key in elo_map
+    away_known = away_key in elo_map
+    stats_available = bool(elo_map) and (home_known or away_known)
+
+    if not home_known:
+        logger.warning(f"Liga MX: unseeded home team '{home_raw}' (canon '{home_key}') — using default Elo")
+    if not away_known:
+        logger.warning(f"Liga MX: unseeded away team '{away_raw}' (canon '{away_key}') — using default Elo")
+
+    signals: List[str] = []
+    research: List[str] = []
+
+    # Home advantage — always applied (real home venues, unlike the neutral WC).
+    home_bonus = LIGAMX_HOME_ELO_BONUS
+    signals.append(f"Home advantage: {home_raw} (+{LIGAMX_HOME_ELO_BONUS:.0f} Elo)")
+
+    # Rest / fatigue differential from the most recent scan window.
+    rest_elo = 0.0
+    last_played = ligamx_ctx.get("last_played", {}) or {}
+    try:
+        from datetime import date as _date_cls
+        _match_date = _date_cls.fromisoformat(commence_time[:10]) if commence_time else None
+    except Exception:
+        _match_date = None
+    if _match_date and last_played:
+        hp = last_played.get(home_key)
+        ap = last_played.get(away_key)
+        if hp and ap:
+            rest_diff = (_match_date - hp).days - (_match_date - ap).days
+            rest_elo = max(-40.0, min(40.0, rest_diff * 8.0))
+            if abs(rest_diff) >= 2:
+                better = home_raw if rest_diff > 0 else away_raw
+                signals.append(f"Rest edge: {better} (+{abs(rest_diff)}d rest → {abs(rest_elo):.0f} Elo)")
+
+    # ── Effective Elo difference → goal supremacy → Poisson lambdas ──────────
+    elo_diff = (r_home + home_bonus) - r_away + rest_elo
+    supremacy = max(-LIGAMX_MAX_SUPREMACY, min(LIGAMX_MAX_SUPREMACY, elo_diff / LIGAMX_ELO_PER_GOAL))
+    base_total = LIGAMX_BASE_TOTAL
+    lam_home = max(0.2, (base_total + supremacy) / 2.0)
+    lam_away = max(0.2, (base_total - supremacy) / 2.0)
+
+    # Low-confidence shrinkage when a side's Elo is a fallback guess.
+    lowconf_factor = LIGAMX_LOWCONF_CAP_FACTOR if not (home_known and away_known) else 1.0
+    lmx_cap = LIGAMX_CRED_CAP * lowconf_factor
+    if lowconf_factor < 1.0:
+        research.append("Low-confidence Elo (unseeded side) — model pulled toward market")
+
+    research.append(f"Elo: {home_raw} {r_home:.0f} vs {away_raw} {r_away:.0f} ({elo_diff:+.0f})")
+    if abs(elo_diff) >= 60:
+        stronger = home_raw if elo_diff > 0 else away_raw
+        signals.append(f"Elo edge: {stronger} ({abs(elo_diff):.0f} pts → {abs(supremacy):.2f} goal supremacy)")
+
+    # Dixon-Coles scoreline grid → 3-way probabilities.
+    matrix = _mls_prob_matrix(lam_home, lam_away, rho=LIGAMX_DC_RHO)
+    p_home_win = sum(v for (i, j), v in matrix.items() if i > j)
+    p_draw     = sum(v for (i, j), v in matrix.items() if i == j)
+    p_away_win = sum(v for (i, j), v in matrix.items() if i < j)
+    total_p = p_home_win + p_draw + p_away_win
+    if total_p > 0:
+        p_home_win /= total_p
+        p_draw     /= total_p
+        p_away_win /= total_p
+
+    research.append(f"Goal projection: {home_raw} {lam_home:.2f} – {away_raw} {lam_away:.2f}")
+    research.append(f"Win probs: H {p_home_win:.1%} | D {p_draw:.1%} | A {p_away_win:.1%}")
+    # "Model projected score:" prefix is load-bearing — the PWA card template
+    # renders any context line with this prefix as the teal headline.
+    signals.append(f"Model projected score: {home_raw} {lam_home:.1f} — {away_raw} {lam_away:.1f}")
+
+    _lmx_raw_home = p_home_win
+    _lmx_raw_away = p_away_win
+
+    # General credibility cap (cold-start safety; auto-relaxed by calibration).
+    p_home_win, _lmx_cred_home = _apply_credibility_cap_dispatched(
+        p_home_win, market_home_prob, _cred_cap("ligamx", lmx_cap, "credibility_moneyline"), "ligamx", "credibility_moneyline"
+    )
+    p_draw, _lmx_cred_draw = _apply_credibility_cap_dispatched(
+        p_draw, market_draw_prob, _cred_cap("ligamx", lmx_cap, "credibility_draw"), "ligamx", "credibility_draw"
+    )
+    p_away_win = 1.0 - p_home_win - p_draw
+    p_away_win, _lmx_cred_away = _apply_credibility_cap_dispatched(
+        p_away_win, market_away_prob, _cred_cap("ligamx", lmx_cap, "credibility_moneyline"), "ligamx", "credibility_moneyline"
+    )
+    _lmx_cred_fired = _lmx_cred_home or _lmx_cred_draw or _lmx_cred_away
+
+    def _make_rec(pick_str, bet_type, model_prob, market_prob):
+        edge = model_prob - market_prob
+        if edge < _min:
+            return None
+        conf = _confidence_label(edge, len(signals), stats_available)
+        return BetRecommendation(
+            sport="LIGAMX", game=label,
+            home_team=home_raw, away_team=away_raw,
+            pick=pick_str, bet_type=bet_type,
+            model_prob=model_prob, market_prob=market_prob, edge=edge,
+            contract_price=market_prob,
+            sizing=_zero_sizing, confidence=conf,
+            signals=signals[:], research=research[:],
+            game_time=game_time, commence_time=commence_time,
+        )
+
+    # Win (Moneyline, both sides) + Tie (Draw). Robinhood's "Don't Win" (double
+    # chance) is a planned fast-follow (needs its own settlement branch).
+    for pick_str, model_p, market_p, raw_p in [
+        (home_raw, p_home_win, market_home_prob, _lmx_raw_home),
+        (away_raw, p_away_win, market_away_prob, _lmx_raw_away),
+        ("Draw",   p_draw,     market_draw_prob, None),
+    ]:
+        bt = "Draw" if pick_str == "Draw" else "Moneyline"
+        r = _make_rec(pick_str, bt, model_p, market_p)
+        if r:
+            if raw_p is not None:
+                r.model_prob_raw = raw_p
+            r.credibility_cap_fired = _lmx_cred_fired
+            recs.append(r)
+
+    # Calibration + decision-log stamping.
+    _lv = locals()
+    _stamp_recs_calibration(
+        recs,
+        game=game,
+        home_team=home_raw, away_team=away_raw,
+        home_raw=_lmx_raw_home, away_raw=_lmx_raw_away,
+        cred_fired=_lmx_cred_fired,
+        hardcap_fired=False,
+        stats_avail=stats_available,
+    )
+    _stamp_decision(game, _min, {
+        "lam_home": lam_home, "lam_away": lam_away,
+        "elo_diff": elo_diff, "supremacy": supremacy,
+        "r_home": r_home, "r_away": r_away,
+        "home_bonus": home_bonus, "rest_elo": rest_elo,
+        "home_known": home_known, "away_known": away_known,
+        "base_total": base_total, "stats_available": stats_available,
+    }, [
+        ("Moneyline", home_raw, _lmx_raw_home, _lmx_raw_home, market_home_prob, None),
+        ("Moneyline", away_raw, _lmx_raw_away, _lmx_raw_away, market_away_prob, None),
+        ("Draw", "draw", p_draw, None, market_draw_prob, None),
+    ], recs)
+    return recs
