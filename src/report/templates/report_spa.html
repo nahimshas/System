@@ -1302,7 +1302,7 @@
       <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
         <div class="signals-title">Watchlist Tracking <span style="font-size:0.68rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">&nbsp;— no budget allocated, W-L only</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          {% for sport_key, badge_class, label in [('NHL', 'badge-nhl', '🏒 NHL'), ('IPL', 'badge-ipl', '🏏 IPL'), ('WNBA', 'badge-wnba', '🏀 WNBA'), ('MLS', 'badge-mls', '⚽ MLS'), ('WC', 'badge-wc', '🌍 WC')] %}
+          {% for sport_key, badge_class, label in [('NHL', 'badge-nhl', '🏒 NHL'), ('IPL', 'badge-ipl', '🏏 IPL'), ('WNBA', 'badge-wnba', '🏀 WNBA'), ('MLS', 'badge-mls', '⚽ MLS'), ('WC', 'badge-wc', '🌍 WC'), ('LIGAMX', 'badge-ligamx', '🇲🇽 Liga MX')] %}
           {% set ws = wl.get(sport_key, {}) %}
           <div id="wl-tile-{{ sport_key }}"
                data-hist-won="{{ ws.won }}"

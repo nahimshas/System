@@ -2078,6 +2078,19 @@
             <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">92 picks tracked</div>
           </div>
           
+          
+          <div id="wl-tile-LIGAMX"
+               data-hist-won="0"
+               data-hist-lost="0"
+               style="flex:1;min-width:130px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.68rem;margin-bottom:6px;"><span class="badge badge-ligamx">🇲🇽 Liga MX</span></div>
+            <div class="wl-record" style="font-size:0.9rem;font-weight:700;color:var(--muted);">
+              0W–0L
+            </div>
+            <div class="wl-picks" style="font-size:0.68rem;color:var(--muted);margin-top:2px;">No picks settled yet</div>
+            
+          </div>
+          
         </div>
       </div>
       
@@ -3240,7 +3253,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">July 20, 2026 at 09:03 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">July 20, 2026 at 09:06 PM PDT</div>
         </div>
         
       </div>
@@ -6072,7 +6085,7 @@ function toggleCtx(el) {
         else if (result === "LOST") wlLive[sport].lost++;
       });
 
-      ["NHL", "IPL", "WNBA", "MLS", "WC"].forEach(function (sp) {
+      ["NHL", "IPL", "WNBA", "MLS", "WC", "LIGAMX"].forEach(function (sp) {
         var lw = wlLive[sp].won;
         var ll = wlLive[sp].lost;
         if (lw + ll === 0) return;   // nothing settled live for this sport

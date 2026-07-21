@@ -1797,7 +1797,7 @@
         else if (result === "LOST") wlLive[sport].lost++;
       });
 
-      ["NHL", "IPL", "WNBA", "MLS", "WC"].forEach(function (sp) {
+      ["NHL", "IPL", "WNBA", "MLS", "WC", "LIGAMX"].forEach(function (sp) {
         var lw = wlLive[sp].won;
         var ll = wlLive[sp].lost;
         if (lw + ll === 0) return;   // nothing settled live for this sport

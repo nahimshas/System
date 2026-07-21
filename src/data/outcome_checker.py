@@ -2014,7 +2014,7 @@ def load_watchlist_performance() -> Dict[str, Dict]:
     """
     records = _load_watchlist_history()
     result: Dict[str, Dict] = {}
-    for sport in ("NHL", "IPL", "WNBA", "MLS", "WC"):
+    for sport in ("NHL", "IPL", "WNBA", "MLS", "WC", "LIGAMX"):
         subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
         # Deduplicate: one entry per (date, game, pick) so that multiple
         # legitimate picks for the same game (ML + spread + total) are all
