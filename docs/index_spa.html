@@ -360,6 +360,7 @@
     .badge-wnba  { background: #f97316; color: #fff; }
     .badge-mls   { background: #14532d; color: #bbf7d0; }
     .badge-wc    { background: #7c2d12; color: #fed7aa; }
+    .badge-ligamx { background: #064e3b; color: #a7f3d0; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .lock-badge { font-size: 0.62rem; color: var(--muted); }
@@ -634,7 +635,7 @@
   </style>
 </head>
 <body>
-<div id="spa-wrap" data-report-date="2026-07-20" data-fresh-odds="true">
+<div id="spa-wrap" data-report-date="2026-07-20" data-fresh-odds="false">
 
 <!-- Header (stats bar) -->
 <div class="app-header">
@@ -720,7 +721,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+9.7%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">Colorado Rockies +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Washington Nationals @ Colorado Rockies</div>
@@ -756,7 +757,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+8.0%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">Chicago Cubs +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Detroit Tigers @ Chicago Cubs</div>
@@ -792,7 +793,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+7.4%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">New York Mets +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">New York Mets @ Milwaukee Brewers</div>
@@ -828,7 +829,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--green);">+7.2%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">Kansas City Royals +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">San Francisco Giants @ Kansas City Royals</div>
@@ -864,7 +865,7 @@
             <span class="badge badge-mlb">MLB</span>
             
             <span class="alloc-edge" style="color:var(--yellow);">+6.0%</span>
-            
+            <span class="lock-badge">🔒</span>
           </div>
           <div class="alloc-pick">Texas Rangers (ML)<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
           <div class="alloc-game short-game">Chicago White Sox @ Texas Rangers</div>
@@ -995,7 +996,7 @@
       <div class="tab-header-text">
         <div class="tab-header-title">⚾ MLB</div>
         <div class="tab-header-sub">
-          5 picks &middot; 6 props
+          6 picks &middot; 6 props
           
         </div>
       </div>
@@ -1030,7 +1031,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
@@ -1077,7 +1078,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
@@ -1124,7 +1125,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
@@ -1171,7 +1172,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-MEDIUM">MEDIUM</span>
     </div>
   </div>
@@ -1218,7 +1219,7 @@
       <div class="card-time"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-MEDIUM">MEDIUM</span>
     </div>
   </div>
@@ -1241,6 +1242,53 @@
 </div>
 
     
+    
+<div class="card budget-single"
+     id="bet-5"
+     data-home-team="Texas Rangers"
+     data-away-team="Chicago White Sox"
+     data-bet-type="Moneyline"
+     data-pick="Texas Rangers"
+     data-sport="MLB"
+     data-cost="5.65"
+     data-profit="3.35"
+     data-confidence="MEDIUM"
+     data-edge-pct="6.0"
+     data-model-prob-pct="66.8"
+     data-market-prob-pct="60.8"
+     data-commence-time="2026-07-21T00:06:00Z"
+     data-game-pk="822874"
+     data-in-budget="true">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Texas Rangers<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
+      <div class="card-game short-game">Chicago White Sox @ Texas Rangers · ML</div>
+      <div class="card-time"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      <span class="lock-badge">🔒</span>
+      <span class="badge badge-conf-MEDIUM">MEDIUM</span>
+    </div>
+  </div>
+  <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bet-5"><span class="ctx-arrow">›</span> Model projected score: Texas Rangers 4.9 — Chicago White Sox 3.8</div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Mkt 60.8% → Model <b style="color:var(--blue)">66.8%</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:36%;background:var(--yellow);"></div></div>
+    <span class="edge-pct yellow">+6.0%</span>
+  </div>
+  
+  <div class="context-body" id="ctx-bet-5">
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model finds a modest edge against Chicago White Sox, driven by a significant ERA trap on Erick Fedde — 4.15 ERA vs 5.03 xFIP in 89 innings suggests regression risk the market hasn't fully priced. Roster watch: Texas Rangers (9.5% of lineup value) — already reflected in the market line. Model projects Texas Rangers by 1.1 runs (Texas Rangers 4.9 — Chicago White Sox 3.8).</div>
+    <div class="context-item">Model projected score: Texas Rangers 4.9 — Chicago White Sox 3.8</div><div class="context-item">Texas Rangers offense: 50W-49L | OPS 0.719 | AVG 0.245 | R/G 4.16</div><div class="context-item">Chicago White Sox offense: 52W-46L | OPS 0.729 | AVG 0.240 | R/G 4.79</div><div class="context-item">Bullpen ERA — Texas Rangers: 5.55 (WHIP 1.52) | Chicago White Sox: 4.34 (WHIP 1.39)</div><div class="context-item">🔵 Jacob deGrom (Texas Rangers) · RHP: ERA 3.49 | FIP 3.5 / xFIP 2.73 | K/9 11.0 | BB/9 2.0 | IP 100</div><div class="context-item">🔴 Erick Fedde (Chicago White Sox) · RHP: ERA 4.15 | FIP 5.22 / xFIP 4.58 | K/9 6.1 | BB/9 3.5 | IP 89</div><div class="context-item">Venue: Globe Life Field — park factor 1.05 (hitter-friendly)</div><div class="context-item">Texas Rangers injury impact (-9.5%)</div><div class="context-item">Chicago White Sox injury impact (-2.0%)</div><div class="context-item">⚕ Texas Rangers — Danny Jansen (C): OUT</div><div class="context-item">⚕ Texas Rangers — Corey Seager (SS): OUT</div><div class="context-item">⚕ Texas Rangers — Jack Leiter (SP): OUT</div><div class="context-item">⚕ Texas Rangers — Cody Freeman (3B): OUT</div><div class="context-item">⚕ Texas Rangers — Chris Martin (RP): OUT</div><div class="context-item">⚕ Texas Rangers — Jalen Beeks (RP): OUT</div><div class="context-item">⚕ Chicago White Sox — Everson Pereira (RF): OUT</div><div class="context-item">⚕ Chicago White Sox — Tyler Gilbert (RP): OUT</div><div class="context-item">⚠ ERA trap [SEVERE] — Erick Fedde: ERA 4.15 vs xFIP 5.03 over 89 IP (severity 0.88) — Chicago White Sox ML may be overpriced by market</div><div class="context-item">Recent form: Texas Rangers 5-5 last 10 | 4.8 R/G vs 4.2 season (↑0.19 run adj)</div>
+    
+    <div style="margin-top:8px;font-size:0.72rem;color:var(--teal);">📋 Slot #5 in Today's Card</div>
+    
+  </div>
+  
+</div>
+
+    
     </details>
     
     
@@ -1250,36 +1298,36 @@
     
 
 <div class="card prop-card"
-     data-home-team="Pittsburgh Pirates"
-     data-away-team="New York Yankees"
+     data-home-team="Chicago White Sox"
+     data-away-team="Texas Rangers"
      data-bet-type="Prop"
      data-sport="MLB"
-     data-player="Bryan Reynolds"
-     data-prop-type="Hits Over"
-     data-model-line="1.14"
+     data-player="Chase Meidroth"
+     data-prop-type="HRR Over"
+     data-model-line="1.83"
      data-confidence="HIGH"
-     data-commence-time="2026-07-20T23:06:00Z"
+     data-commence-time="2026-07-21T00:06:00Z"
      data-market-line="0.5"
      data-edge-pct="15.0">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Bryan Reynolds</div>
-      <div class="card-game short-team">Pittsburgh Pirates vs New York Yankees · Hits Over</div>
+      <div class="card-pick">Chase Meidroth</div>
+      <div class="card-game short-team">Chicago White Sox vs Texas Rangers · HRR Over</div>
       <div class="card-time"></div>
       <div class="live-status prop-live-badge" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bryan-reynolds-hits-over"><span class="ctx-arrow">›</span> Model projects 1.14 hits</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-chase-meidroth-hrr-over"><span class="ctx-arrow">›</span> Model projects 1.83 hrr</div>
   <div class="prop-bar-wrap"
        data-bar-max="8"
        data-market-line="0.5">
     <div class="prop-bar-header">
       <span class="prop-bar-current">—</span>
-      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">71.8%</span></span>
+      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">59.5%</span></span>
     </div>
     <div class="prop-bar-track">
       <div class="prop-bar-fill"></div>
@@ -1288,16 +1336,16 @@
     <div class="prop-bar-scale"><span>0</span><span>8</span></div>
   </div>
   <div class="edge-row">
-    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.14</b></span>
+    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.83</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
     <span class="edge-pct">+15.0%</span>
   </div>
   
   
-  <div class="context-body" id="ctx-bryan-reynolds-hits-over">
-    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 71.8%. Model: 1.14.</div>
-    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Bryan Reynolds at 1.14 Hits vs the line of 0.5 — a strong +0.64 edge.</div>
-    <div class="context-item">Market: Over 0.5 at 71.8% (draftkings)</div><div class="context-item">Model projects 1.14 → edge +15.0%</div><div class="context-item">Game total: model 8.2 vs market 7.5 (high-scoring environment, scale 1.09x)</div><div class="context-item">Bryan Reynolds: AVG 0.282 | OBP 0.398 | H/G 1.02 | TB/G 1.72 | HR/G 0.140 | HRR/G 2.31 | K% 23.2% (435 PA)</div><div class="context-item">Facing Ryan Weathers: FIP 3.91 / xFIP 2.97 | WHIP 1.24 | K/9 10.2</div><div class="context-item">Park factor 1.07 at Yankee Stadium</div>
+  <div class="context-body" id="ctx-chase-meidroth-hrr-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 59.5%. Model: 1.83.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Chase Meidroth at 1.83 HRR vs the line of 0.5 — a strong +1.33 edge.</div>
+    <div class="context-item">Market: Over 0.5 at 59.5% (draftkings)</div><div class="context-item">Model projects 1.83 → edge +15.0%</div><div class="context-item">Game total: model 8.5 vs market 7.5 (high-scoring environment, scale 1.10x)</div><div class="context-item">Chase Meidroth: AVG 0.272 | OBP 0.343 | H/G 1.01 | TB/G 1.41 | HR/G 0.074 | HRR/G 1.94 | K% 23.8% (399 PA)</div><div class="context-item">Facing Jacob deGrom: FIP 3.50 / xFIP 2.73 | WHIP 1.02 | K/9 11.0</div><div class="context-item">Park factor 1.05 at Globe Life Field</div>
   </div>
   
 </div>
@@ -1306,92 +1354,36 @@
     
 
 <div class="card prop-card"
-     data-home-team="Pittsburgh Pirates"
-     data-away-team="New York Yankees"
+     data-home-team="Chicago White Sox"
+     data-away-team="Texas Rangers"
      data-bet-type="Prop"
      data-sport="MLB"
-     data-player="Bryan Reynolds"
-     data-prop-type="Total Bases Over"
-     data-model-line="1.71"
+     data-player="Colson Montgomery"
+     data-prop-type="HRR Over"
+     data-model-line="1.76"
      data-confidence="HIGH"
-     data-commence-time="2026-07-20T23:06:00Z"
-     data-market-line="1.5"
-     data-edge-pct="15.0">
-  <div class="card-row">
-    <div style="flex:1;min-width:0;">
-      <div class="card-pick">Bryan Reynolds</div>
-      <div class="card-game short-team">Pittsburgh Pirates vs New York Yankees · Total Bases Over</div>
-      <div class="card-time"></div>
-      <div class="live-status prop-live-badge" style="min-height:0;"></div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
-      <span class="badge badge-conf-HIGH">HIGH</span>
-    </div>
-  </div>
-  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bryan-reynolds-total-bases-over"><span class="ctx-arrow">›</span> Model projects 1.71 total bases</div>
-  <div class="prop-bar-wrap"
-       data-bar-max="8"
-       data-market-line="1.5">
-    <div class="prop-bar-header">
-      <span class="prop-bar-current">—</span>
-      <span class="prop-bar-line-label">Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">45.0%</span></span>
-    </div>
-    <div class="prop-bar-track">
-      <div class="prop-bar-fill"></div>
-      <div class="prop-bar-marker" style="left:18.8%" data-line="1.5"></div>
-    </div>
-    <div class="prop-bar-scale"><span>0</span><span>8</span></div>
-  </div>
-  <div class="edge-row">
-    <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.71</b></span>
-    <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
-    <span class="edge-pct">+15.0%</span>
-  </div>
-  
-  
-  <div class="context-body" id="ctx-bryan-reynolds-total-bases-over">
-    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 1.5 at 45.0%. Model: 1.71.</div>
-    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Bryan Reynolds at 1.71 Total Bases vs the line of 1.5 — a strong +0.21 edge.</div>
-    <div class="context-item">Market: Over 1.5 at 45.0% (draftkings)</div><div class="context-item">Model projects 1.71 → edge +15.0%</div><div class="context-item">Game total: model 8.2 vs market 7.5 (high-scoring environment, scale 1.09x)</div><div class="context-item">Bryan Reynolds: AVG 0.282 | OBP 0.398 | H/G 1.02 | TB/G 1.72 | HR/G 0.140 | HRR/G 2.31 | K% 23.2% (435 PA)</div><div class="context-item">Facing Ryan Weathers: FIP 3.91 / xFIP 2.97 | WHIP 1.24 | K/9 10.2</div><div class="context-item">Park factor 1.07 at Yankee Stadium</div>
-  </div>
-  
-</div>
-
-    
-    
-
-<div class="card prop-card"
-     data-home-team="Pittsburgh Pirates"
-     data-away-team="New York Yankees"
-     data-bet-type="Prop"
-     data-sport="MLB"
-     data-player="Nick Gonzales"
-     data-prop-type="Hits Over"
-     data-model-line="1.29"
-     data-confidence="HIGH"
-     data-commence-time="2026-07-20T23:06:00Z"
+     data-commence-time="2026-07-21T00:06:00Z"
      data-market-line="0.5"
      data-edge-pct="15.0">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Nick Gonzales</div>
-      <div class="card-game short-team">Pittsburgh Pirates vs New York Yankees · Hits Over</div>
+      <div class="card-pick">Colson Montgomery</div>
+      <div class="card-game short-team">Chicago White Sox vs Texas Rangers · HRR Over</div>
       <div class="card-time"></div>
       <div class="live-status prop-live-badge" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-nick-gonzales-hits-over"><span class="ctx-arrow">›</span> Model projects 1.29 hits</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-colson-montgomery-hrr-over"><span class="ctx-arrow">›</span> Model projects 1.76 hrr</div>
   <div class="prop-bar-wrap"
        data-bar-max="8"
        data-market-line="0.5">
     <div class="prop-bar-header">
       <span class="prop-bar-current">—</span>
-      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">71.2%</span></span>
+      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">60.8%</span></span>
     </div>
     <div class="prop-bar-track">
       <div class="prop-bar-fill"></div>
@@ -1400,16 +1392,16 @@
     <div class="prop-bar-scale"><span>0</span><span>8</span></div>
   </div>
   <div class="edge-row">
-    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.29</b></span>
+    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.76</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
     <span class="edge-pct">+15.0%</span>
   </div>
   
   
-  <div class="context-body" id="ctx-nick-gonzales-hits-over">
-    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 71.2%. Model: 1.29.</div>
-    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Nick Gonzales at 1.29 Hits vs the line of 0.5 — a strong +0.79 edge.</div>
-    <div class="context-item">Market: Over 0.5 at 71.2% (draftkings)</div><div class="context-item">Model projects 1.29 → edge +15.0%</div><div class="context-item">Game total: model 8.2 vs market 7.5 (high-scoring environment, scale 1.09x)</div><div class="context-item">Nick Gonzales: AVG 0.311 | OBP 0.370 | H/G 1.16 | TB/G 1.52 | HR/G 0.053 | HRR/G 2.21 | K% 18.1% (386 PA)</div><div class="context-item">Facing Ryan Weathers: FIP 3.91 / xFIP 2.97 | WHIP 1.24 | K/9 10.2</div><div class="context-item">Park factor 1.07 at Yankee Stadium</div>
+  <div class="context-body" id="ctx-colson-montgomery-hrr-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 60.8%. Model: 1.76.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Colson Montgomery at 1.76 HRR vs the line of 0.5 — a strong +1.26 edge.</div>
+    <div class="context-item">Market: Over 0.5 at 60.8% (draftkings)</div><div class="context-item">Model projects 1.76 → edge +15.0%</div><div class="context-item">Game total: model 8.5 vs market 7.5 (high-scoring environment, scale 1.10x)</div><div class="context-item">K% matchup: batter 32.2% vs pitcher 11.0 K/9 → -5.7% suppression</div><div class="context-item">Colson Montgomery: AVG 0.224 | OBP 0.307 | H/G 0.84 | TB/G 1.79 | HR/G 0.255 | HRR/G 1.96 | K% 32.2% (394 PA)</div><div class="context-item">Facing Jacob deGrom: FIP 3.50 / xFIP 2.73 | WHIP 1.02 | K/9 11.0</div><div class="context-item">Park factor 1.05 at Globe Life Field</div>
   </div>
   
 </div>
@@ -1418,36 +1410,36 @@
     
 
 <div class="card prop-card"
-     data-home-team="New York Yankees"
-     data-away-team="Pittsburgh Pirates"
+     data-home-team="Texas Rangers"
+     data-away-team="Chicago White Sox"
      data-bet-type="Prop"
      data-sport="MLB"
-     data-player="Ben Rice"
+     data-player="Josh Jung"
      data-prop-type="Hits Over"
-     data-model-line="1.04"
+     data-model-line="1.43"
      data-confidence="HIGH"
-     data-commence-time="2026-07-20T23:06:00Z"
+     data-commence-time="2026-07-21T00:06:00Z"
      data-market-line="0.5"
      data-edge-pct="15.0">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Ben Rice</div>
-      <div class="card-game short-team">New York Yankees vs Pittsburgh Pirates · Hits Over</div>
+      <div class="card-pick">Josh Jung</div>
+      <div class="card-game short-team">Texas Rangers vs Chicago White Sox · Hits Over</div>
       <div class="card-time"></div>
       <div class="live-status prop-live-badge" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-ben-rice-hits-over"><span class="ctx-arrow">›</span> Model projects 1.04 hits</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-josh-jung-hits-over"><span class="ctx-arrow">›</span> Model projects 1.43 hits</div>
   <div class="prop-bar-wrap"
        data-bar-max="8"
        data-market-line="0.5">
     <div class="prop-bar-header">
       <span class="prop-bar-current">—</span>
-      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">66.4%</span></span>
+      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">73.6%</span></span>
     </div>
     <div class="prop-bar-track">
       <div class="prop-bar-fill"></div>
@@ -1456,20 +1448,20 @@
     <div class="prop-bar-scale"><span>0</span><span>8</span></div>
   </div>
   <div class="edge-row">
-    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.04</b></span>
+    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.43</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
     <span class="edge-pct">+15.0%</span>
   </div>
   
-  <div style="margin-top:8px;font-size:0.78rem;padding:6px 10px;border-radius:6px;background:rgba(34,197,94,0.1);color:var(--green);">
-    Last: HIT (actual 2.0, proj 1.13) — 2026-07-17
+  <div style="margin-top:8px;font-size:0.78rem;padding:6px 10px;border-radius:6px;background:rgba(239,68,68,0.1);color:var(--red);">
+    Last: MISS (actual 0.0, proj 1.1) — 2026-07-17
   </div>
   
   
-  <div class="context-body" id="ctx-ben-rice-hits-over">
-    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 66.4%. Model: 1.04.</div>
-    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Ben Rice at 1.04 Hits vs the line of 0.5 — a strong +0.54 edge.</div>
-    <div class="context-item">Market: Over 0.5 at 66.4% (draftkings)</div><div class="context-item">Model projects 1.04 → edge +15.0%</div><div class="context-item">Game total: model 8.2 vs market 7.5 (high-scoring environment, scale 1.09x)</div><div class="context-item">Ben Rice: AVG 0.281 | OBP 0.371 | H/G 1.04 | TB/G 2.21 | HR/G 0.308 | HRR/G 2.45 | K% 23.1% (402 PA)</div><div class="context-item">Facing Braxton Ashcraft: FIP 3.26 / xFIP 2.80 | WHIP 1.11 | K/9 10.2</div><div class="context-item">Park factor 1.07 at Yankee Stadium</div>
+  <div class="context-body" id="ctx-josh-jung-hits-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 73.6%. Model: 1.43.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Josh Jung at 1.43 Hits vs the line of 0.5 — a strong +0.93 edge.</div>
+    <div class="context-item">Market: Over 0.5 at 73.6% (draftkings)</div><div class="context-item">Model projects 1.43 → edge +15.0%</div><div class="context-item">Game total: model 8.5 vs market 7.5 (high-scoring environment, scale 1.10x)</div><div class="context-item">Josh Jung: AVG 0.292 | OBP 0.359 | H/G 1.13 | TB/G 1.71 | HR/G 0.100 | HRR/G 2.02 | K% 17.9% (390 PA)</div><div class="context-item">Facing Erick Fedde: FIP 5.22 / xFIP 4.58 | WHIP 1.42 | K/9 6.1</div><div class="context-item">Park factor 1.05 at Globe Life Field</div>
   </div>
   
 </div>
@@ -1478,54 +1470,54 @@
     
 
 <div class="card prop-card"
-     data-home-team="New York Yankees"
-     data-away-team="Pittsburgh Pirates"
+     data-home-team="Washington Nationals"
+     data-away-team="Colorado Rockies"
      data-bet-type="Prop"
      data-sport="MLB"
-     data-player="Ben Rice"
-     data-prop-type="Total Bases Over"
-     data-model-line="2.15"
+     data-player="Andrew Alvarez"
+     data-prop-type="Strikeouts Over"
+     data-model-line="7.5"
      data-confidence="HIGH"
-     data-commence-time="2026-07-20T23:06:00Z"
-     data-market-line="1.5"
+     data-commence-time="2026-07-21T00:41:00Z"
+     data-market-line="4.5"
      data-edge-pct="15.0">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Ben Rice</div>
-      <div class="card-game short-team">New York Yankees vs Pittsburgh Pirates · Total Bases Over</div>
+      <div class="card-pick">Andrew Alvarez</div>
+      <div class="card-game short-team">Washington Nationals vs Colorado Rockies · Strikeouts Over</div>
       <div class="card-time"></div>
       <div class="live-status prop-live-badge" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-ben-rice-total-bases-over"><span class="ctx-arrow">›</span> Model projects 2.15 total bases</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-andrew-alvarez-strikeouts-over"><span class="ctx-arrow">›</span> Model projects 7.5 strikeouts · avg 9.7 K/9</div>
   <div class="prop-bar-wrap"
-       data-bar-max="8"
-       data-market-line="1.5">
+       data-bar-max="9"
+       data-market-line="4.5">
     <div class="prop-bar-header">
       <span class="prop-bar-current">—</span>
-      <span class="prop-bar-line-label">Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">46.7%</span></span>
+      <span class="prop-bar-line-label">Line: 4.5 <span style="color:var(--muted);font-size:0.85em;">48.1%</span></span>
     </div>
     <div class="prop-bar-track">
       <div class="prop-bar-fill"></div>
-      <div class="prop-bar-marker" style="left:18.8%" data-line="1.5"></div>
+      <div class="prop-bar-marker" style="left:50.0%" data-line="4.5"></div>
     </div>
-    <div class="prop-bar-scale"><span>0</span><span>8</span></div>
+    <div class="prop-bar-scale"><span>0</span><span>9</span></div>
   </div>
   <div class="edge-row">
-    <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">2.15</b></span>
+    <span class="mkt-mdl">Line 4.5 → Model <b style="color:var(--blue)">7.5</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
     <span class="edge-pct">+15.0%</span>
   </div>
   
   
-  <div class="context-body" id="ctx-ben-rice-total-bases-over">
-    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 1.5 at 46.7%. Model: 2.15.</div>
-    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Ben Rice at 2.15 Total Bases vs the line of 1.5 — a strong +0.65 edge.</div>
-    <div class="context-item">Market: Over 1.5 at 46.7% (draftkings)</div><div class="context-item">Model projects 2.15 → edge +15.0%</div><div class="context-item">Game total: model 8.2 vs market 7.5 (high-scoring environment, scale 1.09x)</div><div class="context-item">Ben Rice: AVG 0.281 | OBP 0.371 | H/G 1.04 | TB/G 2.21 | HR/G 0.308 | HRR/G 2.45 | K% 23.1% (402 PA)</div><div class="context-item">Facing Braxton Ashcraft: FIP 3.26 / xFIP 2.80 | WHIP 1.11 | K/9 10.2</div><div class="context-item">Park factor 1.07 at Yankee Stadium</div>
+  <div class="context-body" id="ctx-andrew-alvarez-strikeouts-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 4.5 Ks at 48.1%. Model: 7.5 Ks in 7.0 inn.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Andrew Alvarez at 7.5 strikeouts vs the line of 4.5 — a strong edge of +3.00.</div>
+    <div class="context-item">Market: Over 4.5 Ks at 48.1% (draftkings)</div><div class="context-item">K/9 9.7 (adj 9.7) → 7.5 Ks in 7.0 inn | Edge +15.0%</div><div class="context-item">Opp K%: 22.8% vs league avg 22.8%</div><div class="context-item">Andrew Alvarez: ERA 4.04 | FIP 2.91 / xFIP 3.13 | K/9 9.7 | BB/9 4.0 | HR/9 0.37</div><div class="context-item">Season IP: 49 | Projected start: ~7.0 inn (actual avg: 8.2 inn/start)</div><div class="context-item">Venue: Coors Field (park factor 1.30)</div>
   </div>
   
 </div>
@@ -1534,36 +1526,36 @@
     
 
 <div class="card prop-card"
-     data-home-team="New York Yankees"
-     data-away-team="Pittsburgh Pirates"
+     data-home-team="Colorado Rockies"
+     data-away-team="Washington Nationals"
      data-bet-type="Prop"
      data-sport="MLB"
-     data-player="Cody Bellinger"
+     data-player="Hunter Goodman"
      data-prop-type="Hits Over"
-     data-model-line="0.94"
+     data-model-line="1.34"
      data-confidence="HIGH"
-     data-commence-time="2026-07-20T23:06:00Z"
+     data-commence-time="2026-07-21T00:41:00Z"
      data-market-line="0.5"
      data-edge-pct="15.0">
   <div class="card-row">
     <div style="flex:1;min-width:0;">
-      <div class="card-pick">Cody Bellinger</div>
-      <div class="card-game short-team">New York Yankees vs Pittsburgh Pirates · Hits Over</div>
+      <div class="card-pick">Hunter Goodman</div>
+      <div class="card-game short-team">Colorado Rockies vs Washington Nationals · Hits Over</div>
       <div class="card-time"></div>
       <div class="live-status prop-live-badge" style="min-height:0;"></div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
+      <span class="lock-badge">🔒</span>
       <span class="badge badge-conf-HIGH">HIGH</span>
     </div>
   </div>
-  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-cody-bellinger-hits-over"><span class="ctx-arrow">›</span> Model projects 0.94 hits</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-hunter-goodman-hits-over"><span class="ctx-arrow">›</span> Model projects 1.34 hits</div>
   <div class="prop-bar-wrap"
        data-bar-max="8"
        data-market-line="0.5">
     <div class="prop-bar-header">
       <span class="prop-bar-current">—</span>
-      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">65.3%</span></span>
+      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">73.5%</span></span>
     </div>
     <div class="prop-bar-track">
       <div class="prop-bar-fill"></div>
@@ -1572,16 +1564,72 @@
     <div class="prop-bar-scale"><span>0</span><span>8</span></div>
   </div>
   <div class="edge-row">
-    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">0.94</b></span>
+    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.34</b></span>
     <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
     <span class="edge-pct">+15.0%</span>
   </div>
   
   
-  <div class="context-body" id="ctx-cody-bellinger-hits-over">
-    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 65.3%. Model: 0.94.</div>
-    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Cody Bellinger at 0.94 Hits vs the line of 0.5 — a strong +0.44 edge.</div>
-    <div class="context-item">Market: Over 0.5 at 65.3% (draftkings)</div><div class="context-item">Model projects 0.94 → edge +15.0%</div><div class="context-item">Game total: model 8.2 vs market 7.5 (high-scoring environment, scale 1.09x)</div><div class="context-item">Cody Bellinger: AVG 0.255 | OBP 0.345 | H/G 0.94 | TB/G 1.54 | HR/G 0.113 | HRR/G 1.98 | K% 15.7% (414 PA)</div><div class="context-item">Facing Braxton Ashcraft: FIP 3.26 / xFIP 2.80 | WHIP 1.11 | K/9 10.2</div><div class="context-item">Park factor 1.07 at Yankee Stadium</div>
+  <div class="context-body" id="ctx-hunter-goodman-hits-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 73.5%. Model: 1.34.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Hunter Goodman at 1.34 Hits vs the line of 0.5 — a strong +0.84 edge.</div>
+    <div class="context-item">Market: Over 0.5 at 73.5% (draftkings)</div><div class="context-item">Model projects 1.34 → edge +15.0%</div><div class="context-item">K% matchup: batter 32.6% vs pitcher 9.7 K/9 → -5.3% suppression</div><div class="context-item">Hunter Goodman: AVG 0.257 | OBP 0.326 | H/G 0.97 | TB/G 2.11 | HR/G 0.326 | HRR/G 2.25 | K% 32.6% (384 PA)</div><div class="context-item">Facing Andrew Alvarez: FIP 2.91 / xFIP 3.13 | WHIP 1.45 | K/9 9.7</div><div class="context-item">Park factor 1.30 at Coors Field</div>
+  </div>
+  
+</div>
+
+    
+    
+
+<div class="card prop-card"
+     data-home-team="Atlanta Braves"
+     data-away-team="San Diego Padres"
+     data-bet-type="Prop"
+     data-sport="MLB"
+     data-player="Michael Harris II"
+     data-prop-type="Hits Over"
+     data-model-line="1.33"
+     data-confidence="HIGH"
+     data-commence-time="2026-07-20T23:16:00Z"
+     data-market-line="0.5"
+     data-edge-pct="15.0">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Michael Harris II</div>
+      <div class="card-game short-team">Atlanta Braves vs San Diego Padres · Hits Over</div>
+      <div class="card-time"></div>
+      <div class="live-status prop-live-badge" style="min-height:0;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      <span class="lock-badge">🔒</span>
+      <span class="badge badge-conf-HIGH">HIGH</span>
+    </div>
+  </div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-michael-harris-ii-hits-over"><span class="ctx-arrow">›</span> Model projects 1.33 hits</div>
+  <div class="prop-bar-wrap"
+       data-bar-max="8"
+       data-market-line="0.5">
+    <div class="prop-bar-header">
+      <span class="prop-bar-current">—</span>
+      <span class="prop-bar-line-label">Line: 0.5 <span style="color:var(--muted);font-size:0.85em;">73.2%</span></span>
+    </div>
+    <div class="prop-bar-track">
+      <div class="prop-bar-fill"></div>
+      <div class="prop-bar-marker" style="left:6.2%" data-line="0.5"></div>
+    </div>
+    <div class="prop-bar-scale"><span>0</span><span>8</span></div>
+  </div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Line 0.5 → Model <b style="color:var(--blue)">1.33</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
+    <span class="edge-pct">+15.0%</span>
+  </div>
+  
+  
+  <div class="context-body" id="ctx-michael-harris-ii-hits-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 0.5 at 73.2%. Model: 1.33.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Michael Harris II at 1.33 Hits vs the line of 0.5 — a strong +0.83 edge.</div>
+    <div class="context-item">Market: Over 0.5 at 73.2% (draftkings)</div><div class="context-item">Model projects 1.33 → edge +15.0%</div><div class="context-item">Michael Harris II: AVG 0.301 | OBP 0.331 | H/G 1.14 | TB/G 1.89 | HR/G 0.185 | HRR/G 2.29 | K% 20.1% (369 PA)</div><div class="context-item">Facing JP Sears: FIP 5.39 / xFIP 4.24 | WHIP 1.46 | K/9 8.0</div><div class="context-item">Park factor 1.03 at Truist Park</div>
   </div>
   
 </div>
@@ -1818,6 +1866,24 @@
     
     <div style="height:16px;"></div>
   </div><!-- /tab-wc -->
+
+  <!-- ═══════════════ LIGA MX TAB ════════════════════════════════════════ -->
+  <div id="tab-ligamx" class="spa-tab">
+    <div class="tab-header">
+      <div class="tab-header-text">
+        <div class="tab-header-title">🇲🇽 Liga MX</div>
+        <div class="tab-header-sub">
+          No matches today
+          
+        </div>
+      </div>
+      <button class="tab-bell-btn" data-pref="LIGAMX" onclick="tabBellClick(this)" style="display:none">🔕</button>
+    </div>
+    
+    <div class="empty-state"><div class="icon">🇲🇽</div>No Liga MX matches scheduled today.</div>
+    
+    <div style="height:16px;"></div>
+  </div><!-- /tab-ligamx -->
 
   <!-- ═══════════════ ANALYTICS TAB ══════════════════════════════════════ -->
   <div id="tab-analytics" class="spa-tab">
@@ -2849,6 +2915,26 @@
               <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">Building (3 / 50 cap firings)</td>
             </tr>
             
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:7px 6px;font-weight:600;">Liga MX Moneylines</td>
+              <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
+              <td style="text-align:right;padding:7px 6px;">&plusmn;10.0%</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">No data yet</td>
+            </tr>
+            
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:7px 6px;font-weight:600;">Liga MX Draws</td>
+              <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#3b3a52;color:#fff;">0 — hard clip</span></td>
+              <td style="text-align:right;padding:7px 6px;">&plusmn;10.0%</td>
+              <td class="cap-col-default" style="text-align:right;padding:7px 6px;color:var(--muted);">&plusmn;10.0%</td>
+              <td class="cap-col-delta" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td class="cap-col-firings" style="text-align:right;padding:7px 6px;color:var(--muted);">—</td>
+              <td style="padding:7px 6px;color:var(--muted);font-size:0.72rem;">No data yet</td>
+            </tr>
+            
           </tbody>
         </table>
       </div>
@@ -3154,7 +3240,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">July 20, 2026 at 08:28 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">July 20, 2026 at 08:59 PM PDT</div>
         </div>
         
       </div>
@@ -3189,6 +3275,7 @@
     <button class="spa-tab-btn" id="nav-s6"></button>
     <button class="spa-tab-btn" id="nav-s7"></button>
     <button class="spa-tab-btn" id="nav-s8"></button>
+    <button class="spa-tab-btn" id="nav-s9"></button>
   </div>
 </nav>
 <!-- hasDot flags for carousel (rendered once by Jinja2) -->
@@ -3203,6 +3290,7 @@ window._tabDots = {
   nfl:       false,
   mls:       false,
   wc:        false,
+  ligamx:    false,
   analytics: false
 };
 // Sport tabs that have picks in today's report — used to auto-set visibility.
@@ -3232,6 +3320,7 @@ window._reportDate = "2026-07-20";
     { key:"nfl",       emoji:"🏈", label:"NFL"       },
     { key:"mls",       emoji:"⚽", label:"MLS"       },
     { key:"wc",        emoji:"🌍", label:"World Cup" },
+    { key:"ligamx",    emoji:"🇲🇽", label:"Liga MX"   },
     { key:"analytics", emoji:"📊", label:"Analytics" }
   ];
   var PINNED_TABS = { today: true, analytics: true };
@@ -4211,7 +4300,8 @@ function toggleCtx(el) {
     NFL: "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=" + _espnDate,
     WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate,
     MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _soccerDates,
-    WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _soccerDates
+    WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _soccerDates,
+    LIGAMX: "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard?dates=" + _soccerDates
   };
 
   // ── Local timezone formatting ────────────────────────────────────────────
@@ -5962,7 +6052,7 @@ function toggleCtx(el) {
     // polling loop resolves a pick (the initial call runs at page load when
     // no results are live yet; subsequent calls update the tile in real-time).
     function updateWatchlistTiles() {
-      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 }, WC: { won: 0, lost: 0 } };
+      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 }, WC: { won: 0, lost: 0 }, LIGAMX: { won: 0, lost: 0 } };
 
       document.querySelectorAll(
         ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result], .wc-watchlist-card[data-live-result]"
@@ -6128,7 +6218,8 @@ function toggleCtx(el) {
           IPL: '<span class="badge badge-ipl">🏏 IPL</span>',
           WNBA: '<span class="badge badge-wnba">🏀 WNBA</span>',
           MLS: '<span class="badge badge-mls">⚽ MLS</span>',
-          WC: '<span class="badge badge-wc">🌍 World Cup</span>'
+          WC: '<span class="badge badge-wc">🌍 World Cup</span>',
+          LIGAMX: '<span class="badge badge-ligamx">🇲🇽 Liga MX</span>'
         }[sport] || '<span style="color:var(--muted);">PARLAYS</span>';
         sportCard.innerHTML =
           '<div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;">' + sportBadgeHtml + '</div>' +
@@ -6983,6 +7074,7 @@ function toggleCtx(el) {
     { url: ESPN.WNBA, sport: "WNBA" },
     { url: ESPN.MLS,  sport: "MLS"  },
     { url: ESPN.WC,   sport: "WC"   },
+    { url: ESPN.LIGAMX, sport: "LIGAMX" },
   ];
 
   function refresh() {
