@@ -34,6 +34,7 @@ ESPN_WATCHLIST_PATHS = {
     "WNBA": "basketball/wnba",
     "MLS": "soccer/usa.1",
     "WC": "soccer/fifa.world",
+    "LIGAMX": "soccer/mex.1",
 }
 
 # Rolling pending list for leagues whose games finish AFTER the morning run.
@@ -1343,7 +1344,7 @@ def _parse_score_str(score_str) -> float:
 # Knockout games decided in extra time / penalties must be graded on the
 # 90-minute score — the post-ET final settles those markets WRONG (a 1-1 game
 # that finishes 2-1 in ET is a Draw for betting purposes).
-_SOCCER_90MIN_SPORTS = {"MLS", "WC"}
+_SOCCER_90MIN_SPORTS = {"MLS", "WC", "LIGAMX"}
 
 
 def _soccer_90min_scores(comp: Dict, home_comp: Dict, away_comp: Dict):
@@ -1656,6 +1657,41 @@ def check_and_settle_watchlist(today: date) -> int:
             "result":          result,
         })
         logger.info(f"WC watchlist settled: {pick.get('pick')} → {result}")
+
+    # ── Liga MX ─────────────────────────────────────────────────────────────
+    ligamx_picks = [p for p in (state.get("ligamx_display") or []) if p.get("sport") == "LIGAMX"]
+    ligamx_scores = _fetch_watchlist_final_scores("LIGAMX", yesterday) if ligamx_picks else {}
+
+    for pick in ligamx_picks:
+        key = (yesterday.isoformat(), "LIGAMX", pick.get("pick", ""), pick.get("game", ""))
+        if key in settled_keys:
+            continue
+        score_data = _find_game_score(ligamx_scores, pick.get("home_team", ""), pick.get("away_team", ""))
+        if not score_data:
+            logger.debug(f"Liga MX watchlist: score not found for {pick.get('game')} on {yesterday}")
+            continue
+        result = _determine_mls_outcome(
+            pick.get("pick", ""), pick.get("bet_type", ""),
+            pick.get("home_team", ""), pick.get("away_team", ""),
+            score_data["home_score"], score_data["away_score"],
+        )
+        if result not in ("WON", "LOST"):
+            continue
+        new_records.append({
+            "date":            yesterday.isoformat(),
+            "sport":           "LIGAMX",
+            "game":            pick.get("game", ""),
+            "pick":            pick.get("pick", ""),
+            "bet_type":        pick.get("bet_type", "Moneyline"),
+            "home_team":       pick.get("home_team", ""),
+            "away_team":       pick.get("away_team", ""),
+            "edge_pct":        pick.get("edge_pct", 0),
+            "confidence":      pick.get("confidence", "MEDIUM"),
+            "model_prob_pct":  pick.get("model_prob_pct", 0),
+            "market_prob_pct": pick.get("market_prob_pct", 0),
+            "result":          result,
+        })
+        logger.info(f"Liga MX watchlist settled: {pick.get('pick')} → {result}")
 
     if new_records:
         _save_watchlist_history(existing + new_records)

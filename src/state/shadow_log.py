@@ -471,7 +471,7 @@ def settle_shadow_from_espn(today: date) -> int:
 
     # Sports that have ESPN paths we can use
     MAIN_SPORTS      = {"NBA", "MLB"}               # _fetch_espn_final_scores
-    WATCHLIST_SPORTS = {"NHL", "WNBA", "MLS", "WC"} # _fetch_watchlist_final_scores
+    WATCHLIST_SPORTS = {"NHL", "WNBA", "MLS", "WC", "LIGAMX"} # _fetch_watchlist_final_scores
     IPL_SPORTS       = {"IPL"}                      # Cricbuzz via _settle_ipl_pick
     SUPPORTED        = MAIN_SPORTS | WATCHLIST_SPORTS | IPL_SPORTS
 
@@ -631,7 +631,7 @@ def settle_shadow_from_espn(today: date) -> int:
                 espn_home = score_data.get("home_name", home_abbr)
                 espn_away = score_data.get("away_name", away_abbr)
 
-                if sport in ("MLS", "WC"):
+                if sport in ("MLS", "WC", "LIGAMX"):
                     result = _determine_mls_outcome(
                         pick, bet_type, espn_home, espn_away,
                         score_data["home_score"], score_data["away_score"],

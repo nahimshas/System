@@ -65,7 +65,7 @@ def _fetch_events(sport: str, game_date: date) -> list:
         return []
     # Soccer is ESPN-dated by UTC, so an evening-Pacific match rolls into the
     # next date — query a 2-day window so those games settle (see outcome_checker).
-    if sport in ("MLS", "WC"):
+    if sport in ("MLS", "WC", "LIGAMX"):
         date_str = f"{game_date.strftime('%Y%m%d')}-{(game_date + timedelta(days=1)).strftime('%Y%m%d')}"
     else:
         date_str = game_date.strftime("%Y%m%d")
@@ -201,7 +201,7 @@ def _resolve(sport: str, pick: str, bet_type: str, home_team: str, away_team: st
 
     # ESPN home/away orientation may be flipped vs the pick's metadata — score
     # the outcome with ESPN's own team names so spreads/totals stay correct.
-    if sport in ("MLS", "WC"):
+    if sport in ("MLS", "WC", "LIGAMX"):
         result = _determine_mls_outcome(pick, bet_type, event["home_name"], event["away_name"],
                                         event["home_score"], event["away_score"])
     else:
@@ -259,6 +259,7 @@ def main() -> int:
         state.get("wnba_display", []) +
         state.get("mls_display", []) +
         state.get("wc_display", []) +
+        state.get("ligamx_display", []) +
         state.get("ipl_display", [])
     )
 

@@ -32,13 +32,14 @@ from src.sports.ipl      import ipl
 from src.sports.wnba     import wnba
 from src.sports.mls      import mls
 from src.sports.wc       import wc
+from src.sports.ligamx   import ligamx
 from src.sports.registry import REGISTRY
 
 # Maps every registry slug to its module singleton — used by the analysis loop.
 # Add a new entry here when a new sport module is created.
 SPORT_MODULES: dict = {
     "nba": nba, "mlb": mlb, "nfl": nfl, "nhl": nhl,
-    "ipl": ipl, "wnba": wnba, "mls": mls, "wc": wc,
+    "ipl": ipl, "wnba": wnba, "mls": mls, "wc": wc, "ligamx": ligamx,
 }
 from src.state.manager import (
     load_state, save_state, merge_picks,
@@ -312,6 +313,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_wnba_display = _own_displays_loaded.get("wnba", [])
             final_mls_display  = _own_displays_loaded.get("mls",  [])
             final_wc_display   = _own_displays_loaded.get("wc",   [])
+            final_ligamx_display = _own_displays_loaded.get("ligamx", [])
 
             # Apply current lock flags — state was written before some games started,
             # so re-computing here ensures the re-rendered HTML shows correct badges.
@@ -329,6 +331,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             final_wnba_display    = [_hydrate_bet(d) for d in final_wnba_display]
             final_ipl_display     = [_hydrate_bet(d) for d in final_ipl_display]
             final_wc_display      = [_hydrate_bet(d) for d in final_wc_display]
+            final_ligamx_display  = [_hydrate_bet(d) for d in final_ligamx_display]
 
             report_data = build_report(
                 run_date=today,
@@ -350,6 +353,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 mls_game_count=state.get("mls_game_count", 0),
                 wc_display=final_wc_display,
                 wc_game_count=state.get("wc_game_count", 0),
+                ligamx_display=final_ligamx_display,
+                ligamx_game_count=state.get("ligamx_game_count", 0),
                 errors=errors,
                 change_warnings=change_warnings,
                 odds_api_credits=saved_credits,
@@ -632,6 +637,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     wnba_game_count = game_counts.get("wnba", 0)
     mls_game_count  = game_counts.get("mls", 0)
     wc_game_count   = game_counts.get("wc", 0)
+    ligamx_game_count = game_counts.get("ligamx", 0)
 
     # Extract named display lists for own-tile sports (IPL / WNBA / MLS / WC).
     ipl_display_raw  = own_display.get("ipl",  [])
@@ -748,6 +754,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     fresh_wnba_display = fresh_own_displays.get("wnba", [])
     fresh_mls_display  = fresh_own_displays.get("mls",  [])
     fresh_wc_display   = fresh_own_displays.get("wc",   [])
+    fresh_ligamx_display = fresh_own_displays.get("ligamx", [])
 
     # ------------------------------------------------------------------ #
     #  Shadow log — calibration data foundation.
@@ -1124,6 +1131,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         mls_game_count=mls_game_count,
         wc_display=fresh_wc_display,
         wc_game_count=wc_game_count,
+        ligamx_display=fresh_ligamx_display,
+        ligamx_game_count=ligamx_game_count,
         errors=errors,
         change_warnings=change_warnings,
         odds_api_credits=get_api_credits(),

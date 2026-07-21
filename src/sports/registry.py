@@ -211,6 +211,24 @@ REGISTRY: dict[str, SportEntry] = {
             hours_lookahead=24,
         ),
     ),
+
+    # Liga MX (Mexican Primera División) — watchlist-only own tile. Added Jul 2026
+    # (Robinhood: Win/Tie/Don't-Win). Elo-driven (no club xG for Mexico), like WC
+    # but with real home advantage. Settles date-based via check_and_settle_watchlist().
+    "ligamx": SportEntry(
+        slug="ligamx",
+        key="soccer_mexico_ligamx",
+        label="Liga MX",
+        caps=SportCapabilities(
+            enters_budget=False,
+            enters_parlays=False,
+            track_in_main_history=False,
+            uses_pending_file=False,
+            in_main_display_pool=False,
+            active_months=frozenset({1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12}),
+            hours_lookahead=24,
+        ),
+    ),
 }
 
 

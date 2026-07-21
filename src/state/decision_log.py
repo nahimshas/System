@@ -109,7 +109,7 @@ def _f(v: Any) -> Optional[float]:
 # Public API
 # ---------------------------------------------------------------------------
 
-_SOCCER = {"MLS", "WC"}
+_SOCCER = {"MLS", "WC", "LIGAMX"}
 
 
 def _grade_candidate(entry: Dict[str, Any], home_score: float, away_score: float) -> Optional[str]:
@@ -188,7 +188,7 @@ def settle_decision_from_scores(today: date) -> int:
     score source — mirrors the shadow log's caution). Returns rows newly graded.
     """
     MAIN = {"NBA", "MLB"}
-    WATCH = {"NHL", "WNBA", "MLS", "WC"}
+    WATCH = {"NHL", "WNBA", "MLS", "WC", "LIGAMX"}
     SUPPORTED = MAIN | WATCH
     try:
         from src.data.outcome_checker import (

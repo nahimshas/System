@@ -24,7 +24,8 @@
     NFL: "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=" + _espnDate,
     WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate,
     MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _soccerDates,
-    WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _soccerDates
+    WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _soccerDates,
+    LIGAMX: "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard?dates=" + _soccerDates
   };
 
   // ── Local timezone formatting ────────────────────────────────────────────
@@ -1775,7 +1776,7 @@
     // polling loop resolves a pick (the initial call runs at page load when
     // no results are live yet; subsequent calls update the tile in real-time).
     function updateWatchlistTiles() {
-      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 }, WC: { won: 0, lost: 0 } };
+      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 }, WC: { won: 0, lost: 0 }, LIGAMX: { won: 0, lost: 0 } };
 
       document.querySelectorAll(
         ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result], .wc-watchlist-card[data-live-result]"
@@ -1941,7 +1942,8 @@
           IPL: '<span class="badge badge-ipl">🏏 IPL</span>',
           WNBA: '<span class="badge badge-wnba">🏀 WNBA</span>',
           MLS: '<span class="badge badge-mls">⚽ MLS</span>',
-          WC: '<span class="badge badge-wc">🌍 World Cup</span>'
+          WC: '<span class="badge badge-wc">🌍 World Cup</span>',
+          LIGAMX: '<span class="badge badge-ligamx">🇲🇽 Liga MX</span>'
         }[sport] || '<span style="color:var(--muted);">PARLAYS</span>';
         sportCard.innerHTML =
           '<div style="font-size:0.68rem;font-weight:700;margin-bottom:4px;">' + sportBadgeHtml + '</div>' +
@@ -2796,6 +2798,7 @@
     { url: ESPN.WNBA, sport: "WNBA" },
     { url: ESPN.MLS,  sport: "MLS"  },
     { url: ESPN.WC,   sport: "WC"   },
+    { url: ESPN.LIGAMX, sport: "LIGAMX" },
   ];
 
   function refresh() {

@@ -239,6 +239,8 @@ def build_report(
     mls_game_count: int = 0,
     wc_display: Optional[List[Dict]] = None,
     wc_game_count: int = 0,
+    ligamx_display: Optional[List[Dict]] = None,
+    ligamx_game_count: int = 0,
     fresh_odds: bool = False,   # True only when a full odds-fetch run generated this report
 ) -> Dict:
     change_warnings = change_warnings or []
@@ -277,6 +279,11 @@ def build_report(
     )[:MAX_SINGLE_BETS]
 
     # World Cup is watchlist-only — never enters budget allocation or parlays.
+    ligamx_watchlist = sorted(
+        [s for s in (ligamx_display or []) if s.get("sport") == "LIGAMX" and _pwa_show(s)],
+        key=_wl_sort_key,
+    )[:MAX_SINGLE_BETS]
+
     wc_watchlist = sorted(
         [s for s in (wc_display or []) if s.get("sport") == "WC" and _pwa_show(s)],
         key=_wl_sort_key,
@@ -319,6 +326,7 @@ def build_report(
         wnba_watchlist = _mark_settled(wnba_watchlist, "WNBA")
         mls_watchlist  = _mark_settled(mls_watchlist,  "MLS")
         wc_watchlist   = _mark_settled(wc_watchlist,   "WC")
+        ligamx_watchlist = _mark_settled(ligamx_watchlist, "LIGAMX")
         ipl_watchlist  = _mark_settled(ipl_watchlist,  "IPL")
     except Exception as _e:
         logger.debug(f"Watchlist settled decoration skipped: {_e}")
@@ -686,6 +694,9 @@ def build_report(
         "wc_watchlist":       wc_watchlist,
         "wc_game_count":      wc_game_count,
         "has_wc":             wc_game_count > 0,
+        "ligamx_watchlist":   ligamx_watchlist,
+        "ligamx_game_count":  ligamx_game_count,
+        "has_ligamx":         ligamx_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),

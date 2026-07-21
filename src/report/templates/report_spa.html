@@ -524,6 +524,7 @@
     .badge-wnba  { background: #f97316; color: #fff; }
     .badge-mls   { background: #14532d; color: #bbf7d0; }
     .badge-wc    { background: #7c2d12; color: #fed7aa; }
+    .badge-ligamx { background: #064e3b; color: #a7f3d0; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .lock-badge { font-size: 0.62rem; color: var(--muted); }
@@ -913,6 +914,7 @@
             {% elif row.sport == 'IPL' %}<span class="badge badge-ipl">IPL</span>
             {% elif row.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
             {% elif row.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
+            {% elif row.sport == 'LIGAMX' %}<span class="badge badge-ligamx">Liga MX</span>
             {% elif row.bet_type == 'Parlay' %}<span class="badge badge-parlay">PARLAY</span>
             {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ row.sport }}</span>
             {% endif %}
@@ -1187,6 +1189,32 @@
     {% endif %}
     <div style="height:16px;"></div>
   </div><!-- /tab-wc -->
+
+  <!-- ═══════════════ LIGA MX TAB ════════════════════════════════════════ -->
+  <div id="tab-ligamx" class="spa-tab">
+    <div class="tab-header">
+      <div class="tab-header-text">
+        <div class="tab-header-title">🇲🇽 Liga MX</div>
+        <div class="tab-header-sub">
+          {% if not report.has_ligamx %}No matches today
+          {% elif report.ligamx_watchlist %}{{ report.ligamx_watchlist|length }} pick{% if report.ligamx_watchlist|length != 1 %}s{% endif %} &middot; watchlist
+          {% else %}No qualifying picks{% endif %}
+        </div>
+      </div>
+      <button class="tab-bell-btn" data-pref="LIGAMX" onclick="tabBellClick(this)" style="display:none">🔕</button>
+    </div>
+    {% if not report.has_ligamx %}
+    <div class="empty-state"><div class="icon">🇲🇽</div>No Liga MX matches scheduled today.</div>
+    {% elif not report.ligamx_watchlist %}
+    <div class="empty-state"><div class="icon">😕</div>No picks with edge &gt; 3% today.</div>
+    {% else %}
+    <div class="sec-label">Watchlist</div>
+    {% for bet in report.ligamx_watchlist %}
+    {{ watchlist_card(bet, "badge-ligamx", "🇲🇽 Liga MX", "ligamx-" + loop.index|string, "LIGAMX", "Watchlist only — Elo-driven model, not tracked in performance tables until Liga MX testing is complete.", "ligamx-watchlist-card") }}
+    {% endfor %}
+    {% endif %}
+    <div style="height:16px;"></div>
+  </div><!-- /tab-ligamx -->
 
   <!-- ═══════════════ ANALYTICS TAB ══════════════════════════════════════ -->
   <div id="tab-analytics" class="spa-tab">
@@ -1722,6 +1750,7 @@
     <button class="spa-tab-btn" id="nav-s6"></button>
     <button class="spa-tab-btn" id="nav-s7"></button>
     <button class="spa-tab-btn" id="nav-s8"></button>
+    <button class="spa-tab-btn" id="nav-s9"></button>
   </div>
 </nav>
 <!-- hasDot flags for carousel (rendered once by Jinja2) -->
@@ -1736,6 +1765,7 @@ window._tabDots = {
   nfl:       {{ 'true' if report.nfl_top_singles else 'false' }},
   mls:       {{ 'true' if report.mls_watchlist else 'false' }},
   wc:        {{ 'true' if report.wc_watchlist else 'false' }},
+  ligamx:    {{ 'true' if report.ligamx_watchlist else 'false' }},
   analytics: false
 };
 // Sport tabs that have picks in today's report — used to auto-set visibility.
@@ -1747,7 +1777,8 @@ window._srvTabsWithPicks = [{% for k,v in [
   ('wnba', report.wnba_watchlist),
   ('nfl',  report.nfl_top_singles),
   ('mls',  report.mls_watchlist),
-  ('wc',   report.wc_watchlist)
+  ('wc',   report.wc_watchlist),
+  ('ligamx', report.ligamx_watchlist)
 ] if v %}"{{ k }}",{% endfor %}];
 window._reportDate = "{{ report.run_date_iso }}";
 </script>
@@ -1774,6 +1805,7 @@ window._reportDate = "{{ report.run_date_iso }}";
     { key:"nfl",       emoji:"🏈", label:"NFL"       },
     { key:"mls",       emoji:"⚽", label:"MLS"       },
     { key:"wc",        emoji:"🌍", label:"World Cup" },
+    { key:"ligamx",    emoji:"🇲🇽", label:"Liga MX"   },
     { key:"analytics", emoji:"📊", label:"Analytics" }
   ];
   var PINNED_TABS = { today: true, analytics: true };

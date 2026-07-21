@@ -19,6 +19,7 @@ on:
           - wnba
           - mls
           - wc
+          - ligamx
         default: ""
       reset_state:
         description: "Delete today's state file and rebuild picks from scratch"
@@ -241,6 +242,7 @@ jobs:
               top_watchlist(state.get('wnba_display', []), 'WNBA') +
               top_watchlist(state.get('mls_display',  []), 'MLS') +
               top_watchlist(state.get('wc_display',   []), 'WC') +
+              top_watchlist(state.get('ligamx_display', []), 'LIGAMX') +
               top_watchlist(state.get('ipl_display',  []), 'IPL')
           )
 
