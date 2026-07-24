@@ -275,6 +275,13 @@ def get_nfl_context(today: date, team_names: List[str] = None) -> Dict:
     norm_names = [normalize(n) for n in team_names]
 
     season_stats = _fetch_all_team_stats()
+    # Warm start: blend last season's ratings in until the current season has
+    # enough games to stand alone (prevents the Week-1 coin-flip cold start).
+    try:
+        prior_stats = _fetch_all_team_stats(_nfl_season() - 1)
+        season_stats = _apply_warm_start(season_stats, prior_stats)
+    except Exception as e:
+        logger.warning(f"NFL warm-start failed (using current season only): {e}")
 
     try:
         recent_form = _fetch_recent_form(season_stats)
