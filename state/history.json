@@ -12763,5 +12763,93 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-07-23",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Minnesota Twins @ Cleveland Guardians",
+    "bet_type": "Moneyline",
+    "pick": "Cleveland Guardians",
+    "home_team": "Cleveland Guardians",
+    "away_team": "Minnesota Twins",
+    "edge_pct": 9.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 66.0,
+    "market_prob_pct": 57.0,
+    "cost": 5.9,
+    "profit_if_win": 4.1,
+    "result": "LOST",
+    "actual_pnl": -5.9,
+    "actual_home_score": 1.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-07-23",
+    "type": "single",
+    "sport": "MLB",
+    "game": "San Diego Padres @ Atlanta Braves",
+    "bet_type": "Spread",
+    "pick": "San Diego Padres +1.5",
+    "home_team": "Atlanta Braves",
+    "away_team": "San Diego Padres",
+    "edge_pct": 9.7,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 56.6,
+    "market_prob_pct": 46.9,
+    "cost": 5.87,
+    "profit_if_win": 6.13,
+    "result": "WON",
+    "actual_pnl": 6.13,
+    "actual_home_score": 6.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-07-23",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Kansas City Royals @ Detroit Tigers",
+    "bet_type": "Spread",
+    "pick": "Kansas City Royals +1.5",
+    "home_team": "Detroit Tigers",
+    "away_team": "Kansas City Royals",
+    "edge_pct": 6.8,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 57.4,
+    "market_prob_pct": 50.5,
+    "cost": 3.68,
+    "profit_if_win": 3.32,
+    "result": "WON",
+    "actual_pnl": 3.32,
+    "actual_home_score": 4.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-07-23",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "San Diego Padres +1.5 + Cleveland Guardians (ML)",
+    "bet_type": "Parlay",
+    "pick": "San Diego Padres +1.5 + Cleveland Guardians (ML)",
+    "edge_pct": 9.1,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 35.8,
+    "market_prob_pct": 0,
+    "cost": 2.3,
+    "profit_if_win": 5.7,
+    "result": "LOST",
+    "actual_pnl": -2.3,
+    "legs": [
+      {
+        "game": "San Diego Padres @ Atlanta Braves",
+        "pick": "San Diego Padres +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Minnesota Twins @ Cleveland Guardians",
+        "pick": "Cleveland Guardians",
+        "result": "LOST"
+      }
+    ]
   }
 ]
