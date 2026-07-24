@@ -104,16 +104,30 @@ def _fetch_all_team_stats(season: int = None) -> Dict[str, Dict]:
                 stat_map = {s["name"]: s.get("value", 0.0)
                             for s in entry.get("stats", []) if "name" in s}
 
-                ppg  = float(stat_map.get("avgPointsFor",
-                             stat_map.get("pointsFor", 21.0)) or 21.0)
-                oppg = float(stat_map.get("avgPointsAgainst",
-                             stat_map.get("pointsAgainst", 21.0)) or 21.0)
                 wins   = float(stat_map.get("wins",   0))
                 losses = float(stat_map.get("losses", 0))
                 ties   = float(stat_map.get("ties", 0))
                 total  = wins + losses + ties
                 win_pct = float(stat_map.get("winPercent",
                                 wins / total if total > 0 else 0.5))
+
+                # ESPN standings return SEASON TOTALS (pointsFor=490 for the
+                # year), NOT per-game averages — the avgPointsFor/Against fields
+                # are gone. Compute per-game ourselves; before this fix the code
+                # treated season totals as per-game, inflating every team's
+                # net rating ~17× (KC +34/game instead of +2/game → impossible
+                # favorites). Prefer an explicit avg field if ESPN ever restores
+                # it. Falls to league avg (21.5) when no games played. (Jul 2026)
+                _pf = float(stat_map.get("pointsFor", 0.0) or 0.0)
+                _pa = float(stat_map.get("pointsAgainst", 0.0) or 0.0)
+                if "avgPointsFor" in stat_map and stat_map["avgPointsFor"]:
+                    ppg = float(stat_map["avgPointsFor"])
+                    oppg = float(stat_map.get("avgPointsAgainst", 21.5) or 21.5)
+                elif total > 0:
+                    ppg  = _pf / total
+                    oppg = _pa / total
+                else:
+                    ppg = oppg = 21.5
 
                 result[espn_name] = {
                     "off_rtg":  ppg,           # points/game scored
