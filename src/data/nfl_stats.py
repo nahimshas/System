@@ -83,10 +83,20 @@ def _fetch_all_team_stats(season: int = None) -> Dict[str, Dict]:
     if not data:
         return {}
 
+    # ESPN's standings nesting changed to conf → teams (was conf → division →
+    # teams). Walk the tree robustly: collect `standings.entries` at whatever
+    # depth they appear, so both the old and new structures parse. (Without
+    # this the old two-level loop silently returned ZERO teams → every game
+    # cold-started. Fixed Jul 2026.)
+    def _collect_entries(node) -> list:
+        out = list((node.get("standings") or {}).get("entries", []) or [])
+        for child in node.get("children", []) or []:
+            out.extend(_collect_entries(child))
+        return out
+
     result: Dict[str, Dict] = {}
     for conf in data.get("children", []):
-        for div in conf.get("children", []):
-            for entry in div.get("standings", {}).get("entries", []):
+            for entry in _collect_entries(conf):
                 espn_name = entry.get("team", {}).get("displayName", "")
                 if not espn_name:
                     continue
