@@ -19145,6 +19145,167 @@
         "Weather Factor picks: 1-1 with avg CLV -1.6%",
         "Starter Edge picks: 1-0 with avg CLV -0.6%"
       ]
+    },
+    {
+      "date": "2026-07-23",
+      "generated_at": "2026-07-24T05:46:38Z",
+      "generated_by": "workflow",
+      "headline": "2-2 on budget (+$1.25), avg CLV -0.87%",
+      "budget_record": "2-2",
+      "watchlist_record": "1-1",
+      "budget_pnl": 1.25,
+      "avg_budget_clv": -0.87,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "Minnesota Twins @ Cleveland Guardians",
+          "sport": "MLB",
+          "pick": "Cleveland Guardians",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Minnesota Twins 3, Cleveland Guardians 1",
+          "pnl": "-$5.90",
+          "clv_pct": 0.2,
+          "why_picked": "Primary signal: Park Factor. (Park factor 0.96 (pitcher-friendly: Progressive Field))",
+          "what_happened": "Trevor Larnach and Luke Keaschall get RBIs in 12th as Twins beat Guardians 3-1 for series split.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.2%)",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "San Diego Padres @ Atlanta Braves",
+          "sport": "MLB",
+          "pick": "San Diego Padres +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "San Diego Padres 5, Atlanta Braves 6",
+          "pnl": "+$6.13",
+          "clv_pct": -1.0,
+          "why_picked": "Primary signal: Park Factor. (Park factor 1.03 (hitter-friendly: Truist Park))",
+          "what_happened": "Chris Sale strikes out 11 as the Braves hit 4 home runs to edge the Padres 6-5.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.0% against this pick",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Kansas City Royals @ Detroit Tigers",
+          "sport": "MLB",
+          "pick": "Kansas City Royals +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Kansas City Royals 3, Detroit Tigers 4",
+          "pnl": "+$3.32",
+          "clv_pct": -1.8,
+          "why_picked": "Primary signal: Park Factor. (Park factor 0.95 (pitcher-friendly: Comerica Park))",
+          "what_happened": "Outman has 3-run homer and Dingler the go-ahead RBI to lift surging Tigers to 4-3 win over Royals.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.8% against this pick",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "San Diego Padres @ Atlanta Braves / Minnesota Twins @ Cleveland Guardians",
+          "pick": "San Diego Padres +1.5 + Cleveland Guardians (ML)",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "LOST",
+          "pnl": "-$2.30",
+          "legs": [
+            {
+              "pick": "San Diego Padres +1.5",
+              "sport": "MLB",
+              "result": "WON"
+            },
+            {
+              "pick": "Cleveland Guardians",
+              "sport": "MLB",
+              "result": "LOST"
+            }
+          ],
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 a leg missed",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Tampa Bay Rays @ Toronto Blue Jays",
+          "sport": "MLB",
+          "pick": "Tampa Bay Rays",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Tampa Bay Rays 1, Toronto Blue Jays 3",
+          "pnl": "",
+          "clv_pct": 0.4,
+          "why_picked": "Primary signal: Park Factor. (Park factor 1.05 (hitter-friendly: Rogers Centre))",
+          "what_happened": "Shane Bieber pitches season-high 7 innings as Blue Jays beat Rays 3-1 to avoid 4-game sweep.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.4%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Arizona Diamondbacks @ St. Louis Cardinals",
+          "sport": "MLB",
+          "pick": "Arizona Diamondbacks",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Arizona Diamondbacks 10, St. Louis Cardinals 6",
+          "pnl": "",
+          "clv_pct": -0.7,
+          "why_picked": "Primary signal: Park Factor. (Park factor 0.98 (pitcher-friendly: Busch Stadium))",
+          "what_happened": "Locklear, Pdaadt help the Diamondbacks beat the Cardinals 10-6.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.7%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "HIGH confidence: 0-1 today",
+        "MEDIUM confidence: 2-0 today",
+        "MLB Moneyline: 0-1",
+        "MLB Spread: 2-0"
+      ],
+      "model_observations": [
+        "Park Factor picks: 2-1 with avg CLV -0.9%",
+        "Injury Impact picks: 2-1 with avg CLV -0.9%",
+        "Recent Form picks: 2-1 with avg CLV -0.9%",
+        "Schedule Load picks: 2-1 with avg CLV -0.9%"
+      ]
     }
   ]
 }
