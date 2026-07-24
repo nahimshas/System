@@ -130,6 +130,19 @@
       },
       "rationale": "FIP-blend hypothesis REFUTED Jul 5 (backing FIP-xFIP>1.0 starters is the BEST segment: 58.1% wr, +6.6% ROI, n=105 \u2014 never blend FIP into the quality score). Residual: within own-starter ERA-xFIP>1.0 picks, HR-driven gaps ran worse than sequencing-driven (52.3%/-4.4% vs 58.1%/+5.0%) at n=43 \u2014 re-test when both buckets reach ~100.",
       "status": "open"
+    },
+    {
+      "id": "nfl_warm_start",
+      "title": "NFL warm-start (season cold-start prior) \u2014 early-season validation",
+      "created": "2026-07-24",
+      "evaluate_after": "2026-10-05",
+      "data_window_start": "2026-09-01",
+      "type": "note",
+      "rules": {
+        "min_picks": 30
+      },
+      "rationale": "Jul 2026 NFL audit found THREE compounding bugs that made the model unusable at season start: (1) ESPN standings nesting changed conf->division->teams to conf->teams, so _fetch_all_team_stats returned ZERO teams (every game cold-started even mid-season); (2) ESPN dropped avgPointsFor/Against, so season TOTALS were used as per-game (net ratings ~17x inflated \u2192 impossible favorites); (3) no prior-season carryover, so Week 1 rated every team net=0 and bet phantom underdogs against strong favorites (proven: Carolina +15% vs KC 78% market). All three FIXED Jul 24: robust entry collection, per-game division, warm-start blend (prior net regressed x0.67 toward mean, ramping out over 6 games via games_played weight). EVALUATE ~Oct 5 (after ~4 weeks / Weeks 1-4): are NFL budget picks' CLV >= 0 and win rate sane? Watch the warm_start_weight decision-log feature \u2014 do warm-start-active (early) picks under/over-perform? NFL is a BUDGET (real-money) sport, so if early CLV is negative the CLV governor auto-gates it; consider forcing watchlist-only or reduced confidence for Weeks 1-2 next season if the warm start proves insufficient.",
+      "status": "open"
     }
   ]
 }

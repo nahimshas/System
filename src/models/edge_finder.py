@@ -2167,6 +2167,15 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
         if not stats_available:
             signals.append("⚠ NFL stats unavailable — using market baseline only")
 
+        # Early-season transparency: note when last-season priors are still blended in.
+        _hw = home_stats.get("warm_start_weight")
+        if _hw is not None and _hw < 1.0:
+            _cur_pct = int(round(_hw * 100))
+            research.append(
+                f"Early-season warm start: ratings blend {100 - _cur_pct}% last-season "
+                f"(regressed) + {_cur_pct}% current — full current-season data by ~Week 6"
+            )
+
         # Home field advantage — zeroed for the Super Bowl (neutral site; the
         # designated "home" team has no real venue edge there).
         if game.get("season_game_type") == "superbowl":
