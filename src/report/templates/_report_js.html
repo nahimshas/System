@@ -748,7 +748,7 @@
       remUnits = periRem2 * 20 + clockMin2 + otMin2;
       _v = 0.12;  _T = 60;
 
-    } else if (sport === "MLS" || sport === "WC") {
+    } else if (sport === "MLS" || sport === "WC" || sport === "LIGAMX") {
       // Soccer (MLS / World Cup): 2 × 45-min halves (≈90 min). ESPN displayClock
       // is count-up (elapsed minutes in the current half), unlike basketball.
       var elapsedMLS = Math.max(0, clock / 60);
@@ -806,7 +806,7 @@
               : (sport === "WNBA") ? 3.5
               : (sport === "NFL")  ? 6.0
               : (sport === "NHL")  ? 0.097
-              : (sport === "MLS" || sport === "WC") ? 0.042
+              : (sport === "MLS" || sport === "WC" || sport === "LIGAMX") ? 0.042
               : 0.9;  // MLB — proportionally scaled with moneyline v
 
       var mu_tot  = lineVal + normalPPF(_mp) * Math.sqrt(_T * _vT);
@@ -855,7 +855,7 @@
       var oppFinal  = weAreHome ? as : hs;
       if (ourFinal === oppFinal) {
         // Soccer ML: a draw is a loss on a team pick (no push in soccer ML)
-        return (sp === "MLS" || sp === "WC") ? "LOST" : "PUSH";
+        return (sp === "MLS" || sp === "WC" || sp === "LIGAMX") ? "LOST" : "PUSH";
       }
       return ourFinal > oppFinal ? "WON" : "LOST";
     }
@@ -1779,7 +1779,7 @@
       var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 }, WC: { won: 0, lost: 0 }, LIGAMX: { won: 0, lost: 0 } };
 
       document.querySelectorAll(
-        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result], .wc-watchlist-card[data-live-result]"
+        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result], .wc-watchlist-card[data-live-result], .ligamx-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
         // Skip picks already counted server-side in data-hist-won / data-hist-lost:
         //   data-in-history="1" — server-side flag: pick is in watchlist_history,
