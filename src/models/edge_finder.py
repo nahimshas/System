@@ -2476,6 +2476,8 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
         "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
         "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
         "playoff": _lv.get("playoff"), "stats_available": stats_available,
+        "home_warm_start_weight": nfl_ctx["season_stats"].get(home, {}).get("warm_start_weight"),
+        "away_warm_start_weight": nfl_ctx["season_stats"].get(away, {}).get("warm_start_weight"),
     }, [
         ("Moneyline", home, _lv.get("adjusted_home_prob"), _nfl_rh, _lv.get("market_home_prob"), None),
         ("Moneyline", away, _lv.get("adjusted_away_prob"),
