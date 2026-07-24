@@ -60,11 +60,25 @@ def _get(url: str, params: dict = None) -> Optional[dict]:
 # Season stats — standings endpoint (one call for all 32 teams)
 # ---------------------------------------------------------------------------
 
-def _fetch_all_team_stats() -> Dict[str, Dict]:
+# Warm-start (season cold-start) constants.
+# NFL team strength = net points/game, which is 0 for every team in ESPN's
+# standings until real games are played. Without a prior, the model rates
+# Week-1 games as coin-flips-plus-home-field and bets every rebuilding
+# underdog against every strong favorite (proven Jul 2026). The warm start
+# carries last season's ratings forward, regressed toward the mean (NFL teams
+# revert hard year-to-year), and ramps out as current-season games accumulate.
+NFL_WARMSTART_RAMP_GAMES = 6      # current-season games until pure current data
+NFL_PRIOR_REGRESSION     = 0.67   # keep 67% of prior net rating (regress 1/3 → mean)
+NFL_LEAGUE_AVG_PPG       = 21.5   # anchor for regressing ppg/oppg toward league mean
+
+
+def _fetch_all_team_stats(season: int = None) -> Dict[str, Dict]:
     """
     Returns {espn_display_name: stats_dict} for every NFL team from standings.
+    `season` defaults to the current NFL season; pass season-1 for the prior.
     """
-    season = _nfl_season()
+    if season is None:
+        season = _nfl_season()
     data = _get(f"{ESPN_NFL_V2}/standings", params={"season": season})
     if not data:
         return {}
@@ -85,7 +99,7 @@ def _fetch_all_team_stats() -> Dict[str, Dict]:
                 oppg = float(stat_map.get("avgPointsAgainst",
                              stat_map.get("pointsAgainst", 21.0)) or 21.0)
                 wins   = float(stat_map.get("wins",   0))
-                losses = float(stat_map.get("losses", 1))
+                losses = float(stat_map.get("losses", 0))
                 ties   = float(stat_map.get("ties", 0))
                 total  = wins + losses + ties
                 win_pct = float(stat_map.get("winPercent",
@@ -100,10 +114,42 @@ def _fetch_all_team_stats() -> Dict[str, Dict]:
                     "win_pct":  win_pct,
                     "wins":     int(wins),
                     "losses":   int(losses),
+                    "games_played": int(total),
                 }
 
-    logger.info(f"NFL season stats: {len(result)} teams loaded")
+    logger.info(f"NFL season {season} stats: {len(result)} teams loaded")
     return result
+
+
+def _apply_warm_start(current: Dict[str, Dict], prior: Dict[str, Dict]) -> Dict[str, Dict]:
+    """
+    Blend each team's current-season ratings with last-season's (regressed toward
+    the mean), weighted by how many current games have been played. Week 1
+    (0 games) → pure regressed prior; by ~Week 6 → pure current season.
+    Mutates and returns `current`. If `prior` is empty, current is left as-is.
+    """
+    if not prior:
+        logger.warning("NFL warm-start: no prior-season data — using current only")
+        return current
+    for name, cur in current.items():
+        gp = cur.get("games_played", 0)
+        w  = min(1.0, gp / NFL_WARMSTART_RAMP_GAMES) if NFL_WARMSTART_RAMP_GAMES else 1.0
+        pri = prior.get(name, {})
+        # Regress the prior toward the mean: net → 0, ppg/oppg → league avg.
+        pri_net  = pri.get("net_rtg", 0.0) * NFL_PRIOR_REGRESSION
+        pri_ppg  = NFL_LEAGUE_AVG_PPG + (pri.get("ppg",  NFL_LEAGUE_AVG_PPG) - NFL_LEAGUE_AVG_PPG) * NFL_PRIOR_REGRESSION
+        pri_oppg = NFL_LEAGUE_AVG_PPG + (pri.get("oppg", NFL_LEAGUE_AVG_PPG) - NFL_LEAGUE_AVG_PPG) * NFL_PRIOR_REGRESSION
+        cur["net_rtg"] = round(w * cur["net_rtg"] + (1 - w) * pri_net, 3)
+        cur["ppg"]     = round(w * cur["ppg"]  + (1 - w) * pri_ppg, 3)
+        cur["oppg"]    = round(w * cur["oppg"] + (1 - w) * pri_oppg, 3)
+        cur["off_rtg"] = cur["ppg"]
+        cur["def_rtg"] = cur["oppg"]
+        cur["warm_start_weight"] = round(w, 3)   # 0 = pure prior, 1 = pure current
+    active = sum(1 for c in current.values() if c.get("warm_start_weight", 1.0) < 1.0)
+    if active:
+        logger.info(f"NFL warm-start ACTIVE: {active} team(s) blending last-season priors "
+                    f"(regressed ×{NFL_PRIOR_REGRESSION}, ramp {NFL_WARMSTART_RAMP_GAMES} games)")
+    return current
 
 
 # ---------------------------------------------------------------------------
