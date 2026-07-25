@@ -196,7 +196,7 @@ def build(today=None):
     budget_keys = {(p.get("game"), p.get("bet_type"), p.get("pick")) for p in singles}
     display_pools = (state.get("singles_display", []) + state.get("wnba_display", []) +
                      state.get("mls_display", []) + state.get("wc_display", []) +
-                     state.get("ipl_display", []))
+                     state.get("ligamx_display", []) + state.get("ipl_display", []))
     watchlist = [p for p in display_pools
                  if (p.get("game"), p.get("bet_type"), p.get("pick")) not in budget_keys]
 
