@@ -12851,5 +12851,121 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-07-24",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ New York Mets",
+    "bet_type": "Spread",
+    "pick": "New York Mets +1.5",
+    "home_team": "New York Mets",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 66.1,
+    "market_prob_pct": 56.1,
+    "cost": 7.56,
+    "profit_if_win": 5.44,
+    "result": "LOST",
+    "actual_pnl": -7.56,
+    "actual_home_score": 2.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-07-24",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Colorado Rockies @ Milwaukee Brewers",
+    "bet_type": "Spread",
+    "pick": "Colorado Rockies +1.5",
+    "home_team": "Milwaukee Brewers",
+    "away_team": "Colorado Rockies",
+    "edge_pct": 8.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 54.6,
+    "market_prob_pct": 46.1,
+    "cost": 4.81,
+    "profit_if_win": 5.19,
+    "result": "WON",
+    "actual_pnl": 5.19,
+    "actual_home_score": 2.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-07-24",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Toronto Blue Jays @ Boston Red Sox",
+    "bet_type": "Spread",
+    "pick": "Boston Red Sox +1.5",
+    "home_team": "Boston Red Sox",
+    "away_team": "Toronto Blue Jays",
+    "edge_pct": 7.2,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 71.6,
+    "market_prob_pct": 64.4,
+    "cost": 5.98,
+    "profit_if_win": 3.02,
+    "result": "WON",
+    "actual_pnl": 3.02,
+    "actual_home_score": 6.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-07-24",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Colorado Rockies +1.5 + New York Mets +1.5",
+    "bet_type": "Parlay",
+    "pick": "Colorado Rockies +1.5 + New York Mets +1.5",
+    "edge_pct": 9.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 34.8,
+    "market_prob_pct": 0,
+    "cost": 2.23,
+    "profit_if_win": 5.77,
+    "result": "LOST",
+    "actual_pnl": -2.23,
+    "legs": [
+      {
+        "game": "Colorado Rockies @ Milwaukee Brewers",
+        "pick": "Colorado Rockies +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Los Angeles Dodgers @ New York Mets",
+        "pick": "New York Mets +1.5",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-24",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Mets (ML) + Boston Red Sox +1.5",
+    "bet_type": "Parlay",
+    "pick": "New York Mets (ML) + Boston Red Sox +1.5",
+    "edge_pct": 7.4,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 36.4,
+    "market_prob_pct": 0,
+    "cost": 1.86,
+    "profit_if_win": 4.14,
+    "result": "LOST",
+    "actual_pnl": -1.86,
+    "legs": [
+      {
+        "game": "Los Angeles Dodgers @ New York Mets",
+        "pick": "New York Mets",
+        "result": "LOST"
+      },
+      {
+        "game": "Toronto Blue Jays @ Boston Red Sox",
+        "pick": "Boston Red Sox +1.5",
+        "result": "WON"
+      }
+    ]
   }
 ]
