@@ -1420,6 +1420,17 @@
     var liveDiv = card.querySelector(".live-status");
     if (!liveDiv) return;
 
+    // Postponed/suspended/cancelled: never grade (parseEvent forced stateId="1"
+    // so it won't settle) — show a clear PPD note instead of the start time,
+    // since the game won't be played. Server VOIDs it (stake returned).
+    if (ev.postponed) {
+      liveDiv.innerHTML =
+        '<div style="margin-top:8px;text-align:center;font-size:0.74rem;color:#f59e0b;font-weight:600;">' +
+        '⏸ Postponed — bet voided (stake returned)</div>';
+      clearCardTime(card);
+      return;
+    }
+
     // Shorten full team names in proj-score-hl to abbreviations (runs once per card)
     var projDiv = card.querySelector('.proj-score-hl');
     if (projDiv && !projDiv.getAttribute('data-abbr') && ev.homeAbbr && ev.awayAbbr) {
