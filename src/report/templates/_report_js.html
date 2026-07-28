@@ -969,6 +969,15 @@
     // Prefer shortDetail; fall back to description (covers more ESPN formats)
     var detail    = stype.shortDetail || stype.description || "";
 
+    // Postponed/suspended/cancelled: ESPN reports these with state "post" and a
+    // 0-0 score, which the single-card grader would otherwise settle as a real
+    // final (a +1.5 spread "covers" a 0-0 non-game → phantom WON, Jul 26 2026).
+    // Flag it so applyCard shows PPD instead of grading, matching the server
+    // which VOIDs these (stake returned).
+    var _statusName = (stype.name || "") + " " + (stype.description || "") + " " + detail;
+    var postponed   = /postpone|suspend|cancel/i.test(_statusName);
+    if (postponed) stateId = "1";   // treat as not-final for card grading
+
     // Period / inning and clock
     var period    = status.period  || 1;
     var clockStr  = status.displayClock || "0:00";
