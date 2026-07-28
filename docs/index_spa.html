@@ -3156,7 +3156,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">July 27, 2026 at 06:46 PM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">July 27, 2026 at 06:49 PM PDT</div>
         </div>
         
       </div>
@@ -5160,6 +5160,15 @@ function toggleCtx(el) {
     // Prefer shortDetail; fall back to description (covers more ESPN formats)
     var detail    = stype.shortDetail || stype.description || "";
 
+    // Postponed/suspended/cancelled: ESPN reports these with state "post" and a
+    // 0-0 score, which the single-card grader would otherwise settle as a real
+    // final (a +1.5 spread "covers" a 0-0 non-game → phantom WON, Jul 26 2026).
+    // Flag it so applyCard shows PPD instead of grading, matching the server
+    // which VOIDs these (stake returned).
+    var _statusName = (stype.name || "") + " " + (stype.description || "") + " " + detail;
+    var postponed   = /postpone|suspend|cancel/i.test(_statusName);
+    if (postponed) stateId = "1";   // treat as not-final for card grading
+
     // Period / inning and clock
     var period    = status.period  || 1;
     var clockStr  = status.displayClock || "0:00";
@@ -5185,6 +5194,7 @@ function toggleCtx(el) {
       homeRecord: homeRecord, awayRecord: awayRecord,
       homeScore: homeScore, awayScore: awayScore,
       stateId: stateId, detail: detail,
+      postponed: postponed,
       period: period, clockSec: clockSec,
       isBottom: isBottom,
       sport: sportKey,
@@ -5600,6 +5610,17 @@ function toggleCtx(el) {
 
     var liveDiv = card.querySelector(".live-status");
     if (!liveDiv) return;
+
+    // Postponed/suspended/cancelled: never grade (parseEvent forced stateId="1"
+    // so it won't settle) — show a clear PPD note instead of the start time,
+    // since the game won't be played. Server VOIDs it (stake returned).
+    if (ev.postponed) {
+      liveDiv.innerHTML =
+        '<div style="margin-top:8px;text-align:center;font-size:0.74rem;color:#f59e0b;font-weight:600;">' +
+        '⏸ Postponed — bet voided (stake returned)</div>';
+      clearCardTime(card);
+      return;
+    }
 
     // Shorten full team names in proj-score-hl to abbreviations (runs once per card)
     var projDiv = card.querySelector('.proj-score-hl');
