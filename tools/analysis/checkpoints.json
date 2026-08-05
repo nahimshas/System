@@ -143,6 +143,21 @@
       },
       "rationale": "Jul 2026 NFL audit found THREE compounding bugs that made the model unusable at season start: (1) ESPN standings nesting changed conf->division->teams to conf->teams, so _fetch_all_team_stats returned ZERO teams (every game cold-started even mid-season); (2) ESPN dropped avgPointsFor/Against, so season TOTALS were used as per-game (net ratings ~17x inflated \u2192 impossible favorites); (3) no prior-season carryover, so Week 1 rated every team net=0 and bet phantom underdogs against strong favorites (proven: Carolina +15% vs KC 78% market). All three FIXED Jul 24: robust entry collection, per-game division, warm-start blend (prior net regressed x0.67 toward mean, ramping out over 6 games via games_played weight). EVALUATE ~Oct 5 (after ~4 weeks / Weeks 1-4): are NFL budget picks' CLV >= 0 and win rate sane? Watch the warm_start_weight decision-log feature \u2014 do warm-start-active (early) picks under/over-perform? NFL is a BUDGET (real-money) sport, so if early CLV is negative the CLV governor auto-gates it; consider forcing watchlist-only or reduced confidence for Weeks 1-2 next season if the warm start proves insufficient.",
       "status": "open"
+    },
+    {
+      "id": "f5_validation",
+      "title": "First-5-innings suite \u2014 does it beat the market where full-game MLB failed?",
+      "created": "2026-08-04",
+      "evaluate_after": "2026-09-07",
+      "data_window_start": "2026-08-05",
+      "type": "note",
+      "rules": {
+        "min_graded_picks": 100
+      },
+      "rationale": "Aug 4 2026: three independent tests proved the full-game MLB model has no exploitable edge (budget CLV -0.65% over n=212; features WORSEN out-of-sample log-loss; when we disagree with the market the market is right, worse the bigger our claimed edge). F5 is the one remaining hypothesis with a MECHANISTIC reason to work: (a) it is a bet on the STARTING PITCHERS ONLY \u2014 the model's deepest input (composite sp_score) \u2014 with the bullpen term (our weakest input) removed entirely; (b) F5/derivative markets are thinner and often algorithmically derived from the full-game line rather than independently priced; (c) unlike constants tuning, it has never been tested rather than repeatedly falsified. Built watchlist-only: markets 'F5 Moneyline'/'F5 Tie'/'F5 Spread'/'F5 Total' are in BUDGET_EXCLUDED_MARKETS, so they display + log + accrue CLV with ZERO money at risk. Calibration guarded by tests/test_f5.py (a first draft mis-scaled the pitcher weight and produced 15pp phantom edges; correct scaling is x5/9). Settlement uses the 5-inning linescore, never the final.",
+      "on_pass": "If market_test.py shows F5 features add out-of-sample signal AND CLV >= 0 AND positive ROI in both halves of a time split: remove F5 from BUDGET_EXCLUDED_MARKETS and let it compete for budget slots. If full-game MLB is still failing at that point, propose the swap the user suggested: F5 becomes the budget market, full-game drops to display-only.",
+      "on_fail": "Keep F5 watchlist-only or retire it. If F5 ALSO shows no edge, that is strong evidence the limit is our public-data inputs rather than the market chosen \u2014 at which point the honest recommendation is to stop betting MLB in any form and let NFL/Liga MX be judged on their own.",
+      "status": "open"
     }
   ]
 }
