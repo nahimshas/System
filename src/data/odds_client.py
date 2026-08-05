@@ -408,9 +408,65 @@ def get_game_odds(sport: str, hours_lookahead: Optional[int] = None) -> List[Dic
                     }
                     break
 
+        # --- First 5 innings (MLB) ---------------------------------------
+        # F5 moneyline is a 3-WAY market (home / tie / away) — a 5-inning game
+        # can be level — so it parses like soccer, not like a full-game ML.
+        # Any of the three F5 blocks may be absent for a given game; each is
+        # optional and independently guarded.
+        f5_ml = _pick_book_odds(bookmakers, "h2h_1st_5_innings")
+        if f5_ml:
+            cons3 = _consensus_probs_3way(bookmakers, "h2h_1st_5_innings")
+            if cons3 and home in cons3 and away in cons3:
+                draw_key = next((k for k in cons3 if k not in (home, away, "book_count")), None)
+                entry["f5_moneyline"] = {
+                    "book": f"consensus({cons3.get('book_count', 1)})",
+                    "home_prob": cons3[home],
+                    "draw_prob": cons3.get(draw_key, cons3.get("Draw", 0.0)),
+                    "away_prob": cons3[away],
+                }
+            else:
+                cons2 = _consensus_probs(bookmakers, "h2h_1st_5_innings")
+                if cons2 and home in cons2 and away in cons2:
+                    entry["f5_moneyline"] = {
+                        "book": f"consensus({cons2.get('book_count', 1)})",
+                        "home_prob": cons2[home], "draw_prob": 0.0, "away_prob": cons2[away],
+                    }
+
+        f5_sp = _pick_book_odds(bookmakers, "spreads_1st_5_innings")
+        if f5_sp:
+            for o in f5_sp["outcomes"]:
+                if o["name"] == home:
+                    hp_pt = o.get("point", 0)
+                    c = _consensus_probs_for_spread(bookmakers, home, hp_pt,
+                                                    market_key="spreads_1st_5_innings")
+                    hp = c.get(home) if c else None
+                    entry["f5_spread"] = {
+                        "book": f5_sp["book"], "home_spread": hp_pt,
+                        "home_prob": hp if hp else american_to_prob(o["price"]),
+                        "away_prob": 1 - (hp if hp else american_to_prob(o["price"])),
+                    }
+                    break
+
+        f5_tot  = _pick_book_odds(bookmakers, "totals_1st_5_innings")
+        f5_cons = _consensus_probs(bookmakers, "totals_1st_5_innings")
+        if f5_tot:
+            for o in f5_tot["outcomes"]:
+                if o["name"] == "Over":
+                    ov = f5_cons.get("Over") if f5_cons else None
+                    un = f5_cons.get("Under") if f5_cons else None
+                    entry["f5_total"] = {
+                        "book": f"consensus({f5_cons.get('book_count',1)})" if f5_cons else f5_tot["book"],
+                        "line": o.get("point", 0),
+                        "over_prob":  ov if ov else american_to_prob(o["price"]),
+                        "under_prob": un if un else 1 - american_to_prob(o["price"]),
+                    }
+                    break
+
         games.append(entry)
 
-    logger.info(f"Fetched {len(games)} {sport} games from odds API")
+    _n_f5 = sum(1 for g in games if g.get("f5_moneyline") or g.get("f5_total"))
+    logger.info(f"Fetched {len(games)} {sport} games from odds API"
+                + (f" ({_n_f5} with F5 markets)" if sport == "baseball_mlb" else ""))
     return games
 
 
