@@ -281,6 +281,12 @@ def get_game_odds(sport: str, hours_lookahead: Optional[int] = None) -> List[Dic
     else:
         commence_from, commence_to = _pacific_today_utc_window()
         markets = "h2h,spreads,totals"
+        # First-5-innings suite (MLB only, Aug 2026). F5 is a bet on the STARTING
+        # PITCHERS — no bullpen, no late-game management — which is the one input
+        # our model has real depth on, and it's a thinner market than full game.
+        # Watchlist-only until it earns budget entry (see BUDGET_EXCLUDED_MARKETS).
+        if sport == "baseball_mlb":
+            markets += ",h2h_1st_5_innings,spreads_1st_5_innings,totals_1st_5_innings"
 
     data = _get(f"/sports/{sport}/odds", {
         "regions": "us",
