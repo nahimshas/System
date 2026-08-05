@@ -71,6 +71,17 @@ MIN_PARLAY_LEG_EDGE: float = 0.025   # each parlay leg must have ≥ 2.5% edge
 #     least reliable, and realized ROI there is negative. 0.38 keeps the proven
 #     40–50% bucket while cutting the <40% longshots. Still logged.
 PWA_HIDDEN_MARKETS: frozenset = frozenset({"Total", "Draw"})
+
+# Markets that DISPLAY and LOG but never receive real money, regardless of edge.
+# Used for new/unvalidated markets serving a probation period: they accumulate
+# decision-log rows, CLV, and calibration exactly like live markets, but the
+# budget filter in main.py refuses them. Graduation is a checkpoint decision
+# (market_test.py + CLV >= 0 + positive ROI in both halves of a time split) —
+# the same bar the MLB full-game markets failed in Aug 2026.
+# First-5-innings suite added Aug 2026 (watchlist probation).
+BUDGET_EXCLUDED_MARKETS: frozenset = frozenset({
+    "F5 Moneyline", "F5 Tie", "F5 Spread", "F5 Total",
+})
 PWA_MODEL_PROB_FLOOR: float = 0.38
 
 # --- Schedule load (7-day fatigue) ---

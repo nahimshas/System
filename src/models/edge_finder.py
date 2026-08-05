@@ -4570,3 +4570,157 @@ def analyze_ligamx_game(
         ("Draw", "draw", p_draw, None, market_draw_prob, None),
     ], recs)
     return recs
+
+
+# ── First 5 innings (MLB) ────────────────────────────────────────────────────
+# F5 constants. A 5-inning game is decided almost entirely by the two STARTERS
+# — no bullpen, no late-game management — which is the input this model has the
+# most depth on (composite sp_score: xFIP, BB/9, K/9, ERA-trap). It is also a
+# thinner market than the full game. Watchlist-only until validated.
+F5_INNINGS          = 5.0
+F5_DC_RHO           = -0.06   # low-score correlation, milder than soccer's -0.10
+F5_CRED_CAP         = 0.10    # max drift from market (new-market caution)
+F5_MAX_GOALS        = 12      # scoreline grid bound for 5 innings
+
+
+def analyze_mlb_f5_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: Dict,
+                        mlb_ctx: Dict, min_edge: float = None) -> List[BetRecommendation]:
+    """
+    First-5-innings edge finder (MLB) — watchlist-only.
+
+    Reuses the full-game expected-runs machinery but STRIPS the bullpen term
+    (the starter throws essentially all 5 innings) and scales to 5 innings.
+    Runs through a Dixon-Coles scoreline grid, exactly like the soccer models,
+    because F5 is a 3-WAY market (home / tie / away) — a 5-inning game can be
+    level. One grid yields every F5 bet type Robinhood offers:
+        F5 Moneyline (home/away), F5 Tie, F5 Spread ±1.5, F5 Total over/under.
+
+    All recs carry zero sizing (watchlist) and market types prefixed "F5 ".
+    """
+    from src.config import MLB_HOME_ADVANTAGE
+
+    _zero_sizing = BetSizing(
+        dollar_allocation=0, num_contracts=0, contract_price=0,
+        total_cost=0, profit_if_win=0, loss_if_lose=0,
+        expected_value=0, kelly_fraction=0,
+    )
+
+    home = game["home_team"]
+    away = game["away_team"]
+    label = f"{away} @ {home}"
+    commence_time = game.get("commence_time", "")
+    game_time = _utc_to_pdt(commence_time)
+    _min = min_edge if min_edge is not None else MIN_EDGE
+    recs: List[BetRecommendation] = []
+
+    if not (game.get("f5_moneyline") or game.get("f5_total") or game.get("f5_spread")):
+        return recs   # book doesn't list F5 for this game
+
+    season = mlb_ctx.get("season_stats", {}) if mlb_ctx else {}
+    hs = season.get(home, {}) or {}
+    as_ = season.get(away, {}) or {}
+    stats_available = bool(hs and as_) and bool(home_pitcher_stats and away_pitcher_stats)
+
+    signals: List[str] = []
+    research: List[str] = []
+
+    # ── Expected runs through 5 innings — STARTERS ONLY (no bullpen term) ────
+    league_f5 = 4.35 * (F5_INNINGS / 9.0)          # league-average runs per team thru 5
+    h_sp = _pitcher_quality_score(home_pitcher_stats) if home_pitcher_stats else 0.0
+    a_sp = _pitcher_quality_score(away_pitcher_stats) if away_pitcher_stats else 0.0
+    # Pitching weight, scaled consistently with the 9-inning model.
+    # The full-game formula spreads _PITCH_COEFF (0.80) across 9 innings, so a
+    # starter's per-inning run-prevention is sp_score*0.80/9. Over 5 innings
+    # that is sp_score*0.80*(5/9). Applying the raw 0.80 to a 5-inning baseline
+    # (as a first draft did) makes the pitcher ~2.7x too strong per inning and
+    # manufactures 15pp disagreements with the market — the exact overconfidence
+    # signature that sank the full-game model. Keep the scaling honest.
+    _F5_PITCH = 0.80 * (F5_INNINGS / 9.0)
+    h_off = ((hs.get("ops") or 0.735) - 0.735) / 0.080
+    a_off = ((as_.get("ops") or 0.735) - 0.735) / 0.080
+
+    lam_home = max(0.15, league_f5 - a_sp * _F5_PITCH + h_off * 0.6 * (F5_INNINGS / 9.0)
+                   + MLB_HOME_ADVANTAGE * 5 * (F5_INNINGS / 9.0))
+    lam_away = max(0.15, league_f5 - h_sp * _F5_PITCH + a_off * 0.6 * (F5_INNINGS / 9.0))
+
+    research.append(f"F5 starter scores: {home} {h_sp:+.2f} | {away} {a_sp:+.2f} (bullpen excluded)")
+    research.append(f"F5 expected runs: {home} {lam_home:.2f} | {away} {lam_away:.2f}")
+    signals.append(f"Model projected score: {home} {lam_home:.1f} — {away} {lam_away:.1f}")
+    if abs(h_sp - a_sp) >= 0.4:
+        better = home if h_sp > a_sp else away
+        signals.append(f"F5 starter edge: {better} ({abs(h_sp - a_sp):.2f} quality gap over 5 innings)")
+
+    # ── Scoreline grid → 3-way / spread / total probabilities ───────────────
+    matrix = _mls_prob_matrix(lam_home, lam_away, max_goals=F5_MAX_GOALS, rho=F5_DC_RHO)
+    p_home = sum(v for (i, j), v in matrix.items() if i > j)
+    p_tie  = sum(v for (i, j), v in matrix.items() if i == j)
+    p_away = sum(v for (i, j), v in matrix.items() if i < j)
+    tot_p = p_home + p_tie + p_away
+    if tot_p > 0:
+        p_home, p_tie, p_away = p_home / tot_p, p_tie / tot_p, p_away / tot_p
+    research.append(f"F5 probabilities: {home} {p_home:.1%} | Tie {p_tie:.1%} | {away} {p_away:.1%}")
+
+    def _rec(pick_str, bet_type, model_p, market_p, raw_p=None, line=None):
+        if market_p is None or not (0.01 < market_p < 0.99):
+            return None
+        edge = model_p - market_p
+        if edge < _min or not has_positive_ev(model_p, market_p):
+            return None
+        r = BetRecommendation(
+            sport="MLB", game=label, home_team=home, away_team=away,
+            pick=pick_str, bet_type=bet_type,
+            model_prob=model_p, market_prob=market_p, edge=edge,
+            contract_price=market_p, sizing=_zero_sizing,
+            confidence=_confidence_label(edge, len(signals), stats_available),
+            signals=signals[:], research=research[:],
+            game_time=game_time, commence_time=commence_time,
+        )
+        if raw_p is not None:
+            r.model_prob_raw = raw_p
+        recs.append(r)
+        return r
+
+    # F5 Moneyline + Tie (3-way)
+    ml = game.get("f5_moneyline")
+    if ml:
+        mh, md, ma = ml.get("home_prob"), ml.get("draw_prob"), ml.get("away_prob")
+        ch = _apply_credibility_cap_dispatched(p_home, mh, _cred_cap("mlb_f5", F5_CRED_CAP, "credibility_moneyline"), "mlb_f5", "credibility_moneyline")[0] if mh else p_home
+        ca = _apply_credibility_cap_dispatched(p_away, ma, _cred_cap("mlb_f5", F5_CRED_CAP, "credibility_moneyline"), "mlb_f5", "credibility_moneyline")[0] if ma else p_away
+        _rec(home, "F5 Moneyline", ch, mh, raw_p=p_home)
+        _rec(away, "F5 Moneyline", ca, ma, raw_p=p_away)
+        if md and md > 0.01:
+            ct = _apply_credibility_cap_dispatched(p_tie, md, _cred_cap("mlb_f5", F5_CRED_CAP, "credibility_draw"), "mlb_f5", "credibility_draw")[0]
+            _rec("Tie", "F5 Tie", ct, md, raw_p=p_tie)
+
+    # F5 Spread (±1.5 — Robinhood's F5 run line)
+    sp = game.get("f5_spread")
+    if sp and sp.get("home_spread") is not None:
+        line = float(sp["home_spread"])
+        # P(home margin > -line) — same convention as the full-game run line
+        mh_cov = sum(v for (i, j), v in matrix.items() if (i - j) > -line)
+        ma_cov = 1.0 - mh_cov
+        _rec(f"{home} {line:+.1f}", "F5 Spread", mh_cov, sp.get("home_prob"), raw_p=mh_cov, line=line)
+        _rec(f"{away} {-line:+.1f}", "F5 Spread", ma_cov, sp.get("away_prob"), raw_p=ma_cov, line=-line)
+
+    # F5 Total
+    tt = game.get("f5_total")
+    if tt and tt.get("line") is not None:
+        line = float(tt["line"])
+        p_over = sum(v for (i, j), v in matrix.items() if (i + j) > line)
+        p_under = 1.0 - p_over
+        _rec(f"Over {line}", "F5 Total", p_over, tt.get("over_prob"), raw_p=p_over, line=line)
+        _rec(f"Under {line}", "F5 Total", p_under, tt.get("under_prob"), raw_p=p_under, line=line)
+
+    # Decision-log capture (both sides of every F5 market + the model inputs).
+    _stamp_decision(game, _min, {
+        "f5_lam_home": lam_home, "f5_lam_away": lam_away,
+        "f5_home_sp_score": h_sp, "f5_away_sp_score": a_sp,
+        "f5_home_off": h_off, "f5_away_off": a_off,
+        "f5_p_home": p_home, "f5_p_tie": p_tie, "f5_p_away": p_away,
+        "stats_available": stats_available,
+    }, [
+        ("F5 Moneyline", home, p_home, p_home, (ml or {}).get("home_prob"), None),
+        ("F5 Moneyline", away, p_away, p_away, (ml or {}).get("away_prob"), None),
+        ("F5 Tie", "tie", p_tie, p_tie, (ml or {}).get("draw_prob"), None),
+    ], recs)
+    return recs

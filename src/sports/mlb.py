@@ -176,7 +176,7 @@ class MLBModule:
         )
         from src.data.umpire import get_umpire_tendency
         from src.data.weather import get_game_weather
-        from src.models.edge_finder import analyze_mlb_game
+        from src.models.edge_finder import analyze_mlb_game, analyze_mlb_f5_game
 
         from datetime import date as _date
         injuries          = context.get("injuries", {})
@@ -288,6 +288,21 @@ class MLBModule:
                     min_edge=min_edge,
                 )
                 results.extend(recs)
+
+                # First-5-innings suite (watchlist-only, Aug 2026). Separate
+                # analyzer: starters only, no bullpen — the input this model has
+                # the most depth on, in a thinner market. Never blocks the
+                # full-game recs if it fails.
+                try:
+                    f5_ctx = {"season_stats": {
+                        game["home_team"]: {"ops": (home_bat or {}).get("ops")},
+                        game["away_team"]: {"ops": (away_bat or {}).get("ops")},
+                    }}
+                    results.extend(
+                        analyze_mlb_f5_game(game, hp_stats, ap_stats, f5_ctx, min_edge=min_edge)
+                    )
+                except Exception as _f5e:
+                    logger.warning(f"MLB F5 analysis skipped ({home} vs {away}): {_f5e}")
 
             except Exception as e:
                 logger.error(f"MLB game analysis error ({home} vs {away}): {e}")

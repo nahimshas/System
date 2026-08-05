@@ -135,7 +135,7 @@ def _consensus_probs(bookmakers: List[Dict], market_key: str) -> Optional[Dict]:
             if len(outcomes) < 2:
                 continue
 
-            if market_key in ("h2h", "spreads"):
+            if market_key in ("h2h", "spreads", "h2h_1st_5_innings", "spreads_1st_5_innings"):
                 raw = {o["name"]: american_to_prob(o["price"]) for o in outcomes}
                 names = list(raw.keys())
                 # Remove vig on each book before averaging
@@ -144,7 +144,7 @@ def _consensus_probs(bookmakers: List[Dict], market_key: str) -> Optional[Dict]:
                 probs_by_name.setdefault(names[1], []).append(p1)
                 book_count += 1
 
-            elif market_key == "totals":
+            elif market_key in ("totals", "totals_1st_5_innings"):
                 for o in outcomes:
                     p = american_to_prob(o["price"])
                     probs_by_name.setdefault(o["name"], []).append(p)
@@ -189,7 +189,8 @@ def _consensus_probs_3way(bookmakers: list, market_key: str = "h2h") -> Optional
 
 
 def _consensus_probs_for_spread(
-    bookmakers: List[Dict], home: str, home_point: float
+    bookmakers: List[Dict], home: str, home_point: float,
+    market_key: str = "spreads",
 ) -> Optional[Dict]:
     """
     Spread-specific consensus that only averages books offering the SAME spread
@@ -206,7 +207,7 @@ def _consensus_probs_for_spread(
 
     for book in bookmakers:
         for mkt in book.get("markets", []):
-            if mkt["key"] != "spreads":
+            if mkt["key"] != market_key:
                 continue
             outcomes = mkt["outcomes"]
             if len(outcomes) < 2:
@@ -330,6 +331,10 @@ def get_game_odds(sport: str, hours_lookahead: Optional[int] = None) -> List[Dic
             "moneyline": None,
             "spread": None,
             "total": None,
+            # First-5-innings markets (MLB); stay None when the book doesn't list them
+            "f5_moneyline": None,
+            "f5_spread": None,
+            "f5_total": None,
         }
 
         # --- Moneyline ---

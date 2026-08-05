@@ -423,6 +423,19 @@ def _fetch_espn_final_scores(sport: str, game_date: date) -> Dict:
         except (TypeError, ValueError):
             continue
 
+        # First-5-innings scores (MLB F5 markets settle on these, NOT the final).
+        # Summed from the per-inning linescores ESPN already returns. None when
+        # the game hasn't reached 5 innings or the breakdown is unavailable —
+        # callers must leave the pick PENDING rather than grade on the final.
+        def _f5(c):
+            ls = c.get("linescores") or []
+            if len(ls) < 5:
+                return None
+            try:
+                return float(sum(float(x.get("value", 0) or 0) for x in ls[:5]))
+            except (TypeError, ValueError):
+                return None
+
         entry = {
             "home_name":  home_name,
             "away_name":  away_name,
@@ -430,6 +443,8 @@ def _fetch_espn_final_scores(sport: str, game_date: date) -> Dict:
             "away_abbr":  away_abbr,
             "home_score": home_score,
             "away_score": away_score,
+            "home_f5":    _f5(home_comp),
+            "away_f5":    _f5(away_comp),
             "event_date": event.get("date", ""),
         }
         # Index by both name variants for flexible lookup.
@@ -679,6 +694,69 @@ def _determine_outcome(
         return "WON" if adjusted > 0 else "LOST"
 
     logger.warning(f"Unrecognised bet type '{bet_type}' — cannot settle")
+    return "UNKNOWN"
+
+
+def _determine_f5_outcome(pick: str, bet_type: str, home_team: str, away_team: str,
+                          home_f5: float, away_f5: float) -> str:
+    """
+    Grade a first-5-innings bet on the score AFTER 5 INNINGS (not the final).
+
+    F5 is a 3-way market — a 5-inning game can be level — so:
+      • "F5 Moneyline": a tie is a LOSS for a team pick (like soccer ML)
+      • "F5 Tie":       WON iff level after 5
+      • "F5 Spread":    ±1.5 run line applied to the 5-inning margin
+      • "F5 Total":     over/under the 5-inning combined runs
+    Returns WON / LOST / PUSH / UNKNOWN.
+    """
+    bt = (bet_type or "").lower().strip()
+    if home_f5 is None or away_f5 is None:
+        return "UNKNOWN"
+    hl, al = (home_team or "").lower(), (away_team or "").lower()
+    pl = (pick or "").lower()
+
+    if bt == "f5 tie":
+        return "WON" if home_f5 == away_f5 else "LOST"
+
+    if bt == "f5 moneyline":
+        if home_f5 == away_f5:
+            return "LOST"          # tie loses a team pick
+        home_won = home_f5 > away_f5
+        if hl and (hl in pl or pl in hl):
+            return "WON" if home_won else "LOST"
+        if al and (al in pl or pl in al):
+            return "WON" if not home_won else "LOST"
+        return "UNKNOWN"
+
+    if bt == "f5 spread":
+        m = re.search(r"([+-]\d+(?:\.\d+)?)\s*$", pick or "")
+        if not m:
+            return "UNKNOWN"
+        line = float(m.group(1))
+        team = re.sub(r"[+-][\d.]+\s*$", "", pick or "").strip().lower()
+        if hl and (hl in team or team in hl):
+            margin = home_f5 - away_f5
+        elif al and (al in team or team in al):
+            margin = away_f5 - home_f5
+        else:
+            return "UNKNOWN"
+        adj = margin + line
+        return "WON" if adj > 0 else ("PUSH" if adj == 0 else "LOST")
+
+    if bt == "f5 total":
+        m = re.search(r"([\d.]+)\s*$", pick or "")
+        if not m:
+            return "UNKNOWN"
+        line = float(m.group(1))
+        total = home_f5 + away_f5
+        if total == line:
+            return "PUSH"
+        if pl.startswith("over"):
+            return "WON" if total > line else "LOST"
+        if pl.startswith("under"):
+            return "WON" if total < line else "LOST"
+        return "UNKNOWN"
+
     return "UNKNOWN"
 
 

@@ -127,6 +127,20 @@ def _grade_candidate(entry: Dict[str, Any], home_score: float, away_score: float
     away = (entry.get("away_team") or "").strip()
     soccer = (entry.get("sport") or "").upper() in _SOCCER
 
+    # First-5-innings markets are graded by the caller against the 5-inning
+    # score (passed in as home_score/away_score); map their market types onto
+    # the same logic, treating "F5 Tie" like a Draw and F5 ML as 3-way.
+    if mt.startswith("F5 "):
+        if mt == "F5 Tie":
+            return "win" if home_score == away_score else "loss"
+        if mt == "F5 Moneyline":
+            if home_score == away_score:
+                return "loss"          # tie loses a team pick
+            my_home = (side == home) or (home.lower() in side.lower())
+            won = (home_score > away_score) if my_home else (away_score > home_score)
+            return "win" if won else "loss"
+        mt = mt.replace("F5 ", "")     # F5 Spread / F5 Total → shared logic below
+
     if mt == "Draw":
         return "win" if home_score == away_score else "loss"
 
@@ -243,7 +257,13 @@ def settle_decision_from_scores(today: date) -> int:
                 sd = _find_game_score(scores, home_abbr, away_abbr)
                 if not sd:
                     continue
-                res = _grade_candidate(entry, sd["home_score"], sd["away_score"])
+                # F5 candidates settle on the 5-inning score, not the final.
+                if str(entry.get("market_type", "")).startswith("F5 "):
+                    if sd.get("home_f5") is None or sd.get("away_f5") is None:
+                        continue      # no 5-inning breakdown yet — stay ungraded
+                    res = _grade_candidate(entry, sd["home_f5"], sd["away_f5"])
+                else:
+                    res = _grade_candidate(entry, sd["home_score"], sd["away_score"])
                 if res is None:
                     continue
                 entry["outcome"] = res

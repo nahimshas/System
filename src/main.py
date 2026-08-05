@@ -19,7 +19,7 @@ from jinja2 import Environment, FileSystemLoader
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
     MAX_SINGLE_BETS, MAX_PROPS_PER_SPORT, MIN_EDGE, BUDGET_MIN_EDGE,
-    PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR,
+    PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR, BUDGET_EXCLUDED_MARKETS,
 )
 from src.data.odds_client import get_last_api_error, get_api_credits
 from src.models.parlay_builder import build_parlays
@@ -604,7 +604,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 # win-rate relationship. Display pools keep MIN_EDGE.
                 all_singles_raw.extend(
                     r for r in qualifying
-                    if _effective_edge_safe(r) >= BUDGET_MIN_EDGE
+                    if (r.bet_type not in BUDGET_EXCLUDED_MARKETS)
+                    and _effective_edge_safe(r) >= BUDGET_MIN_EDGE
                     and _clv_gate_safe(r) and getattr(r.sizing, "num_contracts", 0) > 0
                     and _pwa_display_eligible(r)
                 )

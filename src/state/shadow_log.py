@@ -631,7 +631,20 @@ def settle_shadow_from_espn(today: date) -> int:
                 espn_home = score_data.get("home_name", home_abbr)
                 espn_away = score_data.get("away_name", away_abbr)
 
-                if sport in ("MLS", "WC", "LIGAMX"):
+                if str(bet_type).startswith("F5 "):
+                    # First-5-innings markets settle on the 5-inning score, not
+                    # the final. home_f5/away_f5 come from ESPN linescores; when
+                    # absent (game short of 5 innings, or no breakdown) leave the
+                    # pick unsettled rather than grade against the final score.
+                    from src.data.outcome_checker import _determine_f5_outcome
+                    if score_data.get("home_f5") is None or score_data.get("away_f5") is None:
+                        logger.debug(f"Shadow F5: no 5-inning linescore for '{game}' — leaving pending")
+                        continue
+                    result = _determine_f5_outcome(
+                        pick, bet_type, espn_home, espn_away,
+                        score_data["home_f5"], score_data["away_f5"],
+                    )
+                elif sport in ("MLS", "WC", "LIGAMX"):
                     result = _determine_mls_outcome(
                         pick, bet_type, espn_home, espn_away,
                         score_data["home_score"], score_data["away_score"],
