@@ -282,20 +282,31 @@ def get_game_odds(sport: str, hours_lookahead: Optional[int] = None) -> List[Dic
     else:
         commence_from, commence_to = _pacific_today_utc_window()
         markets = "h2h,spreads,totals"
-        # First-5-innings suite (MLB only, Aug 2026). F5 is a bet on the STARTING
-        # PITCHERS — no bullpen, no late-game management — which is the one input
-        # our model has real depth on, and it's a thinner market than full game.
-        # Watchlist-only until it earns budget entry (see BUDGET_EXCLUDED_MARKETS).
-        if sport == "baseball_mlb":
-            markets += ",h2h_1st_5_innings,spreads_1st_5_innings,totals_1st_5_innings"
+        # ⚠️ DO NOT add F5 / alternate markets here. The Odds API's bulk
+        # /sports/{sport}/odds endpoint only accepts h2h, spreads and totals;
+        # requesting h2h_1st_5_innings et al. returns 422 for the WHOLE request,
+        # which took the entire MLB slate down on Aug 6 2026 (no card produced).
+        # F5 markets live on the per-event endpoint — see get_f5_odds().
 
-    data = _get(f"/sports/{sport}/odds", {
-        "regions": "us",
-        "markets": markets,
-        "oddsFormat": "american",
-        "commenceTimeFrom": commence_from,
-        "commenceTimeTo": commence_to,
-    })
+    def _fetch(mkts):
+        return _get(f"/sports/{sport}/odds", {
+            "regions": "us",
+            "markets": mkts,
+            "oddsFormat": "american",
+            "commenceTimeFrom": commence_from,
+            "commenceTimeTo": commence_to,
+        })
+
+    data = _fetch(markets)
+    # SAFETY NET (added Aug 6 2026 after F5 markets 422'd the whole MLB slate and
+    # produced NO CARD): if the request failed because some market isn't supported
+    # on this endpoint, retry with the core three. A speculative/extra market must
+    # never be able to take a whole sport down.
+    if not data and markets != "h2h,spreads,totals":
+        err = _last_api_error or ""
+        if "not supported" in err.lower() or "422" in err:
+            logger.warning(f"{sport}: retrying with core markets only after: {err[:120]}")
+            data = _fetch("h2h,spreads,totals")
     if not data:
         return []
 
