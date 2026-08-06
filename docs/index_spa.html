@@ -676,6 +676,8 @@
       <div class="tab-header-text">
         <div class="tab-header-title">📋 Today's Card</div>
         
+        <div class="tab-header-sub">$5.22 on 2 picks &middot; 1 parlay <span style="color:var(--border);">|</span> Reserve <span style="color:var(--green);">$51.71</span> <span style="color:var(--border);">|</span> P&amp;L <span id="today-pnl">—</span></div>
+        
       </div>
       <button class="tab-bell-btn" data-pref="today" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
@@ -693,20 +695,121 @@
 
     
     
-    <div style="margin-top:12px;">
-    <div class="error-card">⚠ MLB odds unavailable: Odds API 422 — quota exhausted or invalid params ({"message":"Markets not supported by this endpoint: h2h_1st_5_innings, spreads_1st_5_innings, totals_1st_5_innings","err)</div>
-    </div>
-    
 
     
     
 
     
     
-    <div class="empty-state" style="margin-top:20px;">
-      <div class="icon">😕</div>
-      No qualifying picks found today — edge threshold not met across all sports.
+    
+    <div class="alloc-card"
+         style="margin-top:14px;"
+         id="alloc-1"
+         data-home-team="Arizona Diamondbacks"
+         data-away-team="San Diego Padres"
+         data-bet-type="Spread"
+         data-pick="Arizona Diamondbacks +1.5"
+         data-sport="MLB"
+         data-market-prob-pct="62.3"
+         data-commence-time="2026-08-07T01:41:00Z"
+         >
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">1</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-mlb">MLB</span>
+            
+            <span class="alloc-edge" style="color:var(--yellow);">+5.8%</span>
+            
+          </div>
+          <div class="alloc-pick">Arizona Diamondbacks +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
+          <div class="alloc-game short-game">San Diego Padres @ Arizona Diamondbacks</div>
+          <div class="alloc-time">6:41 PM PDT</div>
+        </div>
+      </div>
+      <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">3 contracts</span>
+        <span class="alloc-chip">@ 62.3¢</span>
+        <span class="alloc-chip">Cost $1.93</span>
+        <span class="alloc-chip win">+$1.07 if win</span>
+      </div>
     </div>
+    
+    <div class="alloc-card"
+         
+         id="alloc-2"
+         data-home-team="Atlanta Braves"
+         data-away-team="Miami Marlins"
+         data-bet-type="Spread"
+         data-pick="Miami Marlins +1.5"
+         data-sport="MLB"
+         data-market-prob-pct="57.2"
+         data-commence-time="2026-08-06T23:16:00Z"
+         >
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">2</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-mlb">MLB</span>
+            
+            <span class="alloc-edge" style="color:var(--yellow);">+6.0%</span>
+            
+          </div>
+          <div class="alloc-pick">Miami Marlins +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
+          <div class="alloc-game short-game">Miami Marlins @ Atlanta Braves</div>
+          <div class="alloc-time">4:16 PM PDT</div>
+        </div>
+      </div>
+      <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">3 contracts</span>
+        <span class="alloc-chip">@ 57.2¢</span>
+        <span class="alloc-chip">Cost $1.78</span>
+        <span class="alloc-chip win">+$1.22 if win</span>
+      </div>
+    </div>
+    
+    <div class="alloc-card"
+         
+         id="alloc-p1"
+         data-home-team=""
+         data-away-team=""
+         data-bet-type="Parlay"
+         data-pick="Miami Marlins +1.5 + Arizona Diamondbacks +1.5"
+         data-sport="Parlay"
+         data-market-prob-pct="50"
+         data-commence-time="2026-08-06T23:16:00Z"
+         data-legs="[{&#34;home_team&#34;: &#34;Atlanta Braves&#34;, &#34;away_team&#34;: &#34;Miami Marlins&#34;, &#34;bet_type&#34;: &#34;Spread&#34;, &#34;pick&#34;: &#34;Miami Marlins +1.5&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 63.2, &#34;commence_time&#34;: &#34;2026-08-06T23:16:00Z&#34;}, {&#34;home_team&#34;: &#34;Arizona Diamondbacks&#34;, &#34;away_team&#34;: &#34;San Diego Padres&#34;, &#34;bet_type&#34;: &#34;Spread&#34;, &#34;pick&#34;: &#34;Arizona Diamondbacks +1.5&#34;, &#34;sport&#34;: &#34;MLB&#34;, &#34;model_prob_pct&#34;: 68.1, &#34;commence_time&#34;: &#34;2026-08-07T01:41:00Z&#34;}]" data-cost="1.51" data-profit="2.49" data-confidence="MEDIUM">
+      <!-- Top section: rank badge + main info side-by-side -->
+      <div class="alloc-card-top">
+        <div class="alloc-rank">P1</div>
+        <div class="alloc-main">
+          <div class="alloc-top">
+            <span class="badge badge-parlay">PARLAY</span>
+            
+            <span class="alloc-edge" style="color:var(--yellow);">+6.6%</span>
+            
+          </div>
+          <div class="alloc-pick">Miami Marlins +1.5 + Arizona Diamondbacks +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
+          
+          
+        </div>
+      </div>
+      <div class="live-status alloc-live" style="font-size:0.75rem;min-height:0;"></div>
+      <!-- Action chips: full card width -->
+      <div class="alloc-action">
+        <span class="alloc-chip">4 contracts</span>
+        <span class="alloc-chip">@ 35.6¢</span>
+        <span class="alloc-chip">Cost $1.51</span>
+        <span class="alloc-chip win">+$2.49 if win</span>
+      </div>
+    </div>
+    
     
 
     <div id="debrief-today-wrap" style="display:none;margin-top:18px;">
@@ -749,14 +852,549 @@
       <div class="tab-header-text">
         <div class="tab-header-title">⚾ MLB</div>
         <div class="tab-header-sub">
-          No games today
+          4 picks &middot; 6 props
           
         </div>
       </div>
       <button class="tab-bell-btn" data-pref="MLB" onclick="tabBellClick(this)" style="display:none">🔕</button>
     </div>
     
-    <div class="empty-state"><div class="icon">⚾</div>No MLB games scheduled today.</div>
+    
+    <details id="sect-mlb-singles" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Singles</summary>
+    
+    
+<div class="card budget-single"
+     id="bet-1"
+     data-home-team="Arizona Diamondbacks"
+     data-away-team="San Diego Padres"
+     data-bet-type="Spread"
+     data-pick="Arizona Diamondbacks +1.5"
+     data-sport="MLB"
+     data-cost="1.93"
+     data-profit="1.07"
+     data-confidence="HIGH"
+     data-edge-pct="5.8"
+     data-model-prob-pct="68.1"
+     data-market-prob-pct="62.3"
+     data-commence-time="2026-08-07T01:41:00Z"
+     data-game-pk="825053"
+     data-in-budget="true">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Arizona Diamondbacks +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
+      <div class="card-game short-game">San Diego Padres @ Arizona Diamondbacks · Spread</div>
+      <div class="card-time"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-HIGH">HIGH</span>
+    </div>
+  </div>
+  <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bet-1"><span class="ctx-arrow">›</span> Model projected score: Arizona Diamondbacks 4.3 — San Diego Padres 4.2</div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Mkt 62.3% → Model <b style="color:var(--blue)">68.1%</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:34%;background:var(--yellow);"></div></div>
+    <span class="edge-pct yellow">+5.8%</span>
+  </div>
+  
+  <div class="context-body" id="ctx-bet-1">
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">This pick fits the model's strongest validated profile: Arizona Diamondbacks gets +1.5 runs while sending the better starting pitcher to the mound. Run-line dogs backed by the superior starter have been the model's most reliable bet type, so this setup is prioritized for the card. Model projects a tight game (Arizona Diamondbacks 4.3 — San Diego Padres 4.2) — exactly the script where the +1.5 cushion wins.</div>
+    <div class="context-item">Model projected score: Arizona Diamondbacks 4.3 — San Diego Padres 4.2</div><div class="context-item">Arizona Diamondbacks offense: 61W-54L | OPS 0.709 | AVG 0.243 | R/G 4.58</div><div class="context-item">San Diego Padres offense: 59W-56L | OPS 0.694 | AVG 0.235 | R/G 4.23</div><div class="context-item">Bullpen ERA — Arizona Diamondbacks: 3.97 (WHIP 1.20) | San Diego Padres: 3.26 (WHIP 1.21)</div><div class="context-item">🔵 Kohl Drake (Arizona Diamondbacks) · LHP: ERA 4.85 | FIP 5.51 / xFIP 4.51 | K/9 8.3 | BB/9 3.5 | IP 13</div><div class="context-item">🔴 Walker Buehler (San Diego Padres) · RHP: ERA 5.18 | FIP 4.45 / xFIP 3.94 | K/9 8.0 | BB/9 3.8 | IP 104</div><div class="context-item">Venue: Chase Field — park factor 1.01 (pitcher-friendly)</div><div class="context-item">⚠ Arizona Diamondbacks schedule load: 6 games in 7 days</div><div class="context-item">⚠ San Diego Padres schedule load: 7 games in 7 days</div><div class="context-item">Arizona Diamondbacks injury impact (-8.7%)</div><div class="context-item">San Diego Padres injury impact (-7.0%)</div><div class="context-item">⚕ Arizona Diamondbacks — Jordan Lawlar (LF): OUT</div><div class="context-item">⚕ Arizona Diamondbacks — Ryan Thompson (RP): OUT</div><div class="context-item">⚕ Arizona Diamondbacks — Michael Soroka (SP): OUT</div><div class="context-item">⚕ Arizona Diamondbacks — Drey Jameson (RP): OUT</div><div class="context-item">⚕ Arizona Diamondbacks — Lourdes Gurriel Jr. (LF): OUT</div><div class="context-item">⚕ Arizona Diamondbacks — Tommy Troy (LF): OUT</div><div class="context-item">⚕ San Diego Padres — Samad Taylor (LF): OUT</div><div class="context-item">⚕ San Diego Padres — David Morgan (RP): OUT</div><div class="context-item">⚕ San Diego Padres — Lucas Giolito (SP): OUT</div><div class="context-item">⚕ San Diego Padres — Miguel Andujar (DH): OUT</div><div class="context-item">Recent form: Arizona Diamondbacks 6-4 last 10 | 5.5 R/G vs 4.6 season (↑0.28 run adj)</div><div class="context-item">Recent form: San Diego Padres 7-3 last 10 | 4.9 R/G vs 4.2 season (↑0.20 run adj)</div><div class="context-item">✅ Validated pattern: Arizona Diamondbacks +1.5 with the stronger starter (SP score edge +0.25)</div>
+    
+    <div style="margin-top:8px;font-size:0.72rem;color:var(--teal);">📋 Slot #1 in Today's Card</div>
+    
+  </div>
+  
+</div>
+
+    
+    
+<div class="card budget-single"
+     id="bet-2"
+     data-home-team="Atlanta Braves"
+     data-away-team="Miami Marlins"
+     data-bet-type="Spread"
+     data-pick="Miami Marlins +1.5"
+     data-sport="MLB"
+     data-cost="1.78"
+     data-profit="1.22"
+     data-confidence="MEDIUM"
+     data-edge-pct="6.0"
+     data-model-prob-pct="63.2"
+     data-market-prob-pct="57.2"
+     data-commence-time="2026-08-06T23:16:00Z"
+     data-game-pk="824885"
+     data-in-budget="true">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Miami Marlins +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
+      <div class="card-game short-game">Miami Marlins @ Atlanta Braves · Spread</div>
+      <div class="card-time"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-MEDIUM">MEDIUM</span>
+    </div>
+  </div>
+  <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-bet-2"><span class="ctx-arrow">›</span> Model projected score: Atlanta Braves 4.3 — Miami Marlins 4.5</div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Mkt 57.2% → Model <b style="color:var(--blue)">63.2%</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:36%;background:var(--yellow);"></div></div>
+    <span class="edge-pct yellow">+6.0%</span>
+  </div>
+  
+  <div class="context-body" id="ctx-bet-2">
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">This pick fits the model's strongest validated profile: Miami Marlins gets +1.5 runs while sending the better starting pitcher to the mound. Run-line dogs backed by the superior starter have been the model's most reliable bet type, so this setup is prioritized for the card. Model projects a tight game (Atlanta Braves 4.3 — Miami Marlins 4.5) — exactly the script where the +1.5 cushion wins. Adding to the case: an ERA trap on Martín Pérez (3.24 ERA vs 4.24 xFIP) suggests the market is overrating the favorite's starter.</div>
+    <div class="context-item">Model projected score: Atlanta Braves 4.3 — Miami Marlins 4.5</div><div class="context-item">Atlanta Braves offense: 69W-45L | OPS 0.732 | AVG 0.249 | R/G 4.89</div><div class="context-item">Miami Marlins offense: 58W-57L | OPS 0.728 | AVG 0.249 | R/G 4.34</div><div class="context-item">Bullpen ERA — Atlanta Braves: 3.81 (WHIP 1.18) | Miami Marlins: 4.01 (WHIP 1.28)</div><div class="context-item">🔵 Martín Pérez (Atlanta Braves) · LHP: ERA 3.24 | FIP 4.33 / xFIP 4.13 | K/9 7.0 | BB/9 3.6 | IP 97</div><div class="context-item">🔴 Janson Junk (Miami Marlins) · RHP: ERA 4.58 | FIP 4.31 / xFIP 3.95 | K/9 7.0 | BB/9 2.5 | IP 78</div><div class="context-item">Venue: Truist Park — park factor 1.03 (hitter-friendly)</div><div class="context-item">🌤 Weather (Atlanta): 90°F | Wind 4 mph N (cross wind) | Precip 3%</div><div class="context-item">👨‍⚖️ HP Umpire: Adam Hamari — run factor 1.06x | K factor 0.95x | Above-avg scoring environment</div><div class="context-item">⚠ Atlanta Braves schedule load: 6 games in 7 days</div><div class="context-item">⚠ Miami Marlins schedule load: 6 games in 7 days</div><div class="context-item">Atlanta Braves injury impact (-2.0%)</div><div class="context-item">Miami Marlins injury impact (-5.9%)</div><div class="context-item">⚕ Atlanta Braves — Robert Suarez (RP): OUT</div><div class="context-item">⚕ Atlanta Braves — Reynaldo Lopez (RP): OUT</div><div class="context-item">⚕ Miami Marlins — Max Meyer (SP): OUT</div><div class="context-item">⚕ Miami Marlins — Anthony Bender (RP): OUT</div><div class="context-item">⚕ Miami Marlins — William Kempner (RP): OUT</div><div class="context-item">⚠ Miami Marlins injury credibility cap applied — model probability anchored near market (44%)</div><div class="context-item">⚠ ERA trap [SEVERE] — Martín Pérez: ERA 3.24 vs xFIP 4.24 over 97 IP (severity 1.00) — Atlanta Braves ML may be overpriced by market</div><div class="context-item">Recent form: Atlanta Braves 8-2 last 10 | 4.0 R/G vs 4.9 season (↓0.27 run adj)</div><div class="context-item">Recent form: Miami Marlins 6-4 last 10 | 3.8 R/G vs 4.3 season (↓0.16 run adj)</div><div class="context-item">✅ Validated pattern: Miami Marlins +1.5 with the stronger starter (SP score edge +0.56)</div>
+    
+    <div style="margin-top:8px;font-size:0.72rem;color:var(--teal);">📋 Slot #2 in Today's Card</div>
+    
+  </div>
+  
+</div>
+
+    
+    
+<div class="card"
+     id="mlb-3"
+     data-home-team="Boston Red Sox"
+     data-away-team="Chicago White Sox"
+     data-bet-type="Moneyline"
+     data-pick="Boston Red Sox"
+     data-sport="MLB"
+     data-cost="1.31"
+     data-profit="0.69"
+     data-confidence="MEDIUM"
+     data-edge-pct="4.3"
+     data-model-prob-pct="68.1"
+     data-market-prob-pct="63.7"
+     data-commence-time="2026-08-06T23:11:00Z"
+     data-game-pk="824729"
+     >
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Boston Red Sox<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
+      <div class="card-game short-game">Chicago White Sox @ Boston Red Sox · ML</div>
+      <div class="card-time"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-MEDIUM">MEDIUM</span>
+    </div>
+  </div>
+  <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-mlb-3"><span class="ctx-arrow">›</span> Model projected score: Boston Red Sox 4.8 — Chicago White Sox 3.6</div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Mkt 63.7% → Model <b style="color:var(--blue)">68.1%</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:25%;background:var(--yellow);"></div></div>
+    <span class="edge-pct yellow">+4.3%</span>
+  </div>
+  
+  <div class="context-body" id="ctx-mlb-3">
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">A slight pitching mismatch drives this pick — Ranger Suarez (Boston Red Sox) · LHP (3.18 xFIP) holds a meaningful advantage over Luis Castillo (Chicago White Sox) · RHP (4.01 xFIP). Roster watch: Boston Red Sox (4.1%) — noted as context; the market line already prices these absences. Model projects Boston Red Sox by 1.2 runs (Boston Red Sox 4.8 — Chicago White Sox 3.6).</div>
+    <div class="context-item">Model projected score: Boston Red Sox 4.8 — Chicago White Sox 3.6</div><div class="context-item">Boston Red Sox offense: 62W-51L | OPS 0.717 | AVG 0.246 | R/G 4.35</div><div class="context-item">Chicago White Sox offense: 59W-54L | OPS 0.719 | AVG 0.237 | R/G 4.72</div><div class="context-item">Bullpen ERA — Boston Red Sox: 3.50 (WHIP 1.24) | Chicago White Sox: 4.15 (WHIP 1.33)</div><div class="context-item">🔵 Ranger Suarez (Boston Red Sox) · LHP: ERA 3.15 | FIP 2.59 / xFIP 3.18 | K/9 9.5 | BB/9 2.5 | IP 100</div><div class="context-item">🔴 Luis Castillo (Chicago White Sox) · RHP: ERA 5.06 | FIP 4.53 / xFIP 4.01 | K/9 7.8 | BB/9 2.9 | IP 99</div><div class="context-item">Venue: Fenway Park — park factor 1.08 (hitter-friendly)</div><div class="context-item">🌤 Weather (Boston): 87°F | Wind 7 mph SW (blowing out) | Precip 16%</div><div class="context-item">👨‍⚖️ HP Umpire: Chris Conroy (near-neutral tendencies)</div><div class="context-item">⚠ Boston Red Sox schedule load: 6 games in 7 days</div><div class="context-item">⚠ Chicago White Sox schedule load: 6 games in 7 days</div><div class="context-item">Boston Red Sox injury impact (-4.1%)</div><div class="context-item">Chicago White Sox injury impact (-1.2%)</div><div class="context-item">⚕ Boston Red Sox — Willson Contreras (1B): DAY-TO-DAY</div><div class="context-item">⚕ Boston Red Sox — Adley Rutschman (C): OUT</div><div class="context-item">⚕ Boston Red Sox — Curtis Mead (3B): OUT</div><div class="context-item">⚕ Boston Red Sox — Isiah Kiner-Falefa (2B): OUT</div><div class="context-item">⚕ Chicago White Sox — Kyle Teel (C): OUT</div><div class="context-item">Recent form: Boston Red Sox 9-1 last 10 | 6.0 R/G vs 4.3 season (↑0.50 run adj)</div>
+    
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">📊 Not in today's top budget allocation</div>
+    
+  </div>
+  
+</div>
+
+    
+    
+<div class="card"
+     id="mlb-4"
+     data-home-team="Kansas City Royals"
+     data-away-team="Minnesota Twins"
+     data-bet-type="Spread"
+     data-pick="Minnesota Twins +1.5"
+     data-sport="MLB"
+     data-cost="0.0"
+     data-profit="0.0"
+     data-confidence="MEDIUM"
+     data-edge-pct="2.7"
+     data-model-prob-pct="64.6"
+     data-market-prob-pct="61.9"
+     data-commence-time="2026-08-06T23:41:00Z"
+     data-game-pk="824080"
+     >
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Minnesota Twins +1.5<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
+      <div class="card-game short-game">Minnesota Twins @ Kansas City Royals · Spread</div>
+      <div class="card-time"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-MEDIUM">MEDIUM</span>
+    </div>
+  </div>
+  <div class="live-status" style="min-height:0;"></div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-mlb-4"><span class="ctx-arrow">›</span> Model projected score: Kansas City Royals 4.3 — Minnesota Twins 4.1</div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Mkt 61.9% → Model <b style="color:var(--blue)">64.6%</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:16%;background:var(--yellow);"></div></div>
+    <span class="edge-pct yellow">+2.7%</span>
+  </div>
+  
+  <div class="context-body" id="ctx-mlb-4">
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model finds a slight edge against Kansas City Royals, driven by a moderate ERA trap on Michael Wacha — 3.51 ERA vs 3.97 xFIP in 138 innings suggests regression risk the market hasn't fully priced. Roster watch: Kansas City Royals (3.2% of lineup value) and Minnesota Twins (8.6% of lineup value) — already reflected in the market line. Model projects Kansas City Royals by 0.2 runs (Kansas City Royals 4.3 — Minnesota Twins 4.1).</div>
+    <div class="context-item">Model projected score: Kansas City Royals 4.3 — Minnesota Twins 4.1</div><div class="context-item">Kansas City Royals offense: 48W-67L | OPS 0.711 | AVG 0.245 | R/G 4.15</div><div class="context-item">Minnesota Twins offense: 56W-59L | OPS 0.722 | AVG 0.243 | R/G 4.65</div><div class="context-item">Bullpen ERA — Kansas City Royals: 5.35 (WHIP 1.55) | Minnesota Twins: 5.29 (WHIP 1.55)</div><div class="context-item">🔵 Michael Wacha (Kansas City Royals) · RHP: ERA 3.51 | FIP 3.92 / xFIP 3.92 | K/9 7.2 | BB/9 2.5 | IP 138</div><div class="context-item">🔴 Bailey Ober (Minnesota Twins) · RHP: ERA 4.45 | FIP 4.67 / xFIP 4.33 | K/9 6.5 | BB/9 2.5 | IP 87</div><div class="context-item">Venue: Kauffman Stadium — neutral park</div><div class="context-item">🌤 Weather (Kansas City): 82°F | Wind 5 mph NW (blowing out) | Precip 25%</div><div class="context-item">👨‍⚖️ HP Umpire: Charlie Ramos (near-neutral tendencies)</div><div class="context-item">⚠ Kansas City Royals schedule load: 6 games in 7 days</div><div class="context-item">⚠ Minnesota Twins schedule load: 6 games in 7 days</div><div class="context-item">Kansas City Royals injury impact (-3.2%)</div><div class="context-item">Minnesota Twins injury impact (-8.6%)</div><div class="context-item">⚕ Kansas City Royals — Beck Way (RP): OUT</div><div class="context-item">⚕ Kansas City Royals — Maikel Garcia (3B): OUT</div><div class="context-item">⚕ Kansas City Royals — Vinnie Pasquantino (1B): OUT</div><div class="context-item">⚕ Minnesota Twins — Joe Ryan (SP): OUT</div><div class="context-item">⚕ Minnesota Twins — Byron Buxton (CF): OUT</div><div class="context-item">⚕ Minnesota Twins — Anthony Banda (RP): OUT</div><div class="context-item">⚠ ERA trap [MODERATE] — Michael Wacha: ERA 3.51 vs xFIP 3.97 over 138 IP (severity 0.46) — Kansas City Royals ML may be overpriced by market</div><div class="context-item">Recent form: Kansas City Royals 5-5 last 10 | 3.5 R/G vs 4.2 season (↓0.20 run adj)</div><div class="context-item">Recent form: Minnesota Twins 5-5 last 10 | 3.7 R/G vs 4.7 season (↓0.29 run adj)</div>
+    
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">📊 Not in today's top budget allocation</div>
+    
+  </div>
+  
+</div>
+
+    
+    </details>
+    
+    
+    <details id="sect-mlb-props" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Props</summary>
+    
+    
+
+<div class="card prop-card"
+     data-home-team="Chicago White Sox"
+     data-away-team="Boston Red Sox"
+     data-bet-type="Prop"
+     data-sport="MLB"
+     data-player="Luis Castillo"
+     data-prop-type="Strikeouts Over"
+     data-model-line="4.8"
+     data-confidence="HIGH"
+     data-commence-time="2026-08-06T23:11:00Z"
+     data-market-line="4.5"
+     data-edge-pct="15.0">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Luis Castillo</div>
+      <div class="card-game short-team">Chicago White Sox vs Boston Red Sox · Strikeouts Over</div>
+      <div class="card-time"></div>
+      <div class="live-status prop-live-badge" style="min-height:0;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-HIGH">HIGH</span>
+    </div>
+  </div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-luis-castillo-strikeouts-over"><span class="ctx-arrow">›</span> Model projects 4.8 strikeouts · avg 7.8 K/9</div>
+  <div class="prop-bar-wrap"
+       data-bar-max="9"
+       data-market-line="4.5">
+    <div class="prop-bar-header">
+      <span class="prop-bar-current">—</span>
+      <span class="prop-bar-line-label">Line: 4.5 <span style="color:var(--muted);font-size:0.85em;">44.6%</span></span>
+    </div>
+    <div class="prop-bar-track">
+      <div class="prop-bar-fill"></div>
+      <div class="prop-bar-marker" style="left:50.0%" data-line="4.5"></div>
+    </div>
+    <div class="prop-bar-scale"><span>0</span><span>9</span></div>
+  </div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Line 4.5 → Model <b style="color:var(--blue)">4.8</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
+    <span class="edge-pct">+15.0%</span>
+  </div>
+  
+  
+  <div class="context-body" id="ctx-luis-castillo-strikeouts-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 4.5 Ks at 44.6%. Model: 4.8 Ks in 5.8 inn.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Luis Castillo at 4.8 strikeouts vs the line of 4.5 — a strong edge of +0.30.</div>
+    <div class="context-item">Market: Over 4.5 Ks at 44.6% (draftkings)</div><div class="context-item">K/9 7.8 (adj 7.5) → 4.8 Ks in 5.8 inn | Edge +15.0%</div><div class="context-item">Opp K%: 21.9% vs league avg 22.8%</div><div class="context-item">Luis Castillo: ERA 5.06 | FIP 4.53 / xFIP 4.01 | K/9 7.8 | BB/9 2.9 | HR/9 1.45</div><div class="context-item">Season IP: 99 | Projected start: ~5.8 inn (actual avg: 5.8 inn/start)</div><div class="context-item">Venue: Fenway Park (park factor 1.08)</div>
+  </div>
+  
+</div>
+
+    
+    
+
+<div class="card prop-card"
+     data-home-team="Boston Red Sox"
+     data-away-team="Chicago White Sox"
+     data-bet-type="Prop"
+     data-sport="MLB"
+     data-player="Ceddanne Rafaela"
+     data-prop-type="Total Bases Over"
+     data-model-line="2.01"
+     data-confidence="HIGH"
+     data-commence-time="2026-08-06T23:11:00Z"
+     data-market-line="1.5"
+     data-edge-pct="15.0">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Ceddanne Rafaela</div>
+      <div class="card-game short-team">Boston Red Sox vs Chicago White Sox · Total Bases Over</div>
+      <div class="card-time"></div>
+      <div class="live-status prop-live-badge" style="min-height:0;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-HIGH">HIGH</span>
+    </div>
+  </div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-ceddanne-rafaela-total-bases-over"><span class="ctx-arrow">›</span> Model projects 2.01 total bases</div>
+  <div class="prop-bar-wrap"
+       data-bar-max="8"
+       data-market-line="1.5">
+    <div class="prop-bar-header">
+      <span class="prop-bar-current">—</span>
+      <span class="prop-bar-line-label">Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">48.8%</span></span>
+    </div>
+    <div class="prop-bar-track">
+      <div class="prop-bar-fill"></div>
+      <div class="prop-bar-marker" style="left:18.8%" data-line="1.5"></div>
+    </div>
+    <div class="prop-bar-scale"><span>0</span><span>8</span></div>
+  </div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">2.01</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
+    <span class="edge-pct">+15.0%</span>
+  </div>
+  
+  
+  <div class="context-body" id="ctx-ceddanne-rafaela-total-bases-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 1.5 at 48.8%. Model: 2.01.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Ceddanne Rafaela at 2.01 Total Bases vs the line of 1.5 — a strong +0.51 edge.</div>
+    <div class="context-item">Market: Over 1.5 at 48.8% (draftkings)</div><div class="context-item">Model projects 2.01 → edge +15.0%</div><div class="context-item">Game total: model 8.8 vs market 8.5 (high-scoring environment, scale 1.04x)</div><div class="context-item">Ceddanne Rafaela: AVG 0.287 | OBP 0.329 | H/G 1.11 | TB/G 1.83 | HR/G 0.138 | HRR/G 2.18 | K% 20.3% (449 PA)</div><div class="context-item">Facing Luis Castillo: FIP 4.53 / xFIP 4.01 | WHIP 1.40 | K/9 7.8</div><div class="context-item">Park factor 1.08 at Fenway Park</div>
+  </div>
+  
+</div>
+
+    
+    
+
+<div class="card prop-card"
+     data-home-team="Boston Red Sox"
+     data-away-team="Chicago White Sox"
+     data-bet-type="Prop"
+     data-sport="MLB"
+     data-player="Wilyer Abreu"
+     data-prop-type="Total Bases Over"
+     data-model-line="1.93"
+     data-confidence="HIGH"
+     data-commence-time="2026-08-06T23:11:00Z"
+     data-market-line="1.5"
+     data-edge-pct="15.0">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Wilyer Abreu</div>
+      <div class="card-game short-team">Boston Red Sox vs Chicago White Sox · Total Bases Over</div>
+      <div class="card-time"></div>
+      <div class="live-status prop-live-badge" style="min-height:0;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-HIGH">HIGH</span>
+    </div>
+  </div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-wilyer-abreu-total-bases-over"><span class="ctx-arrow">›</span> Model projects 1.93 total bases</div>
+  <div class="prop-bar-wrap"
+       data-bar-max="8"
+       data-market-line="1.5">
+    <div class="prop-bar-header">
+      <span class="prop-bar-current">—</span>
+      <span class="prop-bar-line-label">Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">53.3%</span></span>
+    </div>
+    <div class="prop-bar-track">
+      <div class="prop-bar-fill"></div>
+      <div class="prop-bar-marker" style="left:18.8%" data-line="1.5"></div>
+    </div>
+    <div class="prop-bar-scale"><span>0</span><span>8</span></div>
+  </div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.93</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
+    <span class="edge-pct">+15.0%</span>
+  </div>
+  
+  
+  <div class="context-body" id="ctx-wilyer-abreu-total-bases-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 1.5 at 53.3%. Model: 1.93.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Wilyer Abreu at 1.93 Total Bases vs the line of 1.5 — a strong +0.43 edge.</div>
+    <div class="context-item">Market: Over 1.5 at 53.3% (draftkings)</div><div class="context-item">Model projects 1.93 → edge +15.0%</div><div class="context-item">Game total: model 8.8 vs market 8.5 (high-scoring environment, scale 1.04x)</div><div class="context-item">Wilyer Abreu: AVG 0.254 | OBP 0.327 | H/G 0.97 | TB/G 1.77 | HR/G 0.180 | HRR/G 2.04 | K% 20.7% (482 PA)</div><div class="context-item">Facing Luis Castillo: FIP 4.53 / xFIP 4.01 | WHIP 1.40 | K/9 7.8</div><div class="context-item">Park factor 1.08 at Fenway Park</div>
+  </div>
+  
+</div>
+
+    
+    
+
+<div class="card prop-card"
+     data-home-team="Chicago White Sox"
+     data-away-team="Boston Red Sox"
+     data-bet-type="Prop"
+     data-sport="MLB"
+     data-player="Miguel Vargas"
+     data-prop-type="Total Bases Over"
+     data-model-line="1.74"
+     data-confidence="HIGH"
+     data-commence-time="2026-08-06T23:11:00Z"
+     data-market-line="1.5"
+     data-edge-pct="15.0">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Miguel Vargas</div>
+      <div class="card-game short-team">Chicago White Sox vs Boston Red Sox · Total Bases Over</div>
+      <div class="card-time"></div>
+      <div class="live-status prop-live-badge" style="min-height:0;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-HIGH">HIGH</span>
+    </div>
+  </div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-miguel-vargas-total-bases-over"><span class="ctx-arrow">›</span> Model projects 1.74 total bases</div>
+  <div class="prop-bar-wrap"
+       data-bar-max="8"
+       data-market-line="1.5">
+    <div class="prop-bar-header">
+      <span class="prop-bar-current">—</span>
+      <span class="prop-bar-line-label">Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">42.6%</span></span>
+    </div>
+    <div class="prop-bar-track">
+      <div class="prop-bar-fill"></div>
+      <div class="prop-bar-marker" style="left:18.8%" data-line="1.5"></div>
+    </div>
+    <div class="prop-bar-scale"><span>0</span><span>8</span></div>
+  </div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.74</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
+    <span class="edge-pct">+15.0%</span>
+  </div>
+  
+  
+  <div class="context-body" id="ctx-miguel-vargas-total-bases-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 1.5 at 42.6%. Model: 1.74.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Miguel Vargas at 1.74 Total Bases vs the line of 1.5 — a strong +0.24 edge.</div>
+    <div class="context-item">Market: Over 1.5 at 42.6% (draftkings)</div><div class="context-item">Model projects 1.74 → edge +15.0%</div><div class="context-item">Game total: model 8.8 vs market 8.5 (high-scoring environment, scale 1.04x)</div><div class="context-item">Miguel Vargas: AVG 0.239 | OBP 0.344 | H/G 0.88 | TB/G 1.77 | HR/G 0.214 | HRR/G 2.14 | K% 17.8% (489 PA)</div><div class="context-item">Facing Ranger Suarez: FIP 2.59 / xFIP 3.18 | WHIP 1.16 | K/9 9.5</div><div class="context-item">Park factor 1.08 at Fenway Park</div>
+  </div>
+  
+</div>
+
+    
+    
+
+<div class="card prop-card"
+     data-home-team="Chicago White Sox"
+     data-away-team="Boston Red Sox"
+     data-bet-type="Prop"
+     data-sport="MLB"
+     data-player="Colson Montgomery"
+     data-prop-type="Total Bases Over"
+     data-model-line="1.56"
+     data-confidence="HIGH"
+     data-commence-time="2026-08-06T23:11:00Z"
+     data-market-line="1.5"
+     data-edge-pct="15.0">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Colson Montgomery</div>
+      <div class="card-game short-team">Chicago White Sox vs Boston Red Sox · Total Bases Over</div>
+      <div class="card-time"></div>
+      <div class="live-status prop-live-badge" style="min-height:0;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-HIGH">HIGH</span>
+    </div>
+  </div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-colson-montgomery-total-bases-over"><span class="ctx-arrow">›</span> Model projects 1.56 total bases</div>
+  <div class="prop-bar-wrap"
+       data-bar-max="8"
+       data-market-line="1.5">
+    <div class="prop-bar-header">
+      <span class="prop-bar-current">—</span>
+      <span class="prop-bar-line-label">Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">38.8%</span></span>
+    </div>
+    <div class="prop-bar-track">
+      <div class="prop-bar-fill"></div>
+      <div class="prop-bar-marker" style="left:18.8%" data-line="1.5"></div>
+    </div>
+    <div class="prop-bar-scale"><span>0</span><span>8</span></div>
+  </div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.56</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
+    <span class="edge-pct">+15.0%</span>
+  </div>
+  
+  
+  <div class="context-body" id="ctx-colson-montgomery-total-bases-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 1.5 at 38.8%. Model: 1.56.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Colson Montgomery at 1.56 Total Bases vs the line of 1.5 — a strong +0.06 edge.</div>
+    <div class="context-item">Market: Over 1.5 at 38.8% (draftkings)</div><div class="context-item">Model projects 1.56 → edge +15.0%</div><div class="context-item">Game total: model 8.8 vs market 8.5 (high-scoring environment, scale 1.04x)</div><div class="context-item">K% matchup: batter 32.4% vs pitcher 9.5 K/9 → -5.1% suppression</div><div class="context-item">Colson Montgomery: AVG 0.214 | OBP 0.296 | H/G 0.80 | TB/G 1.67 | HR/G 0.234 | HRR/G 1.88 | K% 32.4% (450 PA)</div><div class="context-item">Facing Ranger Suarez: FIP 2.59 / xFIP 3.18 | WHIP 1.16 | K/9 9.5</div><div class="context-item">Park factor 1.08 at Fenway Park</div>
+  </div>
+  
+</div>
+
+    
+    
+
+<div class="card prop-card"
+     data-home-team="Miami Marlins"
+     data-away-team="Atlanta Braves"
+     data-bet-type="Prop"
+     data-sport="MLB"
+     data-player="Otto Lopez"
+     data-prop-type="Total Bases Over"
+     data-model-line="1.95"
+     data-confidence="HIGH"
+     data-commence-time="2026-08-06T23:16:00Z"
+     data-market-line="1.5"
+     data-edge-pct="15.0">
+  <div class="card-row">
+    <div style="flex:1;min-width:0;">
+      <div class="card-pick">Otto Lopez</div>
+      <div class="card-game short-team">Miami Marlins vs Atlanta Braves · Total Bases Over</div>
+      <div class="card-time"></div>
+      <div class="live-status prop-live-badge" style="min-height:0;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+      
+      <span class="badge badge-conf-HIGH">HIGH</span>
+    </div>
+  </div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-otto-lopez-total-bases-over"><span class="ctx-arrow">›</span> Model projects 1.95 total bases</div>
+  <div class="prop-bar-wrap"
+       data-bar-max="8"
+       data-market-line="1.5">
+    <div class="prop-bar-header">
+      <span class="prop-bar-current">—</span>
+      <span class="prop-bar-line-label">Line: 1.5 <span style="color:var(--muted);font-size:0.85em;">48.3%</span></span>
+    </div>
+    <div class="prop-bar-track">
+      <div class="prop-bar-fill"></div>
+      <div class="prop-bar-marker" style="left:18.8%" data-line="1.5"></div>
+    </div>
+    <div class="prop-bar-scale"><span>0</span><span>8</span></div>
+  </div>
+  <div class="edge-row">
+    <span class="mkt-mdl">Line 1.5 → Model <b style="color:var(--blue)">1.95</b></span>
+    <div class="edge-bar-wrap"><div class="edge-bar" style="width:90%;"></div></div>
+    <span class="edge-pct">+15.0%</span>
+  </div>
+  
+  
+  <div class="context-body" id="ctx-otto-lopez-total-bases-over">
+    <div class="context-item" style="color:var(--yellow);border-left-color:var(--yellow);">Draftkings: Over 1.5 at 48.3%. Model: 1.95.</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">The model projects Otto Lopez at 1.95 Total Bases vs the line of 1.5 — a strong +0.45 edge.</div>
+    <div class="context-item">Market: Over 1.5 at 48.3% (draftkings)</div><div class="context-item">Model projects 1.95 → edge +15.0%</div><div class="context-item">Otto Lopez: AVG 0.320 | OBP 0.352 | H/G 1.28 | TB/G 1.91 | HR/G 0.081 | HRR/G 2.36 | K% 13.3% (480 PA)</div><div class="context-item">Facing Martín Pérez: FIP 4.33 / xFIP 4.13 | WHIP 1.17 | K/9 7.0</div><div class="context-item">Park factor 1.03 at Truist Park</div>
+  </div>
+  
+</div>
+
+    
+    </details>
+    
     
     <div style="height:16px;"></div>
   </div><!-- /tab-mlb -->
@@ -803,7 +1441,7 @@
       <div class="tab-header-text">
         <div class="tab-header-title">🏀 WNBA</div>
         <div class="tab-header-sub">
-          2 picks &middot; watchlist
+          1 pick &middot; watchlist
           
         </div>
       </div>
@@ -820,9 +1458,9 @@
      data-bet-type="Moneyline"
      data-pick="Portland Fire"
      data-sport="WNBA"
-     data-edge-pct="5.6"
-     data-model-prob-pct="62.6"
-     data-market-prob-pct="57.0"
+     data-edge-pct="3.8"
+     data-model-prob-pct="59.7"
+     data-market-prob-pct="55.9"
      data-commence-time="2026-08-07T02:00:00Z"
      >
   <div class="card-row">
@@ -837,53 +1475,14 @@
     </div>
   </div>
   <div class="live-status" style="min-height:0;"></div>
-  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-wnba-1"><span class="ctx-arrow">›</span> Model projected score: Portland Fire 96 — Toronto Tempo 94</div>
+  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-wnba-1"><span class="ctx-arrow">›</span> Model projected score: Portland Fire 96 — Toronto Tempo 95</div>
   <div class="edge-row">
-    <span class="mkt-mdl">Edge <b style="color:var(--yellow)">+5.6%</b> &middot; Mkt 57.0% → Model 62.6%</span>
+    <span class="mkt-mdl">Edge <b style="color:var(--yellow)">+3.8%</b> &middot; Mkt 55.9% → Model 59.7%</span>
   </div>
   
   <div class="context-body" id="ctx-wnba-1">
-    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">Key absences for Toronto Tempo (18% of their scoring output) shift win probability toward Portland Fire.</div>
-    <div class="context-item">Model projected score: Portland Fire 96 — Toronto Tempo 94</div><div class="context-item">Portland Fire: 11W-19L | 85.7 PPG | FG 45.0% | AST/TO 1.41 | NetRtg -5.5</div><div class="context-item">Toronto Tempo: 10W-20L | 86.6 PPG | FG 44.8% | AST/TO 1.44 | NetRtg -4.3</div><div class="context-item">Strength of schedule — Portland Fire: opp avg net +0.3 | Toronto Tempo: opp avg net +0.7 (×0 applied)</div><div class="context-item">Toronto Tempo struggling recently (last 8 games: -15.9 net)</div><div class="context-item">Portland Fire last 8 games: 92.0 PPG | 25% W</div><div class="context-item">Toronto Tempo last 8 games: 81.9 PPG | 12% W</div><div class="context-item">Rest — Portland Fire: 3 day(s) | Toronto Tempo: 0 day(s)</div><div class="context-item">⚕ Portland Fire — Teja Oblak (6.0 PPG, 7% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Portland Fire — Bridget Carleton (6.7 PPG, 8% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Portland Fire — Sarah Ashlee Barker (6.4 PPG, 7% pts share): OUT</div><div class="context-item">⚕ Portland Fire — Sania Feagin (1.1 PPG, 1% pts share): OUT</div><div class="context-item">⚕ Toronto Tempo — Marina Mabrey (13.4 PPG, 15% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Toronto Tempo — Brittney Sykes (12.7 PPG, 14% pts share): OUT</div><div class="context-item">Portland Fire lineup impact (-19.4%)</div><div class="context-item">Toronto Tempo injuries benefit Portland Fire (+18.0%)</div><div class="context-item">Home court: Portland Fire (+2%)</div>
-    <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 Watchlist only — not tracked in performance tables until WNBA testing is complete.</div>
-  </div>
-  
-</div>
-
-    
-    
-<div class="wl-card wnba-watchlist-card"
-     id="wnba-2"
-     data-home-team="Indiana Fever"
-     data-away-team="Las Vegas Aces"
-     data-bet-type="Moneyline"
-     data-pick="Las Vegas Aces"
-     data-sport="WNBA"
-     data-edge-pct="4.2"
-     data-model-prob-pct="53.9"
-     data-market-prob-pct="49.7"
-     data-commence-time="2026-08-06T23:00:00Z"
-     >
-  <div class="card-row">
-    <div style="flex:1;min-width:0;">
-      <div class="card-pick">Las Vegas Aces<span class="pick-live-pill live-pill" style="display:none;margin-left:6px;font-size:0.68rem;">● LIVE</span></div>
-      <div class="card-game short-game">Las Vegas Aces @ Indiana Fever · ML</div>
-      <div class="card-time">4:00 PM PDT</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-      
-      <span class="badge badge-conf-MEDIUM">MEDIUM</span>
-    </div>
-  </div>
-  <div class="live-status" style="min-height:0;"></div>
-  <div class="proj-score-hl context-toggle" onclick="toggleCtx(this)" data-target="ctx-wnba-2"><span class="ctx-arrow">›</span> Model projected score: Indiana Fever 97 — Las Vegas Aces 99</div>
-  <div class="edge-row">
-    <span class="mkt-mdl">Edge <b style="color:var(--yellow)">+4.2%</b> &middot; Mkt 49.7% → Model 53.9%</span>
-  </div>
-  
-  <div class="context-body" id="ctx-wnba-2">
-    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">Indiana Fever's heavy injury load (20% pts-share missing) gives Las Vegas Aces a slight edge despite their own minor absences (13%).</div>
-    <div class="context-item">Model projected score: Indiana Fever 97 — Las Vegas Aces 99</div><div class="context-item">Indiana Fever: 19W-11L | 96.6 PPG | FG 48.5% | AST/TO 1.48 | NetRtg +3.7</div><div class="context-item">Las Vegas Aces: 21W-9L | 91.6 PPG | FG 49.4% | AST/TO 1.91 | NetRtg +4.1</div><div class="context-item">Strength of schedule — Indiana Fever: opp avg net -0.7 | Las Vegas Aces: opp avg net -0.2 (×0 applied)</div><div class="context-item">Indiana Fever in strong form (last 8 games: +11.9 net)</div><div class="context-item">Las Vegas Aces in strong form (last 8 games: +10.0 net)</div><div class="context-item">Indiana Fever last 8 games: 105.2 PPG | 75% W</div><div class="context-item">Las Vegas Aces last 8 games: 97.9 PPG | 62% W</div><div class="context-item">Rest — Indiana Fever: 3 day(s) | Las Vegas Aces: 2 day(s)</div><div class="context-item">⚕ Indiana Fever — Aliyah Boston (14.9 PPG, 16% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Indiana Fever — Caitlin Clark (19.5 PPG, 20% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Indiana Fever — Damiris Dantas (6.8 PPG, 7% pts share): OUT</div><div class="context-item">⚕ Las Vegas Aces — Cheyenne Parker-Tyus (8.8 PPG, 10% pts share): OUT</div><div class="context-item">⚕ Las Vegas Aces — Janiah Barker: OUT</div><div class="context-item">Indiana Fever lineup impact (-19.7%)</div><div class="context-item">Las Vegas Aces injuries benefit Indiana Fever (+12.7%)</div><div class="context-item">Home court: Indiana Fever (+2%)</div>
+    <div class="context-item" style="color:var(--text);border-left-color:var(--blue);">Key absences for Toronto Tempo (15% of their scoring output) shift win probability toward Portland Fire.</div>
+    <div class="context-item">Model projected score: Portland Fire 96 — Toronto Tempo 95</div><div class="context-item">Portland Fire: 11W-19L | 85.7 PPG | FG 45.0% | AST/TO 1.41 | NetRtg -5.5</div><div class="context-item">Toronto Tempo: 10W-20L | 86.6 PPG | FG 44.8% | AST/TO 1.44 | NetRtg -4.3</div><div class="context-item">Strength of schedule — Portland Fire: opp avg net +0.3 | Toronto Tempo: opp avg net +0.7 (×0 applied)</div><div class="context-item">Toronto Tempo struggling recently (last 8 games: -15.9 net)</div><div class="context-item">Portland Fire last 8 games: 92.0 PPG | 25% W</div><div class="context-item">Toronto Tempo last 8 games: 81.9 PPG | 12% W</div><div class="context-item">Rest — Portland Fire: 3 day(s) | Toronto Tempo: 0 day(s)</div><div class="context-item">⚕ Portland Fire — Teja Oblak (6.0 PPG, 7% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Portland Fire — Bridget Carleton (6.7 PPG, 8% pts share): DAY-TO-DAY</div><div class="context-item">⚕ Portland Fire — Sarah Ashlee Barker (6.4 PPG, 7% pts share): OUT</div><div class="context-item">⚕ Portland Fire — Sania Feagin (1.1 PPG, 1% pts share): OUT</div><div class="context-item">⚕ Toronto Tempo — Brittney Sykes (12.7 PPG, 14% pts share): OUT</div><div class="context-item">Portland Fire lineup impact (-19.4%)</div><div class="context-item">Toronto Tempo injuries benefit Portland Fire (+15.0%)</div><div class="context-item">Home court: Portland Fire (+2%)</div>
     <div class="context-item" style="color:var(--muted);border-left-color:var(--teal);">🔭 Watchlist only — not tracked in performance tables until WNBA testing is complete.</div>
   </div>
   
@@ -1504,7 +2103,7 @@
     
     <details id="sect-calibration" open>
     <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Model Calibration
-      <span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · 2026-08-06 15:30:22 UTC</span>
+      <span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · 2026-08-06 22:07:07 UTC</span>
     </summary>
     <div class="card">
       <details style="margin-bottom:12px;">
@@ -1592,7 +2191,7 @@
             
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:7px 6px;"><strong>WNBA</strong> · <span style="color:var(--muted);">Moneyline</span></td>
-              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">181 / 182</td>
+              <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;">181 / 185</td>
               <td style="padding:7px 6px;"><span style="padding:2px 7px;border-radius:99px;font-size:0.7rem;font-weight:600;background:#0e7490;color:#fff;">A</span></td>
               <td class="cal-col-ratio" style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--red);">0.812 (-18.8%)</td>
               <td style="text-align:right;padding:7px 6px;font-variant-numeric:tabular-nums;color:var(--red);">0.812 (-18.8%)</td>
@@ -1800,7 +2399,7 @@
     
     <details id="sect-cap" open>
     <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;margin-top:16px;"><span class="det-arrow">▶</span>Credibility Cap Auto-Adjustment
-      <span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · 2026-08-06 15:30:16 UTC</span>
+      <span style="font-size:0.65rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px;">auto-updated · 2026-08-06 22:06:48 UTC</span>
     </summary>
     <div class="card">
       <details style="margin-bottom:12px;">
@@ -2344,18 +2943,18 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">API Used</div>
-          <div style="font-size:1.05rem;font-weight:700;color:var(--text);">2542</div>
+          <div style="font-size:1.05rem;font-weight:700;color:var(--text);">2568</div>
           <div style="font-size:0.68rem;color:var(--muted);">requests today</div>
         </div>
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">API Remaining</div>
-          <div style="font-size:1.05rem;font-weight:700;color:var(--green);">17458</div>
+          <div style="font-size:1.05rem;font-weight:700;color:var(--green);">17432</div>
           <div style="font-size:0.68rem;color:var(--muted);">requests left</div>
         </div>
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">August 06, 2026 at 08:30 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">August 06, 2026 at 03:07 PM PDT</div>
         </div>
         
       </div>
@@ -2397,7 +2996,7 @@
 window._tabDots = {
   today:     false,
   nba:       false,
-  mlb:       false,
+  mlb:       true,
   ipl:       false,
   nhl:       false,
   wnba:      true,
@@ -2408,7 +3007,7 @@ window._tabDots = {
   analytics: false
 };
 // Sport tabs that have picks in today's report — used to auto-set visibility.
-window._srvTabsWithPicks = ["wnba",];
+window._srvTabsWithPicks = ["mlb","wnba",];
 window._reportDate = "2026-08-06";
 </script>
 
