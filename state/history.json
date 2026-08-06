@@ -14579,5 +14579,121 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-08-05",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Tampa Bay Rays @ Colorado Rockies",
+    "bet_type": "Spread",
+    "pick": "Colorado Rockies +1.5",
+    "home_team": "Colorado Rockies",
+    "away_team": "Tampa Bay Rays",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 59.9,
+    "market_prob_pct": 49.9,
+    "cost": 4.67,
+    "profit_if_win": 4.33,
+    "result": "LOST",
+    "actual_pnl": -4.67,
+    "actual_home_score": 0.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-08-05",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Toronto Blue Jays @ Houston Astros",
+    "bet_type": "Spread",
+    "pick": "Toronto Blue Jays +1.5",
+    "home_team": "Houston Astros",
+    "away_team": "Toronto Blue Jays",
+    "edge_pct": 8.8,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 58.9,
+    "market_prob_pct": 50.1,
+    "cost": 3.65,
+    "profit_if_win": 3.35,
+    "result": "WON",
+    "actual_pnl": 3.35,
+    "actual_home_score": 4.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-08-05",
+    "type": "single",
+    "sport": "MLB",
+    "game": "San Francisco Giants @ Texas Rangers",
+    "bet_type": "Spread",
+    "pick": "San Francisco Giants +1.5",
+    "home_team": "Texas Rangers",
+    "away_team": "San Francisco Giants",
+    "edge_pct": 5.6,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 63.1,
+    "market_prob_pct": 57.5,
+    "cost": 2.38,
+    "profit_if_win": 1.62,
+    "result": "LOST",
+    "actual_pnl": -2.38,
+    "actual_home_score": 6.0,
+    "actual_away_score": 0.0
+  },
+  {
+    "date": "2026-08-05",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Toronto Blue Jays +1.5 + Colorado Rockies +1.5",
+    "bet_type": "Parlay",
+    "pick": "Toronto Blue Jays +1.5 + Colorado Rockies +1.5",
+    "edge_pct": 9.2,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 34.2,
+    "market_prob_pct": 0,
+    "cost": 2.43,
+    "profit_if_win": 6.57,
+    "result": "LOST",
+    "actual_pnl": -2.43,
+    "legs": [
+      {
+        "game": "Toronto Blue Jays @ Houston Astros",
+        "pick": "Toronto Blue Jays +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Tampa Bay Rays @ Colorado Rockies",
+        "pick": "Colorado Rockies +1.5",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-05",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "San Francisco Giants +1.5 + Colorado Rockies (ML)",
+    "bet_type": "Parlay",
+    "pick": "San Francisco Giants +1.5 + Colorado Rockies (ML)",
+    "edge_pct": 7.4,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 30.5,
+    "market_prob_pct": 0,
+    "cost": 1.75,
+    "profit_if_win": 5.25,
+    "result": "LOST",
+    "actual_pnl": -1.75,
+    "legs": [
+      {
+        "game": "San Francisco Giants @ Texas Rangers",
+        "pick": "San Francisco Giants +1.5",
+        "result": "LOST"
+      },
+      {
+        "game": "Tampa Bay Rays @ Colorado Rockies",
+        "pick": "Colorado Rockies",
+        "result": "LOST"
+      }
+    ]
   }
 ]
