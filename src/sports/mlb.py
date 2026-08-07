@@ -51,6 +51,15 @@ class MLBModule:
         today_date = _date.fromisoformat(today)   # get_todays_games needs a date object
         games = get_game_odds(MLB_SPORT)
 
+        # First-5-innings markets come from a SEPARATE per-event endpoint (the
+        # bulk one rejects them — see fetch_f5_markets). Fully isolated: any
+        # failure leaves `games` untouched and the main card unaffected.
+        try:
+            from src.data.odds_client import fetch_f5_markets
+            fetch_f5_markets(MLB_SPORT, games)
+        except Exception as _f5err:
+            logger.warning(f"F5 odds fetch skipped (non-fatal): {_f5err}")
+
         for g in games:
             try:
                 g["player_props"] = fetch_player_props(g["game_id"], MLB_SPORT)

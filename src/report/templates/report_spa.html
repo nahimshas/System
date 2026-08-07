@@ -23,6 +23,7 @@
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
       {% if bet.locked %}<span class="lock-badge">🔒</span>{% endif %}
+      {% if bet.bet_type and bet.bet_type.startswith('F5') %}<span class="badge badge-f5">F5</span>{% endif %}
       <span class="badge badge-conf-{{ bet.confidence }}">{{ bet.confidence }}</span>
     </div>
   </div>
@@ -525,6 +526,7 @@
     .badge-mls   { background: #14532d; color: #bbf7d0; }
     .badge-wc    { background: #7c2d12; color: #fed7aa; }
     .badge-ligamx { background: #064e3b; color: #a7f3d0; }
+    .badge-f5    { background: #422006; color: #fed7aa; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .lock-badge { font-size: 0.62rem; color: var(--muted); }
@@ -1015,6 +1017,19 @@
     <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;"><span class="det-arrow">▶</span>Singles</summary>
     {% for bet in report.mlb_top_singles %}
     {{ bet_card(bet, "badge-mlb", "MLB", 'bet-' + bet.alloc_rank|string if bet.alloc_rank else 'mlb-' + loop.index|string, "MLB") }}
+    {% endfor %}
+    </details>
+    {% endif %}
+    {% if report.has_mlb_f5 %}
+    <details id="sect-mlb-f5" open>
+    <summary class="sec-label" style="cursor:pointer;list-style:none;display:flex;align-items:center;">
+      <span class="det-arrow">▶</span>First 5 Innings
+      <span style="font-size:0.66rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;margin-left:8px;">
+        &mdash; starters only &middot; watchlist, no budget
+      </span>
+    </summary>
+    {% for bet in report.mlb_f5_singles %}
+    {{ bet_card(bet, "badge-f5", "F5", "mlbf5-" + loop.index|string, "MLB") }}
     {% endfor %}
     </details>
     {% endif %}

@@ -79,6 +79,14 @@ PWA_HIDDEN_MARKETS: frozenset = frozenset({"Total", "Draw"})
 # (market_test.py + CLV >= 0 + positive ROI in both halves of a time split) —
 # the same bar the MLB full-game markets failed in Aug 2026.
 # First-5-innings suite added Aug 2026 (watchlist probation).
+# F5 odds cost extra credits: the Odds API serves first-5-innings markets ONLY
+# from the per-EVENT endpoint (~3 credits per game, vs 3 for a whole sport on
+# the bulk endpoint). Flip the ENABLE_F5_ODDS GitHub Actions variable to "false"
+# to stop fetching them without a code change — the analyzer then simply sees no
+# F5 markets and produces no F5 picks. (Same emergency-brake pattern as
+# DISABLE_CLV_STAMPING.)
+ENABLE_F5_ODDS: bool = os.environ.get("ENABLE_F5_ODDS", "true").lower() not in ("0", "false", "no")
+
 BUDGET_EXCLUDED_MARKETS: frozenset = frozenset({
     "F5 Moneyline", "F5 Tie", "F5 Spread", "F5 Total",
 })

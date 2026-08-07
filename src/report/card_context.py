@@ -85,6 +85,15 @@ _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
     # 4. Schedule / rest                   (situational)
     # 5. Injuries                          (roster health)
     # 6. Edge signals                      (why we differ from market)
+    # First-5-innings: starter-driven, no bullpen/umpire/weather noise.
+    "MLB_F5": [
+        re.compile(r"^Model projected score"),              # 0 projected 5-inning score
+        re.compile(r"^F5 starter edge"),                    # 1 the pitching gap
+        re.compile(r"^F5 starter scores"),                  # 2 both starter scores
+        re.compile(r"^F5 expected runs"),                   # 3 lambdas
+        re.compile(r"^F5 probabilities"),                   # 4 3-way split
+        re.compile(r"^(?:🔵|🔴)"),                         # 5 pitcher matchup detail
+    ],
     "MLB": [
         re.compile(r"^Model projected score"),              # 0  projected score
         re.compile(r"^Model expected total"),               # 1  expected total
@@ -842,6 +851,50 @@ def _mls_narrative(pick: str, bet_type: str, signals: List[str], research: List[
 
 # ── Main entry points ─────────────────────────────────────────────────────────
 
+def _f5_narrative(pick: str, bet_type: str, signals: List[str],
+                  research: List[str], edge: float) -> str:
+    """
+    Plain-English narrative for a first-5-innings card.
+
+    F5 is a bet on the STARTING PITCHERS ONLY — the bullpen never appears — so
+    the story is always the starter matchup plus what the 5-inning run
+    expectations imply. Keeps the same voice as the full-game MLB narratives.
+    """
+    joined = " | ".join(list(signals) + list(research))
+    bits: List[str] = []
+
+    m = re.search(r"F5 starter edge: ([^(]+)\(([\d.]+) quality gap", joined)
+    if m:
+        bits.append(f"{m.group(1).strip()} has the clear starter edge over five innings "
+                    f"({m.group(2)} quality gap)")
+    else:
+        m2 = re.search(r"F5 starter scores: (.+?) \| (.+?) \(bullpen excluded\)", joined)
+        if m2:
+            bits.append(f"Starters are close over five innings ({m2.group(1)} vs {m2.group(2)})")
+
+    m3 = re.search(r"F5 expected runs: (.+?) ([\d.]+) \| (.+?) ([\d.]+)", joined)
+    if m3:
+        bits.append(f"model projects {m3.group(1)} {m3.group(2)} — {m3.group(3)} {m3.group(4)} "
+                    f"through five")
+
+    bt = (bet_type or "").lower()
+    if "tie" in bt:
+        bits.append("this bets the game is LEVEL after five, which happens more often than "
+                    "people expect")
+    elif "total" in bt:
+        bits.append("this is a bet on scoring through five only — the bullpen never enters it")
+    elif "spread" in bt:
+        bits.append("run line applied to the five-inning margin")
+    else:
+        bits.append("a tie after five loses this bet — it needs an outright lead")
+
+    bits.append("Starters only: no bullpen, no late-game management. "
+                "Watchlist while F5 proves itself — no money is allocated")
+
+    out = "; ".join(b for b in bits if b)
+    return (out[0].upper() + out[1:] + ".") if out else ""
+
+
 def build_card_context(
     sport: str,
     pick: str,
@@ -862,9 +915,12 @@ def build_card_context(
     Confidence is computed upstream and is NOT affected by this function.
     """
     context = merge_context(signals, research)
-    context = _sort_context(sport, context)
+    _is_f5 = str(bet_type or "").startswith("F5 ")
+    context = _sort_context("MLB_F5" if _is_f5 else sport, context)
 
-    if sport == "MLB":
+    if _is_f5:
+        narrative = _f5_narrative(pick, bet_type, signals, research, edge)
+    elif sport == "MLB":
         narrative = _mlb_narrative(pick, bet_type, signals, research, edge)
     elif sport == "NBA":
         narrative = _nba_narrative(pick, bet_type, signals, research, edge)

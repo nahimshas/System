@@ -696,3 +696,95 @@ def fetch_player_props(game_id: str, sport: str) -> Dict[str, Dict]:
             f"credits_remaining={_credits_remaining}"
         )
     return result
+
+
+def fetch_f5_markets(sport: str, games: List[Dict]) -> int:
+    """
+    Attach first-5-innings markets to already-fetched games (MLB only).
+
+    WHY A SEPARATE CALL: the Odds API's bulk /sports/{sport}/odds endpoint accepts
+    ONLY h2h/spreads/totals. Requesting F5 keys there returns 422 for the whole
+    request — which took the entire MLB slate down on Aug 6 2026 and produced no
+    card. F5 markets live on the per-EVENT endpoint, one call per game.
+
+    COST: ~3 credits per game (markets x regions), vs 3 for a whole sport on the
+    bulk endpoint. Disable with the ENABLE_F5_ODDS=false Actions variable.
+
+    Mutates each game dict in place, adding f5_moneyline / f5_spread / f5_total
+    when the book lists them. FULLY ISOLATED: every failure is swallowed per-game,
+    so this can never affect the main card. Returns the number of games enriched.
+    """
+    from src.config import ENABLE_F5_ODDS
+    if not ENABLE_F5_ODDS:
+        logger.info("F5 odds disabled via ENABLE_F5_ODDS — skipping per-event fetch")
+        return 0
+    if sport != "baseball_mlb" or not games:
+        return 0
+
+    enriched = 0
+    for g in games:
+        eid = g.get("game_id")
+        if not eid:
+            continue
+        try:
+            data = _get(f"/sports/{sport}/events/{eid}/odds", {
+                "regions": "us",
+                "markets": "h2h_1st_5_innings,spreads_1st_5_innings,totals_1st_5_innings",
+                "oddsFormat": "american",
+            })
+            if not data:
+                continue
+            books = data.get("bookmakers", []) or []
+            home, away = g["home_team"], g["away_team"]
+
+            ml = _pick_book_odds(books, "h2h_1st_5_innings")
+            if ml:
+                c3 = _consensus_probs_3way(books, "h2h_1st_5_innings")
+                if c3 and home in c3 and away in c3:
+                    dk = next((k for k in c3 if k not in (home, away, "book_count")), None)
+                    g["f5_moneyline"] = {"book": f"consensus({c3.get('book_count',1)})",
+                                         "home_prob": c3[home],
+                                         "draw_prob": c3.get(dk, c3.get("Draw", 0.0)),
+                                         "away_prob": c3[away]}
+                else:
+                    c2 = _consensus_probs(books, "h2h_1st_5_innings")
+                    if c2 and home in c2 and away in c2:
+                        g["f5_moneyline"] = {"book": f"consensus({c2.get('book_count',1)})",
+                                             "home_prob": c2[home], "draw_prob": 0.0,
+                                             "away_prob": c2[away]}
+
+            sp = _pick_book_odds(books, "spreads_1st_5_innings")
+            if sp:
+                for o in sp["outcomes"]:
+                    if o["name"] == home:
+                        pt = o.get("point", 0)
+                        c = _consensus_probs_for_spread(books, home, pt,
+                                                        market_key="spreads_1st_5_innings")
+                        hp = c.get(home) if c else None
+                        g["f5_spread"] = {"book": sp["book"], "home_spread": pt,
+                                          "home_prob": hp if hp else american_to_prob(o["price"]),
+                                          "away_prob": 1 - (hp if hp else american_to_prob(o["price"]))}
+                        break
+
+            tt = _pick_book_odds(books, "totals_1st_5_innings")
+            tc = _consensus_probs(books, "totals_1st_5_innings")
+            if tt:
+                for o in tt["outcomes"]:
+                    if o["name"] == "Over":
+                        ov = tc.get("Over") if tc else None
+                        un = tc.get("Under") if tc else None
+                        g["f5_total"] = {"book": f"consensus({tc.get('book_count',1)})" if tc else tt["book"],
+                                         "line": o.get("point", 0),
+                                         "over_prob": ov if ov else american_to_prob(o["price"]),
+                                         "under_prob": un if un else 1 - american_to_prob(o["price"])}
+                        break
+
+            if g.get("f5_moneyline") or g.get("f5_spread") or g.get("f5_total"):
+                enriched += 1
+        except Exception as e:
+            logger.debug(f"F5 fetch failed for event {eid}: {e}")
+            continue
+
+    logger.info(f"F5 markets attached to {enriched}/{len(games)} MLB games "
+                f"(~{enriched*3} credits)")
+    return enriched

@@ -384,7 +384,8 @@ def build_report(
         # top-5 display pick when they diverge.
         _rank = 0
         for s in sorted(
-            [s for s in _display if s.get("sport") == sport and _pwa_show(s)],
+            [s for s in _display if s.get("sport") == sport and _pwa_show(s)
+             and not str(s.get("bet_type", "")).startswith("F5 ")],
             key=lambda r: (0 if r["confidence"] == "HIGH" else 1,
                            -r.get("effective_edge", r["edge"]),
                            -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
@@ -405,6 +406,18 @@ def build_report(
                                 -r.get("effective_edge", r["edge"]),
                                 -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)))
         return out
+
+    # First-5-innings picks get their OWN section in the MLB tab (watchlist-only,
+    # never Today's Card). Kept out of the main MLB singles list above so they
+    # compete with each other, not with full-game picks.
+    mlb_f5_singles = sorted(
+        [s for s in _display
+         if s.get("sport") == "MLB" and str(s.get("bet_type", "")).startswith("F5 ")
+         and _pwa_show(s)],
+        key=lambda r: (0 if r.get("confidence") == "HIGH" else 1,
+                       -r.get("effective_edge", r.get("edge", 0)),
+                       -(r.get("model_prob_raw") or r.get("model_prob_pct", 50) / 100)),
+    )[:MAX_SINGLE_BETS]
 
     nba_top_singles_raw = _top_singles_for_sport("NBA")
     mlb_top_singles_raw = _top_singles_for_sport("MLB")
@@ -694,6 +707,8 @@ def build_report(
         "wc_watchlist":       wc_watchlist,
         "wc_game_count":      wc_game_count,
         "has_wc":             wc_game_count > 0,
+        "mlb_f5_singles":     mlb_f5_singles,
+        "has_mlb_f5":         bool(mlb_f5_singles),
         "ligamx_watchlist":   ligamx_watchlist,
         "ligamx_game_count":  ligamx_game_count,
         "has_ligamx":         ligamx_game_count > 0,
