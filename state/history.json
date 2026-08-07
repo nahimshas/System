@@ -14695,5 +14695,73 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-08-06",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Miami Marlins @ Atlanta Braves",
+    "bet_type": "Spread",
+    "pick": "Miami Marlins +1.5",
+    "home_team": "Atlanta Braves",
+    "away_team": "Miami Marlins",
+    "edge_pct": 6.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 63.2,
+    "market_prob_pct": 57.1,
+    "cost": 2.37,
+    "profit_if_win": 1.63,
+    "result": "LOST",
+    "actual_pnl": -2.37,
+    "actual_home_score": 11.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-08-06",
+    "type": "single",
+    "sport": "MLB",
+    "game": "San Diego Padres @ Arizona Diamondbacks",
+    "bet_type": "Spread",
+    "pick": "Arizona Diamondbacks +1.5",
+    "home_team": "Arizona Diamondbacks",
+    "away_team": "San Diego Padres",
+    "edge_pct": 5.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 68.1,
+    "market_prob_pct": 62.3,
+    "cost": 1.93,
+    "profit_if_win": 1.07,
+    "result": "LOST",
+    "actual_pnl": -1.93,
+    "actual_home_score": 1.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-08-06",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Miami Marlins +1.5 + Arizona Diamondbacks +1.5",
+    "bet_type": "Parlay",
+    "pick": "Miami Marlins +1.5 + Arizona Diamondbacks +1.5",
+    "edge_pct": 6.7,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 42.3,
+    "market_prob_pct": 0,
+    "cost": 1.5,
+    "profit_if_win": 2.5,
+    "result": "LOST",
+    "actual_pnl": -1.5,
+    "legs": [
+      {
+        "game": "Miami Marlins @ Atlanta Braves",
+        "pick": "Miami Marlins +1.5",
+        "result": "LOST"
+      },
+      {
+        "game": "San Diego Padres @ Arizona Diamondbacks",
+        "pick": "Arizona Diamondbacks +1.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
