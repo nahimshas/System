@@ -24857,6 +24857,161 @@
         "Park Factor picks: 0-2 with avg CLV +0.2%",
         "Starter Edge picks: 1-0 with avg CLV -1.1%"
       ]
+    },
+    {
+      "date": "2026-08-06",
+      "generated_at": "2026-08-07T05:46:50Z",
+      "generated_by": "workflow",
+      "headline": "0-3 on budget (-$5.80), avg CLV -0.80%",
+      "budget_record": "0-3",
+      "watchlist_record": "3-0",
+      "budget_pnl": -5.8,
+      "avg_budget_clv": -0.8,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "Miami Marlins @ Atlanta Braves",
+          "sport": "MLB",
+          "pick": "Miami Marlins +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Miami Marlins 3, Atlanta Braves 11",
+          "pnl": "-$2.37",
+          "clv_pct": -0.5,
+          "why_picked": "Primary signal: Park Factor. (Park factor 1.03 (hitter-friendly: Truist Park))",
+          "what_happened": "Acu\u00f1a hits 2 homers, Olson adds blast as Braves beat Marlins 11-3 for season-best 8th straight win.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Umpire Factor",
+            "Recent Form"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.5%)",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "San Diego Padres @ Arizona Diamondbacks",
+          "sport": "MLB",
+          "pick": "Arizona Diamondbacks +1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "San Diego Padres 5, Arizona Diamondbacks 1",
+          "pnl": "-$1.93",
+          "clv_pct": -1.1,
+          "why_picked": "Primary signal: Park Factor. (Park factor 1.01 (pitcher-friendly: Chase Field))",
+          "what_happened": "Padres beat Diamondbacks 5-1 to close within a game in NL wild-card race.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.1% against us",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Miami Marlins @ Atlanta Braves / San Diego Padres @ Arizona Diamondbacks",
+          "pick": "Miami Marlins +1.5 + Arizona Diamondbacks +1.5",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "LOST",
+          "pnl": "-$1.50",
+          "legs": [
+            {
+              "pick": "Miami Marlins +1.5",
+              "sport": "MLB",
+              "result": "LOST"
+            },
+            {
+              "pick": "Arizona Diamondbacks +1.5",
+              "sport": "MLB",
+              "result": "LOST"
+            }
+          ],
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 a leg missed",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Chicago White Sox @ Boston Red Sox",
+          "sport": "MLB",
+          "pick": "Boston Red Sox",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Chicago White Sox 11, Boston Red Sox 12",
+          "pnl": "",
+          "clv_pct": 0.8,
+          "why_picked": "Primary signal: Park Factor. (Park factor 1.08 (hitter-friendly: Fenway Park))",
+          "what_happened": "Durbin\u2019s RBI single in the 13th inning caps Red Sox's 12-11 win over the White Sox.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.8%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Minnesota Twins @ Kansas City Royals",
+          "sport": "MLB",
+          "pick": "Minnesota Twins +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Minnesota Twins 4, Kansas City Royals 3",
+          "pnl": "",
+          "clv_pct": -0.1,
+          "why_picked": "Primary signal: Injury Impact. (Kansas City Royals injury impact (-3.2%))",
+          "what_happened": "Brooks Lee's 2-run single in 8th lifts Twins to 4-3 win over Royals.",
+          "signals": [
+            "Injury Impact",
+            "Recent Form",
+            "Schedule Load"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.1%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Toronto Tempo @ Portland Fire",
+          "sport": "WNBA",
+          "pick": "Portland Fire",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Toronto Tempo 83, Portland Fire 97",
+          "pnl": "",
+          "clv_pct": -0.8,
+          "why_picked": "Primary signal: Injury Impact. (Home court: Portland Fire (+2%))",
+          "what_happened": "Final: Toronto Tempo 83, Portland Fire 97.",
+          "signals": [
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.8%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "HIGH confidence: 0-1 today",
+        "MEDIUM confidence: 0-1 today",
+        "MLB Spread: 0-2"
+      ],
+      "model_observations": [
+        "Park Factor picks: 0-2 with avg CLV -0.8%",
+        "Injury Impact picks: 0-2 with avg CLV -0.8%",
+        "Recent Form picks: 0-2 with avg CLV -0.8%"
+      ]
     }
   ]
 }
