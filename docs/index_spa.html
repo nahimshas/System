@@ -3553,7 +3553,7 @@
         
         <div style="flex:1;min-width:120px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
           <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:3px;">Last Run</div>
-          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">August 09, 2026 at 11:26 AM PDT</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text);">August 09, 2026 at 11:36 AM PDT</div>
         </div>
         
       </div>
@@ -4942,16 +4942,43 @@ function toggleCtx(el) {
   // Builds a compact inning-by-inning grid from ev.{home,away}Innings plus the
   // R/H/E totals. Returns "" when no innings are available (pre-game). Shown
   // only on the MLB-tab bet cards (not the Today alloc cards — too tall there).
-  function _mlbLineScore(ev) {
+  // Shallow ev clone with the headline scores replaced by runs through the
+  // Nth inning, so F5 cards show F5 scores in the scoreboard (and never the
+  // full-game score, which would contradict the bet).
+  function _f5ScopedEv(ev, thru) {
+    function _sum(innings) {
+      var t = 0;
+      for (var i = 1; i <= thru; i++) if (innings && innings[i] != null) t += Number(innings[i]) || 0;
+      return t;
+    }
+    var c = {};
+    for (var k in ev) if (Object.prototype.hasOwnProperty.call(ev, k)) c[k] = ev[k];
+    c.awayScore = _sum(ev.awayInnings);
+    c.homeScore = _sum(ev.homeInnings);
+    return c;
+  }
+
+  function _mlbLineScore(ev, limitInn) {
     if (!ev || !ev.awayInnings || !ev.homeInnings) return "";
     var periods = {};
     Object.keys(ev.awayInnings).forEach(function (p) { periods[p] = true; });
     Object.keys(ev.homeInnings).forEach(function (p) { periods[p] = true; });
     var played = Object.keys(periods).map(Number);
-    var maxInning = Math.max(9, played.length ? Math.max.apply(null, played) : 0);
+    // limitInn (F5 cards): show only the innings the bet actually covers, with
+    // R = runs through that inning and no H/E (those are full-game only).
+    var maxInning = limitInn
+      ? limitInn
+      : Math.max(9, played.length ? Math.max.apply(null, played) : 0);
     var nums = [];
     for (var i = 1; i <= maxInning; i++) nums.push(i);
     if (!nums.length) return "";
+    function _sumThru(innings) {
+      var t = 0, any = false;
+      for (var i = 1; i <= maxInning; i++) {
+        if (innings[i] != null) { t += Number(innings[i]) || 0; any = true; }
+      }
+      return any ? t : 0;
+    }
 
     var cellCss  = "padding:2px 5px;text-align:center;font-variant-numeric:tabular-nums;color:#cbd5e1;";
     var headCss  = "padding:2px 5px;text-align:center;color:#64748b;font-size:0.6rem;";
@@ -4963,9 +4990,11 @@ function toggleCtx(el) {
       if (isHdr) {
         cells = '<td style="' + teamCss + '"></td>';
         nums.forEach(function (n) { cells += '<th style="' + headCss + '">' + n + '</th>'; });
-        cells += '<th style="' + headCss + 'border-left:1px solid #2d3148;">R</th>'
-               + '<th style="' + headCss + '">H</th>'
-               + '<th style="' + headCss + '">E</th>';
+        cells += '<th style="' + headCss + 'border-left:1px solid #2d3148;">R</th>';
+        if (!limitInn) {
+          cells += '<th style="' + headCss + '">H</th>'
+                 + '<th style="' + headCss + '">E</th>';
+        }
         return '<tr>' + cells + '</tr>';
       }
       cells = '<td style="' + teamCss + '">' + abbr + '</td>';
@@ -4973,17 +5002,21 @@ function toggleCtx(el) {
         var v = innings[n];
         cells += '<td style="' + cellCss + (v == null ? 'color:#374151;' : '') + '">' + (v != null ? v : "-") + '</td>';
       });
-      cells += '<td style="' + totCss + 'border-left:1px solid #2d3148;color:#14b8a6;">' + (runs != null ? runs : 0) + '</td>'
-             + '<td style="' + totCss + 'color:#cbd5e1;">' + (hits != null ? hits : 0) + '</td>'
-             + '<td style="' + totCss + 'color:#cbd5e1;">' + (errs != null ? errs : 0) + '</td>';
+      cells += '<td style="' + totCss + 'border-left:1px solid #2d3148;color:#14b8a6;">' + (runs != null ? runs : 0) + '</td>';
+      if (!limitInn) {
+        cells += '<td style="' + totCss + 'color:#cbd5e1;">' + (hits != null ? hits : 0) + '</td>'
+               + '<td style="' + totCss + 'color:#cbd5e1;">' + (errs != null ? errs : 0) + '</td>';
+      }
       return '<tr>' + cells + '</tr>';
     }
 
     return '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:6px;">' +
       '<table style="border-collapse:collapse;font-size:0.66rem;margin:0 auto;">' +
         _row("", null, null, null, null, true) +
-        _row(ev.awayAbbr, ev.awayInnings, ev.awayScore, ev.awayHits, ev.awayErrors, false) +
-        _row(ev.homeAbbr, ev.homeInnings, ev.homeScore, ev.homeHits, ev.homeErrors, false) +
+        _row(ev.awayAbbr, ev.awayInnings,
+             limitInn ? _sumThru(ev.awayInnings) : ev.awayScore, ev.awayHits, ev.awayErrors, false) +
+        _row(ev.homeAbbr, ev.homeInnings,
+             limitInn ? _sumThru(ev.homeInnings) : ev.homeScore, ev.homeHits, ev.homeErrors, false) +
       '</table></div>';
   }
 
@@ -6204,36 +6237,34 @@ function toggleCtx(el) {
           cacheBetResult(card, f5res);
         }
         var f5col = f5res === "WON" ? "#4ade80" : f5res === "LOST" ? "#f87171" : "#94a3b8";
-        liveDiv.innerHTML =
-          '<div style="margin-top:8px;text-align:center;font-size:0.78rem;">' +
-            '<span style="color:#94a3b8;">After 5: ' + awayTeam.split(" ").pop() + " " + f5a +
-            ", " + homeTeam.split(" ").pop() + " " + f5h + '</span>' +
-            ' <span style="color:' + f5col + ';font-weight:700;margin-left:6px;">' + (f5res || "") + '</span>' +
+        // Keep the full scoreboard (logos, abbrs, records) — only the scores
+        // and line score are scoped to the first five innings.
+        var f5EvDone = _f5ScopedEv(ev, 5);
+        var doneCtr =
+          '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0;">' +
+            '<span style="color:#64748b;font-size:0.62rem;font-weight:600;">AFTER 5</span>' +
+            '<span style="color:' + f5col + ';font-weight:700;font-size:0.9rem;">' + (f5res || "") + '</span>' +
           '</div>';
+        liveDiv.innerHTML = _renderScoreboard(f5EvDone, doneCtr) + _mlbLineScore(ev, 5);
         return;   // F5 is decided — ignore the rest of the game
       }
-      // Not yet decided — show a LIVE F5 win probability (was stuck at 50%
-      // because the generic winProb() has no F5 branch).
+      // Not yet decided — render the FULL MLB live card (logos, scoreboard,
+      // diamond/BSO, pitcher/batter, inning line score) exactly like any other
+      // MLB card, but with the F5-specific win probability substituted for the
+      // full-game one. An earlier version replaced the whole live area with a
+      // bare percentage, which stripped the scoreboard — don't do that.
       if (ev.stateId === "2") {
         var _f5Prior = parseFloat(card.getAttribute("data-model-prob-pct") || "");
         var f5p = _f5LiveProb(betType, pick, homeTeam, awayTeam, ev,
                               isNaN(_f5Prior) ? null : _f5Prior / 100);
         if (f5p !== null && !isNaN(f5p)) {
-          setPickLive(card, true);
+          setPickLive(card, true, f5p);
           clearCardTime(card);
-          var pct = Math.round(f5p * 100);
-          var col = pct >= 60 ? "#4ade80" : pct >= 40 ? "#facc15" : "#f87171";
-          var hSoFar = _f5FromInnings(ev, homeTeam, awayTeam, true);
-          var aSoFar = _f5FromInnings(ev, homeTeam, awayTeam, false);
-          var thru = (hSoFar === null || aSoFar === null)
-            ? (ev.detail || "")
-            : "thru 5: " + awayTeam.split(" ").pop() + " " + aSoFar + ", " +
-              homeTeam.split(" ").pop() + " " + hSoFar;
-          liveDiv.innerHTML =
-            '<div style="margin-top:8px;text-align:center;font-size:0.78rem;">' +
-              '<span style="color:' + col + ';font-weight:700;">' + pct + '% win</span>' +
-              '<span style="color:#64748b;"> &middot; F5 &middot; ' + (ev.detail || "") + '</span>' +
-            '</div>';
+          var f5Html = _mlbLiveHtml(ev.situation, _f5ScopedEv(ev, 5), f5p)
+                     + _mlbLineScore(ev, 5);
+          // Tag the probability as F5-scoped so it can't be read as full-game.
+          f5Html = f5Html.replace("% win prob", "% win prob &middot; F5");
+          liveDiv.innerHTML = f5Html;
           return;
         }
       }
