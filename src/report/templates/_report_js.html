@@ -1015,6 +1015,98 @@
   }
 
 
+
+  // ── F5 live win probability ───────────────────────────────────────────────
+  // A first-5-innings bet is decided at the end of the 5th, so its live
+  // probability depends only on the runs still to be scored BEFORE then — not
+  // on the rest of the game. Model: current 5-inning score + Poisson runs over
+  // the half-innings remaining until the 5th ends (0.48 runs per half-inning,
+  // the empirical MLB rate we measured Aug 2026). Returns null when F5 state
+  // can't be determined, so the caller can fall back.
+  function _f5LiveProb(betType, pick, homeTeam, awayTeam, ev, priorProb) {
+    if (!ev || !ev.homeInnings || !ev.awayInnings) return null;
+    var inning = ev.period || 1;
+    if (inning > 5) return null;              // 5 innings done — grading path handles it
+
+    var evIsHome = teamMatch(ev.home, homeTeam);
+    var hMap = evIsHome ? ev.homeInnings : ev.awayInnings;
+    var aMap = evIsHome ? ev.awayInnings : ev.homeInnings;
+    function sumTo(m, upto) {
+      var t = 0;
+      for (var i = 1; i <= upto; i++) {
+        var v = parseFloat(m[i]);
+        if (!isNaN(v)) t += v;
+      }
+      return t;
+    }
+    var hNow = sumTo(hMap, 5), aNow = sumTo(aMap, 5);
+
+    // Half-innings left before the end of the 5th (a half in progress counts 0.5).
+    var awayRem = ev.isBottom ? (5 - inning) : (5 - inning + 0.5);
+    var homeRem = ev.isBottom ? (5 - inning + 0.5) : (5 - inning + 1);
+    awayRem = Math.max(0, awayRem); homeRem = Math.max(0, homeRem);
+
+    var RPI = 0.48;                            // empirical runs per half-inning
+    var lh = Math.max(0.01, homeRem * RPI), la = Math.max(0.01, awayRem * RPI);
+
+    function pois(k, lam) {
+      var p = Math.exp(-lam), s = p;
+      if (k === 0) return p;
+      for (var i = 1; i <= k; i++) { p = p * lam / i; if (i === k) return p; s += p; }
+      return p;
+    }
+    var MAXR = 9, pHome = 0, pTie = 0, pAway = 0, pOver = {}, totProb = 0;
+    var bt = String(betType || "").toLowerCase();
+    var lineM = (pick || "").match(/([\d.]+)\s*$/);
+    var totLine = lineM ? parseFloat(lineM[1]) : null;
+    var spM = (pick || "").match(/([+-][\d.]+)\s*$/);
+    var spLine = spM ? parseFloat(spM[1]) : null;
+    var pOverAcc = 0, pUnderAcc = 0, pCoverAcc = 0;
+    var spTeamIsHome = spLine !== null
+      ? teamMatch(homeTeam, (pick || "").replace(/[+-][\d.]+\s*$/, "").trim()) : null;
+
+    for (var i = 0; i <= MAXR; i++) {
+      for (var j = 0; j <= MAXR; j++) {
+        var w = pois(i, lh) * pois(j, la);
+        var fh = hNow + i, fa = aNow + j;
+        if (fh > fa) pHome += w; else if (fh === fa) pTie += w; else pAway += w;
+        if (totLine !== null) { if (fh + fa > totLine) pOverAcc += w; else pUnderAcc += w; }
+        if (spLine !== null) {
+          var margin = spTeamIsHome ? (fh - fa) : (fa - fh);
+          if (margin + spLine > 0) pCoverAcc += w;
+        }
+        totProb += w;
+      }
+    }
+    if (totProb <= 0) return null;
+    pHome /= totProb; pTie /= totProb; pAway /= totProb;
+    pOverAcc /= totProb; pUnderAcc /= totProb; pCoverAcc /= totProb;
+
+    var live = null;
+    if (bt === "f5 tie") live = pTie;
+    else if (bt === "f5 moneyline") {
+      if (teamMatch(homeTeam, pick)) live = pHome;
+      else if (teamMatch(awayTeam, pick)) live = pAway;
+    }
+    else if (bt === "f5 spread") live = (spLine === null ? null : pCoverAcc);
+    else if (bt === "f5 total") {
+      if (totLine !== null)
+        live = String(pick).toLowerCase().indexOf("over") === 0 ? pOverAcc : pUnderAcc;
+    }
+    if (live === null) return null;
+
+    // Blend toward our PRE-GAME probability early on. The grid above assumes
+    // neutral teams (0.48 runs/half-inning for both), which is fine once runs
+    // are on the board but ignores the starter matchup in the 1st. Weight the
+    // prior by how much of the five innings is still unplayed, so it fades to
+    // pure score-based as the 5th approaches.
+    if (priorProb !== undefined && priorProb !== null && !isNaN(priorProb)) {
+      var remShare = Math.max(0, Math.min(1, (homeRem + awayRem) / 10));
+      live = remShare * priorProb + (1 - remShare) * live;
+    }
+    return live;
+  }
+
   // ── F5 helpers ────────────────────────────────────────────────────────────
   // Sum innings 1-5 from ESPN linescores. Returns null until five full innings
   // exist for BOTH sides (so a pick is never graded on a partial game).
@@ -1532,7 +1624,32 @@
           '</div>';
         return;   // F5 is decided — ignore the rest of the game
       }
-      // fewer than 5 innings in the book yet → fall through to normal live display
+      // Not yet decided — show a LIVE F5 win probability (was stuck at 50%
+      // because the generic winProb() has no F5 branch).
+      if (ev.stateId === "2") {
+        var _f5Prior = parseFloat(card.getAttribute("data-model-prob-pct") || "");
+        var f5p = _f5LiveProb(betType, pick, homeTeam, awayTeam, ev,
+                              isNaN(_f5Prior) ? null : _f5Prior / 100);
+        if (f5p !== null && !isNaN(f5p)) {
+          setPickLive(card, true);
+          clearCardTime(card);
+          var pct = Math.round(f5p * 100);
+          var col = pct >= 60 ? "#4ade80" : pct >= 40 ? "#facc15" : "#f87171";
+          var hSoFar = _f5FromInnings(ev, homeTeam, awayTeam, true);
+          var aSoFar = _f5FromInnings(ev, homeTeam, awayTeam, false);
+          var thru = (hSoFar === null || aSoFar === null)
+            ? (ev.detail || "")
+            : "thru 5: " + awayTeam.split(" ").pop() + " " + aSoFar + ", " +
+              homeTeam.split(" ").pop() + " " + hSoFar;
+          liveDiv.innerHTML =
+            '<div style="margin-top:8px;text-align:center;font-size:0.78rem;">' +
+              '<span style="color:' + col + ';font-weight:700;">' + pct + '% win</span>' +
+              '<span style="color:#64748b;"> &middot; F5 &middot; ' + (ev.detail || "") + '</span>' +
+            '</div>';
+          return;
+        }
+      }
+      // otherwise fall through to normal live display
     }
 
     if (ev.stateId === "3") {
