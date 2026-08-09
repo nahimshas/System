@@ -1014,6 +1014,64 @@
     };
   }
 
+
+  // ── F5 helpers ────────────────────────────────────────────────────────────
+  // Sum innings 1-5 from ESPN linescores. Returns null until five full innings
+  // exist for BOTH sides (so a pick is never graded on a partial game).
+  function _f5FromInnings(ev, homeTeam, awayTeam, wantHome) {
+    if (!ev || !ev.homeInnings || !ev.awayInnings) return null;
+    var evIsHome = teamMatch(ev.home, homeTeam);
+    var hMap = evIsHome ? ev.homeInnings : ev.awayInnings;
+    var aMap = evIsHome ? ev.awayInnings : ev.homeInnings;
+    function sum5(m) {
+      var t = 0;
+      for (var i = 1; i <= 5; i++) {
+        if (m[i] === undefined || m[i] === null || m[i] === "") return null;
+        var v = parseFloat(m[i]);
+        if (isNaN(v)) return null;
+        t += v;
+      }
+      return t;
+    }
+    var h = sum5(hMap), a = sum5(aMap);
+    if (h === null || a === null) return null;
+    return wantHome ? h : a;
+  }
+
+  // Mirrors src/data/outcome_checker._determine_f5_outcome — keep in sync.
+  function _f5Outcome(betType, pick, homeTeam, awayTeam, h5, a5) {
+    var bt = String(betType || "").toLowerCase();
+    var pl = String(pick || "").toLowerCase();
+    if (bt === "f5 tie") return h5 === a5 ? "WON" : "LOST";
+    if (bt === "f5 moneyline") {
+      if (h5 === a5) return "LOST";               // a tie loses a team pick
+      var homeWon = h5 > a5;
+      if (teamMatch(homeTeam, pick)) return homeWon ? "WON" : "LOST";
+      if (teamMatch(awayTeam, pick)) return homeWon ? "LOST" : "WON";
+      return "";
+    }
+    if (bt === "f5 spread") {
+      var m = pl.match(/([+-][\d.]+)\s*$/);
+      if (!m) return "";
+      var line = parseFloat(m[1]);
+      var team = pick.replace(/[+-][\d.]+\s*$/, "").trim();
+      var margin = teamMatch(homeTeam, team) ? (h5 - a5)
+                 : teamMatch(awayTeam, team) ? (a5 - h5) : null;
+      if (margin === null) return "";
+      var adj = margin + line;
+      return adj > 0 ? "WON" : adj === 0 ? "PUSH" : "LOST";
+    }
+    if (bt === "f5 total") {
+      var mt = pl.match(/([\d.]+)\s*$/);
+      if (!mt) return "";
+      var ln = parseFloat(mt[1]), tot = h5 + a5;
+      if (tot === ln) return "PUSH";
+      if (pl.indexOf("over") === 0)  return tot > ln ? "WON" : "LOST";
+      if (pl.indexOf("under") === 0) return tot < ln ? "WON" : "LOST";
+    }
+    return "";
+  }
+
   // ── Find the ESPN event matching a bet card ──────────────────────────────
   function findEvent(allEvents, homeTeam, awayTeam, commenceTime) {
     // Doubleheader-safe (Jul 8 2026): the same two teams can play twice in one
@@ -1449,6 +1507,34 @@
     var evHScore = teamMatch(ev.home, homeTeam) ? ev.homeScore : ev.awayScore;
     var evAScore = teamMatch(ev.away, awayTeam) ? ev.awayScore : ev.homeScore;
 
+    // ── First 5 innings: settle as soon as the 5th ends ──────────────────────
+    // F5 bets are decided at the end of the 5th, NOT at the final out, so they
+    // must not sit unresolved for four more innings (user-reported Aug 2026).
+    // Both linescores having 5 entries means five full innings are complete.
+    if (String(betType).indexOf("F5 ") === 0) {
+      var f5h = _f5FromInnings(ev, homeTeam, awayTeam, true);
+      var f5a = _f5FromInnings(ev, homeTeam, awayTeam, false);
+      if (f5h !== null && f5a !== null) {
+        showLockBadge(card);
+        clearCardTime(card);
+        setPickLive(card, false);
+        var f5res = _f5Outcome(betType, pick, homeTeam, awayTeam, f5h, f5a);
+        if (f5res) {
+          card.setAttribute("data-live-result", f5res);
+          cacheBetResult(card, f5res);
+        }
+        var f5col = f5res === "WON" ? "#4ade80" : f5res === "LOST" ? "#f87171" : "#94a3b8";
+        liveDiv.innerHTML =
+          '<div style="margin-top:8px;text-align:center;font-size:0.78rem;">' +
+            '<span style="color:#94a3b8;">After 5: ' + awayTeam.split(" ").pop() + " " + f5a +
+            ", " + homeTeam.split(" ").pop() + " " + f5h + '</span>' +
+            ' <span style="color:' + f5col + ';font-weight:700;margin-left:6px;">' + (f5res || "") + '</span>' +
+          '</div>';
+        return;   // F5 is decided — ignore the rest of the game
+      }
+      // fewer than 5 innings in the book yet → fall through to normal live display
+    }
+
     if (ev.stateId === "3") {
       showLockBadge(card);
       clearCardTime(card);
@@ -1797,10 +1883,10 @@
     // polling loop resolves a pick (the initial call runs at page load when
     // no results are live yet; subsequent calls update the tile in real-time).
     function updateWatchlistTiles() {
-      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 }, WC: { won: 0, lost: 0 }, LIGAMX: { won: 0, lost: 0 } };
+      var wlLive = { NHL: { won: 0, lost: 0 }, IPL: { won: 0, lost: 0 }, WNBA: { won: 0, lost: 0 }, MLS: { won: 0, lost: 0 }, WC: { won: 0, lost: 0 }, LIGAMX: { won: 0, lost: 0 }, F5: { won: 0, lost: 0 } };
 
       document.querySelectorAll(
-        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result], .wc-watchlist-card[data-live-result], .ligamx-watchlist-card[data-live-result]"
+        ".nhl-watchlist-card[data-live-result], .ipl-watchlist-card[data-live-result], .wnba-watchlist-card[data-live-result], .mls-watchlist-card[data-live-result], .wc-watchlist-card[data-live-result], .ligamx-watchlist-card[data-live-result], .f5-watchlist-card[data-live-result]"
       ).forEach(function (wlCard) {
         // Skip picks already counted server-side in data-hist-won / data-hist-lost:
         //   data-in-history="1" — server-side flag: pick is in watchlist_history,
@@ -1812,13 +1898,14 @@
         if (wlCard.getAttribute("data-in-history") === "1") return;
         var result = wlCard.getAttribute("data-live-result");
         if (!result) return;
-        var sport = wlCard.getAttribute("data-sport") || "";
+        // F5 cards keep data-sport="MLB" (ESPN lookup) but bucket under data-wl-key="F5"
+        var sport = wlCard.getAttribute("data-wl-key") || wlCard.getAttribute("data-sport") || "";
         if (!wlLive[sport]) return;
         if      (result === "WON")  wlLive[sport].won++;
         else if (result === "LOST") wlLive[sport].lost++;
       });
 
-      ["NHL", "IPL", "WNBA", "MLS", "WC", "LIGAMX"].forEach(function (sp) {
+      ["NHL", "IPL", "WNBA", "MLS", "WC", "LIGAMX", "F5"].forEach(function (sp) {
         var lw = wlLive[sp].won;
         var ll = wlLive[sp].lost;
         if (lw + ll === 0) return;   // nothing settled live for this sport

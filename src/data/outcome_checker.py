@@ -1771,6 +1771,47 @@ def check_and_settle_watchlist(today: date) -> int:
         })
         logger.info(f"Liga MX watchlist settled: {pick.get('pick')} → {result}")
 
+    # ── First 5 innings (MLB, watchlist probation) ──────────────────────────
+    # F5 picks live in singles_display with sport="MLB" but are their own market
+    # family, so they settle here into watchlist_history under sport "F5" — that
+    # gives them an independent W-L tile without touching MLB's budget record.
+    # Graded on the 5-INNING score; if the breakdown is missing, left unsettled.
+    f5_picks = [p for p in (state.get("singles_display") or [])
+                if str(p.get("bet_type", "")).startswith("F5 ")]
+    if f5_picks:
+        f5_scores = _fetch_espn_final_scores("MLB", yesterday)
+        for pick in f5_picks:
+            key = (yesterday.isoformat(), "F5", pick.get("pick", ""), pick.get("game", ""))
+            if key in settled_keys:
+                continue
+            sd = _find_game_score(f5_scores, pick.get("home_team", ""), pick.get("away_team", ""),
+                                  commence_time=pick.get("commence_time", ""))
+            if not sd or sd.get("home_f5") is None or sd.get("away_f5") is None:
+                continue
+            result = _determine_f5_outcome(
+                pick.get("pick", ""), pick.get("bet_type", ""),
+                sd.get("home_name", pick.get("home_team", "")),
+                sd.get("away_name", pick.get("away_team", "")),
+                sd["home_f5"], sd["away_f5"],
+            )
+            if result not in ("WON", "LOST"):
+                continue
+            new_records.append({
+                "date":            yesterday.isoformat(),
+                "sport":           "F5",
+                "game":            pick.get("game", ""),
+                "pick":            pick.get("pick", ""),
+                "bet_type":        pick.get("bet_type", "F5 Moneyline"),
+                "home_team":       pick.get("home_team", ""),
+                "away_team":       pick.get("away_team", ""),
+                "edge_pct":        pick.get("edge_pct", 0),
+                "confidence":      pick.get("confidence", "MEDIUM"),
+                "model_prob_pct":  pick.get("model_prob_pct", 0),
+                "market_prob_pct": pick.get("market_prob_pct", 0),
+                "result":          result,
+            })
+            logger.info(f"F5 watchlist settled: {pick.get('pick')} ({pick.get('bet_type')}) → {result}")
+
     if new_records:
         _save_watchlist_history(existing + new_records)
 
@@ -2092,7 +2133,7 @@ def load_watchlist_performance() -> Dict[str, Dict]:
     """
     records = _load_watchlist_history()
     result: Dict[str, Dict] = {}
-    for sport in ("NHL", "IPL", "WNBA", "MLS", "WC", "LIGAMX"):
+    for sport in ("NHL", "IPL", "WNBA", "MLS", "WC", "LIGAMX", "F5"):
         subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
         # Deduplicate: one entry per (date, game, pick) so that multiple
         # legitimate picks for the same game (ML + spread + total) are all
