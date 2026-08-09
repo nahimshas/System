@@ -60,8 +60,10 @@ try:  # WC config only exists June 2026+; degrade gracefully if removed
 except ImportError:
     pass
 
-# Sports whose h2h market is 3-way (Home/Draw/Away)
-_THREE_WAY_SPORTS = {"MLS", "WC"}
+# Sports whose h2h market is 3-way (Home/Draw/Away). "F5" is a pseudo-sport
+# used only by the F5 closing-prob path: a first-5-innings moneyline is 3-way
+# because a 5-inning game can end level (LIGAMX is soccer, likewise 3-way).
+_THREE_WAY_SPORTS = {"MLS", "WC", "LIGAMX", "F5"}
 
 # market_type (shadow log) → Odds API market key
 _MARKET_KEYS = {
@@ -69,6 +71,15 @@ _MARKET_KEYS = {
     "Spread":    "spreads",
     "Total":     "totals",
     "Draw":      "h2h",
+    # First-5-innings. NOTE: these are NOT "featured" markets — the bulk
+    # endpoints may reject them (the live bulk one does, which caused the Aug 6
+    # no-card outage). _fetch_historical_snapshot therefore splits them into
+    # their OWN request so a rejection can never take down CLV for h2h/spreads/
+    # totals in the same wave.
+    "F5 Moneyline": "h2h_1st_5_innings",
+    "F5 Tie":       "h2h_1st_5_innings",
+    "F5 Spread":    "spreads_1st_5_innings",
+    "F5 Total":     "totals_1st_5_innings",
 }
 
 # Historical odds request cost: 10 credits per market per region (1 region: us)
@@ -158,19 +169,53 @@ def _fetch_historical_snapshot(
     ckey = (sport_key, snapshot_iso, tuple(sorted(set(market_keys))))
     if ckey in _SNAPSHOT_CACHE:
         return _SNAPSHOT_CACHE[ckey]
-    data = _get(
-        f"/historical/sports/{sport_key}/odds",
-        {
-            "regions": "us",
-            "markets": ",".join(sorted(set(market_keys))),
-            "oddsFormat": "american",
-            "date": snapshot_iso,
-        },
-    )
-    result = (data.get("data") or []) if (data and isinstance(data, dict)) else None
-    # Only cache successful fetches — a None (API error) should be retried.
-    if result is not None:
-        _SNAPSHOT_CACHE[ckey] = result
+
+    def _one(mkts):
+        data = _get(
+            f"/historical/sports/{sport_key}/odds",
+            {
+                "regions": "us",
+                "markets": ",".join(sorted(set(mkts))),
+                "oddsFormat": "american",
+                "date": snapshot_iso,
+            },
+        )
+        return (data.get("data") or []) if (data and isinstance(data, dict)) else None
+
+    # ISOLATION (Aug 2026): non-featured markets (F5) are requested SEPARATELY.
+    # The bulk endpoints reject them with a 422 that fails the WHOLE request —
+    # exactly what produced the Aug 6 no-card outage on the live side. Splitting
+    # means a rejection costs only F5's CLV, never h2h/spreads/totals'.
+    featured = [m for m in set(market_keys) if not m.endswith("_1st_5_innings")]
+    extra    = [m for m in set(market_keys) if m.endswith("_1st_5_innings")]
+
+    result = _one(featured) if featured else []
+    if result is None:
+        return None                      # featured failed → real failure, retry later
+
+    if extra:
+        ex = _one(extra)
+        if ex is None:
+            logger.info(
+                f"F5 closing lines unavailable on the historical endpoint "
+                f"({sport_key} @ {snapshot_iso}) — F5 CLV skipped, other markets unaffected"
+            )
+        else:
+            # Merge the F5 bookmaker markets into the matching featured events.
+            by_id = {e.get("id"): e for e in result}
+            for ev in ex:
+                tgt = by_id.get(ev.get("id"))
+                if tgt is None:
+                    result.append(ev)
+                    continue
+                tb = {b.get("key"): b for b in tgt.get("bookmakers", [])}
+                for b in ev.get("bookmakers", []):
+                    if b.get("key") in tb:
+                        tb[b["key"]].setdefault("markets", []).extend(b.get("markets", []))
+                    else:
+                        tgt.setdefault("bookmakers", []).append(b)
+
+    _SNAPSHOT_CACHE[ckey] = result
     return result
 
 
@@ -201,13 +246,13 @@ def _find_event(events: List[Dict], home: str, away: str,
 # like with like.
 # ---------------------------------------------------------------------------
 
-def _closing_ml_prob(event: Dict, pick_side: str, sport: str) -> Optional[float]:
+def _closing_ml_prob(event: Dict, pick_side: str, sport: str, market_key: str = "h2h") -> Optional[float]:
     """No-vig consensus closing probability for a moneyline (or Draw) pick."""
     three_way = sport in _THREE_WAY_SPORTS
     probs: List[float] = []
     for book in event.get("bookmakers", []):
         for mkt in book.get("markets", []):
-            if mkt.get("key") != "h2h":
+            if mkt.get("key") not in (market_key, ):
                 continue
             outcomes = mkt.get("outcomes", [])
             if three_way:
@@ -239,7 +284,8 @@ def _closing_ml_prob(event: Dict, pick_side: str, sport: str) -> Optional[float]
 
 
 def _closing_spread_prob(event: Dict, pick_side: str,
-                         pick_point: Optional[float]) -> Optional[Tuple[float, Optional[float], bool]]:
+                         pick_point: Optional[float],
+                         market_key: str = "spreads") -> Optional[Tuple[float, Optional[float], bool]]:
     """No-vig consensus closing cover probability for a spread pick.
 
     Prefers books still offering the picked team at the SAME point as the
@@ -252,7 +298,7 @@ def _closing_spread_prob(event: Dict, pick_side: str,
     same_sign: List[Tuple[float, float]] = []  # (prob, point)
     for book in event.get("bookmakers", []):
         for mkt in book.get("markets", []):
-            if mkt.get("key") != "spreads":
+            if mkt.get("key") not in (market_key, ):
                 continue
             outcomes = mkt.get("outcomes", [])
             if len(outcomes) < 2:
@@ -283,7 +329,8 @@ def _closing_spread_prob(event: Dict, pick_side: str,
 
 
 def _closing_total_prob(event: Dict, pick_side: str,
-                        pick_point: Optional[float]) -> Optional[Tuple[float, Optional[float], bool]]:
+                        pick_point: Optional[float],
+                        market_key: str = "totals") -> Optional[Tuple[float, Optional[float], bool]]:
     """No-vig consensus closing probability for a total (Over/Under) pick.
 
     Same exact-point-first / any-point-fallback approach as spreads. The
@@ -297,7 +344,7 @@ def _closing_total_prob(event: Dict, pick_side: str,
     fallback: List[Tuple[float, float]] = []
     for book in event.get("bookmakers", []):
         for mkt in book.get("markets", []):
-            if mkt.get("key") != "totals":
+            if mkt.get("key") not in (market_key, ):
                 continue
             outcomes = mkt.get("outcomes", [])
             if len(outcomes) < 2:
@@ -334,6 +381,25 @@ def _closing_prob_for_entry(event: Dict, entry: Dict) -> Optional[Dict[str, Any]
     market_type = entry.get("market_type", "")
     pick_side   = entry.get("pick_side", "")
     pick_point  = _parse_pick_point(entry.get("pick", ""))
+
+    # First-5-innings entries use the same extractors against the F5 bookmaker
+    # market keys (the snapshot merges them in — see _fetch_historical_snapshot).
+    if market_type in ("F5 Moneyline", "F5 Tie"):
+        _side = pick_side if market_type == "F5 Moneyline" else "Draw"
+        prob = _closing_ml_prob(event, _side, "F5", market_key="h2h_1st_5_innings")
+        return None if prob is None else {"prob": prob, "close_point": None, "point_differs": False}
+    if market_type == "F5 Spread":
+        res = _closing_spread_prob(event, pick_side, pick_point, market_key="spreads_1st_5_innings")
+        if res is None:
+            return None
+        prob, cp, differs = res
+        return {"prob": prob, "close_point": cp, "point_differs": differs}
+    if market_type == "F5 Total":
+        res = _closing_total_prob(event, pick_side, pick_point, market_key="totals_1st_5_innings")
+        if res is None:
+            return None
+        prob, cp, differs = res
+        return {"prob": prob, "close_point": cp, "point_differs": differs}
 
     if market_type in ("Moneyline", "Draw"):
         prob = _closing_ml_prob(event, pick_side, (entry.get("sport") or "").upper())
