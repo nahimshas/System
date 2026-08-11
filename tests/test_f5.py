@@ -118,3 +118,86 @@ class TestF5Settlement:
 
     def test_missing_five_inning_data_is_unknown_not_guessed(self):
         assert _determine_f5_outcome(self.A, "F5 Moneyline", self.H, self.A, None, None) == "UNKNOWN"
+
+
+# ---------------------------------------------------------------------------
+# F5 CLV extraction — proves our side of the pipeline works given a snapshot
+# that contains the *_1st_5_innings bookmaker markets. The only remaining
+# unknown is whether the Odds API historical endpoint serves them.
+# ---------------------------------------------------------------------------
+
+def _f5_event(three_way_ml=True):
+    ml_outcomes = [
+        {"name": "New York Yankees", "price": -140},
+        {"name": "Atlanta Braves", "price": 120},
+    ]
+    if three_way_ml:
+        ml_outcomes = [
+            {"name": "New York Yankees", "price": -110},
+            {"name": "Atlanta Braves", "price": 160},
+            {"name": "Draw", "price": 260},
+        ]
+    return {
+        "home_team": "New York Yankees",
+        "away_team": "Atlanta Braves",
+        "commence_time": "2026-08-08T19:05:00Z",
+        "bookmakers": [{
+            "key": "book1",
+            "markets": [
+                {"key": "h2h_1st_5_innings", "outcomes": ml_outcomes},
+                {"key": "spreads_1st_5_innings", "outcomes": [
+                    {"name": "New York Yankees", "price": -120, "point": 0.5},
+                    {"name": "Atlanta Braves", "price": 100, "point": -0.5},
+                ]},
+                {"key": "totals_1st_5_innings", "outcomes": [
+                    {"name": "Over", "price": -105, "point": 4.5},
+                    {"name": "Under", "price": -115, "point": 4.5},
+                ]},
+            ],
+        }],
+    }
+
+
+def test_f5_clv_extracts_all_three_markets():
+    from src.data.closing_lines import _closing_prob_for_entry
+    cases = [
+        ("F5 Moneyline", "New York Yankees", "New York Yankees"),
+        ("F5 Spread", "New York Yankees +0.5", "New York Yankees +0.5"),
+        ("F5 Total", "Over 4.5", "Over 4.5"),
+    ]
+    ev = _f5_event()
+    for market_type, pick_side, pick in cases:
+        entry = {"market_type": market_type, "pick_side": pick_side, "pick": pick}
+        res = _closing_prob_for_entry(ev, entry)
+        assert res is not None, f"{market_type} produced no closing prob"
+        assert 0.0 < res["prob"] < 1.0, f"{market_type} prob out of range: {res}"
+
+
+def test_f5_moneyline_handles_two_way_books():
+    """Some books price F5 h2h without the tie — must still yield a prob."""
+    from src.data.closing_lines import _closing_prob_for_entry
+    ev = _f5_event(three_way_ml=False)
+    res = _closing_prob_for_entry(
+        ev, {"market_type": "F5 Moneyline", "pick_side": "New York Yankees", "pick": ""}
+    )
+    assert res is not None and 0.0 < res["prob"] < 1.0
+
+
+def test_f5_three_way_ml_prob_is_below_two_way():
+    """With the tie priced, a team's F5 win prob must be lower than the
+    two-way version of the same price — the draw takes probability mass."""
+    from src.data.closing_lines import _closing_ml_prob
+    p3 = _closing_ml_prob(_f5_event(True), "New York Yankees", "F5",
+                          market_key="h2h_1st_5_innings")
+    p2 = _closing_ml_prob(_f5_event(False), "New York Yankees", "F5",
+                          market_key="h2h_1st_5_innings")
+    assert p3 < p2
+
+
+def test_f5_market_types_are_all_mapped():
+    """Every F5 market_type we write to the shadow log must have an Odds API
+    key, or the CLV pass silently skips it (the Aug 2026 gap)."""
+    from src.data.closing_lines import _MARKET_KEYS
+    for mt in ("F5 Moneyline", "F5 Tie", "F5 Spread", "F5 Total"):
+        assert mt in _MARKET_KEYS, f"{mt} missing from _MARKET_KEYS"
+        assert _MARKET_KEYS[mt].endswith("_1st_5_innings")

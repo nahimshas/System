@@ -255,7 +255,12 @@ def _closing_ml_prob(event: Dict, pick_side: str, sport: str, market_key: str = 
             if mkt.get("key") not in (market_key, ):
                 continue
             outcomes = mkt.get("outcomes", [])
-            if three_way:
+            # F5 moneylines are 3-way at some books (tie priced) and 2-way at
+            # others, so for F5 ONLY a 2-outcome book falls through to the 2-way
+            # no-vig path below instead of being dropped. Soccer keeps the strict
+            # 3-outcome requirement: a 2-way soccer price would silently exclude
+            # the draw and produce a wrong probability.
+            if three_way and (len(outcomes) >= 3 or sport != "F5"):
                 if len(outcomes) < 3:
                     break
                 raw = {o["name"]: american_to_prob(o["price"]) for o in outcomes}
