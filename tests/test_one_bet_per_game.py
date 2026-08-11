@@ -84,3 +84,60 @@ def test_rule_is_driven_by_the_config_constant():
     recs = [_Rec(game, "Moneyline", "Tampa Bay Rays", 0.06),
             _Rec(game, "Spread", "Athletics +1.5", 0.05)]
     assert len(_budget_pool(recs)) == MAX_BUDGET_BETS_PER_GAME
+
+
+# ---------------------------------------------------------------------------
+# Same rule for parlay legs (Aug 10 2026). Previously only same-game ML+Spread
+# was blocked, so Spread+Total and ML+Total on one game were priced as if the
+# legs were independent.
+# ---------------------------------------------------------------------------
+
+class _Leg:
+    def __init__(self, game, bet_type, pick="X", edge=0.06):
+        self.game, self.bet_type, self.pick, self.edge = game, bet_type, pick, edge
+
+
+def test_no_two_parlay_legs_from_the_same_game():
+    from src.models.parlay_builder import _parlay_valid
+    g = "Rays @ Athletics"
+    for a, b in (("Spread", "Total"), ("Moneyline", "Total"),
+                 ("Moneyline", "Spread"), ("Spread", "Spread"),
+                 ("Total", "Total"), ("Moneyline", "Moneyline")):
+        assert _parlay_valid(_Leg(g, a), _Leg(g, b)) is False, f"{a}+{b} same game allowed"
+
+
+def test_cross_game_combinations_all_still_allowed():
+    from src.models.parlay_builder import _parlay_valid
+    for a, b in (("Spread", "Spread"), ("Moneyline", "Spread"),
+                 ("Total", "Total"), ("Moneyline", "Total")):
+        assert _parlay_valid(_Leg("A @ B", a), _Leg("C @ D", b)) is True
+
+
+def test_builder_produces_no_same_game_parlay():
+    """End-to-end: a pool where the two best picks share a game must not
+    parlay them together."""
+    from src.models.parlay_builder import build_parlays
+    from src.models.edge_finder import BetRecommendation
+    import inspect
+
+    fields = inspect.signature(BetRecommendation).parameters
+    def mk(game, bet_type, pick, edge, home, away):
+        kw = {}
+        for name in fields:
+            kw[name] = None
+        kw.update(dict(game=game, bet_type=bet_type, pick=pick, edge=edge,
+                       home_team=home, away_team=away))
+        for k, v in (("model_prob", 0.60), ("market_prob", 0.54),
+                     ("confidence", "MEDIUM"), ("sport", "MLB"),
+                     ("signals", []), ("contract_price", 0.54)):
+            if k in fields:
+                kw[k] = v
+        return BetRecommendation(**{k: v for k, v in kw.items() if k in fields})
+
+    pool = [
+        mk("Rays @ Athletics", "Moneyline", "Tampa Bay Rays", 0.09, "Athletics", "Tampa Bay Rays"),
+        mk("Rays @ Athletics", "Total", "Under 8.5", 0.08, "Athletics", "Tampa Bay Rays"),
+    ]
+    for par in build_parlays(pool):
+        assert len(set(par.game_labels)) == len(par.game_labels), \
+            f"same-game parlay built: {par.label}"

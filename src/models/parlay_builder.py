@@ -11,11 +11,18 @@ rules here are the MODEL's own):
       combined probability math (p_a × p_b) is sound.
 
   Same-game parlays (SGP — both legs from the same game):
-    - Any combination EXCEPT ML + Spread. This is a model-correctness rule,
-      not a platform rule: a team's ML and its run line are nearly the same
-      event, so multiplying their probabilities as if independent badly
-      misprices the parlay. Until a correlation adjustment exists, SGP
-      ML+Spread stays blocked.
+    - BLOCKED ENTIRELY (Aug 10 2026). This is a model-correctness rule, not a
+      platform rule. Two legs from one game are never independent, so p_a × p_b
+      is simply the wrong number — and wrong in a direction that varies with
+      the pair (a spread and an under move together; an ML and an under often
+      oppose), so we cannot even say whether it flatters or penalises the
+      parlay. Previously only ML+Spread was blocked, which left Spread+Total
+      and ML+Total priced as if independent. Extends the same reasoning as
+      MAX_BUDGET_BETS_PER_GAME=1 for singles: one game, one bet.
+      Rare in practice — 33 of the 35 historical same-game parlays predate
+      June 2026, and the one July case was the duplicate-leg bug. This is a
+      safety rail, not a change in day-to-day behaviour. Revisit only with a
+      real correlation model, never by relaxing the rule alone.
 """
 from dataclasses import dataclass, field
 from itertools import combinations
@@ -55,24 +62,14 @@ def _parlay_valid(leg_a: BetRecommendation, leg_b: BetRecommendation) -> bool:
     Returns True if the leg combination is allowed.
 
     Robinhood no longer restricts combinations (Jul 2026), so the only
-    remaining rule is the model's own: same-game ML + Spread is blocked
-    because the two legs are nearly the same event and the independence
-    assumption in the combined-probability math (p_a × p_b) would badly
-    misprice it. Cross-game, any combination is valid — including
-    Spread + Spread, which lets two dog-with-better-starter picks
-    (the model's best-performing bet type) be parlayed together.
+    remaining rule is the model's own: BOTH LEGS MUST BE FROM DIFFERENT GAMES.
+    Legs from one game are correlated, and the combined-probability math
+    (p_a × p_b) assumes independence — so the resulting edge is wrong by an
+    unknown amount in an unknown direction. Cross-game, any combination is
+    valid, including Spread + Spread, which lets two dog-with-better-starter
+    picks (the model's best-performing bet type) be parlayed together.
     """
-    same_game = (leg_a.game == leg_b.game)
-
-    if same_game:
-        # Same market twice in one game is never a real parlay: identical picks
-        # (duplicate rec after a line move) or opposite sides of the same line.
-        if leg_a.bet_type == leg_b.bet_type:
-            return False
-        if {leg_a.bet_type, leg_b.bet_type} == {"Moneyline", "Spread"}:
-            return False
-
-    return True
+    return leg_a.game != leg_b.game
 
 
 def build_parlays(singles: List[BetRecommendation]) -> List[ParlayRecommendation]:
