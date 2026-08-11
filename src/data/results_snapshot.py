@@ -25,6 +25,7 @@ from src.data.outcome_checker import (
     ESPN_WATCHLIST_PATHS,
     _determine_outcome,
     _determine_mls_outcome,
+    _determine_f5_outcome,
     _team_token_overlap_match,
     _soccer_90min_scores,
     _SOCCER_90MIN_SPORTS,
@@ -118,11 +119,24 @@ def _fetch_events(sport: str, game_date: date) -> list:
                 else:
                     completed = False
 
+        # First-5-innings scores for F5 picks. An F5 bet is decided at the end
+        # of the 5th, so it must grade off these — not the final score.
+        def _f5(c):
+            ls = c.get("linescores") or []
+            if len(ls) < 5:
+                return None
+            try:
+                return float(sum(float(x.get("value", 0) or 0) for x in ls[:5]))
+            except (TypeError, ValueError):
+                return None
+
         entries.append({
             "home_name":  home.get("team", {}).get("displayName", ""),
             "away_name":  away.get("team", {}).get("displayName", ""),
             "home_score": home_score,
             "away_score": away_score,
+            "home_f5":    _f5(home),
+            "away_f5":    _f5(away),
             "completed":  completed,
             "postponed":  postponed,
             "event_date": event.get("date", ""),
@@ -196,6 +210,24 @@ def _resolve(sport: str, pick: str, bet_type: str, home_team: str, away_team: st
 
     score_str = (f"{event['away_name']} {int(event['away_score'])}, "
                  f"{event['home_name']} {int(event['home_score'])}")
+
+    # ── First 5 innings ──────────────────────────────────────────────────────
+    # Graded on the 5-inning score and settled as soon as the 5th is complete,
+    # so an F5 pick never waits on the last four innings. Without this the
+    # snapshot fell through to full-game grading and every F5 pick came back
+    # PENDING (user-reported Aug 10 2026) even though the bet was long decided.
+    if str(bet_type or "").lower().startswith("f5 "):
+        h_f5, a_f5 = event.get("home_f5"), event.get("away_f5")
+        if h_f5 is None or a_f5 is None:
+            return {"result": "PENDING", "score": f"Through 5 not available ({score_str})"}
+        f5_score = (f"{event['away_name']} {int(a_f5)}, "
+                    f"{event['home_name']} {int(h_f5)} (through 5)")
+        f5_result = _determine_f5_outcome(pick, bet_type, event["home_name"],
+                                          event["away_name"], h_f5, a_f5)
+        if f5_result not in ("WON", "LOST", "PUSH"):
+            return {"result": "PENDING", "score": f5_score}
+        return {"result": f5_result, "score": f5_score}
+
     if not event["completed"]:
         return {"result": "PENDING", "score": f"In progress ({score_str})"}
 

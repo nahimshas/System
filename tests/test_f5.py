@@ -201,3 +201,57 @@ def test_f5_market_types_are_all_mapped():
     for mt in ("F5 Moneyline", "F5 Tie", "F5 Spread", "F5 Total"):
         assert mt in _MARKET_KEYS, f"{mt} missing from _MARKET_KEYS"
         assert _MARKET_KEYS[mt].endswith("_1st_5_innings")
+
+
+# ---------------------------------------------------------------------------
+# F5 grading in the nightly results snapshot (the debrief's only source).
+# Aug 10 2026: every F5 pick showed ⏳ in the debrief because _resolve fell
+# through to full-game grading, which has no F5 branch.
+# ---------------------------------------------------------------------------
+
+def _snapshot_event(home_f5, away_f5, completed=True):
+    return {
+        "home_name": "New York Yankees", "away_name": "Atlanta Braves",
+        "home_score": 7.0, "away_score": 2.0,       # deliberately unlike the F5 score
+        "home_f5": home_f5, "away_f5": away_f5,
+        "completed": completed, "postponed": False,
+        "event_date": "2026-08-09T19:05Z",
+    }
+
+
+def _resolve_f5(pick, bet_type, event):
+    from src.data.results_snapshot import _resolve
+    return _resolve("MLB", pick, bet_type, "New York Yankees", "Atlanta Braves",
+                    "2026-08-09T19:05:00Z", {"MLB": [event]})
+
+
+def test_snapshot_grades_f5_off_the_five_inning_score():
+    """Braves lead 3-1 after 5 but lose 7-2 — the F5 pick must grade on the 5."""
+    ev = _snapshot_event(home_f5=1.0, away_f5=3.0)
+    assert _resolve_f5("Atlanta Braves", "F5 Moneyline", ev)["result"] == "WON"
+    assert _resolve_f5("New York Yankees", "F5 Moneyline", ev)["result"] == "LOST"
+    assert _resolve_f5("Over 3.5", "F5 Total", ev)["result"] == "WON"
+    assert _resolve_f5("Under 3.5", "F5 Total", ev)["result"] == "LOST"
+
+
+def test_snapshot_f5_settles_before_the_game_ends():
+    """F5 is decided at the 5th — an unfinished game must not force PENDING."""
+    ev = _snapshot_event(home_f5=1.0, away_f5=3.0, completed=False)
+    assert _resolve_f5("Atlanta Braves", "F5 Moneyline", ev)["result"] == "WON"
+
+
+def test_snapshot_f5_pending_without_five_innings():
+    ev = _snapshot_event(home_f5=None, away_f5=None, completed=True)
+    out = _resolve_f5("Atlanta Braves", "F5 Moneyline", ev)
+    assert out["result"] == "PENDING"
+
+
+def test_snapshot_f5_score_string_is_labelled_through_5():
+    ev = _snapshot_event(home_f5=1.0, away_f5=3.0)
+    assert "through 5" in _resolve_f5("Atlanta Braves", "F5 Moneyline", ev)["score"]
+
+
+def test_snapshot_full_game_pick_unaffected_by_f5_branch():
+    ev = _snapshot_event(home_f5=1.0, away_f5=3.0)
+    out = _resolve_f5("New York Yankees", "Moneyline", ev)
+    assert out["result"] == "WON" and "through 5" not in out["score"]
