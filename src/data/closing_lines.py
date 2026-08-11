@@ -65,6 +65,25 @@ except ImportError:
 # because a 5-inning game can end level (LIGAMX is soccer, likewise 3-way).
 _THREE_WAY_SPORTS = {"MLS", "WC", "LIGAMX", "F5"}
 
+# F5 CLV is OFF (user decision, Aug 10 2026). The Odds API historical endpoint
+# does not serve first-5-innings markets at all — every wave came back
+# "Markets not supported by this endpoint: h2h_1st_5_innings, ..." — and the
+# only sources that do (per-event historical ~13.5k credits/month, or an
+# hourly pre-game sweep ~1.35k) were judged not worth the spend. The F5 suite
+# is therefore judged on win/loss alone; see the f5_validation checkpoint.
+#
+# The mapping and extractors below are kept intact and tested: flipping this
+# to True is the ONLY change needed if an F5 closing-line source ever appears.
+F5_CLV_ENABLED = False
+
+
+def _clv_market_enabled(market_type: str) -> bool:
+    """False for markets we deliberately don't chase closing lines for."""
+    if not F5_CLV_ENABLED and str(market_type or "").startswith("F5 "):
+        return False
+    return market_type in _MARKET_KEYS
+
+
 # market_type (shadow log) → Odds API market key
 _MARKET_KEYS = {
     "Moneyline": "h2h",
@@ -516,7 +535,7 @@ def update_shadow_log_clv(
                 ct_dt = _parse_iso(ct)
                 if ct_dt is None or ct_dt > now:
                     continue  # no usable start time, or game not started yet
-                if entry.get("market_type") not in _MARKET_KEYS:
+                if not _clv_market_enabled(entry.get("market_type")):
                     continue
                 waves[_wave_key(sport, ct)].append((shard_path, entry))
 
@@ -637,7 +656,7 @@ def update_all_clv(
                     ct_dt = _parse_iso(ct)
                     if ct_dt is None or ct_dt > now:
                         continue
-                    if entry.get("market_type") not in _MARKET_KEYS:
+                    if not _clv_market_enabled(entry.get("market_type")):
                         continue
                     waves[_wave_key(sport, ct)].append((shard_path, entry))
             return waves
@@ -792,7 +811,7 @@ def update_decision_log_clv(
                 ct_dt = _parse_iso(ct)
                 if ct_dt is None or ct_dt > now:
                     continue
-                if entry.get("market_type") not in _MARKET_KEYS:
+                if not _clv_market_enabled(entry.get("market_type")):
                     continue
                 waves[_wave_key(sport, ct)].append((shard_path, entry))
 

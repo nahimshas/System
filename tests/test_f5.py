@@ -195,12 +195,37 @@ def test_f5_three_way_ml_prob_is_below_two_way():
 
 
 def test_f5_market_types_are_all_mapped():
-    """Every F5 market_type we write to the shadow log must have an Odds API
-    key, or the CLV pass silently skips it (the Aug 2026 gap)."""
+    """The mapping stays complete even while F5 CLV is switched off, so
+    flipping F5_CLV_ENABLED is the only change needed to re-enable it."""
     from src.data.closing_lines import _MARKET_KEYS
     for mt in ("F5 Moneyline", "F5 Tie", "F5 Spread", "F5 Total"):
         assert mt in _MARKET_KEYS, f"{mt} missing from _MARKET_KEYS"
         assert _MARKET_KEYS[mt].endswith("_1st_5_innings")
+
+
+def test_f5_clv_is_disabled_and_gates_every_f5_market():
+    """Aug 10 2026: the historical endpoint does not serve *_1st_5_innings, so
+    F5 CLV is off by decision. The gate must exclude F5 without touching any
+    other market, or we burn credits on requests that always 422."""
+    from src.data import closing_lines as cl
+    assert cl.F5_CLV_ENABLED is False
+    for mt in ("F5 Moneyline", "F5 Tie", "F5 Spread", "F5 Total"):
+        assert cl._clv_market_enabled(mt) is False
+    for mt in ("Moneyline", "Spread", "Total", "Draw"):
+        assert cl._clv_market_enabled(mt) is True
+    assert cl._clv_market_enabled("Player Props") is False   # unmapped stays out
+
+
+def test_f5_clv_switch_re_enables_cleanly():
+    """Flipping the switch must restore F5 collection with no other edits."""
+    from src.data import closing_lines as cl
+    orig = cl.F5_CLV_ENABLED
+    try:
+        cl.F5_CLV_ENABLED = True
+        for mt in ("F5 Moneyline", "F5 Tie", "F5 Spread", "F5 Total"):
+            assert cl._clv_market_enabled(mt) is True
+    finally:
+        cl.F5_CLV_ENABLED = orig
 
 
 # ---------------------------------------------------------------------------
