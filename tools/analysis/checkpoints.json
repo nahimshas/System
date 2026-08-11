@@ -159,6 +159,22 @@
       "on_fail": "Keep F5 watchlist-only or retire it. If F5 ALSO shows no edge, that is strong evidence the limit is our public-data inputs rather than the market chosen \u2014 at which point the honest recommendation is to stop betting MLB in any form and let NFL/Liga MX be judged on their own. NOTE: without CLV, a fail here is weaker evidence than the Aug 4 full-game verdict was; say so rather than overclaiming.",
       "status": "open",
       "clv_available": false
+    },
+    {
+      "id": "one_bet_per_game",
+      "title": "One budget bet per game \u2014 does removing same-game doubles help?",
+      "created": "2026-08-10",
+      "evaluate_after": "2026-10-05",
+      "data_window_start": "2026-08-11",
+      "type": "note",
+      "rules": {
+        "min_picks": 150
+      },
+      "rationale": "Shipped Aug 10 2026 after the user spotted the card holding 'Athletics +1.5' AND 'Rays ML' on the same game \u2014 near-opposite bets that both win only if the Rays win by exactly 1, i.e. a hedge paying vig twice. The old dedup keyed on (game, team/direction), so it caught a duplicate of the SAME bet but never two different MARKETS on one game. MAX_BUDGET_BETS_PER_GAME=1 keeps the best-ranked pick and gives the freed slot to the next game; display pools are unchanged. || HONESTY ON THE BACKTEST: it shows +2.51pp ROI (-7.71 -> -5.20) with both halves of a time split agreeing almost exactly (+2.49 / +2.52) \u2014 but that agreement is MECHANICAL, not independent confirmation. The rule only changes 19 of 252 picks: dropped went 7-12 (-6.80u), replacements went 10-9 (-0.49u). n=19 is far too small to call, and the halves share that same small set. Treat the ROI gain as NOT ESTABLISHED. Note also that CLV moved the WRONG way (0.57% -> 0.38%), so our best signal does not corroborate the outcome gain. || SHIPPED ANYWAY on STRUCTURAL grounds, which is the real justification and does not depend on the data: two picks on one game are correlated by construction, concentrate risk on a single outcome, and in the opposing case cap the upside while paying vig twice. This is the subtractive kind of change that has historically worked for us, not the additive kind that has repeatedly failed.",
+      "on_pass": "If ROI on the post-ship window is >= the pre-ship baseline and no same-game pair has appeared on a card, keep the rule and consider extending it to parlays (see the open gap below).",
+      "on_fail": "Do NOT revert on ROI alone \u2014 the structural argument stands independent of the outcome data, and n will still be small. Revert only if the rule is demonstrably costing slots (e.g. cards routinely shipping fewer than MAX_SINGLE_BETS picks).",
+      "open_gap": "PARLAYS still allow two legs from one game for combinations other than ML+Spread (e.g. same-game Spread + Total). Same correlation problem, and p_a x p_b assumes independence. Not changed Aug 10 \u2014 the user asked about singles. Flagged for a decision.",
+      "status": "open"
     }
   ]
 }

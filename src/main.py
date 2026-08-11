@@ -18,7 +18,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
-    MAX_SINGLE_BETS, MAX_PROPS_PER_SPORT, MIN_EDGE, BUDGET_MIN_EDGE,
+    MAX_SINGLE_BETS, MAX_BUDGET_BETS_PER_GAME, MAX_PROPS_PER_SPORT, MIN_EDGE, BUDGET_MIN_EDGE,
     PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR, BUDGET_EXCLUDED_MARKETS,
 )
 from src.data.odds_client import get_last_api_error, get_api_credits
@@ -687,7 +687,24 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         d["effective_edge"] = round(_effective_edge_safe(r), 6)
         return d
 
-    fresh_singles = [_to_dict_with_eff(r) for r in _deduped_raw[:MAX_SINGLE_BETS]]
+    # One budget bet per GAME (Aug 10 2026). The dedup above keys on
+    # (game, team/direction), so it still allowed two picks on one game from
+    # DIFFERENT markets — the card shipped "Athletics +1.5" alongside "Rays ML",
+    # near-opposite bets that both win only if the Rays win by exactly 1. Two
+    # picks on one game are correlated by construction; keep the best-ranked one
+    # (the list is already in _slot_sort_key order) and let the freed slot go to
+    # the next game. Budget only — display pools still show every qualifying
+    # pick, so nothing disappears from the tab.
+    _per_game: dict = {}
+    _budget_pool = []
+    for _r in _deduped_raw:
+        _n = _per_game.get(_r.game, 0)
+        if _n >= MAX_BUDGET_BETS_PER_GAME:
+            continue
+        _per_game[_r.game] = _n + 1
+        _budget_pool.append(_r)
+
+    fresh_singles = [_to_dict_with_eff(r) for r in _budget_pool[:MAX_SINGLE_BETS]]
     # Full uncapped list — passed to merge_picks so signal refresh works even for
     # bets that dropped out of the top-5 since the morning run.
     fresh_singles_all = [_to_dict_with_eff(r) for r in _deduped_raw]
@@ -771,7 +788,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # Picks that made the top-5 display slot (singles + per-sport own tiles).
         # Used to mark `displayed_in_top` so we can later analyse whether
         # displayed picks outperform shadow-only picks.
-        _top_displayed_recs = list(_deduped_raw[:MAX_SINGLE_BETS])
+        # Mirror the budget card exactly (one bet per game), so the shadow log's
+        # displayed_in_top flag keeps meaning "this actually made the card".
+        _top_displayed_recs = list(_budget_pool[:MAX_SINGLE_BETS])
         for _slug, _raw in own_display.items():
             _own_sorted = sorted(_raw, key=_slot_sort_key)
             _cap = len(_raw) if _slug == "ipl" else MAX_SINGLE_BETS

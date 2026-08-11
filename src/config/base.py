@@ -57,6 +57,12 @@ KELLY_FRACTION: float = 0.50          # 1/2 Kelly
 MIN_EDGE: float = 0.03                # minimum 3% edge to recommend (analyzers + display pools)
 BUDGET_MIN_EDGE: float = 0.05         # Jul 4 2026 optimization: budget (real-money) entry requires ≥5% effective edge — sub-5% edges showed no win-rate relationship (noise); display/watchlist/logs keep MIN_EDGE
 MAX_SINGLE_BETS: int = 5              # max single-game bets per day
+# At most this many BUDGET singles on the same game. Two picks on one game are
+# correlated by construction, and can be near-opposites: Aug 10 2026 the card
+# held "Athletics +1.5" AND "Rays ML" on the same game — both win only if the
+# Rays win by exactly 1, so one was almost certainly dead on arrival while we
+# paid vig on both. Display pools are NOT limited; this gates budget only.
+MAX_BUDGET_BETS_PER_GAME: int = 1
 MAX_PARLAYS: int = 2                  # max 2-leg parlay recommendations
 MAX_PROPS_PER_SPORT: int = 6          # max props per sport (NBA/MLB); mirrors analyzer cap
 MIN_PARLAY_LEG_EDGE: float = 0.025   # each parlay leg must have ≥ 2.5% edge

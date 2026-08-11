@@ -53,6 +53,7 @@ LIVE = dict(
     PROMO=True,   # dog-with-better-starter HIGH promotion
     PROMO_BYPASS=False,   # promoted picks ignore the MINE budget floor (candidate rule,
                           # not shipped — see checkpoints.json promo_bypass_floor)
+    ONEPG=True,           # at most ONE budget single per game (SHIPPED Aug 10 2026)
 )
 
 
@@ -229,7 +230,11 @@ def simulate(overrides: dict = None, since: str = "0000-00-00",
         seen = set()
         day = []
         for edge, row, promo in cs:
-            k = (row["game"], row["market_type"])
+            # ONEPG: one bet per GAME, not one per (game, market). Without it a
+            # card can hold two picks on the same game that are near-opposites
+            # (e.g. "A's +1.5" and "Rays ML" — both win only if Rays win by
+            # exactly 1), which is a hedge dressed up as two edges.
+            k = (row["game"],) if P.get("ONEPG") else (row["game"], row["market_type"])
             if k in seen:
                 continue
             seen.add(k)
