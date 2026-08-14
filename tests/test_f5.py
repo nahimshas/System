@@ -234,12 +234,13 @@ def test_f5_clv_switch_re_enables_cleanly():
 # through to full-game grading, which has no F5 branch.
 # ---------------------------------------------------------------------------
 
-def _snapshot_event(home_f5, away_f5, completed=True):
+def _snapshot_event(home_f5, away_f5, completed=True, period=9, detail="Final"):
     return {
         "home_name": "New York Yankees", "away_name": "Atlanta Braves",
         "home_score": 7.0, "away_score": 2.0,       # deliberately unlike the F5 score
         "home_f5": home_f5, "away_f5": away_f5,
         "completed": completed, "postponed": False,
+        "period": period, "status_detail": detail,
         "event_date": "2026-08-09T19:05Z",
     }
 
@@ -260,9 +261,45 @@ def test_snapshot_grades_f5_off_the_five_inning_score():
 
 
 def test_snapshot_f5_settles_before_the_game_ends():
-    """F5 is decided at the 5th — an unfinished game must not force PENDING."""
-    ev = _snapshot_event(home_f5=1.0, away_f5=3.0, completed=False)
+    """F5 is decided at the 5th — an unfinished game in the 6th must grade."""
+    ev = _snapshot_event(home_f5=1.0, away_f5=3.0, completed=False,
+                         period=6, detail="Top 6th")
     assert _resolve_f5("Atlanta Braves", "F5 Moneyline", ev)["result"] == "WON"
+
+
+def test_snapshot_f5_does_not_grade_during_the_bottom_of_the_5th():
+    """Aug 13 2026: ESPN publishes the home 5th as soon as the bottom starts and
+    updates it as runs score. Grading then reads a partial number — a card went
+    LOST, then WON when the inning finished. Must stay PENDING."""
+    ev = _snapshot_event(home_f5=1.0, away_f5=3.0, completed=False,
+                         period=5, detail="Bot 5th")
+    assert _resolve_f5("Atlanta Braves", "F5 Moneyline", ev)["result"] == "PENDING"
+
+
+def test_snapshot_f5_does_not_grade_at_mid_5th():
+    """'Mid 5th' means the top is done but the bottom has yet to be played."""
+    ev = _snapshot_event(home_f5=1.0, away_f5=3.0, completed=False,
+                         period=5, detail="Mid 5th")
+    assert _resolve_f5("Atlanta Braves", "F5 Moneyline", ev)["result"] == "PENDING"
+
+
+def test_snapshot_f5_grades_at_end_of_the_5th():
+    """Once ESPN says the 5th ended, the number is final even at period 5."""
+    ev = _snapshot_event(home_f5=1.0, away_f5=3.0, completed=False,
+                         period=5, detail="End 5th")
+    assert _resolve_f5("Atlanta Braves", "F5 Moneyline", ev)["result"] == "WON"
+
+
+def test_snapshot_f5_the_actual_tex_laa_sequence():
+    """The reported case: Over 3.5 on a game sitting 0-2 through 4.5. Mid-inning
+    it must NOT read LOST; only the finished 5th decides."""
+    mid = _snapshot_event(home_f5=2.0, away_f5=0.0, completed=False,
+                          period=5, detail="Bot 5th")
+    assert _resolve_f5("Over 3.5", "F5 Total", mid)["result"] == "PENDING"
+    # ...bottom of the 5th ends with 4 more runs -> 6 total -> Over 3.5 wins
+    done = _snapshot_event(home_f5=6.0, away_f5=0.0, completed=False,
+                           period=6, detail="Top 6th")
+    assert _resolve_f5("Over 3.5", "F5 Total", done)["result"] == "WON"
 
 
 def test_snapshot_f5_pending_without_five_innings():

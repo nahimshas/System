@@ -1143,6 +1143,27 @@
   // ── F5 helpers ────────────────────────────────────────────────────────────
   // Sum innings 1-5 from ESPN linescores. Returns null until five full innings
   // exist for BOTH sides (so a pick is never graded on a partial game).
+  // Is the FIFTH INNING ACTUALLY OVER?
+  //
+  // Aug 13 2026 bug: _f5FromInnings only required a 5th-inning entry to EXIST
+  // in both linescores. ESPN publishes the home team's 5th as soon as the
+  // BOTTOM of the 5th begins, and updates it as runs score — so a card graded
+  // itself mid-inning off a partial number. TEX @ LAA showed "LOST" during the
+  // bottom of the 5th, then flipped to "WON" when the inning finished.
+  //
+  // A 5-inning score is only final when the game is over, the 6th has started,
+  // or ESPN says the 5th has ended. "Mid 5th" (between halves) is NOT enough:
+  // the bottom half is still to come.
+  function _f5InningsComplete(ev) {
+    if (!ev) return false;
+    if (ev.stateId === "3") return true;              // final
+    var per = ev.period || 0;
+    if (per >= 6) return true;                        // into the 6th
+    var det = String(ev.detail || "");
+    if (per >= 5 && /\bend\b/i.test(det)) return true;  // "End 5th"
+    return false;
+  }
+
   function _f5FromInnings(ev, homeTeam, awayTeam, wantHome) {
     if (!ev || !ev.homeInnings || !ev.awayInnings) return null;
     var evIsHome = teamMatch(ev.home, homeTeam);
@@ -1637,8 +1658,9 @@
     // must not sit unresolved for four more innings (user-reported Aug 2026).
     // Both linescores having 5 entries means five full innings are complete.
     if (String(betType).indexOf("F5 ") === 0) {
-      var f5h = _f5FromInnings(ev, homeTeam, awayTeam, true);
-      var f5a = _f5FromInnings(ev, homeTeam, awayTeam, false);
+      var f5done = _f5InningsComplete(ev);
+      var f5h = f5done ? _f5FromInnings(ev, homeTeam, awayTeam, true) : null;
+      var f5a = f5done ? _f5FromInnings(ev, homeTeam, awayTeam, false) : null;
       if (f5h !== null && f5a !== null) {
         showLockBadge(card);
         clearCardTime(card);

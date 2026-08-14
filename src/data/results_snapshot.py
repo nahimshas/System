@@ -87,6 +87,8 @@ def _fetch_events(sport: str, game_date: date) -> list:
         comp = comps[0]
         status = comp.get("status", {}).get("type", {})
         completed = bool(status.get("completed", False))
+        period = comp.get("status", {}).get("period", 0) or 0
+        status_detail = (status.get("shortDetail") or status.get("description") or "")
         status_text = (status.get("name", "") + " " + status.get("description", "")).lower()
         postponed = "postponed" in status_text or "canceled" in status_text or "cancelled" in status_text
 
@@ -137,6 +139,8 @@ def _fetch_events(sport: str, game_date: date) -> list:
             "away_score": away_score,
             "home_f5":    _f5(home),
             "away_f5":    _f5(away),
+            "period":     period,
+            "status_detail": status_detail,
             "completed":  completed,
             "postponed":  postponed,
             "event_date": event.get("date", ""),
@@ -217,6 +221,18 @@ def _resolve(sport: str, pick: str, bet_type: str, home_team: str, away_team: st
     # snapshot fell through to full-game grading and every F5 pick came back
     # PENDING (user-reported Aug 10 2026) even though the bet was long decided.
     if str(bet_type or "").lower().startswith("f5 "):
+        # The 5th must be OVER, not merely started. ESPN publishes the home
+        # team's 5th-inning runs as soon as the bottom of the 5th begins and
+        # updates them as runs score, so grading on "a 5th entry exists" reads a
+        # partial number mid-inning (Aug 13 2026: a card flipped LOST -> WON when
+        # the bottom of the 5th finished). "Mid 5th" is not enough — the bottom
+        # half is still to come.
+        _per = event.get("period") or 0
+        _det = str(event.get("status_detail") or "")
+        _fifth_over = (event.get("completed") or _per >= 6
+                       or (_per >= 5 and "end" in _det.lower()))
+        if not _fifth_over:
+            return {"result": "PENDING", "score": f"In progress ({score_str})"}
         h_f5, a_f5 = event.get("home_f5"), event.get("away_f5")
         if h_f5 is None or a_f5 is None:
             return {"result": "PENDING", "score": f"Through 5 not available ({score_str})"}
