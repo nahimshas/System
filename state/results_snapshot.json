@@ -1,17 +1,28 @@
 {
-  "date": "2026-08-17",
-  "generated_at": "2026-08-18T07:24:58Z",
+  "date": "2026-08-18",
+  "generated_at": "2026-08-19T05:46:43Z",
   "singles": [
+    {
+      "game": "New York Yankees @ Baltimore Orioles",
+      "sport": "MLB",
+      "bet_type": "Spread",
+      "pick": "Baltimore Orioles +1.5",
+      "result": "LOST",
+      "score": "New York Yankees 3, Baltimore Orioles 1",
+      "clv": 0.0026,
+      "clv_pct": 0.3,
+      "market_prob_at_close": 0.6081
+    },
     {
       "game": "St. Louis Cardinals @ Cincinnati Reds",
       "sport": "MLB",
       "bet_type": "Moneyline",
       "pick": "St. Louis Cardinals",
       "result": "WON",
-      "score": "St. Louis Cardinals 2, Cincinnati Reds 1",
-      "clv": -0.0018,
-      "clv_pct": -0.2,
-      "market_prob_at_close": 0.5099
+      "score": "St. Louis Cardinals 3, Cincinnati Reds 0",
+      "clv": 0.0006,
+      "clv_pct": 0.1,
+      "market_prob_at_close": 0.5236
     },
     {
       "game": "Atlanta Braves @ Minnesota Twins",
@@ -19,61 +30,79 @@
       "bet_type": "Spread",
       "pick": "Minnesota Twins +1.5",
       "result": "WON",
-      "score": "Atlanta Braves 2, Minnesota Twins 4",
-      "clv": -0.0035,
-      "clv_pct": -0.4,
-      "market_prob_at_close": 0.5708
+      "score": "Atlanta Braves 1, Minnesota Twins 4",
+      "clv": -0.0439,
+      "clv_pct": -4.4,
+      "market_prob_at_close": 0.5435
+    },
+    {
+      "game": "San Diego Padres @ New York Mets",
+      "sport": "MLB",
+      "bet_type": "Spread",
+      "pick": "New York Mets +1.5",
+      "result": "LOST",
+      "score": "San Diego Padres 5, New York Mets 2",
+      "clv": -0.007,
+      "clv_pct": -0.7,
+      "market_prob_at_close": 0.5985
     },
     {
       "game": "Los Angeles Dodgers @ Colorado Rockies",
       "sport": "MLB",
       "bet_type": "Spread",
       "pick": "Colorado Rockies +1.5",
-      "result": "LOST",
-      "score": "Los Angeles Dodgers 11, Colorado Rockies 5",
-      "clv": -0.0401,
-      "clv_pct": -4.0,
-      "market_prob_at_close": 0.3724
-    },
-    {
-      "game": "Miami Marlins @ Philadelphia Phillies",
-      "sport": "MLB",
-      "bet_type": "Spread",
-      "pick": "Miami Marlins +1.5",
       "result": "WON",
-      "score": "Miami Marlins 5, Philadelphia Phillies 6",
-      "clv": -0.0143,
-      "clv_pct": -1.4,
-      "market_prob_at_close": 0.4677
-    },
-    {
-      "game": "Athletics @ Kansas City Royals",
-      "sport": "MLB",
-      "bet_type": "Spread",
-      "pick": "Athletics +1.5",
-      "result": "LOST",
-      "score": "Athletics 5, Kansas City Royals 9",
-      "clv": -0.0035,
-      "clv_pct": -0.4,
-      "market_prob_at_close": 0.538
+      "score": "Los Angeles Dodgers 7, Colorado Rockies 6",
+      "clv": -0.0178,
+      "clv_pct": -1.8,
+      "market_prob_at_close": 0.4425
     }
   ],
   "parlays": [
     {
-      "label": "St. Louis Cardinals (ML) + Minnesota Twins +1.5",
-      "result": "WON",
+      "label": "Baltimore Orioles +1.5 + St. Louis Cardinals (ML)",
+      "result": "LOST",
       "void_legs": 0,
       "legs": [
+        {
+          "game": "New York Yankees @ Baltimore Orioles",
+          "sport": "MLB",
+          "bet_type": "Spread",
+          "pick": "Baltimore Orioles +1.5",
+          "result": "LOST",
+          "score": "New York Yankees 3, Baltimore Orioles 1",
+          "clv": 0.0026,
+          "clv_pct": 0.3,
+          "market_prob_at_close": 0.6081
+        },
         {
           "game": "St. Louis Cardinals @ Cincinnati Reds",
           "sport": "MLB",
           "bet_type": "Moneyline",
           "pick": "St. Louis Cardinals",
           "result": "WON",
-          "score": "St. Louis Cardinals 2, Cincinnati Reds 1",
-          "clv": -0.0018,
-          "clv_pct": -0.2,
-          "market_prob_at_close": 0.5099
+          "score": "St. Louis Cardinals 3, Cincinnati Reds 0",
+          "clv": 0.0006,
+          "clv_pct": 0.1,
+          "market_prob_at_close": 0.5236
+        }
+      ]
+    },
+    {
+      "label": "Baltimore Orioles (ML) + Minnesota Twins +1.5",
+      "result": "LOST",
+      "void_legs": 0,
+      "legs": [
+        {
+          "game": "New York Yankees @ Baltimore Orioles",
+          "sport": "MLB",
+          "bet_type": "Moneyline",
+          "pick": "Baltimore Orioles",
+          "result": "LOST",
+          "score": "New York Yankees 3, Baltimore Orioles 1",
+          "clv": 0.0063,
+          "clv_pct": 0.6,
+          "market_prob_at_close": 0.4916
         },
         {
           "game": "Atlanta Braves @ Minnesota Twins",
@@ -81,39 +110,10 @@
           "bet_type": "Spread",
           "pick": "Minnesota Twins +1.5",
           "result": "WON",
-          "score": "Atlanta Braves 2, Minnesota Twins 4",
-          "clv": -0.0035,
-          "clv_pct": -0.4,
-          "market_prob_at_close": 0.5708
-        }
-      ]
-    },
-    {
-      "label": "Miami Marlins +1.5 + Colorado Rockies +1.5",
-      "result": "LOST",
-      "void_legs": 0,
-      "legs": [
-        {
-          "game": "Miami Marlins @ Philadelphia Phillies",
-          "sport": "MLB",
-          "bet_type": "Spread",
-          "pick": "Miami Marlins +1.5",
-          "result": "WON",
-          "score": "Miami Marlins 5, Philadelphia Phillies 6",
-          "clv": -0.0143,
-          "clv_pct": -1.4,
-          "market_prob_at_close": 0.4677
-        },
-        {
-          "game": "Los Angeles Dodgers @ Colorado Rockies",
-          "sport": "MLB",
-          "bet_type": "Spread",
-          "pick": "Colorado Rockies +1.5",
-          "result": "LOST",
-          "score": "Los Angeles Dodgers 11, Colorado Rockies 5",
-          "clv": -0.0401,
-          "clv_pct": -4.0,
-          "market_prob_at_close": 0.3724
+          "score": "Atlanta Braves 1, Minnesota Twins 4",
+          "clv": -0.0439,
+          "clv_pct": -4.4,
+          "market_prob_at_close": 0.5435
         }
       ]
     }
@@ -124,32 +124,113 @@
       "sport": "MLB",
       "bet_type": "F5 Spread",
       "pick": "Miami Marlins +1.5",
-      "result": "LOST",
-      "score": "Miami Marlins 0, Philadelphia Phillies 2 (through 5)"
-    },
-    {
-      "game": "Los Angeles Dodgers @ Colorado Rockies",
-      "sport": "MLB",
-      "bet_type": "F5 Spread",
-      "pick": "Colorado Rockies +1.5",
-      "result": "LOST",
-      "score": "Los Angeles Dodgers 7, Colorado Rockies 1 (through 5)"
-    },
-    {
-      "game": "Los Angeles Dodgers @ Colorado Rockies",
-      "sport": "MLB",
-      "bet_type": "F5 Total",
-      "pick": "Under 5.5",
-      "result": "LOST",
-      "score": "Los Angeles Dodgers 7, Colorado Rockies 1 (through 5)"
+      "result": "WON",
+      "score": "Miami Marlins 2, Philadelphia Phillies 1 (through 5)"
     },
     {
       "game": "Athletics @ Kansas City Royals",
       "sport": "MLB",
       "bet_type": "F5 Spread",
       "pick": "Athletics +0.5",
+      "result": "WON",
+      "score": "Athletics 1, Kansas City Royals 0 (through 5)"
+    },
+    {
+      "game": "Athletics @ Kansas City Royals",
+      "sport": "MLB",
+      "bet_type": "F5 Total",
+      "pick": "Under 5.5",
+      "result": "WON",
+      "score": "Athletics 1, Kansas City Royals 0 (through 5)"
+    },
+    {
+      "game": "Los Angeles Dodgers @ Colorado Rockies",
+      "sport": "MLB",
+      "bet_type": "F5 Total",
+      "pick": "Under 6.5",
       "result": "LOST",
-      "score": "Athletics 4, Kansas City Royals 6 (through 5)"
+      "score": "Los Angeles Dodgers 6, Colorado Rockies 4 (through 5)"
+    },
+    {
+      "game": "Washington Nationals @ Texas Rangers",
+      "sport": "MLB",
+      "bet_type": "F5 Spread",
+      "pick": "Washington Nationals +0.5",
+      "result": "LOST",
+      "score": "Washington Nationals 0, Texas Rangers 5 (through 5)"
+    },
+    {
+      "game": "Seattle Mariners @ Milwaukee Brewers",
+      "sport": "MLB",
+      "bet_type": "F5 Total",
+      "pick": "Under 4.5",
+      "result": "LOST",
+      "score": "Seattle Mariners 0, Milwaukee Brewers 6 (through 5)"
+    },
+    {
+      "game": "Los Angeles Dodgers @ Colorado Rockies",
+      "sport": "MLB",
+      "bet_type": "F5 Spread",
+      "pick": "Colorado Rockies +0.5",
+      "result": "LOST",
+      "score": "Los Angeles Dodgers 6, Colorado Rockies 4 (through 5)"
+    },
+    {
+      "game": "San Diego Padres @ New York Mets",
+      "sport": "MLB",
+      "bet_type": "F5 Spread",
+      "pick": "New York Mets +0.5",
+      "result": "LOST",
+      "score": "San Diego Padres 3, New York Mets 1 (through 5)"
+    },
+    {
+      "game": "Miami Marlins @ Philadelphia Phillies",
+      "sport": "MLB",
+      "bet_type": "Spread",
+      "pick": "Miami Marlins +1.5",
+      "result": "LOST",
+      "score": "Miami Marlins 4, Philadelphia Phillies 6",
+      "clv": 0.004,
+      "clv_pct": 0.4,
+      "market_prob_at_close": 0.5204
+    },
+    {
+      "game": "Seattle Mariners @ Milwaukee Brewers",
+      "sport": "MLB",
+      "bet_type": "F5 Spread",
+      "pick": "Seattle Mariners +0.5",
+      "result": "LOST",
+      "score": "Seattle Mariners 0, Milwaukee Brewers 6 (through 5)"
+    },
+    {
+      "game": "Chicago White Sox @ Chicago Cubs",
+      "sport": "MLB",
+      "bet_type": "F5 Spread",
+      "pick": "Chicago White Sox +0.5",
+      "result": "WON",
+      "score": "Chicago White Sox 3, Chicago Cubs 2 (through 5)"
+    },
+    {
+      "game": "Athletics @ Kansas City Royals",
+      "sport": "MLB",
+      "bet_type": "Spread",
+      "pick": "Athletics +1.5",
+      "result": "WON",
+      "score": "Athletics 3, Kansas City Royals 4",
+      "clv": -0.0003,
+      "clv_pct": -0.0,
+      "market_prob_at_close": 0.5816
+    },
+    {
+      "game": "Toronto Blue Jays @ Tampa Bay Rays",
+      "sport": "MLB",
+      "bet_type": "Moneyline",
+      "pick": "Tampa Bay Rays",
+      "result": "LOST",
+      "score": "Toronto Blue Jays 10, Tampa Bay Rays 5",
+      "clv": -0.0007,
+      "clv_pct": -0.1,
+      "market_prob_at_close": 0.5527
     },
     {
       "game": "Atlanta Braves @ Minnesota Twins",
@@ -157,15 +238,115 @@
       "bet_type": "F5 Spread",
       "pick": "Minnesota Twins +0.5",
       "result": "WON",
-      "score": "Atlanta Braves 2, Minnesota Twins 4 (through 5)"
+      "score": "Atlanta Braves 0, Minnesota Twins 2 (through 5)"
     },
     {
-      "game": "Baltimore Orioles @ Tampa Bay Rays",
+      "game": "Chicago White Sox @ Chicago Cubs",
+      "sport": "MLB",
+      "bet_type": "Spread",
+      "pick": "Chicago White Sox +1.5",
+      "result": "WON",
+      "score": "Chicago White Sox 3, Chicago Cubs 4"
+    },
+    {
+      "game": "Washington Nationals @ Texas Rangers",
+      "sport": "MLB",
+      "bet_type": "F5 Total",
+      "pick": "Over 4.5",
+      "result": "WON",
+      "score": "Washington Nationals 0, Texas Rangers 5 (through 5)"
+    },
+    {
+      "game": "St. Louis Cardinals @ Cincinnati Reds",
       "sport": "MLB",
       "bet_type": "F5 Spread",
-      "pick": "Baltimore Orioles +0.5",
+      "pick": "St. Louis Cardinals -0.5",
       "result": "WON",
-      "score": "Baltimore Orioles 6, Tampa Bay Rays 4 (through 5)"
+      "score": "St. Louis Cardinals 1, Cincinnati Reds 0 (through 5)"
+    },
+    {
+      "game": "Detroit Tigers @ Pittsburgh Pirates",
+      "sport": "MLB",
+      "bet_type": "Moneyline",
+      "pick": "Pittsburgh Pirates",
+      "result": "WON",
+      "score": "Detroit Tigers 1, Pittsburgh Pirates 4",
+      "clv": 0.0163,
+      "clv_pct": 1.6,
+      "market_prob_at_close": 0.5873
+    },
+    {
+      "game": "Washington Nationals @ Texas Rangers",
+      "sport": "MLB",
+      "bet_type": "Spread",
+      "pick": "Washington Nationals +1.5",
+      "result": "LOST",
+      "score": "Washington Nationals 0, Texas Rangers 5",
+      "clv": 0.0207,
+      "clv_pct": 2.1,
+      "market_prob_at_close": 0.6133
+    },
+    {
+      "game": "Seattle Mariners @ Milwaukee Brewers",
+      "sport": "MLB",
+      "bet_type": "Spread",
+      "pick": "Seattle Mariners +1.5",
+      "result": "LOST",
+      "score": "Seattle Mariners 0, Milwaukee Brewers 22",
+      "clv": 0.002,
+      "clv_pct": 0.2,
+      "market_prob_at_close": 0.5747
+    },
+    {
+      "game": "Los Angeles Angels @ Houston Astros",
+      "sport": "MLB",
+      "bet_type": "Spread",
+      "pick": "Los Angeles Angels +1.5",
+      "result": "WON",
+      "score": "Los Angeles Angels 3, Houston Astros 1",
+      "clv": -0.0059,
+      "clv_pct": -0.6,
+      "market_prob_at_close": 0.5605
+    },
+    {
+      "game": "Detroit Tigers @ Pittsburgh Pirates",
+      "sport": "MLB",
+      "bet_type": "F5 Total",
+      "pick": "Under 4.5",
+      "result": "WON",
+      "score": "Detroit Tigers 1, Pittsburgh Pirates 3 (through 5)"
+    },
+    {
+      "game": "San Francisco Giants @ Cleveland Guardians",
+      "sport": "MLB",
+      "bet_type": "F5 Spread",
+      "pick": "San Francisco Giants +0.5",
+      "result": "LOST",
+      "score": "San Francisco Giants 1, Cleveland Guardians 7 (through 5)"
+    },
+    {
+      "game": "Los Angeles Angels @ Houston Astros",
+      "sport": "MLB",
+      "bet_type": "F5 Spread",
+      "pick": "Los Angeles Angels +0.5",
+      "result": "WON",
+      "score": "Los Angeles Angels 3, Houston Astros 0 (through 5)"
+    },
+    {
+      "game": "Atlanta Braves @ Minnesota Twins",
+      "sport": "MLB",
+      "bet_type": "F5 Total",
+      "pick": "Under 4.5",
+      "result": "WON",
+      "score": "Atlanta Braves 0, Minnesota Twins 2 (through 5)"
+    },
+    {
+      "game": "New York Yankees @ Baltimore Orioles",
+      "sport": "MLB",
+      "bet_type": "F5 Spread",
+      "pick": "Baltimore Orioles -0.5",
+      "result": "LOST",
+      "score": "New York Yankees 1, Baltimore Orioles 1 (through 5)"
     },
     {
       "game": "Miami Marlins @ Philadelphia Phillies",
@@ -173,147 +354,59 @@
       "bet_type": "F5 Total",
       "pick": "Under 4.5",
       "result": "WON",
-      "score": "Miami Marlins 0, Philadelphia Phillies 2 (through 5)"
+      "score": "Miami Marlins 2, Philadelphia Phillies 1 (through 5)"
     },
     {
-      "game": "Atlanta Braves @ Minnesota Twins",
-      "sport": "MLB",
-      "bet_type": "F5 Total",
-      "pick": "Under 5.5",
-      "result": "LOST",
-      "score": "Atlanta Braves 2, Minnesota Twins 4 (through 5)"
-    },
-    {
-      "game": "St. Louis Cardinals @ Cincinnati Reds",
-      "sport": "MLB",
-      "bet_type": "F5 Spread",
-      "pick": "Cincinnati Reds +0.5",
-      "result": "LOST",
-      "score": "St. Louis Cardinals 2, Cincinnati Reds 1 (through 5)"
-    },
-    {
-      "game": "Arizona Diamondbacks @ Boston Red Sox",
+      "game": "San Diego Padres @ New York Mets",
       "sport": "MLB",
       "bet_type": "F5 Total",
       "pick": "Over 4.5",
-      "result": "WON",
-      "score": "Arizona Diamondbacks 0, Boston Red Sox 7 (through 5)"
-    },
-    {
-      "game": "Chicago White Sox @ Chicago Cubs",
-      "sport": "MLB",
-      "bet_type": "F5 Spread",
-      "pick": "Chicago White Sox +0.5",
       "result": "LOST",
-      "score": "Chicago White Sox 3, Chicago Cubs 4 (through 5)"
+      "score": "San Diego Padres 3, New York Mets 1 (through 5)"
     },
     {
-      "game": "Arizona Diamondbacks @ Boston Red Sox",
-      "sport": "MLB",
-      "bet_type": "Moneyline",
-      "pick": "Boston Red Sox",
-      "result": "WON",
-      "score": "Arizona Diamondbacks 1, Boston Red Sox 11",
-      "clv": -0.0039,
-      "clv_pct": -0.4,
-      "market_prob_at_close": 0.5567
-    },
-    {
-      "game": "Detroit Tigers @ Pittsburgh Pirates",
-      "sport": "MLB",
-      "bet_type": "Moneyline",
-      "pick": "Detroit Tigers",
-      "result": "WON",
-      "score": "Detroit Tigers 8, Pittsburgh Pirates 5",
-      "clv": -0.0033,
-      "clv_pct": -0.3,
-      "market_prob_at_close": 0.5044
-    },
-    {
-      "game": "Chicago White Sox @ Chicago Cubs",
-      "sport": "MLB",
-      "bet_type": "Spread",
-      "pick": "Chicago White Sox +1.5",
-      "result": "LOST",
-      "score": "Chicago White Sox 5, Chicago Cubs 7"
-    },
-    {
-      "game": "San Diego Padres @ New York Mets",
-      "sport": "MLB",
-      "bet_type": "F5 Spread",
-      "pick": "San Diego Padres +0.5",
-      "result": "LOST",
-      "score": "San Diego Padres 1, New York Mets 2 (through 5)"
-    },
-    {
-      "game": "Detroit Tigers @ Pittsburgh Pirates",
-      "sport": "MLB",
-      "bet_type": "F5 Total",
-      "pick": "Over 4.5",
-      "result": "WON",
-      "score": "Detroit Tigers 5, Pittsburgh Pirates 1 (through 5)"
-    },
-    {
-      "game": "Detroit Tigers @ Pittsburgh Pirates",
-      "sport": "MLB",
-      "bet_type": "F5 Spread",
-      "pick": "Pittsburgh Pirates +0.5",
-      "result": "LOST",
-      "score": "Detroit Tigers 5, Pittsburgh Pirates 1 (through 5)"
-    },
-    {
-      "game": "San Diego Padres @ New York Mets",
-      "sport": "MLB",
-      "bet_type": "Moneyline",
-      "pick": "New York Mets",
-      "result": "WON",
-      "score": "San Diego Padres 1, New York Mets 2",
-      "clv": -0.0034,
-      "clv_pct": -0.3,
-      "market_prob_at_close": 0.5293
-    },
-    {
-      "game": "San Diego Padres @ New York Mets",
-      "sport": "MLB",
-      "bet_type": "F5 Total",
-      "pick": "Under 4.5",
-      "result": "WON",
-      "score": "San Diego Padres 1, New York Mets 2 (through 5)"
-    },
-    {
-      "game": "Arizona Diamondbacks @ Boston Red Sox",
-      "sport": "MLB",
-      "bet_type": "F5 Spread",
-      "pick": "Boston Red Sox -0.5",
-      "result": "WON",
-      "score": "Arizona Diamondbacks 0, Boston Red Sox 7 (through 5)"
-    },
-    {
-      "game": "Dallas Wings @ Golden State Valkyries",
+      "game": "Atlanta Dream @ Las Vegas Aces",
       "sport": "WNBA",
       "bet_type": "Moneyline",
-      "pick": "Golden State Valkyries",
+      "pick": "Atlanta Dream",
       "result": "WON",
-      "score": "Dallas Wings 70, Golden State Valkyries 78",
-      "clv": -0.0033,
-      "clv_pct": -0.3,
-      "market_prob_at_close": 0.6821
+      "score": "Atlanta Dream 97, Las Vegas Aces 82",
+      "clv": 0.2011,
+      "clv_pct": 20.1,
+      "market_prob_at_close": 0.6084
     },
     {
-      "game": "Puebla @ Pachuca",
-      "sport": "LIGAMX",
+      "game": "New York Liberty @ Chicago Sky",
+      "sport": "WNBA",
       "bet_type": "Moneyline",
-      "pick": "Pachuca",
+      "pick": "New York Liberty",
       "result": "LOST",
-      "score": "Puebla 3, Pachuca 2"
+      "score": "New York Liberty 86, Chicago Sky 93",
+      "clv": 0.0239,
+      "clv_pct": 2.4,
+      "market_prob_at_close": 0.6339
     },
     {
-      "game": "Le\u00f3n @ Necaxa",
-      "sport": "LIGAMX",
+      "game": "Indiana Fever @ Toronto Tempo",
+      "sport": "WNBA",
       "bet_type": "Moneyline",
-      "pick": "Necaxa",
+      "pick": "Indiana Fever",
+      "result": "WON",
+      "score": "Indiana Fever 101, Toronto Tempo 95",
+      "clv": 0.0091,
+      "clv_pct": 0.9,
+      "market_prob_at_close": 0.8045
+    },
+    {
+      "game": "Los Angeles Sparks @ Connecticut Sun",
+      "sport": "WNBA",
+      "bet_type": "Moneyline",
+      "pick": "Los Angeles Sparks",
       "result": "LOST",
-      "score": "Le\u00f3n 2, Necaxa 1"
+      "score": "Los Angeles Sparks 77, Connecticut Sun 85",
+      "clv": 0.0247,
+      "clv_pct": 2.5,
+      "market_prob_at_close": 0.5517
     }
   ]
 }
