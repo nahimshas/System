@@ -16439,5 +16439,161 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-08-19",
+    "type": "single",
+    "sport": "MLB",
+    "game": "St. Louis Cardinals @ Cincinnati Reds",
+    "bet_type": "Moneyline",
+    "pick": "St. Louis Cardinals",
+    "home_team": "Cincinnati Reds",
+    "away_team": "St. Louis Cardinals",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 52.2,
+    "market_prob_pct": 42.2,
+    "cost": 4.42,
+    "profit_if_win": 5.58,
+    "result": "LOST",
+    "actual_pnl": -4.42,
+    "actual_home_score": 5.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-08-19",
+    "type": "single",
+    "sport": "MLB",
+    "game": "New York Yankees @ Baltimore Orioles",
+    "bet_type": "Spread",
+    "pick": "Baltimore Orioles +1.5",
+    "home_team": "Baltimore Orioles",
+    "away_team": "New York Yankees",
+    "edge_pct": 8.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 66.6,
+    "market_prob_pct": 58.6,
+    "cost": 4.85,
+    "profit_if_win": 3.15,
+    "result": "LOST",
+    "actual_pnl": -4.85,
+    "actual_home_score": 3.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-08-19",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Atlanta Braves @ Minnesota Twins",
+    "bet_type": "Spread",
+    "pick": "Minnesota Twins +1.5",
+    "home_team": "Minnesota Twins",
+    "away_team": "Atlanta Braves",
+    "edge_pct": 7.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 67.4,
+    "market_prob_pct": 60.4,
+    "cost": 4.37,
+    "profit_if_win": 2.63,
+    "result": "WON",
+    "actual_pnl": 2.63,
+    "actual_home_score": 6.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-08-19",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ Colorado Rockies",
+    "bet_type": "Spread",
+    "pick": "Colorado Rockies +1.5",
+    "home_team": "Colorado Rockies",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 10.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 55.6,
+    "market_prob_pct": 45.6,
+    "cost": 4.76,
+    "profit_if_win": 5.24,
+    "result": "LOST",
+    "actual_pnl": -4.76,
+    "actual_home_score": 4.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-08-19",
+    "type": "single",
+    "sport": "MLB",
+    "game": "San Diego Padres @ New York Mets",
+    "bet_type": "Spread",
+    "pick": "New York Mets +1.5",
+    "home_team": "New York Mets",
+    "away_team": "San Diego Padres",
+    "edge_pct": 7.2,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 64.1,
+    "market_prob_pct": 56.9,
+    "cost": 4.12,
+    "profit_if_win": 2.88,
+    "result": "WON",
+    "actual_pnl": 2.88,
+    "actual_home_score": 4.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-08-19",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Baltimore Orioles +1.5 + St. Louis Cardinals (ML)",
+    "bet_type": "Parlay",
+    "pick": "Baltimore Orioles +1.5 + St. Louis Cardinals (ML)",
+    "edge_pct": 8.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 33.5,
+    "market_prob_pct": 0,
+    "cost": 2.14,
+    "profit_if_win": 5.86,
+    "result": "LOST",
+    "actual_pnl": -2.14,
+    "legs": [
+      {
+        "game": "New York Yankees @ Baltimore Orioles",
+        "pick": "Baltimore Orioles +1.5",
+        "result": "LOST"
+      },
+      {
+        "game": "St. Louis Cardinals @ Cincinnati Reds",
+        "pick": "St. Louis Cardinals",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-08-19",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Minnesota Twins +1.5 + Colorado Rockies +1.5",
+    "bet_type": "Parlay",
+    "pick": "Minnesota Twins +1.5 + Colorado Rockies +1.5",
+    "edge_pct": 9.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 36.6,
+    "market_prob_pct": 0,
+    "cost": 2.37,
+    "profit_if_win": 5.63,
+    "result": "LOST",
+    "actual_pnl": -2.37,
+    "legs": [
+      {
+        "game": "Atlanta Braves @ Minnesota Twins",
+        "pick": "Minnesota Twins +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Los Angeles Dodgers @ Colorado Rockies",
+        "pick": "Colorado Rockies +1.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
