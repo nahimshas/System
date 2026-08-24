@@ -812,6 +812,47 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # but catch anything that escapes (e.g. import errors).
         logger.error(f"Shadow log integration failed (non-fatal): {_shadow_err}")
 
+    # ------------------------------------------------------------------ #
+    #  Execution log — the Kalshi book we would actually buy against.
+    #  Robinhood's sports contracts ARE Kalshi, and the app shows Kalshi's raw
+    #  ask, so this is the real purchase price. We pay ask + $0.02 in fees,
+    #  ~2pp over fair on a coin flip, while our measured edge is ~0 — which is
+    #  most of the loss. This records the book so we can measure what buying at
+    #  the BID instead would have done, and how much adverse selection takes
+    #  back. Pure measurement: it never touches the card, sizing, or routing.
+    #  Isolated + kill-switched (ENABLE_KALSHI_SNAPSHOT=false) — the Aug 6
+    #  outage came from letting a speculative feed sit in the critical path.
+    # ------------------------------------------------------------------ #
+    try:
+        from src.data.kalshi import snapshot as _kalshi_snapshot
+        from src.state.execution_log import record_snapshot as _record_exec
+
+        _budget_keys = {(d.get("game"), d.get("bet_type"), d.get("pick"))
+                        for d in fresh_singles}
+        _exec_picks = []
+        _seen_exec = set()
+        for _d in fresh_singles + fresh_singles_all:
+            _k = (_d.get("game"), _d.get("bet_type"), _d.get("pick"))
+            if _k in _seen_exec:
+                continue
+            _seen_exec.add(_k)
+            _row = dict(_d)
+            _row["_in_budget"] = _k in _budget_keys
+            _exec_picks.append(_row)
+        _record_exec(today, _kalshi_snapshot(_exec_picks, today))
+    except Exception as _exec_err:
+        logger.error(f"Execution log integration failed (non-fatal): {_exec_err}")
+
+    # Settle any earlier picks whose games have started: replay Kalshi's own
+    # candlesticks to see whether a resting bid would have filled and where the
+    # market closed. Free data, so no credit budget applies.
+    try:
+        from datetime import date as _d, timedelta as _td
+        from src.data.execution_settle import settle_executions as _settle_exec
+        _settle_exec(since=(_d.fromisoformat(today) - _td(days=10)).isoformat())
+    except Exception as _exec_s_err:
+        logger.error(f"Execution settle failed (non-fatal): {_exec_s_err}")
+
     # Persist calibration state for the panel layer. Computed lazily on first
     # call (already used by _slot_sort_key above when applicable), so this
     # mainly writes the snapshot to disk for external inspection / display.

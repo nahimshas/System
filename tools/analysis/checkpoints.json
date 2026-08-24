@@ -175,6 +175,22 @@
       "on_fail": "Do NOT revert on ROI alone \u2014 the structural argument stands independent of the outcome data, and n will still be small. Revert only if the rule is demonstrably costing slots (e.g. cards routinely shipping fewer than MAX_SINGLE_BETS picks).",
       "open_gap": "RESOLVED Aug 10 2026 (same session, user said extend it): _parlay_valid now blocks ALL same-game leg pairs, not just ML+Spread. Spread+Total and ML+Total on one game were being priced as if independent. Impact on live behaviour is near zero \u2014 33 of the 35 historical same-game parlays predate June 2026 and the one July case was the duplicate-leg bug \u2014 so this is a safety rail, not a behaviour change. Could not be measured: none of the 35 reconstruct against the shadow log (their legs predate reliable logging), so there is NO outcome evidence either way. Shipped on the same structural grounds as the singles rule. Revisit only with a real correlation model, never by relaxing the rule.",
       "status": "open"
+    },
+    {
+      "id": "execution_at_bid",
+      "title": "Does buying at the BID instead of the ask make MLB break even?",
+      "created": "2026-08-24",
+      "evaluate_after": "2026-09-21",
+      "data_window_start": "2026-08-25",
+      "type": "note",
+      "rules": {
+        "min_settled_picks": 150
+      },
+      "rationale": "Aug 24 2026: measured that we pay ask + $0.02 fees on every bet. On a coin-flip contract that is ~2pp over fair value, and our measured edge is ~0 (budget CLV -0.41%), so purchase price is most of the -3.2pp shortfall, not the model. Robinhood's sports contracts ARE Kalshi and the app shows Kalshi's raw ask (verified to the cent: a Rays ML quoted 0.56 in-app vs 0.56 on the API). Kalshi's data API is public and free. || WHAT DIED HERE: the cross-venue arbitrage idea. On liquid full-game markets Kalshi tracks the sharp consensus within 0.5-1.0pp, far inside the 2.5pp hurdle -- the 'prediction markets misprice vs sharp books' gap is NOT present in MLB moneylines/run lines. The only 3.5pp gap found was in a thin F5 total, and its edge pointed at the OPPOSITE side from our model's pick. || WHAT IS BEING TESTED NOW: resting at the bid instead of taking the ask saves the spread (1c typical, 2c occasionally; ~1.25pp average on the Aug 24 card). But fills are ADVERSELY SELECTED -- a resting order is hit preferentially when the price is about to move against you -- so the quoted spread OVERSTATES the real saving. The user confirms fills are inconsistent in practice. Crucially, for a bettor with ~0 edge an UNFILLED order costs nothing: we skip a zero-EV bet rather than forgo profit. So 'post at bid, never chase' is close to free for us specifically.",
+      "on_pass": "If average clv_if_bid on picks that WOULD have filled is > 0 after fees, AND it holds in both halves of a time split, AND fill rate is high enough to keep a usable card: adopt 'post at bid, skip if unfilled' as policy and surface the bid price on every card.",
+      "on_fail": "If even at the bid we are underwater, execution is not the answer and the MLB pause decision returns with one fewer escape route. Do NOT respond by hunting new model constants -- that question was closed Aug 4.",
+      "measurement": "python3 -m tools.analysis.execution_report. Fill detection replays Kalshi candlesticks and asks whether the market traded at or below our bid; it IGNORES QUEUE POSITION, so reported fill rate is an OPTIMISTIC UPPER BOUND. Adverse selection = clv_if_bid on filled picks minus clv_if_bid on all picks; a negative number is the real cost of waiting.",
+      "status": "open"
     }
   ]
 }
