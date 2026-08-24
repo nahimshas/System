@@ -326,7 +326,23 @@ def _stamp_decision(game, min_edge, features, markets, recs=None):
                 "line": (round(float(line), 1) if line is not None else None),
                 "confidence": conf.get((mtype, side)),
             })
-        game["_decision"] = {"features": features or {}, "candidates": cands}
+        # MERGE, never replace. Two analyzers can run over the SAME game dict —
+        # MLB full-game then MLB F5 — and a plain assignment made the second one
+        # silently erase the first one's candidates. That is exactly what
+        # happened from Aug 10 2026: every MLB full-game candidate stopped
+        # reaching the decision log while F5 rows kept landing, leaving the
+        # backtest/market_test substrate frozen for two weeks. Candidates are
+        # keyed by (market_type, side), so a re-run of the same analyzer still
+        # updates its own rows in place rather than duplicating them.
+        prev = game.get("_decision") or {}
+        by_key = {}
+        for c in (prev.get("candidates") or []):
+            by_key[(c.get("market_type"), c.get("side"))] = c
+        for c in cands:
+            by_key[(c.get("market_type"), c.get("side"))] = c
+        feats = dict(prev.get("features") or {})
+        feats.update(features or {})
+        game["_decision"] = {"features": feats, "candidates": list(by_key.values())}
     except Exception:
         pass
 
