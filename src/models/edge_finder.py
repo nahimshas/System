@@ -4696,6 +4696,15 @@ def analyze_mlb_f5_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats
         recs.append(r)
         return r
 
+    # Decision-log candidates, accumulated as each market is priced. Built here
+    # rather than re-derived at the stamp call because the covers/totals only
+    # exist inside their own blocks — the earlier version hard-coded just the
+    # moneyline, so F5 Spread and F5 Total (our two most-produced F5 markets)
+    # were invisible to analysis from the day F5 shipped.
+    # Convention matches the full-game analyzer: Spread side = bare team name
+    # with a signed line, Total side = "over"/"under".
+    _f5_cands = []
+
     # F5 Moneyline + Tie (3-way)
     ml = game.get("f5_moneyline")
     if ml:
@@ -4704,9 +4713,14 @@ def analyze_mlb_f5_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats
         ca = _apply_credibility_cap_dispatched(p_away, ma, _cred_cap("mlb_f5", F5_CRED_CAP, "credibility_moneyline"), "mlb_f5", "credibility_moneyline")[0] if ma else p_away
         _rec(home, "F5 Moneyline", ch, mh, raw_p=p_home)
         _rec(away, "F5 Moneyline", ca, ma, raw_p=p_away)
+        # post-cap prob first, PRE-cap second (the earlier version passed the
+        # raw prob in both slots, so the cap's effect was unmeasurable here)
+        _f5_cands.append(("F5 Moneyline", home, ch, p_home, mh, None))
+        _f5_cands.append(("F5 Moneyline", away, ca, p_away, ma, None))
         if md and md > 0.01:
             ct = _apply_credibility_cap_dispatched(p_tie, md, _cred_cap("mlb_f5", F5_CRED_CAP, "credibility_draw"), "mlb_f5", "credibility_draw")[0]
             _rec("Tie", "F5 Tie", ct, md, raw_p=p_tie)
+            _f5_cands.append(("F5 Tie", "tie", ct, p_tie, md, None))
 
     # F5 Spread (±1.5 — Robinhood's F5 run line)
     sp = game.get("f5_spread")
@@ -4717,6 +4731,8 @@ def analyze_mlb_f5_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats
         ma_cov = 1.0 - mh_cov
         _rec(f"{home} {line:+.1f}", "F5 Spread", mh_cov, sp.get("home_prob"), raw_p=mh_cov, line=line)
         _rec(f"{away} {-line:+.1f}", "F5 Spread", ma_cov, sp.get("away_prob"), raw_p=ma_cov, line=-line)
+        _f5_cands.append(("F5 Spread", home, mh_cov, mh_cov, sp.get("home_prob"), line))
+        _f5_cands.append(("F5 Spread", away, ma_cov, ma_cov, sp.get("away_prob"), -line))
 
     # F5 Total
     tt = game.get("f5_total")
@@ -4726,6 +4742,8 @@ def analyze_mlb_f5_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats
         p_under = 1.0 - p_over
         _rec(f"Over {line}", "F5 Total", p_over, tt.get("over_prob"), raw_p=p_over, line=line)
         _rec(f"Under {line}", "F5 Total", p_under, tt.get("under_prob"), raw_p=p_under, line=line)
+        _f5_cands.append(("F5 Total", "over", p_over, p_over, tt.get("over_prob"), line))
+        _f5_cands.append(("F5 Total", "under", p_under, p_under, tt.get("under_prob"), line))
 
     # Decision-log capture (both sides of every F5 market + the model inputs).
     _stamp_decision(game, _min, {
@@ -4734,9 +4752,5 @@ def analyze_mlb_f5_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats
         "f5_home_off": h_off, "f5_away_off": a_off,
         "f5_p_home": p_home, "f5_p_tie": p_tie, "f5_p_away": p_away,
         "stats_available": stats_available,
-    }, [
-        ("F5 Moneyline", home, p_home, p_home, (ml or {}).get("home_prob"), None),
-        ("F5 Moneyline", away, p_away, p_away, (ml or {}).get("away_prob"), None),
-        ("F5 Tie", "tie", p_tie, p_tie, (ml or {}).get("draw_prob"), None),
-    ], recs)
+    }, _f5_cands, recs)
     return recs
