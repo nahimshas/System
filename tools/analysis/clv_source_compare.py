@@ -10,16 +10,23 @@ its own venue (sportsbook no-vig open vs close; Kalshi mid at pick vs mid at
 close). Mixing ends across venues would fold the venue gap into the signal, so
 they are never combined; they are only COMPARED here.
 
-What to look for before switching:
-  • correlation >= 0.7 on rows where both exist — they track the same thing
-  • mean difference small relative to the CLV values themselves
-  • coverage: Kalshi should match at least as many rows as the Odds API,
-    and strictly more for F5 (which the Odds API cannot serve at all)
+⚠️ AGREEMENT IS THE WRONG TEST. The first version of this tool gated the
+switch on correlation BETWEEN the two sources, which asks "does Kalshi
+reproduce the sportsbook number?" That is not what CLV is for. CLV earns its
+keep by PREDICTING RESULTS, so the question is which source better separates
+our winners from our losers — measured on the same rows. A source can
+correlate poorly with the other and still be the better signal, and Kalshi has
+the stronger claim on principle: it is the book we actually trade in.
 
-A high correlation does NOT mean the numbers are interchangeable in an
-existing series. Switching sources mid-history creates a seam: everything
-before is sportsbook-based, everything after is Kalshi-based. Either backfill
-Kalshi across the whole window first, or treat the switch date as a boundary.
+What to look for before switching:
+  • predictive power (section 3): Kalshi >= Odds API on the SAME rows
+  • coverage: Kalshi matches or beats Odds API row counts
+  • history depth: Kalshi retains only ~2 months of settled markets, so
+    switching TRUNCATES the governor's window to what Kalshi can reach
+
+Switching sources mid-history creates a seam: everything before is
+sportsbook-based, everything after is Kalshi-based. Backfill as far as Kalshi
+retains first, and treat the earliest Kalshi date as a hard boundary.
 """
 from __future__ import annotations
 
@@ -79,7 +86,49 @@ def main(since: str = "2026-08-04") -> int:
         print(f"mean Kalshi   CLV : {statistics.mean(b)*100:+6.2f}pp")
         print(f"mean |difference| : {statistics.mean([abs(x-y) for x,y in both])*100:6.2f}pp")
         print(f"correlation       : {c:.3f}" if c is not None else "correlation: n/a")
-        print(f"  -> {'TRACKS THE SAME SIGNAL' if (c or 0) >= 0.7 else 'DIVERGENT — do not switch'}\n")
+        print("  -> context only. Low agreement does NOT block a switch; the two")
+        print("     measure different venues. Section 3 is the deciding test.\n")
+
+    # ── 3. predictive power: which CLV actually forecasts winning? ────────
+    settled = [r for r in rows if r.get("outcome") in ("win", "loss")
+               and r.get("clv") is not None and r.get("kalshi_clv") is not None]
+    print("=== PREDICTIVE POWER (the test that matters) ===")
+    if len(settled) < 30:
+        print(f"  only {len(settled)} settled paired rows — need ~30+\n")
+    else:
+        def _pb(key):
+            xs = [r[key] for r in settled]
+            ys = [1.0 if r["outcome"] == "win" else 0.0 for r in settled]
+            mx, my = statistics.mean(xs), statistics.mean(ys)
+            cov = sum((a - mx) * (b - my) for a, b in zip(xs, ys))
+            sx = sum((a - mx) ** 2 for a in xs) ** 0.5
+            sy = sum((b - my) ** 2 for b in ys) ** 0.5
+            return cov / (sx * sy) if sx and sy else None
+
+        def _split(key):
+            pos = [r for r in settled if r[key] > 0]
+            neg = [r for r in settled if r[key] <= 0]
+            def wr(g):
+                if not g:
+                    return "n/a", 0.0
+                w = sum(1 for r in g if r["outcome"] == "win")
+                return f"{w}-{len(g)-w} ({w/len(g)*100:.1f}%)", w / len(g)
+            return wr(pos), wr(neg)
+
+        se = 1.0 / (len(settled) ** 0.5)
+        print(f"  n = {len(settled)} settled rows with BOTH CLVs "
+              f"(1 s.e. on a correlation is ~{se:.3f})")
+        best, best_r = None, None
+        for key, label in (("clv", "Odds API"), ("kalshi_clv", "Kalshi  ")):
+            r = _pb(key)
+            (pw, pr), (nw, nr) = _split(key)
+            print(f"  {label}: r={r:+.4f}   CLV>0 {pw:<16} CLV<=0 {nw:<16} "
+                  f"gap {(pr-nr)*100:+.1f}pp")
+            if r is not None and (best_r is None or r > best_r):
+                best, best_r = label.strip(), r
+        print(f"  -> stronger predictor: {best}")
+        print("  NOTE: both are near zero. Read a difference smaller than one")
+        print("  s.e. as a tie, not as a winner.\n")
 
     print("=== COVERAGE BY MARKET ===")
     agg = defaultdict(lambda: [0, 0, 0])
