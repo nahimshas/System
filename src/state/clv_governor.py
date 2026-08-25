@@ -54,6 +54,45 @@ def _market_type_for_rec(rec: Any) -> str:
     return bt if bt in ("Moneyline", "Spread", "Total", "Draw") else (bt or "Unknown")
 
 
+# Prefer Kalshi's closing line — it is the book we actually trade in, it is
+# free, and it is the ONLY source for F5 (the Odds API historical endpoint
+# serves no *_1st_5_innings markets at any price).
+#
+# NOTHING IS ERASED. Kalshi retains settled markets only back to 2026-06-18
+# while the shadow log starts in April, and that retention window moves
+# FORWARD, so earlier history is permanently unreachable. Rather than truncate
+# the governor's window, entries fall back to the sportsbook `clv` they already
+# carry. Every historical value stays exactly where it was.
+#
+# ⚠️ This makes the series MIXED-VENUE at the 2026-06-18 boundary: Kalshi after,
+# sportsbook before. That is a deliberate trade — measured Aug 25, the two are
+# statistically indistinguishable as predictors of our own results (Odds API
+# r=+0.0513 vs Kalshi r=+0.0347 at n=1597; 1 s.e. ~0.025, and the ranking flips
+# with sample size), so the seam costs less than throwing away four months of
+# history would. Set CLV_PREFER_KALSHI=False to revert to sportsbook-only.
+CLV_PREFER_KALSHI = True
+
+# How recent the secondary CLV series must be to keep a vote on gating.
+ALT_FRESH_DAYS = 45
+
+
+def effective_clv(entry: Dict[str, Any]) -> Optional[float]:
+    """The CLV value the governor should gate on for one shadow-log entry."""
+    if CLV_PREFER_KALSHI:
+        k = entry.get("kalshi_clv")
+        if k is not None:
+            return float(k)
+    v = entry.get("clv")
+    return float(v) if v is not None else None
+
+
+def clv_source(entry: Dict[str, Any]) -> str:
+    """Which feed supplied this entry's CLV — for panels and audits."""
+    if CLV_PREFER_KALSHI and entry.get("kalshi_clv") is not None:
+        return "kalshi"
+    return "odds_api" if entry.get("clv") is not None else "none"
+
+
 def compute_clv_stats(force: bool = False) -> Dict[Tuple[str, str], Dict[str, Any]]:
     """Aggregate CLV per (sport, market_type) from the shadow log.
 
@@ -67,11 +106,13 @@ def compute_clv_stats(force: bool = False) -> Dict[Tuple[str, str], Dict[str, An
     try:
         from src.state.shadow_log import SHADOW_LOG_DIR, _load_shard
         sums: Dict[Tuple[str, str], list] = {}
+        alt_sums: Dict[Tuple[str, str], list] = {}
+        alt_latest: Dict[Tuple[str, str], str] = {}
         if SHADOW_LOG_DIR.exists():
             for shard_path in sorted(SHADOW_LOG_DIR.glob("*.json")):
                 shard = _load_shard(shard_path)
                 for entry in shard.get("entries", {}).values():
-                    clv = entry.get("clv")
+                    clv = effective_clv(entry)
                     if clv is None:
                         continue
                     key = (
@@ -79,12 +120,69 @@ def compute_clv_stats(force: bool = False) -> Dict[Tuple[str, str], Dict[str, An
                         entry.get("market_type") or "Unknown",
                     )
                     sums.setdefault(key, []).append(float(clv))
+                    # The OTHER source, tracked in parallel purely for gating.
+                    alt = (entry.get("clv") if clv_source(entry) == "kalshi"
+                           else entry.get("kalshi_clv"))
+                    if alt is not None:
+                        alt_sums.setdefault(key, []).append(float(alt))
+                        d = entry.get("date") or ""
+                        if d > alt_latest.get(key, ""):
+                            alt_latest[key] = d
         for key, vals in sums.items():
             stats[key] = {"n": len(vals), "avg_clv": sum(vals) / len(vals)}
+        # Per-source averages, so a gate can never be LOOSENED just because the
+        # feed changed. See _phase_and_gate_multi below.
+        for key, vals in alt_sums.items():
+            if key in stats:
+                stats[key]["alt_n"] = len(vals)
+                stats[key]["alt_avg_clv"] = sum(vals) / len(vals)
+                stats[key]["alt_latest"] = alt_latest.get(key, "")
     except Exception as e:
         logger.warning(f"CLV stats computation failed (non-fatal): {e}")
     _stats_cache = stats
     return stats
+
+
+def _phase_and_gate_multi(st: Dict[str, Any]) -> Tuple[int, bool]:
+    """Phase from the primary series; GATE IF EITHER SOURCE WOULD GATE.
+
+    A safety rail must never come off just because the measurement feed
+    changed. Aug 25 2026: preferring Kalshi would have UN-GATED MLB Total —
+    gated since Jun 11 on -2.03% over 593 picks, but Kalshi reads the same
+    market at -0.88%. The two sources are statistically indistinguishable as
+    predictors overall, so a 1.15pp disagreement on one market is not evidence
+    the gate was wrong; it is evidence we do not know. When we do not know, the
+    protective setting stays on.
+
+    This is deliberately ASYMMETRIC: either source can turn a gate ON, and both
+    must agree to turn one OFF.
+    """
+    phase, gated = _phase_and_gate(st["n"], st["avg_clv"])
+    alt_n, alt_avg = st.get("alt_n"), st.get("alt_avg_clv")
+    if alt_n and alt_avg is not None and _alt_is_fresh(st.get("alt_latest", "")):
+        _, alt_gated = _phase_and_gate(alt_n, alt_avg)
+        gated = gated or alt_gated
+    return phase, gated
+
+
+def _alt_is_fresh(latest_date: str) -> bool:
+    """Does the secondary series still have recent data?
+
+    Once the Odds API CLV job is switched off, its series FREEZES. Without a
+    sunset the asymmetric rule above would hold a market gated forever on
+    evidence that stopped updating — which breaks the governor's core promise
+    that gated markets RECOVER automatically as fresh data arrives (display and
+    watchlist keep logging even while a market is gated out of the budget).
+    So a stale secondary loses its vote after ALT_FRESH_DAYS and the primary
+    series governs alone.
+    """
+    if not latest_date:
+        return False
+    try:
+        from datetime import date as _d, timedelta as _td
+        return _d.fromisoformat(latest_date) >= _d.today() - _td(days=ALT_FRESH_DAYS)
+    except Exception:
+        return False
 
 
 def _phase_and_gate(n: int, avg_clv: float) -> Tuple[int, bool]:
@@ -107,7 +205,7 @@ def clv_gate(rec: Any) -> Tuple[bool, str]:
         st = compute_clv_stats().get(key)
         if not st:
             return True, ""
-        phase, gated = _phase_and_gate(st["n"], st["avg_clv"])
+        phase, gated = _phase_and_gate_multi(st)
         if gated:
             return False, (
                 f"CLV governor: {key[0]} {key[1]} avg CLV "
@@ -126,7 +224,7 @@ def persist_state() -> None:
         stats = compute_clv_stats()
         rows = []
         for (sport, market_type), st in sorted(stats.items()):
-            phase, gated = _phase_and_gate(st["n"], st["avg_clv"])
+            phase, gated = _phase_and_gate_multi(st)
             rows.append({
                 "sport":       sport,
                 "market_type": market_type,

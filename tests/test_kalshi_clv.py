@@ -116,3 +116,78 @@ def test_backfill_entry_point_exists_and_is_idempotent_by_design():
     src = inspect.getsource(kc.update_shadow_log_kalshi_clv)
     assert 'e.get("kalshi_clv") is not None' in src, "must skip already-stamped rows"
     assert "MAX_ATTEMPTS" in src, "must cap retries on unmatchable entries"
+
+
+# ── the switch to Kalshi as the primary CLV feed (Aug 25 2026) ────────────
+class TestClvSourceSwitch:
+    """Kalshi becomes the primary CLV feed WITHOUT erasing sportsbook history.
+
+    Kalshi retains settled markets only back to 2026-06-18 and that window
+    moves forward, so pre-June history is permanently unreachable. Rather than
+    truncate the governor's window, entries fall back to the `clv` they already
+    carry — every historical value stays exactly where it was.
+    """
+
+    def test_kalshi_is_preferred_when_present(self):
+        from src.state.clv_governor import effective_clv, clv_source
+        e = {"clv": -0.02, "kalshi_clv": -0.005}
+        assert effective_clv(e) == -0.005
+        assert clv_source(e) == "kalshi"
+
+    def test_falls_back_to_sportsbook_history_never_dropping_it(self):
+        """Pre-2026-06-18 rows have no Kalshi data. They must still count, or
+        the governor silently loses four months of evidence."""
+        from src.state.clv_governor import effective_clv, clv_source
+        e = {"clv": -0.02, "kalshi_clv": None}
+        assert effective_clv(e) == -0.02
+        assert clv_source(e) == "odds_api"
+
+    def test_entry_with_no_clv_at_all_is_none(self):
+        from src.state.clv_governor import effective_clv, clv_source
+        assert effective_clv({}) is None
+        assert clv_source({}) == "none"
+
+    def test_a_gate_can_never_be_loosened_by_the_feed_change(self):
+        """THE SAFETY PROPERTY. Preferring Kalshi would have un-gated MLB Total
+        (gated since Jun 11 on -2.03% over 593 picks; Kalshi reads -0.88%).
+        Either source may turn a gate ON; both must agree to turn one OFF."""
+        from src.state.clv_governor import _phase_and_gate_multi
+        from datetime import date
+        today = date.today().isoformat()
+        st = {"n": 594, "avg_clv": -0.0088,          # Kalshi: would not gate
+              "alt_n": 354, "alt_avg_clv": -0.0209,  # Odds API: would gate
+              "alt_latest": today}
+        _, gated = _phase_and_gate_multi(st)
+        assert gated is True, "switching feeds silently removed a live gate"
+
+    def test_either_source_can_turn_a_gate_on(self):
+        from src.state.clv_governor import _phase_and_gate_multi
+        from datetime import date
+        st = {"n": 200, "avg_clv": -0.03, "alt_n": 200, "alt_avg_clv": 0.01,
+              "alt_latest": date.today().isoformat()}
+        assert _phase_and_gate_multi(st)[1] is True
+
+    def test_a_frozen_secondary_series_loses_its_vote(self):
+        """Once the paid feed is off, its series stops updating. Without a
+        sunset it would hold a market gated forever, breaking the governor's
+        promise that gated markets recover automatically."""
+        from src.state.clv_governor import _phase_and_gate_multi, ALT_FRESH_DAYS
+        from datetime import date, timedelta
+        stale = (date.today() - timedelta(days=ALT_FRESH_DAYS + 5)).isoformat()
+        st = {"n": 594, "avg_clv": -0.0088,
+              "alt_n": 354, "alt_avg_clv": -0.0209, "alt_latest": stale}
+        _, gated = _phase_and_gate_multi(st)
+        assert gated is False, "a stale secondary series still gated the market"
+
+    def test_missing_alt_series_does_not_crash_or_gate(self):
+        from src.state.clv_governor import _phase_and_gate_multi
+        st = {"n": 183, "avg_clv": -0.0007}          # F5: Kalshi-only
+        assert _phase_and_gate_multi(st)[1] is False
+
+    def test_paid_feed_is_off_by_default_but_re_enablable(self):
+        import re
+        for path in ("src/main.py", "src/data/results_snapshot.py"):
+            src = open(path).read()
+            assert 'ENABLE_ODDS_API_CLV' in src, f"{path} missing the switch"
+            m = re.search(r'ENABLE_ODDS_API_CLV",\s*"(\w+)"', src)
+            assert m and m.group(1) == "false", f"{path} must default OFF"

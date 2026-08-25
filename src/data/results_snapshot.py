@@ -283,7 +283,13 @@ def main() -> int:
     # its CLV. Historical archive data persists, so a failed night here is
     # automatically repaired on the next run (or the morning run). Non-fatal.
     clv_lookup = {}
-    _clv_disabled = os.environ.get("DISABLE_CLV_STAMPING", "").lower() in ("1", "true", "yes")
+    # Odds API CLV is OFF by default from Aug 25 2026: Kalshi supplies CLV
+    # free (and is the ONLY source for F5), while this feed was ~54% of daily
+    # credits. Existing sportsbook CLV history is KEPT, never erased — the
+    # governor falls back to it for anything before Kalshi's 2026-06-18
+    # retention boundary. Set ENABLE_ODDS_API_CLV=true to resume the paid feed.
+    _clv_disabled = (os.environ.get("DISABLE_CLV_STAMPING", "").lower() in ("1", "true", "yes")
+                     or os.environ.get("ENABLE_ODDS_API_CLV", "false").lower() != "true")
     if _clv_disabled:
         logger.info("CLV stamping disabled via DISABLE_CLV_STAMPING — skipping capture")
     else:
