@@ -137,3 +137,21 @@ def test_execution_log_key_is_stable():
     a = make_key("2026-08-24", "A @ B", "Moneyline", "A")
     b = make_key("2026-08-24", "A @ B", "Moneyline", "A")
     assert a == b and a.count("|") == 3
+
+
+def test_event_date_handles_tickers_with_and_without_a_start_time():
+    """MLB tickers embed the start time (26AUG242145CINSF); WNBA/MLS/NBA do not
+    (26AUG24ATLLA). Requiring the time group made event_date() return None for
+    every non-MLB market, silently excluding all watchlist sports from Kalshi
+    CLV — the index came back '0 markets' and nothing errored."""
+    from src.data.kalshi import event_date
+    cases = {
+        "KXMLBGAME-26AUG242145CINSF-SF": "2026-08-24",
+        "KXWNBAGAME-26AUG24ATLLA-LA":    "2026-08-24",
+        "KXMLSGAME-26AUG23ATLSKC-TIE":   "2026-08-23",
+        "KXMLBF5-26AUG012040SFSD-TIE":   "2026-08-01",
+        "KXNBAGAME-26OCT30BOSNYK-BOS":   "2026-10-30",
+    }
+    for ticker, want in cases.items():
+        assert event_date({"ticker": ticker, "event_ticker": ticker}) == want, ticker
+    assert event_date({"ticker": "garbage"}) is None

@@ -843,6 +843,18 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     except Exception as _exec_err:
         logger.error(f"Execution log integration failed (non-fatal): {_exec_err}")
 
+    # Kalshi CLV — the closing price of the book we actually trade in, and the
+    # ONLY source of F5 closing lines (the Odds API historical endpoint serves
+    # no *_1st_5_innings markets at all). Additive: writes kalshi_* fields only,
+    # so `clv` / `market_prob_at_close` — which calibration and the CLV governor
+    # read — are untouched until we deliberately switch them over.
+    try:
+        from datetime import date as _kd, timedelta as _ktd
+        from src.data.kalshi_clv import update_shadow_log_kalshi_clv as _kclv
+        _kclv(since=(_kd.fromisoformat(today) - _ktd(days=10)).isoformat())
+    except Exception as _kclv_err:
+        logger.error(f"Kalshi CLV update failed (non-fatal): {_kclv_err}")
+
     # Settle any earlier picks whose games have started: replay Kalshi's own
     # candlesticks to see whether a resting bid would have filled and where the
     # market closed. Free data, so no credit budget applies.

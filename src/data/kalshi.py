@@ -23,6 +23,8 @@ import json
 import logging
 import os
 import re
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -67,7 +69,11 @@ TEAM_TO_KALSHI = {
 _MONTHS = {m: i + 1 for i, m in enumerate(
     ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"])}
-_EVENT_DATE_RE = re.compile(r"-(\d{2})([A-Z]{3})(\d{2})(\d{4})")
+# MLB tickers carry a start time (26AUG242145CINSF); WNBA/MLS/NBA do not
+# (26AUG24ATLLA). The time group is therefore OPTIONAL — requiring it made
+# event_date() return None for every non-MLB market, which silently
+# excluded all watchlist sports from Kalshi CLV.
+_EVENT_DATE_RE = re.compile(r"-(\d{2})([A-Z]{3})(\d{2})(\d{4})?(?=[A-Z])")
 
 
 def enabled() -> bool:
@@ -75,17 +81,48 @@ def enabled() -> bool:
     return os.environ.get("ENABLE_KALSHI_SNAPSHOT", "true").lower() != "false"
 
 
+# Kalshi rate-limits the public API. A backfill makes one candlestick request
+# per pick, which trips 429 almost immediately without pacing, so requests are
+# spaced and 429s are retried with backoff rather than dropped (a dropped
+# request costs a retry slot and the entry gets marked unmatchable).
+_MIN_INTERVAL = 0.12
+_RETRY_ON = (429, 500, 502, 503, 504)
+_MAX_RETRIES = 4
+_last_request_at = 0.0
+
+
 def _get(path: str, params: Optional[Dict[str, Any]] = None) -> Optional[Dict]:
+    global _last_request_at
     url = f"{BASE}{path}"
     if params:
         url += "?" + urllib.parse.urlencode(params)
-    try:
-        req = urllib.request.Request(url, headers={"accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
-            return json.loads(r.read())
-    except Exception as e:
-        logger.warning(f"Kalshi request failed ({path}): {e}")
-        return None
+    delay = 0.5
+    for attempt in range(_MAX_RETRIES):
+        gap = time.monotonic() - _last_request_at
+        if gap < _MIN_INTERVAL:
+            time.sleep(_MIN_INTERVAL - gap)
+        try:
+            req = urllib.request.Request(url, headers={"accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
+                _last_request_at = time.monotonic()
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            _last_request_at = time.monotonic()
+            if e.code in _RETRY_ON and attempt < _MAX_RETRIES - 1:
+                time.sleep(delay)
+                delay *= 2
+                continue
+            logger.warning(f"Kalshi request failed ({path}): {e}")
+            return None
+        except Exception as e:
+            _last_request_at = time.monotonic()
+            if attempt < _MAX_RETRIES - 1:
+                time.sleep(delay)
+                delay *= 2
+                continue
+            logger.warning(f"Kalshi request failed ({path}): {e}")
+            return None
+    return None
 
 
 def _f(x) -> Optional[float]:
@@ -170,11 +207,16 @@ def _quote(market: Dict, side: str) -> Optional[Dict[str, float]]:
 
 
 def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
-                 game_date: str) -> Optional[Dict[str, Any]]:
+                 game_date: str, require_quote: bool = True) -> Optional[Dict[str, Any]]:
     """Map one of our picks onto the Kalshi market we would buy.
 
     Returns {ticker, side, bid, ask, mid, open_interest, sub_title} or None
     when no matching market exists (some derivative lines simply aren't listed).
+
+    require_quote=False keeps the match when there is no live two-sided book.
+    SETTLED markets have no quotes, so CLV backfill — which only needs the
+    ticker and side to replay candlesticks — must pass False or every past game
+    silently fails to resolve.
     """
     try:
         bet_type = str(pick.get("bet_type") or "")
@@ -240,7 +282,9 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
             return None
         q = _quote(m, side)
         if not q:
-            return None
+            if require_quote:
+                return None
+            q = {"bid": None, "ask": None, "mid": None}
         return {"ticker": m.get("ticker"), "series": series, "side": side,
                 "sub_title": m.get("yes_sub_title"),
                 "open_interest": _f(m.get("open_interest_fp")) or 0.0, **q}
