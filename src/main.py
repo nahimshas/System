@@ -862,7 +862,11 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             _row = dict(_d)
             _row["_in_budget"] = _k in _budget_keys
             _exec_picks.append(_row)
-        _record_exec(today, _kalshi_snapshot(_exec_picks, today))
+        # `today` here is a datetime.date, NOT a string — the Kalshi layer keys
+        # on ISO date strings (event_date() returns one), so a date object
+        # compares unequal to every market and silently matches 0 picks.
+        _today_str = today.isoformat() if hasattr(today, "isoformat") else str(today)
+        _record_exec(_today_str, _kalshi_snapshot(_exec_picks, _today_str))
     except Exception as _exec_err:
         logger.error(f"Execution log integration failed (non-fatal): {_exec_err}")
 
@@ -872,9 +876,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # so `clv` / `market_prob_at_close` — which calibration and the CLV governor
     # read — are untouched until we deliberately switch them over.
     try:
-        from datetime import date as _kd, timedelta as _ktd
+        from datetime import timedelta as _ktd
         from src.data.kalshi_clv import update_shadow_log_kalshi_clv as _kclv
-        _kclv(since=(_kd.fromisoformat(today) - _ktd(days=10)).isoformat())
+        _kclv(since=(today - _ktd(days=10)).isoformat())
     except Exception as _kclv_err:
         logger.error(f"Kalshi CLV update failed (non-fatal): {_kclv_err}")
 
@@ -882,9 +886,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # candlesticks to see whether a resting bid would have filled and where the
     # market closed. Free data, so no credit budget applies.
     try:
-        from datetime import date as _d, timedelta as _td
+        from datetime import timedelta as _td
         from src.data.execution_settle import settle_executions as _settle_exec
-        _settle_exec(since=(_d.fromisoformat(today) - _td(days=10)).isoformat())
+        _settle_exec(since=(today - _td(days=10)).isoformat())
     except Exception as _exec_s_err:
         logger.error(f"Execution settle failed (non-fatal): {_exec_s_err}")
 

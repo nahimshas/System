@@ -181,3 +181,35 @@ def test_service_worker_cache_key_is_unique_per_run(tmp_path):
 
     assert "picks-2026-08-26-" in first, first
     assert first != second, "same-day republish reused the cache key"
+
+
+def test_main_passes_iso_strings_not_date_objects_to_the_kalshi_layer():
+    """main.py's `today` is a datetime.date, but the Kalshi layer keys on ISO
+    date STRINGS (event_date() returns one). Passing the date object made
+    resolve_pick compare date != str, matching 0 of 5 picks, and
+    date.fromisoformat(date_obj) raised 'argument must be str' — both caught by
+    try/except, so the failures were silent and the layer never ran (Aug 26).
+    """
+    import re
+    src = open("src/main.py").read()
+    # No call site may hand a bare `today` to fromisoformat
+    assert not re.search(r"fromisoformat\(today\)", src), \
+        "today is already a date — fromisoformat(today) raises"
+    # The snapshot/record pair must receive the normalised string
+    assert "_record_exec(_today_str, _kalshi_snapshot(_exec_picks, _today_str))" in src
+    assert '_today_str = today.isoformat()' in src
+
+
+def test_resolve_pick_rejects_a_date_object_game_date():
+    """Guard the underlying contract: game_date must be an ISO string."""
+    import datetime
+    from src.data.kalshi import resolve_pick
+    m = {"ticker": "KXMLBGAME-26AUG242145CINSF-CIN",
+         "event_ticker": "KXMLBGAME-26AUG242145CINSF",
+         "yes_sub_title": "Cincinnati",
+         "rules_primary": "If Cincinnati wins the Cincinnati vs San Francisco professional baseball game",
+         "yes_bid_dollars": "0.51", "yes_ask_dollars": "0.52", "open_interest_fp": "10"}
+    pick = {"bet_type": "Moneyline", "pick": "Cincinnati Reds",
+            "home_team": "San Francisco Giants", "away_team": "Cincinnati Reds"}
+    assert resolve_pick(pick, {"KXMLBGAME": [m]}, "2026-08-24") is not None
+    assert resolve_pick(pick, {"KXMLBGAME": [m]}, datetime.date(2026, 8, 24)) is None
