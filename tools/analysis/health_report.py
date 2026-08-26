@@ -159,7 +159,11 @@ def check_log_liveness(recent_days=3, clv_window_days=14):
         sl_recent = sum(1 for r in shadow if r.get("date", "") >= cutoff_recent)
         old_enough = [r for r in shadow if cutoff_clv <= r.get("date", "") <= cutoff_settle]
         settled = [r for r in old_enough if r.get("outcome") in ("win", "loss", "push")]
-        with_clv = [r for r in settled if r.get("clv") is not None]
+        # Count EITHER feed. Since Aug 25 2026 Kalshi is the primary source and
+        # the paid Odds API job is off, so counting only `clv` would show
+        # coverage collapsing to zero and fire a false alarm every week.
+        with_clv = [r for r in settled
+                    if r.get("clv") is not None or r.get("kalshi_clv") is not None]
 
         out.update(
             decision_rows_recent=dl_recent,
@@ -173,11 +177,61 @@ def check_log_liveness(recent_days=3, clv_window_days=14):
     return out
 
 
+def check_subsystem_liveness(recent_days=3, window_days=14):
+    """Pulse for the measurement layers added Aug 2026.
+
+    These are deliberately wrapped in try/except so they can never block the
+    daily card — which also means they fail INVISIBLY. On Aug 26 a
+    date-vs-ISO-string mismatch made the execution log match 0 of 5 picks and
+    both Kalshi passes raise on entry, so all three subsystems never ran in
+    production at all. Nothing surfaced it; it was found by reading a workflow
+    log by chance. This check exists so the next silent failure is loud.
+
+    - execution rows: snapshots written in the last `recent_days`
+    - execution settled: share of those with a close price replayed
+    - kalshi CLV coverage: share of settled shadow entries carrying kalshi_clv
+    """
+    out = {"name": "subsystem_liveness"}
+    try:
+        cutoff_recent = (date.today() - timedelta(days=recent_days)).isoformat()
+        cutoff_settle = (date.today() - timedelta(days=2)).isoformat()
+        cutoff_window = (date.today() - timedelta(days=window_days)).isoformat()
+
+        exec_rows = []
+        for p in sorted(glob.glob(os.path.join(_ROOT, "state/execution_log/*.json"))):
+            data = json.load(open(p))
+            e = data.get("entries", {})
+            exec_rows.extend(e.values() if isinstance(e, dict) else e)
+        recent = [r for r in exec_rows if r.get("date", "") >= cutoff_recent]
+        mature = [r for r in exec_rows if cutoff_window <= r.get("date", "") <= cutoff_settle]
+        exec_settled = [r for r in mature if r.get("close_price") is not None]
+
+        shadow = _shadow_entries()
+        settled = [r for r in shadow
+                   if cutoff_window <= r.get("date", "") <= cutoff_settle
+                   and r.get("outcome") in ("win", "loss", "push")]
+        kx = [r for r in settled if r.get("kalshi_clv") is not None]
+
+        out.update(
+            execution_rows_recent=len(recent),
+            execution_rows_total=len(exec_rows),
+            execution_settled_pct=(round(len(exec_settled) / len(mature) * 100, 1)
+                                   if mature else None),
+            kalshi_clv_coverage_pct=(round(len(kx) / len(settled) * 100, 1)
+                                     if settled else None),
+            ok=len(recent) > 0,
+        )
+    except Exception as e:
+        out.update(ok=False, error=str(e))
+    return out
+
+
 # Deterministic ACTION NEEDED triggers beyond checkpoints — the routine treats
 # a non-empty alerts list as ACTION NEEDED (or DEGRADED for liveness failures).
 DRAWDOWN_ALERT_7D = -40.0     # last-7-days budget P&L below this → alert
 SETTLEMENT_RATE_MIN = 60.0    # % of 2+ day-old shadow entries settled
 CLV_COVERAGE_MIN = 40.0       # % of settled entries carrying CLV (14d window)
+KALSHI_CLV_COVERAGE_MIN = 40.0  # % of settled entries carrying kalshi_clv (primary feed)
 
 
 def compute_alerts(report):
@@ -195,6 +249,20 @@ def compute_alerts(report):
         alerts.append(f"settlement lag: only {lv['settlement_rate_pct']}% of mature shadow entries settled")
     if lv.get("clv_coverage_pct") is not None and lv["clv_coverage_pct"] < CLV_COVERAGE_MIN:
         alerts.append(f"CLV coverage {lv['clv_coverage_pct']}% (14d) — stamping disabled/broken/out of credits (informational if deliberately disabled)")
+
+    # Subsystems that fail silently because they are exception-guarded.
+    sl = report.get("subsystem_liveness", {})
+    if not sl.get("ok"):
+        alerts.append(
+            f"execution log stalled: {sl.get('execution_rows_recent', 0)} rows in "
+            f"the last 3 days (total {sl.get('execution_rows_total', 0)}) — the "
+            f"Kalshi snapshot is exception-guarded, so a silent failure looks "
+            f"exactly like this")
+    kc = sl.get("kalshi_clv_coverage_pct")
+    if kc is not None and kc < KALSHI_CLV_COVERAGE_MIN:
+        alerts.append(
+            f"Kalshi CLV coverage {kc}% (14d) — Kalshi is the PRIMARY CLV feed "
+            f"since Aug 25, so this is the signal going dark, not a nicety")
     return alerts
 
 
@@ -435,6 +503,7 @@ def main():
         "budget_clv": check_budget_clv(),
         "promoted_pattern": check_promoted_pattern(),
         "log_liveness": check_log_liveness(),
+        "subsystem_liveness": check_subsystem_liveness(),
         "governors": check_governors(),
         "checkpoints": evaluate_checkpoints(),
     }
@@ -469,6 +538,11 @@ def main():
           f"shadow(3d)={lv.get('shadow_rows_recent')} settled={lv.get('settlement_rate_pct')}% "
           f"clv_cov={lv.get('clv_coverage_pct')}%")
     g = report["governors"]
+    sl = report["subsystem_liveness"]
+    _mark = "OK" if sl.get("ok") else "!!"
+    print(f"[{_mark}] Subsystems: execution rows(3d)={sl.get('execution_rows_recent')} "
+          f"total={sl.get('execution_rows_total')} settled={sl.get('execution_settled_pct')}% "
+          f"kalshi_clv_cov={sl.get('kalshi_clv_coverage_pct')}%")
     print(f"[--] CLV gates: {g.get('clv_gates') or 'none'}")
     print(f"[--] Calibration phases beyond 0: {g.get('calibration_phases') or 'none'}")
     print(f"[--] MLB caps: {g.get('mlb_caps')}")
