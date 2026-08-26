@@ -191,3 +191,69 @@ class TestClvSourceSwitch:
             assert 'ENABLE_ODDS_API_CLV' in src, f"{path} missing the switch"
             m = re.search(r'ENABLE_ODDS_API_CLV",\s*"(\w+)"', src)
             assert m and m.group(1) == "false", f"{path} must default OFF"
+
+
+class TestDebriefClvWiring:
+    """The debrief went blank on the first night after the feed switch.
+
+    Two coupled faults: (1) clv_lookup_for_date was only CALLED inside the
+    paid-feed branch, though reading the shadow log costs nothing; and (2) the
+    lookup keyed on market_prob_at_close, which only the Odds API writes, so
+    kalshi_clv rows were invisible to it. The nightly snapshot also never
+    captured Kalshi CLV, so tonight's picks would always lag a day.
+    """
+
+    def test_lookup_is_not_gated_behind_the_paid_feed(self):
+        src = open("src/data/results_snapshot.py").read()
+        i_else = src.index("Odds API CLV capture disabled")
+        i_lookup = src.index("clv_lookup_for_date(picks_date)")
+        assert i_lookup > i_else, "lookup must sit outside the paid-feed branch"
+        block = src[src.index("clv_lookup = clv_lookup_for_date"):]
+        assert "_clv_disabled" not in block.split("\n")[0]
+
+    def test_snapshot_captures_kalshi_clv_itself(self):
+        """Debrief builds at ~10:46pm, before the next morning's run."""
+        src = open("src/data/results_snapshot.py").read()
+        assert "update_shadow_log_kalshi_clv" in src
+
+    def test_lookup_accepts_a_kalshi_only_entry(self, tmp_path, monkeypatch):
+        from datetime import date
+        import json
+        import src.data.closing_lines as cl
+        shard = {"schema_version": 1, "month": "2026-08", "entries": {
+            "k1": {"date": "2026-08-25", "game": "A @ B", "bet_type": "Moneyline",
+                   "pick": "A", "sport": "MLB", "market_type": "Moneyline",
+                   "kalshi_clv": -0.02, "kalshi_prob_at_pick": 0.55,
+                   "kalshi_prob_at_close": 0.53,
+                   "clv": None, "market_prob_at_close": None},
+        }}
+        d = tmp_path / "shadow"
+        d.mkdir()
+        (d / "2026-08.json").write_text(json.dumps(shard))
+        monkeypatch.setattr(cl, "SHADOW_LOG_DIR", d)
+        out = cl.clv_lookup_for_date(date(2026, 8, 25))
+        assert ("A @ B", "Moneyline", "A") in out
+        row = out[("A @ B", "Moneyline", "A")]
+        assert row["clv"] == -0.02 and row["clv_source"] == "kalshi"
+        assert row["market_prob_at_close"] == 0.53, "must use the Kalshi close"
+
+    def test_lookup_still_serves_legacy_sportsbook_rows(self):
+        """Pre-June rows have only the Odds API values and must keep working."""
+        from datetime import date
+        import json, tempfile, pathlib
+        import src.data.closing_lines as cl
+        with tempfile.TemporaryDirectory() as t:
+            d = pathlib.Path(t)
+            (d / "2026-05.json").write_text(json.dumps({"entries": {
+                "k": {"date": "2026-05-10", "game": "C @ D", "bet_type": "Total",
+                      "pick": "Over 8.5", "market_type": "Total",
+                      "clv": 0.01, "market_prob_at_first_pick": 0.50,
+                      "market_prob_at_close": 0.51}}}))
+            orig = cl.SHADOW_LOG_DIR
+            cl.SHADOW_LOG_DIR = d
+            try:
+                out = cl.clv_lookup_for_date(date(2026, 5, 10))
+            finally:
+                cl.SHADOW_LOG_DIR = orig
+        row = out[("C @ D", "Total", "Over 8.5")]
+        assert row["clv"] == 0.01 and row["clv_source"] == "odds_api"

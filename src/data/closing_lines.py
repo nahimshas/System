@@ -962,16 +962,26 @@ def clv_lookup_for_date(run_date: date) -> Dict[Tuple[str, str, str], Dict[str, 
     try:
         shard = _load_shard(SHADOW_LOG_DIR / f"{run_date.year:04d}-{run_date.month:02d}.json")
         date_str = run_date.isoformat()
+        from src.state.clv_governor import effective_clv, clv_source
         for entry in shard.get("entries", {}).values():
             if entry.get("date") != date_str:
                 continue
-            if entry.get("market_prob_at_close") is None:
+            # Accept EITHER feed. Keying on market_prob_at_close alone meant the
+            # debrief showed no CLV at all once the paid Odds API job was turned
+            # off (Aug 25 2026), even though kalshi_clv was present — the
+            # nightly debrief went blank the very first night.
+            clv = effective_clv(entry)
+            if clv is None:
                 continue
+            src = clv_source(entry)
             key = (entry.get("game", ""), entry.get("bet_type", ""), entry.get("pick", ""))
             out[key] = {
-                "market_prob_at_open":  entry.get("market_prob_at_first_pick"),
-                "market_prob_at_close": entry.get("market_prob_at_close"),
-                "clv":                  entry.get("clv"),
+                "market_prob_at_open":  (entry.get("kalshi_prob_at_pick") if src == "kalshi"
+                                         else entry.get("market_prob_at_first_pick")),
+                "market_prob_at_close": (entry.get("kalshi_prob_at_close") if src == "kalshi"
+                                         else entry.get("market_prob_at_close")),
+                "clv":                  clv,
+                "clv_source":           src,
                 "close_point_differs":  entry.get("close_point_differs", False),
             }
     except Exception as e:

@@ -17335,5 +17335,93 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-08-25",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Philadelphia Phillies @ Seattle Mariners",
+    "bet_type": "Moneyline",
+    "pick": "Philadelphia Phillies",
+    "home_team": "Seattle Mariners",
+    "away_team": "Philadelphia Phillies",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 59.7,
+    "market_prob_pct": 49.7,
+    "cost": 3.62,
+    "profit_if_win": 3.38,
+    "result": "LOST",
+    "actual_pnl": -3.62,
+    "actual_home_score": 4.0,
+    "actual_away_score": 1.0
+  },
+  {
+    "date": "2026-08-25",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Minnesota Twins @ Athletics",
+    "bet_type": "Spread",
+    "pick": "Athletics +1.5",
+    "home_team": "Athletics",
+    "away_team": "Minnesota Twins",
+    "edge_pct": 10.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 63.0,
+    "market_prob_pct": 53.0,
+    "cost": 4.4,
+    "profit_if_win": 3.6,
+    "result": "WON",
+    "actual_pnl": 3.6,
+    "actual_home_score": 4.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-08-25",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ Atlanta Braves",
+    "bet_type": "Moneyline",
+    "pick": "Los Angeles Dodgers",
+    "home_team": "Atlanta Braves",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 5.9,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 64.7,
+    "market_prob_pct": 58.8,
+    "cost": 1.82,
+    "profit_if_win": 1.18,
+    "result": "LOST",
+    "actual_pnl": -1.82,
+    "actual_home_score": 4.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-08-25",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Athletics +1.5 + Philadelphia Phillies (ML)",
+    "bet_type": "Parlay",
+    "pick": "Athletics +1.5 + Philadelphia Phillies (ML)",
+    "edge_pct": 9.8,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 36.2,
+    "market_prob_pct": 0,
+    "cost": 2.55,
+    "profit_if_win": 6.45,
+    "result": "LOST",
+    "actual_pnl": -2.55,
+    "legs": [
+      {
+        "game": "Minnesota Twins @ Athletics",
+        "pick": "Athletics +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Philadelphia Phillies @ Seattle Mariners",
+        "pick": "Philadelphia Phillies",
+        "result": "LOST"
+      }
+    ]
   }
 ]

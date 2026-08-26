@@ -291,19 +291,38 @@ def main() -> int:
     _clv_disabled = (os.environ.get("DISABLE_CLV_STAMPING", "").lower() in ("1", "true", "yes")
                      or os.environ.get("ENABLE_ODDS_API_CLV", "false").lower() != "true")
     if _clv_disabled:
-        logger.info("CLV stamping disabled via DISABLE_CLV_STAMPING — skipping capture")
+        logger.info("Odds API CLV capture disabled — using Kalshi (free)")
     else:
         try:
             from src.data.closing_lines import (
-                update_all_clv,
-                repair_missing_commence_times, clv_lookup_for_date,
+                update_all_clv, repair_missing_commence_times,
             )
             repair_missing_commence_times(max_credits=20)
             clv_summary = update_all_clv(max_credits=1000, lookback_days=7)
             logger.info(f"CLV capture summary: {clv_summary}")
-            clv_lookup = clv_lookup_for_date(picks_date)
         except Exception as e:
             logger.warning(f"CLV capture failed (non-fatal): {e}")
+
+    # Kalshi CLV — free, and the primary feed since Aug 25 2026. This MUST run
+    # here as well as in the morning report: the debrief is built at ~10:46pm,
+    # before the next morning's run, so without a capture at snapshot time
+    # tonight's picks would always show no CLV and the debrief would lag a
+    # full day behind.
+    try:
+        from src.data.kalshi_clv import update_shadow_log_kalshi_clv
+        logger.info(f"Kalshi CLV: {update_shadow_log_kalshi_clv(since=picks_date.isoformat())}")
+    except Exception as e:
+        logger.warning(f"Kalshi CLV capture failed (non-fatal): {e}")
+
+    # Read CLV out of the shadow log regardless of which feed produced it. This
+    # is a pure read and costs nothing, so it must NOT sit inside the paid-feed
+    # branch — that coupling is what blanked the debrief on the first night.
+    try:
+        from src.data.closing_lines import clv_lookup_for_date
+        clv_lookup = clv_lookup_for_date(picks_date)
+        logger.info(f"CLV lookup: {len(clv_lookup)} pick(s) carry a closing line")
+    except Exception as e:
+        logger.warning(f"CLV lookup failed (non-fatal): {e}")
 
     # Collect every pick list the debrief shows
     singles = state.get("singles", [])
