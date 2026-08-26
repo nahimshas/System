@@ -155,3 +155,29 @@ def test_event_date_handles_tickers_with_and_without_a_start_time():
     for ticker, want in cases.items():
         assert event_date({"ticker": ticker, "event_ticker": ticker}) == want, ticker
     assert event_date({"ticker": "garbage"}) is None
+
+
+def test_service_worker_cache_key_is_unique_per_run(tmp_path):
+    """Two publishes on the SAME DAY must produce different cache keys.
+
+    The key was the date alone. The report publishes several times a day, so
+    every publish after the first reused the key and the service worker's
+    activate handler — which deletes caches whose name != CACHE — never cleared
+    the previous copy. It also meant a bad build could poison a key that the
+    next genuine run would re-publish verbatim, leaving the bad cache in place
+    (Aug 26 2026).
+    """
+    import time
+    from datetime import date
+    from src.main import _write_sw
+
+    sw = tmp_path / "sw.js"
+    sw.write_text("const CACHE = 'picks-old';\n")
+    _write_sw(tmp_path, date(2026, 8, 26))
+    first = sw.read_text()
+    time.sleep(1.1)                      # keys carry a second-resolution stamp
+    _write_sw(tmp_path, date(2026, 8, 26))
+    second = sw.read_text()
+
+    assert "picks-2026-08-26-" in first, first
+    assert first != second, "same-day republish reused the cache key"

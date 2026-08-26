@@ -253,21 +253,38 @@ def _hydrate_prop(d: dict) -> dict:
 
 
 def _write_sw(out_dir: Path, run_date) -> None:
-    """Rewrite sw.js with a date-stamped cache name so browsers detect a new SW on each report."""
+    """Rewrite sw.js with a RUN-UNIQUE cache name so browsers detect a new SW.
+
+    The key used to be the date alone, which has two failure modes:
+
+    1. The report publishes several times a day (morning run, then subsequent
+       refreshes). Every one of those reused the same key, so the activate
+       handler — which deletes caches whose name != CACHE — never cleared the
+       earlier copy, and the app could keep serving a stale page offline.
+    2. Aug 26 2026: a bad build published key 'picks-2026-08-26' carrying an
+       EMPTY report. Reverting the page left that key alive in browsers, and
+       the next genuine run would have re-published the very same key —
+       matching the poisoned cache and leaving it in place.
+
+    A timestamp makes every publish distinct, so each one invalidates whatever
+    came before it.
+    """
     sw_path = out_dir / "sw.js"
     if not sw_path.exists():
         return
     try:
         content = sw_path.read_text(encoding="utf-8")
         import re as _re
+        from datetime import datetime as _dt, timezone as _tz
+        stamp = f"{run_date.isoformat()}-{_dt.now(_tz.utc).strftime('%H%M%S')}"
         new_content = _re.sub(
             r"const CACHE = 'picks-[^']*';",
-            f"const CACHE = 'picks-{run_date.isoformat()}';",
+            f"const CACHE = 'picks-{stamp}';",
             content,
         )
         if new_content != content:
             sw_path.write_text(new_content, encoding="utf-8")
-            logger.info(f"sw.js updated: cache key → picks-{run_date.isoformat()}")
+            logger.info(f"sw.js updated: cache key → picks-{stamp}")
     except Exception as e:
         logger.warning(f"sw.js update skipped: {e}")
 
