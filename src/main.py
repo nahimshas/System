@@ -879,6 +879,9 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         from datetime import timedelta as _ktd
         from src.data.kalshi_clv import update_shadow_log_kalshi_clv as _kclv
         _kclv(since=(today - _ktd(days=10)).isoformat())
+        # Candidates too — CLV on REJECTED picks is what the archive is for.
+        from src.data.kalshi_clv import update_decision_log_kalshi_clv as _kdclv
+        _kdclv(since=(today - _ktd(days=10)).isoformat())
     except Exception as _kclv_err:
         logger.error(f"Kalshi CLV update failed (non-fatal): {_kclv_err}")
 

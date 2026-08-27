@@ -27,6 +27,9 @@ def main() -> int:
                     help="earliest pick date to backfill (default: first F5 day)")
     ap.add_argument("--max", type=int, default=1500,
                     help="max entries this run (re-run to continue)")
+    ap.add_argument("--recompute", action="store_true",
+                    help="re-measure rows that already have kalshi_clv (use after a "
+                         "resolution or methodology change)")
     ap.add_argument("--sports", default=None,
                     help="comma-separated sports, e.g. MLB,WNBA (default: all supported)")
     args = ap.parse_args()
@@ -35,7 +38,7 @@ def main() -> int:
 
     sports = [s.strip().upper() for s in args.sports.split(",")] if args.sports else None
     summary = update_shadow_log_kalshi_clv(since=args.since, max_entries=args.max,
-                                           sports=sports)
+                                           sports=sports, recompute=args.recompute)
     print(f"\nBackfill result: {summary}")
     if summary["stamped"] == 0 and summary["unmatched"] == 0 and summary["no_candles"] == 0:
         print("Nothing left to backfill for this window.")

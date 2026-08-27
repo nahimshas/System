@@ -57,6 +57,8 @@ SPORT_SERIES: Dict[str, Dict[str, str]] = {
 }
 
 MAX_ATTEMPTS = 3
+# Averaging window (seconds) at each CLV endpoint — see prices_at().
+WINDOW_SECONDS = 900
 
 
 def _f(x) -> Optional[float]:
@@ -158,25 +160,45 @@ def prices_at(series: str, ticker: str, side: str,
         return None, None
 
     pick_ts = int(pick_dt.timestamp())
-    at_pick = at_close = None
-    # First candle at/after the pick, last candle at/before first pitch.
-    for c in candles:
-        ts = c.get("end_period_ts")
-        if ts is None:
-            continue
-        m = _mid_from_candle(c, side)
-        if m is None:
-            continue
-        if at_pick is None and ts >= pick_ts:
-            at_pick = m
-        if ts <= end:
-            at_close = m
-    if at_pick is None:            # pick predates the first candle — use the open
+    # AVERAGE A WINDOW OF MIDS, don't sample a single candle.
+    #
+    # Kalshi trades in 1-cent ticks, so a single mid can only ever land on a
+    # half-cent and CLV comes out quantised to 0.5pp — LARGER than the ~0.4pp
+    # effect we are trying to measure. (Measured Aug 27 2026: 2022 of 2022
+    # kalshi_clv values were exact tick multiples, versus 78% continuous from
+    # the sportsbook feed.) Averaging the mids over a short window around each
+    # endpoint recovers sub-tick resolution and damps single-print noise, the
+    # same way a closing line is normally taken over a window rather than an
+    # instant.
+    def _window_mean(centre_ts: int, before: int, after: int) -> Optional[float]:
+        vals = []
         for c in candles:
+            ts = c.get("end_period_ts")
+            if ts is None or not (centre_ts - before <= ts <= centre_ts + after):
+                continue
             m = _mid_from_candle(c, side)
             if m is not None:
-                at_pick = m
-                break
+                vals.append(m)
+        return round(sum(vals) / len(vals), 5) if vals else None
+
+    # At pick: look forward, the pick is taken at that moment.
+    at_pick = _window_mean(pick_ts, 0, WINDOW_SECONDS)
+    # At close: look back from first pitch — there is no "after".
+    at_close = _window_mean(end, WINDOW_SECONDS, 0)
+
+    # Fall back to single candles when a window is empty (thin markets).
+    if at_pick is None:
+        at_pick = next((m for c in candles
+                        if (m := _mid_from_candle(c, side)) is not None
+                        and (c.get("end_period_ts") or 0) >= pick_ts), None)
+    if at_pick is None:
+        at_pick = next((m for c in candles
+                        if (m := _mid_from_candle(c, side)) is not None), None)
+    if at_close is None:
+        last = [m for c in candles
+                if (c.get("end_period_ts") or 0) <= end
+                and (m := _mid_from_candle(c, side)) is not None]
+        at_close = last[-1] if last else None
     return at_pick, at_close
 
 
@@ -210,7 +232,8 @@ def _entry_to_pick(e: Dict) -> Dict[str, Any]:
 
 def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
                                  max_entries: int = 1500,
-                                 sports: Optional[List[str]] = None) -> Dict[str, int]:
+                                 sports: Optional[List[str]] = None,
+                                 recompute: bool = False) -> Dict[str, int]:
     """Stamp kalshi_prob_at_pick / kalshi_prob_at_close / kalshi_clv.
 
     Additive only — existing clv / market_prob_at_close are never touched.
@@ -231,9 +254,9 @@ def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
             shard = _load_shard(path)
             shards[path] = shard
             for e in shard.get("entries", {}).values():
-                if e.get("kalshi_clv") is not None:
+                if e.get("kalshi_clv") is not None and not recompute:
                     continue
-                if (e.get("kalshi_clv_attempts") or 0) >= MAX_ATTEMPTS:
+                if (e.get("kalshi_clv_attempts") or 0) >= MAX_ATTEMPTS and not recompute:
                     continue
                 if (e.get("date") or "") < since:
                     continue
@@ -310,4 +333,128 @@ def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
         return summary
     except Exception as ex:
         logger.error(f"Kalshi CLV update failed (non-fatal): {ex}")
+        return summary
+
+def _decision_entry_to_pick(e: Dict) -> Optional[Dict[str, Any]]:
+    """Decision-log entry -> the shape resolve_pick() expects.
+
+    The decision log stores `side` and `line` SEPARATELY, unlike the shadow log
+    whose `pick` already carries the line. Reconstruct the pick text so the
+    resolver can choose the right rung off Kalshi's strike ladder.
+    """
+    game = e.get("game", "") or ""
+    if " @ " not in game:
+        return None
+    away, home = [x.strip() for x in game.split(" @ ", 1)]
+    mt = e.get("market_type") or ""
+    side = str(e.get("side") or "")
+    line = e.get("line")
+
+    if mt in ("Moneyline", "F5 Moneyline"):
+        pick = side
+    elif mt in ("Spread", "F5 Spread"):
+        if line is None:
+            return None
+        pick = f"{side} {float(line):+.1f}"
+    elif mt in ("Total", "F5 Total"):
+        if line is None:
+            return None
+        pick = f"{'Over' if side.lower().startswith('o') else 'Under'} {float(line)}"
+    else:
+        return None          # F5 Tie has no reliable draw price — skip
+    return {"bet_type": mt, "pick": pick, "home_team": home, "away_team": away}
+
+
+def update_decision_log_kalshi_clv(since: str = "0000-00-00",
+                                   max_entries: int = 2000,
+                                   recompute: bool = False) -> Dict[str, int]:
+    """Stamp kalshi_clv onto DECISION-LOG candidates — including rejected sides.
+
+    This is the half that makes the archive worth keeping: CLV on picks the
+    model REJECTED, which is how we test whether our selection adds anything.
+    It used to ride along with the Odds API pass; that feed is off, so without
+    this the candidate archive silently stops accruing CLV (183 of 719 rows in
+    the week the switch landed).
+
+    Additive and idempotent, exactly like the shadow-log pass.
+    """
+    summary = {"stamped": 0, "unmatched": 0, "no_candles": 0, "skipped": 0,
+               "unmapped": 0}
+    if not enabled():
+        return summary
+    try:
+        from src.state import decision_log as _dl
+
+        now = datetime.now(timezone.utc)
+        shards, todo = {}, []
+        for path in sorted(_dl.DECISION_LOG_DIR.glob("*.json")):
+            shard = _dl._load_shard(path)
+            shards[path] = shard
+            for e in shard.get("entries", {}).values():
+                if e.get("kalshi_clv") is not None and not recompute:
+                    continue
+                if (e.get("kalshi_clv_attempts") or 0) >= MAX_ATTEMPTS and not recompute:
+                    continue
+                if (e.get("date") or "") < since:
+                    continue
+                sport = (e.get("sport") or "").upper()
+                mt = e.get("market_type")
+                if sport not in SPORT_SERIES or mt not in SPORT_SERIES[sport]:
+                    continue
+                if not _teams_mappable(e.get("game", "")):
+                    summary["unmapped"] += 1
+                    continue
+                ct = _parse_iso(e.get("commence_time", ""))
+                if ct is None or ct > now:
+                    summary["skipped"] += 1
+                    continue
+                todo.append((path, e))
+        if not todo:
+            return summary
+        todo = todo[:max_entries]
+
+        dates = {e.get("date") for _, e in todo if e.get("date")}
+        series = sorted({SPORT_SERIES[(e.get("sport") or "").upper()][e["market_type"]]
+                         for _, e in todo})
+        if any(e["market_type"] == "F5 Spread" for _, e in todo):
+            series = sorted(set(series) | {"KXMLBF5"})
+        logger.info(f"Kalshi decision CLV: {len(todo)} candidates, {len(dates)} date(s)")
+        idx = build_index(series, dates)
+
+        modified = set()
+        for i, (path, e) in enumerate(todo, 1):
+            pick = _decision_entry_to_pick(e)
+            r = resolve_pick(pick, idx, e.get("date", ""), require_quote=False) if pick else None
+            if not r:
+                e["kalshi_clv_attempts"] = (e.get("kalshi_clv_attempts") or 0) + 1
+                summary["unmatched"] += 1
+                modified.add(path)
+                continue
+            pick_dt = _parse_iso(e.get("first_seen_at") or "") or (
+                _parse_iso(e.get("commence_time", "")) - timedelta(hours=8))
+            close_dt = _parse_iso(e.get("commence_time", ""))
+            at_pick, at_close = prices_at(r["series"], r["ticker"], r["side"],
+                                          pick_dt, close_dt)
+            if at_pick is None or at_close is None:
+                e["kalshi_clv_attempts"] = (e.get("kalshi_clv_attempts") or 0) + 1
+                summary["no_candles"] += 1
+                modified.add(path)
+                continue
+            e["kalshi_ticker"] = r["ticker"]
+            e["kalshi_prob_at_pick"] = at_pick
+            e["kalshi_prob_at_close"] = at_close
+            e["kalshi_clv"] = round(at_close - at_pick, 5)
+            e["kalshi_clv_captured_at"] = now.isoformat()
+            summary["stamped"] += 1
+            modified.add(path)
+            if i % 50 == 0:
+                for _p in list(modified):
+                    _dl._save_shard_atomic(_p, shards[_p])
+
+        for path in modified:
+            _dl._save_shard_atomic(path, shards[path])
+        logger.info(f"Kalshi decision CLV: {summary}")
+        return summary
+    except Exception as ex:
+        logger.error(f"Kalshi decision CLV failed (non-fatal): {ex}")
         return summary

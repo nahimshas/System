@@ -311,6 +311,9 @@ def main() -> int:
     try:
         from src.data.kalshi_clv import update_shadow_log_kalshi_clv
         logger.info(f"Kalshi CLV: {update_shadow_log_kalshi_clv(since=picks_date.isoformat())}")
+        from src.data.kalshi_clv import update_decision_log_kalshi_clv
+        logger.info(f"Kalshi decision CLV: "
+                    f"{update_decision_log_kalshi_clv(since=picks_date.isoformat())}")
     except Exception as e:
         logger.warning(f"Kalshi CLV capture failed (non-fatal): {e}")
 

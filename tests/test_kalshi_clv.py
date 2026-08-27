@@ -257,3 +257,67 @@ class TestDebriefClvWiring:
                 cl.SHADOW_LOG_DIR = orig
         row = out[("C @ D", "Total", "Over 8.5")]
         assert row["clv"] == 0.01 and row["clv_source"] == "odds_api"
+
+
+class TestDecisionLogCandidateClv:
+    """CLV must reach the CANDIDATE archive, not just the picks we made.
+
+    Candidate CLV used to ride along with the Odds API pass. That feed went off
+    Aug 25, so the decision log silently stopped accruing CLV — 183 of 719 rows
+    in the week the switch landed. Measuring CLV on picks the model REJECTED is
+    the whole reason the archive exists.
+    """
+
+    def test_moneyline_pick_text_is_the_side(self):
+        e = {"game": "A Team @ B Team", "market_type": "Moneyline",
+             "side": "A Team", "line": None}
+        assert kc._decision_entry_to_pick(e)["pick"] == "A Team"
+
+    def test_spread_reassembles_the_signed_line(self):
+        """The decision log stores side and line separately; the resolver needs
+        them recombined or it cannot pick a rung off Kalshi's ladder."""
+        e = {"game": "A @ B", "market_type": "Spread", "side": "A", "line": 1.5}
+        assert kc._decision_entry_to_pick(e)["pick"] == "A +1.5"
+        e2 = {"game": "A @ B", "market_type": "F5 Spread", "side": "A", "line": -0.5}
+        assert kc._decision_entry_to_pick(e2)["pick"] == "A -0.5"
+
+    def test_total_maps_over_under_to_kalshi_wording(self):
+        over = {"game": "A @ B", "market_type": "Total", "side": "over", "line": 8.5}
+        under = {"game": "A @ B", "market_type": "F5 Total", "side": "under", "line": 4.5}
+        assert kc._decision_entry_to_pick(over)["pick"] == "Over 8.5"
+        assert kc._decision_entry_to_pick(under)["pick"] == "Under 4.5"
+
+    def test_f5_tie_is_skipped(self):
+        """No reliable draw price. Historical Tie rows carry
+        market_prob_at_first_pick == 0.0 against model_prob ~0.20 — a fake 20pp
+        edge — so they must not be revived here."""
+        e = {"game": "A @ B", "market_type": "F5 Tie", "side": "tie", "line": None}
+        assert kc._decision_entry_to_pick(e) is None
+
+    def test_missing_line_returns_none_rather_than_guessing(self):
+        e = {"game": "A @ B", "market_type": "Total", "side": "over", "line": None}
+        assert kc._decision_entry_to_pick(e) is None
+
+    def test_malformed_game_returns_none(self):
+        assert kc._decision_entry_to_pick(
+            {"game": "nonsense", "market_type": "Moneyline", "side": "X"}) is None
+
+    def test_both_run_paths_capture_candidate_clv(self):
+        for path in ("src/main.py", "src/data/results_snapshot.py"):
+            assert "update_decision_log_kalshi_clv" in open(path).read(), path
+
+
+class TestClvResolution:
+    """Kalshi trades in 1-cent ticks, so a single mid can only land on a
+    half-cent — quantising CLV to 0.5pp, LARGER than the ~0.4pp effect we are
+    measuring. Measured Aug 27: 2022 of 2022 values were exact tick multiples
+    versus 78% continuous from the sportsbook feed."""
+
+    def test_window_is_configured(self):
+        assert kc.WINDOW_SECONDS >= 300, "window too short to damp tick noise"
+
+    def test_prices_are_averaged_not_sampled(self):
+        import inspect
+        src = inspect.getsource(kc.prices_at)
+        assert "_window_mean" in src, "must average a window, not sample one candle"
+        assert "sum(vals) / len(vals)" in src
