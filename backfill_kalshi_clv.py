@@ -27,6 +27,8 @@ def main() -> int:
                     help="earliest pick date to backfill (default: first F5 day)")
     ap.add_argument("--max", type=int, default=1500,
                     help="max entries this run (re-run to continue)")
+    ap.add_argument("--shadow-only", action="store_true",
+                    help="skip the decision-log (candidate) pass")
     ap.add_argument("--recompute", action="store_true",
                     help="re-measure rows that already have kalshi_clv (use after a "
                          "resolution or methodology change)")
@@ -34,12 +36,22 @@ def main() -> int:
                     help="comma-separated sports, e.g. MLB,WNBA (default: all supported)")
     args = ap.parse_args()
 
-    from src.data.kalshi_clv import update_shadow_log_kalshi_clv
+    from src.data.kalshi_clv import (update_shadow_log_kalshi_clv,
+                                     update_decision_log_kalshi_clv)
 
     sports = [s.strip().upper() for s in args.sports.split(",")] if args.sports else None
     summary = update_shadow_log_kalshi_clv(since=args.since, max_entries=args.max,
                                            sports=sports, recompute=args.recompute)
-    print(f"\nBackfill result: {summary}")
+    print(f"\nShadow-log result: {summary}")
+
+    # The candidate archive needs CLV too — that is where REJECTED picks live,
+    # and measuring those is the reason the decision log exists.
+    if not args.shadow_only:
+        dsum = update_decision_log_kalshi_clv(since=args.since, max_entries=args.max,
+                                              recompute=args.recompute)
+        print(f"Decision-log result: {dsum}")
+        for k in summary:
+            summary[k] = summary.get(k, 0) + dsum.get(k, 0)
     if summary["stamped"] == 0 and summary["unmatched"] == 0 and summary["no_candles"] == 0:
         print("Nothing left to backfill for this window.")
     else:
