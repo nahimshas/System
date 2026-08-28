@@ -17579,5 +17579,73 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-08-27",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Baltimore Orioles @ St. Louis Cardinals",
+    "bet_type": "Moneyline",
+    "pick": "Baltimore Orioles",
+    "home_team": "St. Louis Cardinals",
+    "away_team": "Baltimore Orioles",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 63.5,
+    "market_prob_pct": 53.5,
+    "cost": 3.88,
+    "profit_if_win": 3.12,
+    "result": "LOST",
+    "actual_pnl": -3.88,
+    "actual_home_score": 7.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-08-27",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Houston Astros @ New York Yankees",
+    "bet_type": "Moneyline",
+    "pick": "New York Yankees",
+    "home_team": "New York Yankees",
+    "away_team": "Houston Astros",
+    "edge_pct": 5.9,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 65.1,
+    "market_prob_pct": 59.1,
+    "cost": 1.83,
+    "profit_if_win": 1.17,
+    "result": "LOST",
+    "actual_pnl": -1.83,
+    "actual_home_score": 1.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-08-27",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Baltimore Orioles (ML) + New York Yankees (ML)",
+    "bet_type": "Parlay",
+    "pick": "Baltimore Orioles (ML) + New York Yankees (ML)",
+    "edge_pct": 8.3,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 39.9,
+    "market_prob_pct": 0,
+    "cost": 2.35,
+    "profit_if_win": 4.65,
+    "result": "LOST",
+    "actual_pnl": -2.35,
+    "legs": [
+      {
+        "game": "Baltimore Orioles @ St. Louis Cardinals",
+        "pick": "Baltimore Orioles",
+        "result": "LOST"
+      },
+      {
+        "game": "Houston Astros @ New York Yankees",
+        "pick": "New York Yankees",
+        "result": "LOST"
+      }
+    ]
   }
 ]
