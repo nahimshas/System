@@ -527,6 +527,7 @@
     .badge-mls   { background: #14532d; color: #bbf7d0; }
     .badge-wc    { background: #7c2d12; color: #fed7aa; }
     .badge-ligamx { background: #064e3b; color: #a7f3d0; }
+    .badge-cfb { background: #3b0764; color: #e9d5ff; }
     .badge-f5    { background: #422006; color: #fed7aa; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
@@ -918,6 +919,7 @@
             {% elif row.sport == 'WNBA' %}<span class="badge badge-wnba">WNBA</span>
             {% elif row.sport == 'MLS' %}<span class="badge badge-mls">MLS</span>
             {% elif row.sport == 'LIGAMX' %}<span class="badge badge-ligamx">Liga MX</span>
+            {% elif row.sport == 'CFB' %}<span class="badge badge-cfb">CFB</span>
             {% elif row.bet_type == 'Parlay' %}<span class="badge badge-parlay">PARLAY</span>
             {% else %}<span class="badge" style="background:#374151;color:#d1d5db;">{{ row.sport }}</span>
             {% endif %}
@@ -1232,6 +1234,32 @@
     <div style="height:16px;"></div>
   </div><!-- /tab-ligamx -->
 
+  <!-- ═══════════════ COLLEGE FOOTBALL TAB ═══════════════════════════════ -->
+  <div id="tab-cfb" class="spa-tab">
+    <div class="tab-header">
+      <div class="tab-header-text">
+        <div class="tab-header-title">🏈 College Football</div>
+        <div class="tab-header-sub">
+          {% if not report.has_cfb %}No games today
+          {% elif report.cfb_watchlist %}{{ report.cfb_watchlist|length }} pick{% if report.cfb_watchlist|length != 1 %}s{% endif %} &middot; watchlist
+          {% else %}No qualifying picks{% endif %}
+        </div>
+      </div>
+      <button class="tab-bell-btn" data-pref="CFB" onclick="tabBellClick(this)" style="display:none">🔕</button>
+    </div>
+    {% if not report.has_cfb %}
+    <div class="empty-state"><div class="icon">🏈</div>No college football games scheduled today.</div>
+    {% elif not report.cfb_watchlist %}
+    <div class="empty-state"><div class="icon">😕</div>No picks with enough edge today.</div>
+    {% else %}
+    <div class="sec-label">Watchlist</div>
+    {% for bet in report.cfb_watchlist %}
+    {{ watchlist_card(bet, "badge-cfb", "🏈 CFB", "cfb-" + loop.index|string, "CFB", "Watchlist only — Elo-margin model, zero money at risk. Kalshi's college books are thin (8-cent moneyline spreads; spread/total open interest near zero), so this measures whether the model has signal, not whether it is bettable.", "cfb-watchlist-card") }}
+    {% endfor %}
+    {% endif %}
+    <div style="height:16px;"></div>
+  </div><!-- /tab-cfb -->
+
   <!-- ═══════════════ ANALYTICS TAB ══════════════════════════════════════ -->
   <div id="tab-analytics" class="spa-tab">
     <div class="tab-header">
@@ -1318,8 +1346,12 @@
       <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;">
         <div class="signals-title">Watchlist Tracking <span style="font-size:0.68rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">&nbsp;— no budget allocated, W-L only</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          {% for sport_key, badge_class, label in [('NHL', 'badge-nhl', '🏒 NHL'), ('IPL', 'badge-ipl', '🏏 IPL'), ('WNBA', 'badge-wnba', '🏀 WNBA'), ('MLS', 'badge-mls', '⚽ MLS'), ('WC', 'badge-wc', '🌍 WC'), ('LIGAMX', 'badge-ligamx', '🇲🇽 Liga MX'), ('F5', 'badge-f5', '⚾ F5')] %}
-          {% set ws = wl.get(sport_key, {}) %}
+          {% for sport_key, badge_class, label in [('NHL', 'badge-nhl', '🏒 NHL'), ('IPL', 'badge-ipl', '🏏 IPL'), ('WNBA', 'badge-wnba', '🏀 WNBA'), ('MLS', 'badge-mls', '⚽ MLS'), ('WC', 'badge-wc', '🌍 WC'), ('LIGAMX', 'badge-ligamx', '🇲🇽 Liga MX'), ('F5', 'badge-f5', '⚾ F5'), ('CFB', 'badge-cfb', '🏈 CFB')] %}
+          {# A sport with no settled picks yet gets an EMPTY dict, and `{}.won`
+             raises in strict Jinja — which aborts the whole SPA render, not
+             just this tile. Default to a zeroed record so adding a new
+             watchlist sport can never take the page down. #}
+          {% set ws = wl.get(sport_key, {'won': 0, 'lost': 0, 'total': 0, 'win_rate_pct': none}) %}
           <div id="wl-tile-{{ sport_key }}"
                data-hist-won="{{ ws.won }}"
                data-hist-lost="{{ ws.lost }}"
@@ -1781,6 +1813,7 @@ window._tabDots = {
   mls:       {{ 'true' if report.mls_watchlist else 'false' }},
   wc:        {{ 'true' if report.wc_watchlist else 'false' }},
   ligamx:    {{ 'true' if report.ligamx_watchlist else 'false' }},
+  cfb:       {{ 'true' if report.cfb_watchlist else 'false' }},
   analytics: false
 };
 // Sport tabs that have picks in today's report — used to auto-set visibility.
@@ -1821,6 +1854,7 @@ window._reportDate = "{{ report.run_date_iso }}";
     { key:"mls",       emoji:"⚽", label:"MLS"       },
     { key:"wc",        emoji:"🌍", label:"World Cup" },
     { key:"ligamx",    emoji:"🇲🇽", label:"Liga MX"   },
+    { key:"cfb",       emoji:"🏈", label:"CFB"       },
     { key:"analytics", emoji:"📊", label:"Analytics" }
   ];
   var PINNED_TABS = { today: true, analytics: true };

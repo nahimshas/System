@@ -85,6 +85,8 @@ _INITIAL_DEFAULT_CAPS: Dict[str, float] = {
     "mls.credibility_total":     0.10,
     "mls.credibility_spread":    0.10,
 
+    "cfb.credibility_moneyline":    0.08,
+    "cfb.credibility_spread":       0.08,
     "ligamx.credibility_moneyline": 0.10,
     "ligamx.credibility_draw":      0.10,
     # WNBA / IPL (moneyline only)
@@ -111,6 +113,8 @@ _DISPLAY_LABELS: Dict[str, str] = {
     "mls.credibility_draw":       "MLS Draws",
     "mls.credibility_total":      "MLS Over/Unders",
     "mls.credibility_spread":     "MLS Spreads",
+    "cfb.credibility_moneyline":    "CFB Moneylines",
+    "cfb.credibility_spread":       "CFB Spreads",
     "ligamx.credibility_moneyline": "Liga MX Moneylines",
     "ligamx.credibility_draw":      "Liga MX Draws",
     "wnba.credibility_moneyline": "WNBA Moneylines",

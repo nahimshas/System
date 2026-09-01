@@ -4754,3 +4754,154 @@ def analyze_mlb_f5_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats
         "stats_available": stats_available,
     }, _f5_cands, recs)
     return recs
+
+
+# ---------------------------------------------------------------------------
+# College football (FBS) — WATCHLIST ONLY
+# ---------------------------------------------------------------------------
+
+def analyze_cfb_game(
+    game: Dict,
+    cfb_ctx: Dict,
+    min_edge: float = None,
+) -> List[BetRecommendation]:
+    """Elo-margin edge finder for college football.
+
+    Unlike MLB (pitcher-driven probabilities) or soccer (Poisson scorelines),
+    CFB is modelled as a POINT MARGIN and the markets are read off a normal
+    distribution around it:
+
+        margin = (elo_home - elo_away) / ELO_TO_POINTS + HOME_ADV
+        P(home covers L) = Phi((margin + L) / MARGIN_STD)
+        P(home wins)     = Phi(margin / MARGIN_STD)
+
+    Totals are NOT modelled — see the note in config/cfb.py.
+
+    A game is skipped entirely when either team has no rating (FCS opponents,
+    unmappable names) or too few games this season: an unrated team would
+    otherwise default to average and manufacture a large phantom edge against a
+    real opponent, which is the single most likely way this model could produce
+    nonsense.
+    """
+    from src.config import (
+        CFB_ELO_TO_POINTS, CFB_HOME_ADV_POINTS, CFB_MARGIN_STD,
+        CFB_CRED_CAP, CFB_MIN_ELO_GAMES, CFB_WARMSTART_RAMP_GAMES, MIN_EDGE,
+    )
+    from src.data.cfb_stats import rating_for
+    from scipy.stats import norm as _norm
+
+    _min = MIN_EDGE if min_edge is None else min_edge
+    recs: List[BetRecommendation] = []
+    _zero_sizing = BetSizing(
+        dollar_allocation=0, num_contracts=0, contract_price=0,
+        total_cost=0, profit_if_win=0, loss_if_lose=0,
+        expected_value=0, kelly_fraction=0,
+    )
+
+    home = game["home_team"]
+    away = game["away_team"]
+    label = f"{away} @ {home}"
+    commence_time = game.get("commence_time", "")
+    game_time = game.get("game_time", "")
+
+    r_home, n_home = rating_for(home, cfb_ctx)
+    r_away, n_away = rating_for(away, cfb_ctx)
+    if r_home is None or r_away is None:
+        logger.debug(f"CFB skip (unrated team): {label}")
+        return recs
+
+    # Early season: the prior is all we have and it is weak. Shrink the rating
+    # gap until enough games exist, rather than trusting a regressed number.
+    played = min(n_home, n_away)
+    ramp = min(1.0, (played + 1) / float(max(1, CFB_WARMSTART_RAMP_GAMES) + 1))
+    elo_gap = (r_home - r_away) * ramp
+
+    neutral = bool(game.get("neutral_site"))
+    hfa = 0.0 if neutral else CFB_HOME_ADV_POINTS
+    margin = elo_gap / CFB_ELO_TO_POINTS + hfa
+    stats_available = played >= CFB_MIN_ELO_GAMES
+
+    signals: List[str] = [
+        f"Elo {r_home:.0f} vs {r_away:.0f} → projected margin "
+        f"{margin:+.1f} for {home if margin >= 0 else away}",
+    ]
+    if not stats_available:
+        signals.append(f"Early season — only {played} rated game(s), gap shrunk {ramp:.0%}")
+    if neutral:
+        signals.append("Neutral site — no home advantage applied")
+
+    research = [
+        f"Projected score margin: {home} by {margin:.1f}" if margin >= 0
+        else f"Projected score margin: {away} by {abs(margin):.1f}",
+    ]
+
+    books = game.get("bookmakers", [])
+    markets_for_log: List[tuple] = []
+
+    def _emit(pick: str, bet_type: str, model_p: float, market_p: Optional[float],
+              raw_p: float, line: Optional[float] = None):
+        if market_p is None or market_p <= 0 or market_p >= 1:
+            return None
+        edge = model_p - market_p
+        if edge < _min:
+            return None
+        r = BetRecommendation(
+            game=label, home_team=home, away_team=away, sport="CFB",
+            bet_type=bet_type, pick=pick,
+            model_prob=model_p, market_prob=market_p, edge=edge,
+            contract_price=market_p, sizing=_zero_sizing,
+            confidence=_confidence_label(edge, len(signals), stats_available),
+            signals=signals[:], research=research[:],
+            game_time=game_time, commence_time=commence_time,
+        )
+        r.model_prob_raw = raw_p
+        recs.append(r)
+        return r
+
+    # ── Moneyline ──────────────────────────────────────────────────────────
+    p_home_raw = float(_norm.cdf(margin / CFB_MARGIN_STD))
+    ml = game.get("moneyline") or {}
+    mk_h, mk_a = ml.get("home_prob"), ml.get("away_prob")
+    if mk_h and mk_a:
+        p_home = _apply_credibility_cap_dispatched(
+            p_home_raw, mk_h, _cred_cap("cfb", CFB_CRED_CAP, "credibility_moneyline"),
+            "cfb", "credibility_moneyline")[0] if mk_h else p_home_raw
+        p_away = 1.0 - p_home
+        _emit(home, "Moneyline", p_home, mk_h, p_home_raw)
+        _emit(away, "Moneyline", p_away, mk_a, 1.0 - p_home_raw)
+        markets_for_log += [
+            ("Moneyline", home, p_home, p_home_raw, mk_h, None),
+            ("Moneyline", away, p_away, 1.0 - p_home_raw, mk_a, None),
+        ]
+
+    # ── Spread ─────────────────────────────────────────────────────────────
+    # odds_client exposes the line and its no-vig consensus under game["spread"]
+    # (already filtered to books quoting the same side of the line), so use that
+    # rather than re-deriving it here.
+    sp = game.get("spread") or {}
+    line = sp.get("home_spread")
+    if line is not None:
+        line = float(line)
+        # P(home covers) = P(margin + line > 0)
+        cov_raw = float(_norm.cdf((margin + line) / CFB_MARGIN_STD))
+        mk_hc = sp.get("home_prob")
+        mk_ac = sp.get("away_prob")
+        cov = _apply_credibility_cap_dispatched(
+            cov_raw, mk_hc, _cred_cap("cfb", CFB_CRED_CAP, "credibility_spread"),
+            "cfb", "credibility_spread")[0] if mk_hc else cov_raw
+        _emit(f"{home} {line:+.1f}", "Spread", cov, mk_hc, cov_raw, line=line)
+        _emit(f"{away} {-line:+.1f}", "Spread", 1.0 - cov, mk_ac, 1.0 - cov_raw, line=-line)
+        markets_for_log += [
+            ("Spread", home, cov, cov_raw, mk_hc, line),
+            ("Spread", away, 1.0 - cov, 1.0 - cov_raw, mk_ac, -line),
+        ]
+
+    _stamp_decision(game, _min, {
+        "cfb_elo_home": r_home, "cfb_elo_away": r_away,
+        "cfb_elo_gap_raw": r_home - r_away, "cfb_elo_gap_ramped": elo_gap,
+        "cfb_games_home": n_home, "cfb_games_away": n_away,
+        "cfb_projected_margin": margin, "cfb_ramp": ramp,
+        "cfb_neutral_site": neutral,
+        "stats_available": stats_available,
+    }, markets_for_log, recs)
+    return recs

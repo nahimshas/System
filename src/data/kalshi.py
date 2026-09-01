@@ -177,6 +177,68 @@ def _pick_point(pick: str) -> Optional[float]:
     return float(m.group(1)) if m else None
 
 
+# College football has ~134 FBS teams (279 tokens on Kalshi once FCS is
+# included) and the two feeds name them differently: Kalshi says "Boise St.",
+# the Odds API says "Boise State Broncos". A static map would be 279 rows and
+# would rot every time a school rebrands, so CFB matches structurally instead:
+# normalise St./State, drop punctuation, and require the Kalshi token to be a
+# leading subset of the full name.
+# Words that continue a SCHOOL NAME rather than begin a mascot. If one of these
+# follows a candidate token, the token is a different school.
+_CFB_QUALIFIERS = {
+    "state", "tech", "aandm", "am", "southern", "northern", "eastern",
+    "western", "central", "international", "atlantic", "pacific", "christian",
+    "baptist", "methodist", "military", "polytechnic", "chicago", "dominion",
+}
+
+
+def _cfb_norm(s: str) -> str:
+    s = re.sub(r"[^a-z0-9 ]", " ", str(s or "").lower())
+    s = re.sub(r"\bst\b\.?", "state", s)
+    s = re.sub(r"\bu\b|\buniversity\b|\bcollege\b", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def cfb_team_matches(full_name: str, kalshi_token: str) -> bool:
+    """True when a Kalshi CFB token names the same school as `full_name`."""
+    a, b = _cfb_norm(full_name), _cfb_norm(kalshi_token)
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    aw, bw = a.split(), b.split()
+    # Kalshi's token is the school; the Odds API adds a mascot. Require every
+    # Kalshi word to appear IN ORDER at the start of the full name.
+    if not (len(bw) <= len(aw) and aw[:len(bw)] == bw):
+        return False
+    # ...but a prefix alone is not enough: "Ohio" would swallow "Ohio State
+    # Buckeyes", and those are two different FBS programmes. If what remains
+    # after the token is itself a school QUALIFIER rather than a mascot, the
+    # token names a different school and must not match.
+    rest = aw[len(bw):]
+    return not (rest and rest[0] in _CFB_QUALIFIERS)
+
+
+def _cfb_token_from_markets(full_name: str, markets: List[Dict]) -> Optional[str]:
+    """Pick the Kalshi CFB token for a team, requiring an UNAMBIGUOUS match.
+
+    Several tokens can prefix-match one school ("Ohio" and "Ohio St."), so the
+    longest match wins and a tie means we refuse rather than guess — a wrong
+    market is far worse than a missing one.
+    """
+    if not full_name:
+        return None
+    toks = {m.get("yes_sub_title") for m in markets if m.get("yes_sub_title")}
+    hits = [t for t in toks if cfb_team_matches(full_name, t)]
+    if not hits:
+        return None
+    hits.sort(key=lambda t: len(_cfb_norm(t)), reverse=True)
+    if len(hits) > 1 and len(_cfb_norm(hits[0])) == len(_cfb_norm(hits[1])):
+        logger.debug(f"CFB token ambiguous for {full_name!r}: {hits[:2]}")
+        return None
+    return hits[0]
+
+
 def _team_token(name: str) -> Optional[str]:
     if not name:
         return None
@@ -207,7 +269,8 @@ def _quote(market: Dict, side: str) -> Optional[Dict[str, float]]:
 
 
 def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
-                 game_date: str, require_quote: bool = True) -> Optional[Dict[str, Any]]:
+                 game_date: str, require_quote: bool = True,
+                 series_map: Optional[Dict[str, str]] = None) -> Optional[Dict[str, Any]]:
     """Map one of our picks onto the Kalshi market we would buy.
 
     Returns {ticker, side, bid, ask, mid, open_interest, sub_title} or None
@@ -220,7 +283,9 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
     """
     try:
         bet_type = str(pick.get("bet_type") or "")
-        series = SERIES.get(bet_type)
+        # SERIES is the MLB map. Other sports MUST pass their own, or every
+        # lookup lands in the MLB books and silently resolves nothing.
+        series = (series_map or SERIES).get(bet_type)
         if not series:
             return None
         pick_txt_early = str(pick.get("pick") or "")
@@ -230,8 +295,15 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
         # pool short-circuits and the pick looks unmatchable.
         if bet_type == "F5 Spread" and abs(_pick_point(pick_txt_early) or 0) == 0.5:
             series = "KXMLBF5"
-        home = _team_token(pick.get("home_team"))
-        away = _team_token(pick.get("away_team"))
+        is_cfb = series.startswith("KXNCAAF")
+        if is_cfb:
+            # CFB has no static token map — derive both tokens from the market
+            # list itself using the structural matcher.
+            home = _cfb_token_from_markets(pick.get("home_team"), markets.get(series, []))
+            away = _cfb_token_from_markets(pick.get("away_team"), markets.get(series, []))
+        else:
+            home = _team_token(pick.get("home_team"))
+            away = _team_token(pick.get("away_team"))
         if not home or not away:
             return None
         pool = [m for m in markets.get(series, []) if event_date(m) == game_date]
@@ -243,7 +315,15 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
             return None
 
         pick_txt = str(pick.get("pick") or "")
-        team = _team_token(_strip_point(pick_txt)) if bet_type not in ("Total", "F5 Total") else None
+        if bet_type in ("Total", "F5 Total"):
+            team = None
+        elif is_cfb:
+            # CFB must use the structural matcher here too — the static map has
+            # no college teams, so this silently returned None and every CFB
+            # pick failed to resolve even though the tokens were found.
+            team = _cfb_token_from_markets(_strip_point(pick_txt), markets.get(series, []))
+        else:
+            team = _team_token(_strip_point(pick_txt))
         opp = away if team == home else home
         pt = _pick_point(pick_txt)
 

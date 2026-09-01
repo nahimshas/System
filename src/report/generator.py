@@ -241,6 +241,8 @@ def build_report(
     wc_game_count: int = 0,
     ligamx_display: Optional[List[Dict]] = None,
     ligamx_game_count: int = 0,
+    cfb_display: Optional[List[Dict]] = None,
+    cfb_game_count: int = 0,
     fresh_odds: bool = False,   # True only when a full odds-fetch run generated this report
 ) -> Dict:
     change_warnings = change_warnings or []
@@ -286,6 +288,12 @@ def build_report(
 
     wc_watchlist = sorted(
         [s for s in (wc_display or []) if s.get("sport") == "WC" and _pwa_show(s)],
+        key=_wl_sort_key,
+    )[:MAX_SINGLE_BETS]
+
+    # College football — watchlist only, its own tile.
+    cfb_watchlist = sorted(
+        [s for s in (cfb_display or []) if s.get("sport") == "CFB" and _pwa_show(s)],
         key=_wl_sort_key,
     )[:MAX_SINGLE_BETS]
 
@@ -712,6 +720,9 @@ def build_report(
         "ligamx_watchlist":   ligamx_watchlist,
         "ligamx_game_count":  ligamx_game_count,
         "has_ligamx":         ligamx_game_count > 0,
+        "cfb_watchlist":      cfb_watchlist,
+        "cfb_game_count":     cfb_game_count,
+        "has_cfb":            cfb_game_count > 0,
         "has_bets":           len(all_singles) > 0 or len(parlays) > 0,
         "performance":        performance,
         "has_performance":    bool(performance.get("total", 0)),

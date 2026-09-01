@@ -35,6 +35,7 @@ ESPN_WATCHLIST_PATHS = {
     "MLS": "soccer/usa.1",
     "WC": "soccer/fifa.world",
     "LIGAMX": "soccer/mex.1",
+    "CFB": "football/college-football",
 }
 
 # Rolling pending list for leagues whose games finish AFTER the morning run.

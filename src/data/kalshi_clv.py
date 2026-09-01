@@ -53,6 +53,9 @@ SPORT_SERIES: Dict[str, Dict[str, str]] = {
     "MLS":  {"Moneyline": "KXMLSGAME",  "Spread": "KXMLSSPREAD",  "Total": "KXMLSTOTAL"},
     "LIGAMX": {"Moneyline": "KXLIGAMXGAME", "Spread": "KXLIGAMXSPREAD",
                "Total": "KXLIGAMXTOTAL"},
+    # CFB resolves team tokens structurally (no static map) — see kalshi.py.
+    "CFB":  {"Moneyline": "KXNCAAFGAME", "Spread": "KXNCAAFSPREAD",
+             "Total": "KXNCAAFTOTAL"},
     # IPL deliberately absent: Kalshi lists no per-match IPL markets.
 }
 
@@ -202,7 +205,7 @@ def prices_at(series: str, ticker: str, side: str,
     return at_pick, at_close
 
 
-def _teams_mappable(game: str) -> bool:
+def _teams_mappable(game: str, sport: str = "") -> bool:
     """Both teams must map to Kalshi tokens or the market can never resolve.
 
     Checked up front so unmapped sports are skipped cleanly rather than
@@ -213,6 +216,10 @@ def _teams_mappable(game: str) -> bool:
     from src.data.kalshi import _team_token
     if " @ " not in (game or ""):
         return False
+    # CFB tokens are derived from the live market list, not a static map, so
+    # mappability can only be judged at resolve time.
+    if (sport or "").upper() == "CFB":
+        return True
     away, home = game.split(" @ ", 1)
     return bool(_team_token(away.strip()) and _team_token(home.strip()))
 
@@ -266,7 +273,7 @@ def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
                 mt = e.get("market_type")
                 if sport not in SPORT_SERIES or mt not in SPORT_SERIES[sport]:
                     continue
-                if not _teams_mappable(e.get("game", "")):
+                if not _teams_mappable(e.get("game", ""), sport):
                     summary["unmapped"] += 1
                     continue
                 ct = _parse_iso(e.get("commence_time", ""))
@@ -291,7 +298,8 @@ def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
         modified = set()
         for path, e in todo:
             pick = _entry_to_pick(e)
-            r = resolve_pick(pick, idx, e.get("date", ""), require_quote=False)
+            r = resolve_pick(pick, idx, e.get("date", ""), require_quote=False,
+                             series_map=SPORT_SERIES.get((e.get("sport") or "").upper()))
             if not r:
                 e["kalshi_clv_attempts"] = (e.get("kalshi_clv_attempts") or 0) + 1
                 summary["unmatched"] += 1
@@ -401,7 +409,7 @@ def update_decision_log_kalshi_clv(since: str = "0000-00-00",
                 mt = e.get("market_type")
                 if sport not in SPORT_SERIES or mt not in SPORT_SERIES[sport]:
                     continue
-                if not _teams_mappable(e.get("game", "")):
+                if not _teams_mappable(e.get("game", ""), sport):
                     summary["unmapped"] += 1
                     continue
                 ct = _parse_iso(e.get("commence_time", ""))
@@ -424,7 +432,9 @@ def update_decision_log_kalshi_clv(since: str = "0000-00-00",
         modified = set()
         for i, (path, e) in enumerate(todo, 1):
             pick = _decision_entry_to_pick(e)
-            r = resolve_pick(pick, idx, e.get("date", ""), require_quote=False) if pick else None
+            r = (resolve_pick(pick, idx, e.get("date", ""), require_quote=False,
+                              series_map=SPORT_SERIES.get((e.get("sport") or "").upper()))
+                 if pick else None)
             if not r:
                 e["kalshi_clv_attempts"] = (e.get("kalshi_clv_attempts") or 0) + 1
                 summary["unmatched"] += 1

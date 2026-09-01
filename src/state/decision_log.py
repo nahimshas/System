@@ -202,7 +202,7 @@ def settle_decision_from_scores(today: date) -> int:
     score source — mirrors the shadow log's caution). Returns rows newly graded.
     """
     MAIN = {"NBA", "MLB"}
-    WATCH = {"NHL", "WNBA", "MLS", "WC", "LIGAMX"}
+    WATCH = {"NHL", "WNBA", "MLS", "WC", "LIGAMX", "CFB"}
     SUPPORTED = MAIN | WATCH
     try:
         from src.data.outcome_checker import (

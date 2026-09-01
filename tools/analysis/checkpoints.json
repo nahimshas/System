@@ -211,6 +211,22 @@
       "measurement": "python3 -m tools.analysis.clv_source_compare",
       "status": "open",
       "open_gap": "Watchlist sports (WNBA/MLS/WC/LIGAMX) get NO Kalshi CLV: kalshi.TEAM_TO_KALSHI maps MLB teams only, so those entries are skipped \u2014 deliberately WITHOUT burning a retry attempt, so they light up the moment team maps are added. Their Kalshi series exist and were verified present. LIGAMX has no Odds API CLV either (0 rows), so it is currently blind."
+    },
+    {
+      "id": "cfb_validation",
+      "title": "College football Elo-margin model \u2014 any signal at all?",
+      "created": "2026-09-01",
+      "evaluate_after": "2026-11-15",
+      "data_window_start": "2026-09-01",
+      "type": "note",
+      "rules": {
+        "min_graded_picks": 250
+      },
+      "rationale": "Added as a WATCHLIST sport Sep 1 2026. Modelled as a POINT MARGIN, not probabilities: ~134 FBS teams play ~12 games each with huge talent dispersion, so a power rating that converts to a spread is the right shape and per-game stat aggregation never gets the sample it needs. margin = elo_gap/25 + 2.6 home; P(cover) = Phi((margin+line)/16.5). || WHY IT MIGHT WORK WHERE MLB DID NOT: far more games, far less sharp attention on small matchups, and much wider dispersion to model. || WHY IT PROBABLY WILL NOT: the inputs are public, which is exactly what failed everywhere else. Elo from public results is not privileged data. || \u26d4 LIQUIDITY CEILING, measured Aug 29 2026: Kalshi CFB moneyline median spread is 8 CENTS (MLB is 1), and the spread/total books show median open interest of ZERO with 16-18c spreads. Only marquee games have real depth. So even a working model is actionable on a handful of games a week \u2014 this exists to answer 'is there signal', NOT 'can we bet it'. Do not propose graduating CFB to budget on model results alone; the books have to be there too.",
+      "on_pass": "If Kalshi CLV >= 0 over >= 250 graded picks AND positive in both halves of a time split: report it, then check per-game liquidity BEFORE proposing any budget role. A signal in unbettable markets is a finding, not an edge.",
+      "on_fail": "Retire or keep as a display curiosity. A CFB failure alongside MLB's would be further evidence the limit is our public-data inputs rather than the sport chosen \u2014 which is the same conclusion the F5 checkpoint is testing.",
+      "open_gap": "Totals are deliberately NOT modelled (need a pace x efficiency model, and they are the worst-priced CFB market on Kalshi). SP+ deferred by user decision: it is famous and public, so the market already prices it \u2014 worth considering only as a BASELINE to compare our rating against, never as the model itself.",
+      "status": "open"
     }
   ]
 }
