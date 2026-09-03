@@ -1817,6 +1817,10 @@ window._tabDots = {
   analytics: false
 };
 // Sport tabs that have picks in today's report — used to auto-set visibility.
+{# ⚠️ KEEP IN SYNC WITH window._tabDots ABOVE AND TABS_META_ALL BELOW.
+   _tabDots only draws the dot; THIS list drives auto show/hide. CFB was added
+   to _tabDots but not here, so its tab stayed hidden all day despite having
+   picks — the tab existed, rendered, and was unreachable. #}
 window._srvTabsWithPicks = [{% for k,v in [
   ('nba',  report.nba_top_singles or report.nba_props),
   ('mlb',  report.mlb_top_singles or report.mlb_props),
@@ -1826,7 +1830,8 @@ window._srvTabsWithPicks = [{% for k,v in [
   ('nfl',  report.nfl_top_singles),
   ('mls',  report.mls_watchlist),
   ('wc',   report.wc_watchlist),
-  ('ligamx', report.ligamx_watchlist)
+  ('ligamx', report.ligamx_watchlist),
+  ('cfb',  report.cfb_watchlist)
 ] if v %}"{{ k }}",{% endfor %}];
 window._reportDate = "{{ report.run_date_iso }}";
 </script>

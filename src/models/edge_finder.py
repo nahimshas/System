@@ -4786,7 +4786,7 @@ def analyze_cfb_game(
     from src.config import (
         CFB_ELO_TO_POINTS, CFB_HOME_ADV_POINTS, CFB_MARGIN_STD,
         CFB_CRED_CAP, CFB_MIN_ELO_GAMES, CFB_WARMSTART_RAMP_GAMES, MIN_EDGE,
-        CFB_MAX_MARGIN_DISAGREE, CFB_MIN_RATED_GAMES,
+        CFB_MAX_MARGIN_DISAGREE, CFB_MIN_RATED_GAMES, CFB_LEAGUE_AVG_TOTAL,
     )
     from src.data.cfb_stats import rating_for
     from scipy.stats import norm as _norm
@@ -4815,25 +4815,45 @@ def analyze_cfb_game(
     # gap until enough games exist, rather than trusting a regressed number.
     played = min(n_home, n_away)
     ramp = min(1.0, (played + 1) / float(max(1, CFB_WARMSTART_RAMP_GAMES) + 1))
-    elo_gap = (r_home - r_away) * ramp
+    # r_home / r_away are SRS ratings IN POINTS, so the gap is already a margin.
+    # There is no Elo->points conversion here any more: that conversion was
+    # miscalibrated ~8x on Sep 3 2026 and produced cap-pinned picks on every
+    # game. A rating fitted to actual scoring margins cannot drift that way.
+    rating_gap = (r_home - r_away) * ramp
 
     neutral = bool(game.get("neutral_site"))
     hfa = 0.0 if neutral else CFB_HOME_ADV_POINTS
-    margin = elo_gap / CFB_ELO_TO_POINTS + hfa
+    margin = rating_gap + hfa
     stats_available = played >= CFB_MIN_ELO_GAMES
 
+    _sp_pre = game.get("spread") or {}
+    market_margin_display = (-float(_sp_pre["home_spread"])
+                             if _sp_pre.get("home_spread") is not None else None)
+
     signals: List[str] = [
-        f"Elo {r_home:.0f} vs {r_away:.0f} → projected margin "
-        f"{margin:+.1f} for {home if margin >= 0 else away}",
+        f"Power ratings {r_home:+.1f} vs {r_away:+.1f} (points vs average) → "
+        f"projected margin {margin:+.1f} for {home if margin >= 0 else away}",
     ]
     if not stats_available:
         signals.append(f"Early season — only {played} rated game(s), gap shrunk {ramp:.0%}")
     if neutral:
         signals.append("Neutral site — no home advantage applied")
 
+    # Card parity with the other sports: the template renders a teal, expandable
+    # "Model projected score" line, so emit one. CFB has no totals model, so the
+    # score comes from the projected MARGIN plus a league-average total — stated
+    # on the card so it is never mistaken for a totals view.
+    _fav, _dog = (home, away) if margin >= 0 else (away, home)
+    _half = CFB_LEAGUE_AVG_TOTAL / 2.0
     research = [
-        f"Projected score margin: {home} by {margin:.1f}" if margin >= 0
-        else f"Projected score margin: {away} by {abs(margin):.1f}",
+        f"Model projected score: {_fav} {_half + abs(margin) / 2.0:.0f} — "
+        f"{_dog} {_half - abs(margin) / 2.0:.0f}",
+        (f"Projected margin: {_fav} by {abs(margin):.1f} "
+         f"(market line implies {abs(market_margin_display):.1f})"
+         if market_margin_display is not None
+         else f"Projected margin: {_fav} by {abs(margin):.1f}"),
+        f"Rating confidence: {played} rated game(s) — projected score assumes a "
+        f"league-average {CFB_LEAGUE_AVG_TOTAL:.0f}-point total (totals are not modelled)",
     ]
 
     # ── SANITY GATE ────────────────────────────────────────────────────────
@@ -4915,8 +4935,8 @@ def analyze_cfb_game(
         ]
 
     _stamp_decision(game, _min, {
-        "cfb_elo_home": r_home, "cfb_elo_away": r_away,
-        "cfb_elo_gap_raw": r_home - r_away, "cfb_elo_gap_ramped": elo_gap,
+        "cfb_srs_home": r_home, "cfb_srs_away": r_away,
+        "cfb_rating_gap_raw": r_home - r_away, "cfb_rating_gap_ramped": rating_gap,
         "cfb_games_home": n_home, "cfb_games_away": n_away,
         "cfb_projected_margin": margin, "cfb_ramp": ramp,
         "cfb_neutral_site": neutral,

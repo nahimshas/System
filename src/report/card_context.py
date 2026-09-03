@@ -86,6 +86,13 @@ _CONTEXT_PRIORITY: Dict[str, List[re.Pattern]] = {
     # 5. Injuries                          (roster health)
     # 6. Edge signals                      (why we differ from market)
     # First-5-innings: starter-driven, no bullpen/umpire/weather noise.
+    "CFB": [
+        re.compile(r"^Model projected score"),              # 0 projected score
+        re.compile(r"^Projected margin"),                   # 1 the margin itself
+        re.compile(r"^Elo "),                               # 2 the ratings behind it
+        re.compile(r"^Rating confidence"),                  # 3 how much to trust them
+        re.compile(r"^Neutral site"),                       # 4 venue note
+    ],
     "MLB_F5": [
         re.compile(r"^Model projected score"),              # 0 projected 5-inning score
         re.compile(r"^F5 starter edge"),                    # 1 the pitching gap
@@ -895,6 +902,51 @@ def _f5_narrative(pick: str, bet_type: str, signals: List[str],
     return (out[0].upper() + out[1:] + ".") if out else ""
 
 
+def _cfb_narrative(pick: str, bet_type: str, signals: List[str],
+                   research: List[str], edge: float) -> str:
+    """Plain-English narrative for a college-football card.
+
+    CFB is a MARGIN model, so the story is always "how many points apart do we
+    think these teams are, and how does that compare to the line". The rating
+    caveat is stated explicitly because early-season CFB ratings are the least
+    trustworthy inputs in the system.
+    """
+    joined = " | ".join(list(signals) + list(research))
+    bits: List[str] = []
+
+    m = re.search(r"projected margin ([+-]?[\d.]+) for (.+?)(?:\s*\||$)", joined)
+    if m:
+        bits.append(f"the model makes {m.group(2).strip()} about "
+                    f"{abs(float(m.group(1))):.0f} points better here")
+
+    m2 = re.search(r"Elo (\d+) vs (\d+)", joined)
+    if m2:
+        gap = abs(int(m2.group(1)) - int(m2.group(2)))
+        bits.append(f"power ratings differ by {gap} Elo")
+
+    if re.search(r"Early season", joined):
+        m3 = re.search(r"only (\d+) rated game", joined)
+        n = m3.group(1) if m3 else "few"
+        bits.append(f"ratings still lean on last season's regressed prior "
+                    f"({n} games in) so the gap is deliberately damped")
+
+    if re.search(r"Neutral site", joined):
+        bits.append("neutral site, so no home-field points are applied")
+
+    bt = (bet_type or "").lower()
+    if "spread" in bt:
+        bits.append("this bets the margin, not the winner")
+    else:
+        bits.append("straight winner")
+
+    bits.append("College football is WATCHLIST ONLY — no money is allocated, and "
+                "the books for most college games are too thin to bet even if the "
+                "model is right")
+
+    out = "; ".join(b for b in bits if b)
+    return (out[0].upper() + out[1:] + ".") if out else ""
+
+
 def build_card_context(
     sport: str,
     pick: str,
@@ -932,6 +984,8 @@ def build_card_context(
         narrative = _ipl_narrative(pick, signals, research, edge)
     elif sport == "MLS":
         narrative = _mls_narrative(pick, bet_type, signals, research, edge)
+    elif sport == "CFB":
+        narrative = _cfb_narrative(pick, bet_type, signals, research, edge)
     else:
         narrative = ""
 

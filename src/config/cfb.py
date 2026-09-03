@@ -75,3 +75,9 @@ CFB_MAX_MARGIN_DISAGREE: float = 10.0
 # Minimum rated games (this season or prior) before a team's rating is trusted
 # enough to bet against a market line at all.
 CFB_MIN_RATED_GAMES: int = 4
+
+# League-average FBS combined points, used ONLY to turn a projected margin into
+# a displayable score line on the card. We do NOT model totals (see above), so
+# this is a presentation assumption and the card says so — it must never feed a
+# totals pick.
+CFB_LEAGUE_AVG_TOTAL: float = 52.0

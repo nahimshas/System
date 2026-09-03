@@ -38,7 +38,7 @@ _ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/college-football
 _TIMEOUT = 25
 # ESPN group 80 = FBS. Without it the scoreboard includes FCS-only slates.
 _FBS_GROUP = 80
-_SCHEMA = 1
+_SCHEMA = 2   # v2 stores raw results + SRS ratings
 
 
 def canon(name: str) -> str:
@@ -60,6 +60,7 @@ def _load_state() -> Dict:
     except Exception as e:
         logger.warning(f"CFB Elo state unreadable: {e}")
     return {"schema": _SCHEMA, "elo": {}, "games": {}, "processed": [],
+            "results": [], "srs": {}, "srs_prior": {},
             "season": None, "last_scan": None}
 
 
@@ -221,9 +222,42 @@ def refresh_cfb_elo(today: date, bootstrap_days: int = 430) -> Dict:
         _regress_for_new_season(state, season)
         applied = _apply(state, this_season_games)
 
+        # ── Margin ratings (the ones we actually predict with) ─────────────
+        # Keep raw results so SRS can be refitted every run; Elo is retained
+        # only as a secondary signal.
+        seen_ids = {r.get("id") for r in state.get("results", [])}
+        for g in games:
+            if g["id"] not in seen_ids:
+                state.setdefault("results", []).append(g)
+                seen_ids.add(g["id"])
+        # Drop anything older than two seasons — keeps the file bounded.
+        cutoff = f"{season - 1}-07-01"
+        state["results"] = [r for r in state["results"] if r.get("date", "") >= cutoff]
+
+        prior_rows = [r for r in state["results"]
+                      if _season_of(date.fromisoformat(r["date"])) < season]
+        this_rows = [r for r in state["results"]
+                     if _season_of(date.fromisoformat(r["date"])) >= season]
+
+        # Last season's SRS, regressed, becomes this season's prior.
+        from src.config import CFB_PRIOR_REGRESSION
+        prior_srs = compute_srs(prior_rows) if prior_rows else {}
+        priors = {t: v * CFB_PRIOR_REGRESSION for t, v in prior_srs.items()}
+        state["srs_prior"] = priors
+        state["srs"] = compute_srs(this_rows, priors=priors) if this_rows else dict(priors)
+
         state["last_scan"] = today.isoformat()
         _save_state(state)
-        logger.info(f"CFB Elo: {len(state['elo'])} teams, {applied} new result(s)")
+        srs = state.get("srs") or {}
+        spread = (max(srs.values()) - min(srs.values())) if srs else 0.0
+        logger.info(f"CFB ratings: {len(srs)} teams, {applied} new result(s), "
+                    f"SRS spread {spread:.1f} pts "
+                    f"({len(this_rows)} games this season, {len(prior_rows)} prior)")
+        if srs and spread < 30.0:
+            logger.warning(
+                f"CFB SRS spread is only {spread:.1f} points — too compressed to "
+                f"express real lines (they reach 45). Picks will be gated out; "
+                f"this is the Sep 3 2026 failure mode, not a silent one.")
     except Exception as e:
         logger.error(f"CFB Elo refresh failed (non-fatal): {e}")
     return state
@@ -233,25 +267,98 @@ def get_cfb_context(today: date) -> Dict[str, Any]:
     """{'elo': {...}, 'games': {...}} for the analyzer. Never raises."""
     try:
         state = refresh_cfb_elo(today)
-        return {"elo": state.get("elo", {}), "games": state.get("games", {})}
+        return {"elo": state.get("elo", {}), "games": state.get("games", {}),
+                "srs": state.get("srs", {})}
     except Exception as e:
         logger.error(f"CFB context failed: {e}")
-        return {"elo": {}, "games": {}}
+        return {"elo": {}, "games": {}, "srs": {}}
 
 
 def rating_for(name: str, ctx: Dict[str, Any]) -> Tuple[Optional[float], int]:
-    """(rating, games_played) for a team, or (None, 0) when unknown.
+    """(rating IN POINTS, games_played), or (None, 0) when unknown.
 
-    Unknown means FCS or a name we cannot map — either way the game must not be
-    analysed rather than silently defaulting to an average rating.
+    The rating is an SRS margin rating, so it is already in points and the
+    caller needs no Elo->points conversion — that conversion is exactly what was
+    miscalibrated by ~8x on Sep 3 2026.
+
+    Unknown means FCS or an unmappable name; the game must be SKIPPED rather
+    than silently defaulting to average, which would manufacture a huge phantom
+    edge against a real opponent.
     """
-    from src.config import CFB_ELO_DEFAULT
-    elo = ctx.get("elo", {})
+    srs = ctx.get("srs") or {}
+    counts = ctx.get("games", {})
     k = canon(name)
-    if k in elo:
-        return float(elo[k]), int(ctx.get("games", {}).get(k, 0))
-    # tolerate minor naming differences (St/State, mascot suffixes)
-    for key in elo:
+    if k in srs:
+        return float(srs[k]), int(counts.get(k, 0))
+    for key in srs:
         if key.startswith(k) or k.startswith(key):
-            return float(elo[key]), int(ctx.get("games", {}).get(key, 0))
+            return float(srs[key]), int(counts.get(key, 0))
     return None, 0
+
+# ---------------------------------------------------------------------------
+# Margin ratings (SRS) — replaces the Elo scale for prediction
+# ---------------------------------------------------------------------------
+#
+# WHY THIS EXISTS. Win/loss Elo threw away the only signal college football
+# actually gives you: HOW MUCH teams win by. Measured Sep 3 2026, one replayed
+# season of Elo spanned just 372 points — a maximum expressible margin of 14.9
+# — while real lines reach 45. Against the market's own lines the implied
+# conversion was ~3 Elo per point versus our constant of 25, i.e. ratings
+# compressed roughly 8x. Every pick came out pinned to the credibility cap.
+#
+# A Simple Rating System solves that structurally rather than by retuning:
+#
+#     rating_i = mean over i's games of (margin_ij + rating_j)
+#
+# solved iteratively. Ratings come out IN POINTS, so there is no Elo->points
+# conversion left to miscalibrate, and the scale naturally spans the real range
+# because it is fitted to actual scoring margins.
+#
+# Margins are capped before fitting: a 63-0 win says little more than 35-0, and
+# uncapped blowouts would let a few cupcake games dominate a rating.
+
+SRS_MARGIN_CAP = 28.0
+SRS_ITERATIONS = 25
+# Pseudo-games of prior-season rating blended in, so a team with two games is
+# not rated purely on two games.
+SRS_PRIOR_WEIGHT = 4.0
+
+
+def compute_srs(games: List[Dict], priors: Optional[Dict[str, float]] = None,
+                home_adv: float = None) -> Dict[str, float]:
+    """Opponent-adjusted average scoring margin, in POINTS. Never raises."""
+    from src.config import CFB_HOME_ADV_POINTS
+    hfa = CFB_HOME_ADV_POINTS if home_adv is None else home_adv
+    priors = priors or {}
+    try:
+        # Neutralise home field, then cap, so a rating reflects true strength.
+        rows: Dict[str, List[Tuple[str, float]]] = {}
+        for g in games:
+            hk, ak = canon(g["home"]), canon(g["away"])
+            if not hk or not ak:
+                continue
+            m = float(g["home_score"] - g["away_score"])
+            if not g.get("neutral"):
+                m -= hfa
+            m = max(-SRS_MARGIN_CAP, min(SRS_MARGIN_CAP, m))
+            rows.setdefault(hk, []).append((ak, m))
+            rows.setdefault(ak, []).append((hk, -m))
+        if not rows:
+            return {}
+
+        rating = {t: float(priors.get(t, 0.0)) for t in rows}
+        for _ in range(SRS_ITERATIONS):
+            nxt = {}
+            for t, opps in rows.items():
+                acc = sum(m + rating.get(o, 0.0) for o, m in opps)
+                n = len(opps)
+                # Shrink toward the prior when a team has few games.
+                p = float(priors.get(t, 0.0))
+                nxt[t] = (acc + SRS_PRIOR_WEIGHT * p) / (n + SRS_PRIOR_WEIGHT)
+            # Re-centre so the average team is 0 — keeps the scale anchored.
+            mean = sum(nxt.values()) / len(nxt)
+            rating = {t: v - mean for t, v in nxt.items()}
+        return rating
+    except Exception as e:
+        logger.error(f"SRS computation failed (non-fatal): {e}")
+        return {}
