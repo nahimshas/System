@@ -104,11 +104,18 @@ def test_unrated_opponent_is_skipped_entirely():
 def test_early_season_shrinks_the_rating_gap():
     """Week 1 ratings are a regressed prior, not evidence. The gap must be
     damped until real games accumulate."""
-    wk1 = analyze_cfb_game(_game(mk_home=0.30), _ctx(1800, 1400, games=0), min_edge=0.0)
-    late = analyze_cfb_game(_game(mk_home=0.30), _ctx(1800, 1400, games=10), min_edge=0.0)
-    h1 = next(r for r in wk1 if r.pick == "Home U").model_prob_raw
-    h2 = next(r for r in late if r.pick == "Home U").model_prob_raw
-    assert h1 < h2, "early-season gap was not shrunk"
+    from src.config import CFB_MIN_RATED_GAMES, CFB_WARMSTART_RAMP_GAMES
+    assert CFB_WARMSTART_RAMP_GAMES > CFB_MIN_RATED_GAMES, \
+        "ramp must outlast the min-games gate or it never damps a live pick"
+    # Both fixtures clear the min-games gate; only the ramp differs.
+    early = _game(home_spread=-6.5, mk_home=0.30)
+    late_g = _game(home_spread=-6.5, mk_home=0.30)
+    analyze_cfb_game(early, _ctx(1620, 1500, games=CFB_MIN_RATED_GAMES), min_edge=0.0)
+    analyze_cfb_game(late_g, _ctx(1620, 1500, games=20), min_edge=0.0)
+    assert early["_decision"]["features"]["cfb_ramp"] < 1.0
+    assert late_g["_decision"]["features"]["cfb_ramp"] == 1.0
+    assert (early["_decision"]["features"]["cfb_projected_margin"]
+            < late_g["_decision"]["features"]["cfb_projected_margin"])
 
 
 def test_spread_probability_uses_the_line():
@@ -117,8 +124,9 @@ def test_spread_probability_uses_the_line():
     Read the probabilities off the DECISION LOG, which records both sides
     regardless of edge — an unfavourable side is correctly never emitted as a
     pick, so asserting on recs would only test the edge filter."""
-    gp = _game(home_spread=7.5, mk_home=0.5)
-    gm = _game(home_spread=-7.5, mk_home=0.5)
+    # Lines kept inside CFB_MAX_MARGIN_DISAGREE so the sanity gate lets them through.
+    gp = _game(home_spread=5.5, mk_home=0.5)
+    gm = _game(home_spread=-5.5, mk_home=0.5)
     analyze_cfb_game(gp, _ctx(1500, 1500), min_edge=0.0)
     analyze_cfb_game(gm, _ctx(1500, 1500), min_edge=0.0)
     def _home_cover(g):
@@ -226,3 +234,49 @@ def test_cfb_is_present_on_every_display_surface():
         assert marker in tpl, f"missing {marker}"
     gen = open("src/report/generator.py").read()
     assert '"cfb_watchlist":' in gen and '"has_cfb":' in gen
+
+
+class TestCfbSanityGate:
+    """Sep 3 2026: the model shipped and produced GARBAGE on its first slate.
+
+    All five picks came out at EXACTLY +8.0% edge — the credibility cap value —
+    on +26.5 to +42.5 underdogs the model believed were near-even. Root cause:
+    week-1 Elo spanned only 372 points (max expressible margin 14.9) while the
+    lines reached 42.5, so the model literally could not represent the game and
+    the cap clamped every pick to its ceiling.
+
+    A cap firing on 100% of picks is a symptom, not a safety net. These tests
+    encode the gate that catches it.
+    """
+
+    def test_wild_disagreement_with_the_market_produces_nothing(self):
+        ctx = _ctx(1500, 1490, games=8)
+        g = _game(home_spread=-31.5, mk_home=0.95)
+        assert analyze_cfb_game(g, ctx, min_edge=0.0) == []
+
+    def test_reasonable_disagreement_still_produces_picks(self):
+        ctx = _ctx(1500, 1490, games=8)
+        g = _game(home_spread=-3.5, mk_home=0.5)
+        assert analyze_cfb_game(g, ctx, min_edge=0.0)
+
+    def test_gate_is_symmetric(self):
+        """Being wildly wrong in the other direction is equally disqualifying."""
+        ctx = _ctx(1900, 1400, games=8)   # model: home by 22
+        g = _game(home_spread=2.5, mk_home=0.5)  # market: home is a 2.5 dog
+        assert analyze_cfb_game(g, ctx, min_edge=0.0) == []
+
+    def test_too_few_rated_games_produces_nothing(self):
+        """Early-season ratings are a regressed prior, not evidence."""
+        from src.config import CFB_MIN_RATED_GAMES
+        ctx = _ctx(1600, 1500, games=CFB_MIN_RATED_GAMES - 1)
+        assert analyze_cfb_game(_game(home_spread=-4.5), ctx, min_edge=0.0) == []
+
+    def test_the_cap_must_not_be_the_thing_holding_picks_in_range(self):
+        """If every emitted pick sits at exactly the cap, the model is
+        overconfident and the gate has failed."""
+        from src.config import CFB_CRED_CAP
+        ctx = _ctx(1560, 1500, games=8)
+        recs = analyze_cfb_game(_game(home_spread=-2.5, mk_home=0.48), ctx, min_edge=0.0)
+        at_cap = [r for r in recs if abs(r.edge - CFB_CRED_CAP) < 1e-6]
+        assert len(at_cap) < len(recs) or not recs, \
+            "every pick pinned to the cap — the model is not calibrated"

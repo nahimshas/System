@@ -4786,6 +4786,7 @@ def analyze_cfb_game(
     from src.config import (
         CFB_ELO_TO_POINTS, CFB_HOME_ADV_POINTS, CFB_MARGIN_STD,
         CFB_CRED_CAP, CFB_MIN_ELO_GAMES, CFB_WARMSTART_RAMP_GAMES, MIN_EDGE,
+        CFB_MAX_MARGIN_DISAGREE, CFB_MIN_RATED_GAMES,
     )
     from src.data.cfb_stats import rating_for
     from scipy.stats import norm as _norm
@@ -4834,6 +4835,23 @@ def analyze_cfb_game(
         f"Projected score margin: {home} by {margin:.1f}" if margin >= 0
         else f"Projected score margin: {away} by {abs(margin):.1f}",
     ]
+
+    # ── SANITY GATE ────────────────────────────────────────────────────────
+    # The market's spread is its own margin estimate. If ours is nowhere near
+    # it, we do not have an edge — we have an uninformative rating, and the
+    # credibility cap would clamp every pick to exactly the cap value.
+    _sp_probe = game.get("spread") or {}
+    _line_probe = _sp_probe.get("home_spread")
+    if _line_probe is not None:
+        market_margin = -float(_line_probe)
+        if abs(margin - market_margin) > CFB_MAX_MARGIN_DISAGREE:
+            logger.info(
+                f"CFB skip (margin disagreement): {label} — model {margin:+.1f} vs "
+                f"market {market_margin:+.1f} (>{CFB_MAX_MARGIN_DISAGREE:.0f} pts apart)")
+            return recs
+    if played < CFB_MIN_RATED_GAMES:
+        logger.debug(f"CFB skip (only {played} rated game(s)): {label}")
+        return recs
 
     books = game.get("bookmakers", [])
     markets_for_log: List[tuple] = []

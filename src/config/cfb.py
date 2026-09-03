@@ -45,7 +45,9 @@ CFB_MARGIN_STD: float = 16.5
 # this share of its distance from average.
 CFB_PRIOR_REGRESSION: float = 0.60
 # Games into the new season before the prior stops being blended out.
-CFB_WARMSTART_RAMP_GAMES: int = 4
+# Must exceed CFB_MIN_RATED_GAMES, or the ramp completes exactly when betting
+# becomes allowed and never damps a single live pick.
+CFB_WARMSTART_RAMP_GAMES: int = 6
 
 # ── Safety ─────────────────────────────────────────────────────────────────
 # Credibility cap: how far the model may disagree with the market. Tighter than
@@ -55,3 +57,21 @@ CFB_CRED_CAP: float = 0.08
 # Ignore FCS/non-FBS opponents — their ratings are meaningless and the games are
 # unpriced blowouts.
 CFB_MIN_ELO_GAMES: int = 3
+
+
+# ── Sanity gate (added Sep 3 2026 after the model shipped garbage) ─────────
+# The market's spread IS its estimate of the margin. If our projected margin
+# disagrees with it by more than this, we are not finding an edge — we are
+# failing to understand the game, and the credibility cap will silently clamp
+# the result to exactly the cap on every pick.
+#
+# WHAT HAPPENED: week-1 ratings spanned only 372 Elo (max expressible margin
+# 14.9 points) while real CFB lines reach 45. Every pick came out at EXACTLY
+# +8.0% edge — the cap value — on +26.5 to +42.5 underdogs the model believed
+# were near-even. A cap that fires on 100% of picks is not a safety net, it is
+# a symptom.
+CFB_MAX_MARGIN_DISAGREE: float = 10.0
+
+# Minimum rated games (this season or prior) before a team's rating is trusted
+# enough to bet against a market line at all.
+CFB_MIN_RATED_GAMES: int = 4
