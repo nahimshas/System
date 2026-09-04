@@ -1,5 +1,5 @@
 {
-  "computed_at": "2026-09-03T15:29:45.554147+00:00",
+  "computed_at": "2026-09-04T15:29:31.717798+00:00",
   "thresholds": {
     "phase1_min_n": 30,
     "phase2_min_n": 50,
@@ -7,6 +7,14 @@
     "phase2_gate": -0.01
   },
   "markets": [
+    {
+      "sport": "CFB",
+      "market_type": "Moneyline",
+      "n": 5,
+      "avg_clv": 0.0013,
+      "phase": 0,
+      "gated": false
+    },
     {
       "sport": "IPL",
       "market_type": "Moneyline",
@@ -18,7 +26,7 @@
     {
       "sport": "MLB",
       "market_type": "F5 Moneyline",
-      "n": 22,
+      "n": 24,
       "avg_clv": 0.0042,
       "phase": 0,
       "gated": false
@@ -26,15 +34,15 @@
     {
       "sport": "MLB",
       "market_type": "F5 Spread",
-      "n": 279,
-      "avg_clv": -0.0021,
+      "n": 287,
+      "avg_clv": -0.0023,
       "phase": 2,
       "gated": false
     },
     {
       "sport": "MLB",
       "market_type": "F5 Total",
-      "n": 183,
+      "n": 186,
       "avg_clv": -0.0008,
       "phase": 2,
       "gated": false
@@ -42,7 +50,7 @@
     {
       "sport": "MLB",
       "market_type": "Moneyline",
-      "n": 1096,
+      "n": 1104,
       "avg_clv": 0.0013,
       "phase": 2,
       "gated": false
@@ -50,7 +58,7 @@
     {
       "sport": "MLB",
       "market_type": "Spread",
-      "n": 1003,
+      "n": 1012,
       "avg_clv": -0.0017,
       "phase": 2,
       "gated": false
@@ -58,7 +66,7 @@
     {
       "sport": "MLB",
       "market_type": "Total",
-      "n": 631,
+      "n": 633,
       "avg_clv": -0.008,
       "phase": 2,
       "gated": true
