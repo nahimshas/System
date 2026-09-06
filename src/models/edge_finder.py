@@ -4788,7 +4788,7 @@ def analyze_cfb_game(
         CFB_CRED_CAP, CFB_MIN_ELO_GAMES, CFB_WARMSTART_RAMP_GAMES, MIN_EDGE,
         CFB_MAX_MARGIN_DISAGREE, CFB_MIN_RATED_GAMES, CFB_LEAGUE_AVG_TOTAL,
     )
-    from src.data.cfb_stats import rating_for
+    from src.data.cfb_stats import rating_for, effective_games
     from scipy.stats import norm as _norm
 
     _min = MIN_EDGE if min_edge is None else min_edge
@@ -4813,7 +4813,9 @@ def analyze_cfb_game(
 
     # Early season: the prior is all we have and it is weak. Shrink the rating
     # gap until enough games exist, rather than trusting a regressed number.
-    played = min(n_home, n_away)
+    # Evidence behind the rating INCLUDING the prior season — counting only
+    # current-season games skipped every game in September (see effective_games).
+    played = min(effective_games(home, cfb_ctx), effective_games(away, cfb_ctx))
     ramp = min(1.0, (played + 1) / float(max(1, CFB_WARMSTART_RAMP_GAMES) + 1))
     # r_home / r_away are SRS ratings IN POINTS, so the gap is already a margin.
     # There is no Elo->points conversion here any more: that conversion was
@@ -4860,6 +4862,26 @@ def analyze_cfb_game(
     # The market's spread is its own margin estimate. If ours is nowhere near
     # it, we do not have an edge — we have an uninformative rating, and the
     # credibility cap would clamp every pick to exactly the cap value.
+    def _skip(reason: str):
+        """Record the game in the decision log, THEN skip.
+
+        A gate that returns before _stamp_decision leaves no archive row, so
+        the games we refused become invisible — we could not later ask "what
+        did we skip, and would it have won?". That is exactly what the archive
+        exists for, and it silently stopped recording CFB for three days.
+        """
+        _stamp_decision(game, _min, {
+            "cfb_srs_home": r_home, "cfb_srs_away": r_away,
+            "cfb_rating_gap_raw": r_home - r_away,
+            "cfb_games_home": n_home, "cfb_games_away": n_away,
+            "cfb_effective_games": played,
+            "cfb_projected_margin": margin, "cfb_ramp": ramp,
+            "cfb_neutral_site": neutral,
+            "cfb_skipped": reason,
+            "stats_available": stats_available,
+        }, [], recs)
+        return recs
+
     _sp_probe = game.get("spread") or {}
     _line_probe = _sp_probe.get("home_spread")
     if _line_probe is not None:
@@ -4868,10 +4890,10 @@ def analyze_cfb_game(
             logger.info(
                 f"CFB skip (margin disagreement): {label} — model {margin:+.1f} vs "
                 f"market {market_margin:+.1f} (>{CFB_MAX_MARGIN_DISAGREE:.0f} pts apart)")
-            return recs
+            return _skip("margin_disagreement")
     if played < CFB_MIN_RATED_GAMES:
         logger.debug(f"CFB skip (only {played} rated game(s)): {label}")
-        return recs
+        return _skip("insufficient_rating_evidence")
 
     books = game.get("bookmakers", [])
     markets_for_log: List[tuple] = []

@@ -367,3 +367,60 @@ def test_tab_autoshow_list_includes_every_sport_with_a_tab():
     for key in ("nba", "mlb", "ipl", "nhl", "wnba", "nfl", "mls", "wc", "ligamx", "cfb"):
         assert f"'{key}'" in srv.group(1), f"{key} missing from the auto-show list"
         assert f"{key}:" in dots.group(1), f"{key} missing from the dot list"
+
+
+class TestRatingEvidenceAndArchive:
+    """Sep 6 2026: CFB produced nothing for three days, for two reasons that
+    had nothing to do with the model being cautious."""
+
+    def test_prior_season_counts_as_evidence(self):
+        """The gate counted only CURRENT-season games, so in week 1 every team
+        looked unrated and 100% of games were skipped — 0 of 179 teams had 4+
+        games, 168 had exactly one — even though ratings were fitted on 942
+        prior-season results."""
+        from src.data.cfb_stats import effective_games, canon
+        from src.config import CFB_PRIOR_GAMES_CREDIT, CFB_MIN_RATED_GAMES
+        ctx = {"games": {canon("Home U"): 1}, "prior_rated": {canon("Home U")}}
+        assert effective_games("Home U", ctx) == 1 + CFB_PRIOR_GAMES_CREDIT
+        assert effective_games("Home U", ctx) >= CFB_MIN_RATED_GAMES, \
+            "a team with a full prior season must clear the gate in week 1"
+
+    def test_no_prior_and_no_games_is_still_gated(self):
+        from src.data.cfb_stats import effective_games
+        assert effective_games("Nobody", {"games": {}, "prior_rated": set()}) == 0
+
+    def test_skipped_games_are_still_recorded(self):
+        """A gate that returns before _stamp_decision makes the games we refused
+        INVISIBLE — we could never ask 'what did we skip, would it have won?'.
+        CFB silently stopped writing decision rows for three days."""
+        ctx = {"srs": {canon("Home U"): 0.0, canon("Away U"): 0.0},
+               "games": {canon("Home U"): 9, canon("Away U"): 9},
+               "prior_rated": set()}
+        g = _game(home_spread=-31.5, mk_home=0.5)
+        assert analyze_cfb_game(g, ctx, min_edge=0.0) == []
+        assert "_decision" in g, "skipped game left no archive row"
+        assert g["_decision"]["features"]["cfb_skipped"] == "margin_disagreement"
+
+    def test_skip_reason_is_recorded_for_thin_evidence_too(self):
+        from src.config import CFB_MIN_RATED_GAMES
+        ctx = {"srs": {canon("Home U"): 4.0, canon("Away U"): 0.0},
+               "games": {canon("Home U"): 0, canon("Away U"): 0},
+               "prior_rated": set()}
+        g = _game(home_spread=-6.5, mk_home=0.5)
+        analyze_cfb_game(g, ctx, min_edge=0.0)
+        assert g["_decision"]["features"]["cfb_skipped"] == "insufficient_rating_evidence"
+
+
+def test_margin_cap_is_sized_for_college_not_the_nfl():
+    """28 is an NFL cap. Measured on a 942-game prior season: cap 28 gives 37.7
+    points of spread, cap 40 gives 45.1, while market lines reach 42.5."""
+    from src.data.cfb_stats import SRS_MARGIN_CAP
+    assert SRS_MARGIN_CAP >= 35, "cap too tight to express real CFB talent gaps"
+
+
+def test_prior_regression_does_not_double_shrink():
+    """SRS_PRIOR_WEIGHT already shrinks for sample size; CFB_PRIOR_REGRESSION is
+    only for roster turnover. At 0.60 the two compounded and left 22.6 points of
+    usable spread against lines reaching 42.5."""
+    from src.config import CFB_PRIOR_REGRESSION
+    assert CFB_PRIOR_REGRESSION >= 0.75

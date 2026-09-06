@@ -43,7 +43,12 @@ CFB_MARGIN_STD: float = 16.5
 # CFB rosters turn over far harder than the NFL's, so last season's rating is a
 # weaker prior. Regress toward the mean at each season boundary: a team keeps
 # this share of its distance from average.
-CFB_PRIOR_REGRESSION: float = 0.60
+# NOTE: SRS_PRIOR_WEIGHT already shrinks a rating toward its prior for SAMPLE
+# size. This constant is only for ROSTER TURNOVER. At 0.60 the two compounded
+# and double-shrank the scale (measured: 22.6 pts of usable spread against
+# lines reaching 42.5). 0.80 keeps real turnover regression without the
+# double-count.
+CFB_PRIOR_REGRESSION: float = 0.80
 # Games into the new season before the prior stops being blended out.
 # Must exceed CFB_MIN_RATED_GAMES, or the ramp completes exactly when betting
 # becomes allowed and never damps a single live pick.
@@ -81,3 +86,9 @@ CFB_MIN_RATED_GAMES: int = 4
 # this is a presentation assumption and the card says so — it must never feed a
 # totals pick.
 CFB_LEAGUE_AVG_TOTAL: float = 52.0
+
+# Games of credit a team gets for having a full PRIOR season behind its rating.
+# Without this the min-games gate counted only the CURRENT season, so in week 1
+# every team looked unrated and 100% of games were skipped — even though the
+# rating was built from 942 prior-season results.
+CFB_PRIOR_GAMES_CREDIT: int = 4

@@ -268,10 +268,30 @@ def get_cfb_context(today: date) -> Dict[str, Any]:
     try:
         state = refresh_cfb_elo(today)
         return {"elo": state.get("elo", {}), "games": state.get("games", {}),
-                "srs": state.get("srs", {})}
+                "srs": state.get("srs", {}),
+                # Teams with a full prior season behind their rating. Without
+                # this the caller can only see CURRENT-season games and treats
+                # every team as unrated in September.
+                "prior_rated": set((state.get("srs_prior") or {}).keys())}
     except Exception as e:
         logger.error(f"CFB context failed: {e}")
-        return {"elo": {}, "games": {}, "srs": {}}
+        return {"elo": {}, "games": {}, "srs": {}, "prior_rated": set()}
+
+
+def effective_games(name: str, ctx: Dict[str, Any]) -> int:
+    """How much evidence stands behind a team's rating.
+
+    Current-season games PLUS a credit for having a full prior season. Counting
+    only the current season made every team look unrated in September and
+    skipped 100% of games (measured Sep 6 2026: 0 of 179 teams had 4+ games,
+    168 had exactly one), even though ratings were fitted on 942 prior results.
+    """
+    from src.config import CFB_PRIOR_GAMES_CREDIT
+    k = canon(name)
+    n = int((ctx.get("games") or {}).get(k, 0))
+    prior = ctx.get("prior_rated") or set()
+    has_prior = k in prior or any(p.startswith(k) or k.startswith(p) for p in prior)
+    return n + (CFB_PRIOR_GAMES_CREDIT if has_prior else 0)
 
 
 def rating_for(name: str, ctx: Dict[str, Any]) -> Tuple[Optional[float], int]:
@@ -317,7 +337,13 @@ def rating_for(name: str, ctx: Dict[str, Any]) -> Tuple[Optional[float], int]:
 # Margins are capped before fitting: a 63-0 win says little more than 35-0, and
 # uncapped blowouts would let a few cupcake games dominate a rating.
 
-SRS_MARGIN_CAP = 28.0
+# 28 is an NFL-appropriate cap. CFB talent gaps are far wider and a team
+# winning by 45 IS meaningfully better than one winning by 28, so capping that
+# low compresses the whole scale. Measured Sep 6 2026 on a full 942-game prior
+# season: cap 28 -> 37.7 pts of spread, cap 40 -> 45.1, uncapped -> 51.5, while
+# market lines reach 42.5. 40 keeps genuine blowout information without letting
+# a single 84-0 cupcake game define a rating.
+SRS_MARGIN_CAP = 40.0
 SRS_ITERATIONS = 25
 # Pseudo-games of prior-season rating blended in, so a team with two games is
 # not rated purely on two games.
