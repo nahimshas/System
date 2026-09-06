@@ -203,6 +203,31 @@
       "promoted_record": "76-54",
       "bankroll_drift": 0.0,
       "generated_by": "workflow"
+    },
+    {
+      "date": "2026-09-06",
+      "status": "ACTION_NEEDED",
+      "headline": "Bankroll ok, logs alive, no checkpoint decisions due.",
+      "checkpoint_verdicts": {
+        "package_health": "FAIL \u2014 If budget CLV < 0 persistently or promoted wr <= demote threshold: demote the dog_better_starter promotion and re-run the constants backtest on the fresh window.",
+        "ha_zero": "resolved",
+        "rlsig_30": "resolved",
+        "pattern_card": "FAIL \u2014 Keep the current 5-pick card with the 0.05 floor.",
+        "promo_bypass_floor": "resolved",
+        "flip_totals": "resolved",
+        "nba_reaudit": "not_due (evaluate after 2026-11-10)",
+        "era_trap_fip_bonus": "manual note \u2014 see rationale",
+        "nfl_warm_start": "not_due (evaluate after 2026-10-05)",
+        "f5_validation": "not_due (evaluate after 2026-09-14)",
+        "one_bet_per_game": "not_due (evaluate after 2026-10-05)",
+        "execution_at_bid": "not_due (evaluate after 2026-09-21)",
+        "clv_source_switch": "not_due (evaluate after 2026-09-21)",
+        "cfb_validation": "not_due (evaluate after 2026-11-15)"
+      },
+      "budget_clv_pct": -0.44,
+      "promoted_record": "89-58",
+      "bankroll_drift": -2.81,
+      "generated_by": "workflow"
     }
   ]
 }
