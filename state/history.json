@@ -19207,5 +19207,141 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-09-07",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Toronto Blue Jays @ Athletics",
+    "bet_type": "Spread",
+    "pick": "Athletics +1.5",
+    "home_team": "Athletics",
+    "away_team": "Toronto Blue Jays",
+    "edge_pct": 9.2,
+    "confidence": "HIGH",
+    "model_prob_pct": 57.1,
+    "market_prob_pct": 47.9,
+    "cost": 3.99,
+    "profit_if_win": 4.01,
+    "result": "WON",
+    "actual_pnl": 4.01,
+    "actual_home_score": 6.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-09-07",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Cincinnati Reds @ Los Angeles Dodgers",
+    "bet_type": "Moneyline",
+    "pick": "Cincinnati Reds",
+    "home_team": "Los Angeles Dodgers",
+    "away_team": "Cincinnati Reds",
+    "edge_pct": 10.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 48.9,
+    "market_prob_pct": 38.9,
+    "cost": 3.27,
+    "profit_if_win": 4.73,
+    "result": "LOST",
+    "actual_pnl": -3.27,
+    "actual_home_score": 6.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-09-07",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Arizona Diamondbacks @ Kansas City Royals",
+    "bet_type": "Spread",
+    "pick": "Kansas City Royals +1.5",
+    "home_team": "Kansas City Royals",
+    "away_team": "Arizona Diamondbacks",
+    "edge_pct": 8.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 69.8,
+    "market_prob_pct": 61.8,
+    "cost": 4.47,
+    "profit_if_win": 2.53,
+    "result": "WON",
+    "actual_pnl": 2.53,
+    "actual_home_score": 4.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-09-07",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Washington Nationals @ San Diego Padres",
+    "bet_type": "Spread",
+    "pick": "Washington Nationals +1.5",
+    "home_team": "San Diego Padres",
+    "away_team": "Washington Nationals",
+    "edge_pct": 6.8,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 60.4,
+    "market_prob_pct": 53.5,
+    "cost": 2.78,
+    "profit_if_win": 2.22,
+    "result": "WON",
+    "actual_pnl": 2.22,
+    "actual_home_score": 3.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-09-07",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Cincinnati Reds +1.5 + Athletics +1.5",
+    "bet_type": "Parlay",
+    "pick": "Cincinnati Reds +1.5 + Athletics +1.5",
+    "edge_pct": 9.5,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 36.7,
+    "market_prob_pct": 0,
+    "cost": 2.63,
+    "profit_if_win": 6.37,
+    "result": "LOST",
+    "actual_pnl": -2.63,
+    "legs": [
+      {
+        "game": "Cincinnati Reds @ Los Angeles Dodgers",
+        "pick": "Cincinnati Reds +1.5",
+        "result": "LOST"
+      },
+      {
+        "game": "Toronto Blue Jays @ Athletics",
+        "pick": "Athletics +1.5",
+        "result": "WON"
+      }
+    ]
+  },
+  {
+    "date": "2026-09-07",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Kansas City Royals +1.5 + Cincinnati Reds (ML)",
+    "bet_type": "Parlay",
+    "pick": "Kansas City Royals +1.5 + Cincinnati Reds (ML)",
+    "edge_pct": 8.8,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 32.9,
+    "market_prob_pct": 0,
+    "cost": 2.08,
+    "profit_if_win": 5.92,
+    "result": "LOST",
+    "actual_pnl": -2.08,
+    "legs": [
+      {
+        "game": "Arizona Diamondbacks @ Kansas City Royals",
+        "pick": "Kansas City Royals +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Cincinnati Reds @ Los Angeles Dodgers",
+        "pick": "Cincinnati Reds",
+        "result": "LOST"
+      }
+    ]
   }
 ]
