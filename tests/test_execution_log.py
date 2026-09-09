@@ -213,3 +213,66 @@ def test_resolve_pick_rejects_a_date_object_game_date():
             "home_team": "San Francisco Giants", "away_team": "Cincinnati Reds"}
     assert resolve_pick(pick, {"KXMLBGAME": [m]}, "2026-08-24") is not None
     assert resolve_pick(pick, {"KXMLBGAME": [m]}, datetime.date(2026, 8, 24)) is None
+
+
+class TestNflClvCoverage:
+    """NFL is a BUDGET sport — real money — and had NO CLV at all.
+
+    TEAM_TO_KALSHI held only MLB teams, so _team_token returned None for every
+    NFL side, _teams_mappable said False, and every NFL row was skipped as
+    "unmapped". The CLV governor could therefore never gate NFL, no matter how
+    badly it performed (found Sep 9 2026, week 2 of the season).
+    """
+
+    def test_every_nfl_team_maps(self):
+        from src.data.kalshi import NFL_TEAM_TO_KALSHI, _team_token
+        assert len(NFL_TEAM_TO_KALSHI) == 32
+        assert len(set(NFL_TEAM_TO_KALSHI.values())) == 32, "duplicate tokens"
+        for name in NFL_TEAM_TO_KALSHI:
+            assert _team_token(name), f"{name} does not resolve"
+
+    def test_the_ambiguous_city_pairs_stay_distinct(self):
+        """Both LA teams and both NY teams share a city — collapsing them would
+        silently resolve one team's CLV against the other's book."""
+        from src.data.kalshi import _team_token
+        assert _team_token("Los Angeles Rams") != _team_token("Los Angeles Chargers")
+        assert _team_token("New York Jets") != _team_token("New York Giants")
+
+    def test_mlb_lookup_is_unaffected(self):
+        from src.data.kalshi import _team_token
+        assert _team_token("Tampa Bay Rays") == "Tampa Bay"
+        assert _team_token("Chicago White Sox") == "Chicago WS"
+
+    def test_nfl_games_are_mappable(self):
+        from src.data.kalshi_clv import _teams_mappable
+        assert _teams_mappable("Seattle Seahawks @ Kansas City Chiefs", "NFL")
+
+    def test_event_matching_survives_inconsistent_rules_prose(self):
+        """Kalshi mixes 'Dallas vs New York G' with 'NY Giants vs LA Rams' in
+        the SAME series. A rules-text-only filter dropped 16 of 32 NFL
+        moneylines even with a correct team map, so matching pools by EVENT."""
+        from src.data.kalshi import resolve_pick
+        from src.data.kalshi_clv import SPORT_SERIES
+        ev = "KXNFLGAME-26SEP21NYGLAR"
+        prose = "wins the NY Giants vs LA Rams Pro Football game"   # abbreviated
+        a = {"ticker": ev + "-NYG", "event_ticker": ev, "yes_sub_title": "New York G",
+             "rules_primary": "If New York G " + prose,
+             "yes_bid_dollars": "0.45", "yes_ask_dollars": "0.47",
+             "open_interest_fp": "500"}
+        b = {"ticker": ev + "-LAR", "event_ticker": ev, "yes_sub_title": "Los Angeles R",
+             "rules_primary": "If Los Angeles R " + prose,
+             "yes_bid_dollars": "0.53", "yes_ask_dollars": "0.55",
+             "open_interest_fp": "500"}
+        pick = {"bet_type": "Moneyline", "pick": "New York Giants",
+                "home_team": "Los Angeles Rams", "away_team": "New York Giants"}
+        r = resolve_pick(pick, {"KXNFLGAME": [a, b]}, "2026-09-21",
+                         require_quote=False, series_map=SPORT_SERIES["NFL"])
+        assert r is not None and r["ticker"].endswith("-NYG")
+
+
+def test_performance_breakdown_is_registry_driven():
+    """A hardcoded sport list is how a graduated sport silently loses its
+    performance tile — the same class of bug that left the CFB tab unreachable."""
+    src = open("src/data/outcome_checker.py").read()
+    assert 'for sport in ("PARLAY", "MLB", "NHL", "NFL", "NBA")' not in src
+    assert "track_in_main_history" in src, "must derive tracked sports from the registry"

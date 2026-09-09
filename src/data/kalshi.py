@@ -66,6 +66,28 @@ TEAM_TO_KALSHI = {
     "Washington Nationals": "Washington",
 }
 
+# NFL (32 teams). NFL is a BUDGET sport — real money — and without this map
+# every NFL row was skipped as "unmapped", so NFL had NO CLV at all and the CLV
+# governor could never gate it. Verified against the live KXNFLGAME tokens.
+NFL_TEAM_TO_KALSHI = {
+    "Arizona Cardinals": "Arizona", "Atlanta Falcons": "Atlanta",
+    "Baltimore Ravens": "Baltimore", "Buffalo Bills": "Buffalo",
+    "Carolina Panthers": "Carolina", "Chicago Bears": "Chicago",
+    "Cincinnati Bengals": "Cincinnati", "Cleveland Browns": "Cleveland",
+    "Dallas Cowboys": "Dallas", "Denver Broncos": "Denver",
+    "Detroit Lions": "Detroit", "Green Bay Packers": "Green Bay",
+    "Houston Texans": "Houston", "Indianapolis Colts": "Indianapolis",
+    "Jacksonville Jaguars": "Jacksonville", "Kansas City Chiefs": "Kansas City",
+    "Las Vegas Raiders": "Las Vegas", "Los Angeles Chargers": "Los Angeles C",
+    "Los Angeles Rams": "Los Angeles R", "Miami Dolphins": "Miami",
+    "Minnesota Vikings": "Minnesota", "New England Patriots": "New England",
+    "New Orleans Saints": "New Orleans", "New York Giants": "New York G",
+    "New York Jets": "New York J", "Philadelphia Eagles": "Philadelphia",
+    "Pittsburgh Steelers": "Pittsburgh", "San Francisco 49ers": "San Francisco",
+    "Seattle Seahawks": "Seattle", "Tampa Bay Buccaneers": "Tampa Bay",
+    "Tennessee Titans": "Tennessee", "Washington Commanders": "Washington",
+}
+
 _MONTHS = {m: i + 1 for i, m in enumerate(
     ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
      "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"])}
@@ -240,13 +262,21 @@ def _cfb_token_from_markets(full_name: str, markets: List[Dict]) -> Optional[str
 
 
 def _team_token(name: str) -> Optional[str]:
+    """Kalshi token for a team, across every sport with a static map.
+
+    MLB and NFL are looked up together: a name belongs to at most one league,
+    so a merged lookup cannot collide, and keeping them separate is how NFL
+    silently ended up with no CLV at all.
+    """
     if not name:
         return None
-    if name in TEAM_TO_KALSHI:
-        return TEAM_TO_KALSHI[name]
-    for full, tok in TEAM_TO_KALSHI.items():           # tolerate minor variants
-        if _norm(full) == _norm(name):
-            return tok
+    for table in (TEAM_TO_KALSHI, NFL_TEAM_TO_KALSHI):
+        if name in table:
+            return table[name]
+    for table in (TEAM_TO_KALSHI, NFL_TEAM_TO_KALSHI):
+        for full, tok in table.items():                # tolerate minor variants
+            if _norm(full) == _norm(name):
+                return tok
     return None
 
 
@@ -307,10 +337,29 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
         if not home or not away:
             return None
         pool = [m for m in markets.get(series, []) if event_date(m) == game_date]
-        # Both teams must appear in the market's own rules text.
-        pool = [m for m in pool
-                if _norm(home) in _norm(m.get("rules_primary"))
-                and _norm(away) in _norm(m.get("rules_primary"))]
+        # Identify the right GAME by event, not by prose. Kalshi's rules text is
+        # inconsistent — the same series mixes "Dallas vs New York G" with
+        # "NY Giants vs LA Rams" — so a rules-only filter silently dropped half
+        # of NFL (16 of 32 moneylines) even with a correct team map.
+        #
+        # An event's markets collectively name both teams, so pool by
+        # event_ticker whose combined text mentions both tokens, and fall back
+        # to the per-market rules check when no event grouping is available.
+        by_event: Dict[str, List[Dict]] = {}
+        for m in pool:
+            by_event.setdefault(m.get("event_ticker") or m.get("ticker") or "", []).append(m)
+        matched: List[Dict] = []
+        for _ev, ms in by_event.items():
+            blob = _norm(" ".join(
+                [str(x.get("yes_sub_title") or "") for x in ms] +
+                [str(ms[0].get("rules_primary") or "")]))
+            if _norm(home) in blob and _norm(away) in blob:
+                matched.extend(ms)
+        if not matched:
+            matched = [m for m in pool
+                       if _norm(home) in _norm(m.get("rules_primary"))
+                       and _norm(away) in _norm(m.get("rules_primary"))]
+        pool = matched
         if not pool:
             return None
 

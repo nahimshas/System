@@ -864,10 +864,22 @@ def load_performance_summary() -> Dict:
             by_conf[conf] = _stats(subset)
     summary["by_confidence"] = by_conf
 
-    # Break down by sport. NHL added June 2026 when it graduated to a budget
-    # sport; NFL listed so its tile appears once it has settled budget bets.
+    # Break down by sport, DERIVED FROM THE REGISTRY rather than a hardcoded
+    # list. A hardcoded list is how a graduated sport silently loses its
+    # performance tile — the same class of bug that left the CFB tab
+    # unreachable (Sep 2026). Any sport with track_in_main_history=True gets a
+    # tile automatically the moment it has a settled record.
     by_sport: Dict[str, Dict] = {}
-    for sport in ("PARLAY", "MLB", "NHL", "NFL", "NBA"):
+    try:
+        from src.sports.registry import REGISTRY
+        tracked = [e.label.upper() for e in REGISTRY.values()
+                   if e.caps.track_in_main_history]
+    except Exception:
+        tracked = ["MLB", "NHL", "NFL", "NBA"]
+    # Anything already present in history counts too, so a retired sport keeps
+    # its record rather than vanishing from the panel.
+    seen = {r.get("sport") for r in settled if r.get("sport")}
+    for sport in ["PARLAY"] + sorted(set(tracked) | seen - {"PARLAY"}):
         subset = [r for r in settled if r.get("sport") == sport]
         if subset:
             by_sport[sport] = _stats(subset)
