@@ -416,6 +416,32 @@ class BetRecommendation:
     game_type:             str  = ""            # per-game season type (regular/play_in/postseason/superbowl)
 
 
+def half_point_line(home_line: float, model_home_cover: float) -> float:
+    """Snap a WHOLE-number spread to the adjacent half-point, conservatively.
+
+    Robinhood/Kalshi event contracts are binary — there is no push — so they
+    quote only half-point spreads (verified Sep 2026: KXNFLSPREAD lists 1.5,
+    2.5, 3.5 ... and no whole numbers). A book line of -3 is therefore not a
+    bet we can actually place.
+
+    Snapping matters beyond labelling: -2.5 and -3.5 are materially different
+    bets, and the gap between them is the push mass at exactly 3 — the single
+    most common NFL margin. Relabelling -3 as -2.5 would overstate our edge by
+    handing us the push outcomes for free.
+
+    So we move the line AWAY from the side the model favours (half a point
+    harder). If the model likes the home team we push the line further against
+    them, and vice versa. Being conservative is the only safe direction when
+    the true bettable price is unknown.
+    """
+    if home_line is None:
+        return home_line
+    line = float(home_line)
+    if abs(line - round(line)) > 1e-9:
+        return line                     # already a half point
+    return line - 0.5 if model_home_cover >= 0.5 else line + 0.5
+
+
 def _confidence_label(edge: float, signal_count: int, stats_available: bool) -> str:
     """HIGH requires strong edge + multiple signals + stats available."""
     if edge >= 0.07 and signal_count >= 3 and stats_available:
@@ -748,6 +774,21 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
 
             # P(home covers) = P(actual margin > −home_spread_line)
             model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, NBA_SPREAD_STD))
+
+            # Kalshi lists only HALF-point spreads (binary contracts, no push),
+            # so a whole book line is not a bet we can place. Snap conservatively
+            # and reprice both sides at the new line — see half_point_line().
+            _snap_nba = half_point_line(home_spread_line, model_home_cover)
+            if _snap_nba != home_spread_line:
+                logger.info(f"NBA spread snapped to a bettable line: "
+                            f"{home_spread_line:+.1f} -> {_snap_nba:+.1f}")
+                _delta = _snap_nba - home_spread_line
+                home_spread_line = _snap_nba
+                model_home_cover = float(
+                    norm.cdf(effective_margin + home_spread_line, 0, NBA_SPREAD_STD))
+                _mkt_m = float(norm.ppf(min(0.999, max(0.001, market_home_cover)))) * NBA_SPREAD_STD
+                market_home_cover = float(norm.cdf(_mkt_m + _delta, 0, NBA_SPREAD_STD))
+                market_away_cover = 1.0 - market_home_cover
             model_away_cover = 1.0 - model_home_cover
 
             # Apply spread credibility cap
@@ -2352,6 +2393,28 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
 
             effective_margin = float(norm.ppf(adjusted_home_prob)) * NFL_SPREAD_STD
             model_home_cover = float(norm.cdf(effective_margin + home_spread_line, 0, NFL_SPREAD_STD))
+
+            # Robinhood/Kalshi contracts are binary, so only HALF-point spreads
+            # exist. Snap a whole book line to the adjacent half that is harder
+            # for the side we favour, then REPRICE at that line — the push mass
+            # at a whole number (3 is the most common NFL margin) is exactly
+            # what separates -2.5 from -3.5, so relabelling without repricing
+            # would hand us those pushes for free and overstate the edge.
+            _snapped = half_point_line(home_spread_line, model_home_cover)
+            if _snapped != home_spread_line:
+                logger.info(f"NFL spread snapped to a bettable line: "
+                            f"{home_spread_line:+.1f} -> {_snapped:+.1f} ({label})")
+                home_spread_line = _snapped
+                model_home_cover = float(
+                    norm.cdf(effective_margin + home_spread_line, 0, NFL_SPREAD_STD))
+                # The market prob was quoted at the WHOLE line and no longer
+                # matches what we would buy. Shift it by the same model-implied
+                # half-point step so both sides are compared at one line.
+                _mkt_margin = float(norm.ppf(min(0.999, max(0.001, market_home_cover)))) * NFL_SPREAD_STD
+                market_home_cover = float(
+                    norm.cdf(_mkt_margin + (_snapped - sp.get("home_spread", 0.0)),
+                             0, NFL_SPREAD_STD))
+                market_away_cover = 1.0 - market_home_cover
             model_away_cover = 1.0 - model_home_cover
 
             # Apply spread credibility cap
@@ -4942,10 +5005,20 @@ def analyze_cfb_game(
     line = sp.get("home_spread")
     if line is not None:
         line = float(line)
-        # P(home covers) = P(margin + line > 0)
         cov_raw = float(_norm.cdf((margin + line) / CFB_MARGIN_STD))
         mk_hc = sp.get("home_prob")
         mk_ac = sp.get("away_prob")
+        # Kalshi lists only half-point college spreads too.
+        _snap = half_point_line(line, cov_raw)
+        if _snap != line:
+            logger.info(f"CFB spread snapped to a bettable line: {line:+.1f} -> {_snap:+.1f}")
+            _d = _snap - line
+            line = _snap
+            cov_raw = float(_norm.cdf((margin + line) / CFB_MARGIN_STD))
+            if mk_hc is not None:
+                _mm = float(_norm.ppf(min(0.999, max(0.001, mk_hc)))) * CFB_MARGIN_STD
+                mk_hc = float(_norm.cdf((_mm + _d) / CFB_MARGIN_STD))
+                mk_ac = 1.0 - mk_hc
         cov = _apply_credibility_cap_dispatched(
             cov_raw, mk_hc, _cred_cap("cfb", CFB_CRED_CAP, "credibility_spread"),
             "cfb", "credibility_spread")[0] if mk_hc else cov_raw

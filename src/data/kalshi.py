@@ -384,10 +384,14 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
         elif bet_type == "F5 Tie":
             want, side = "Tie", "yes"
         elif bet_type == "Spread" and pt is not None:
+            # UNIT WORD VARIES BY SPORT: MLB says "runs", NFL/CFB/NBA say
+            # "points". Hardcoding "runs" meant spread CLV never resolved for
+            # ANY non-MLB sport — silently, since a miss just looks like a
+            # market that is not listed. Match on the numeric part instead.
             if pt < 0:
-                want, side = f"{team} wins by over {abs(pt)} runs", "yes"
+                want, side = f"{team} wins by over {abs(pt)}", "yes"
             else:
-                want, side = f"{opp} wins by over {pt} runs", "no"
+                want, side = f"{opp} wins by over {pt}", "no"
         elif bet_type == "F5 Spread" and pt is not None:
             if abs(pt) == 0.5:      # ±0.5 in F5 is just "wins the first 5"
                 want = f"{team} wins first 5 innings" if pt < 0 else f"{opp} wins first 5 innings"
@@ -397,14 +401,22 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
             else:
                 want, side = f"{opp} -{pt} first 5 innings", "no"
         elif bet_type in ("Total", "F5 Total") and pt is not None:
-            unit = "runs in the first 5" if bet_type == "F5 Total" else "runs scored"
-            want = f"Over {pt} {unit}"
+            # Same unit problem for totals: "Over 8.5 runs scored" (MLB) vs
+            # "Over 63.5 points scored" (NFL/CFB). F5 keeps its own suffix
+            # because a 5-inning total must not match the full-game one.
+            want = (f"Over {pt} runs in the first 5" if bet_type == "F5 Total"
+                    else f"Over {pt}")
             side = "yes" if "over" in pick_txt.lower() else "no"
 
         if not want:
             return None
         target = _norm(want)
         m = next((x for x in pool if _norm(x.get("yes_sub_title")) == target), None)
+        if m is None:
+            # Prefix match, anchored at the START so "over 2.5" cannot match
+            # "over 12.5" — that would silently price a completely different line.
+            m = next((x for x in pool
+                      if _norm(x.get("yes_sub_title")).startswith(target)), None)
         if m is None:
             m = next((x for x in pool if target in _norm(x.get("yes_sub_title"))), None)
         if m is None:
