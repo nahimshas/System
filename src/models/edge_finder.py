@@ -4962,7 +4962,8 @@ def analyze_cfb_game(
     markets_for_log: List[tuple] = []
 
     def _emit(pick: str, bet_type: str, model_p: float, market_p: Optional[float],
-              raw_p: float, line: Optional[float] = None):
+              raw_p: float, line: Optional[float] = None,
+              cap_fired: bool = False):
         if market_p is None or market_p <= 0 or market_p >= 1:
             return None
         edge = model_p - market_p
@@ -4978,6 +4979,12 @@ def analyze_cfb_game(
             game_time=game_time, commence_time=commence_time,
         )
         r.model_prob_raw = raw_p
+        # Stamp the cap flag HERE. _stamp_recs_calibration only fills it in when
+        # model_prob_raw is still None, and CFB always sets that — so a dropped
+        # flag stayed False forever, hiding every CFB cap firing from the card,
+        # the shadow log, and the cap auto-tuning counterfactual (which reads
+        # ONLY cap-fired rows, so the CFB cap could never self-tune).
+        r.credibility_cap_fired = bool(cap_fired)
         recs.append(r)
         return r
 
@@ -4986,12 +4993,15 @@ def analyze_cfb_game(
     ml = game.get("moneyline") or {}
     mk_h, mk_a = ml.get("home_prob"), ml.get("away_prob")
     if mk_h and mk_a:
-        p_home = _apply_credibility_cap_dispatched(
-            p_home_raw, mk_h, _cred_cap("cfb", CFB_CRED_CAP, "credibility_moneyline"),
-            "cfb", "credibility_moneyline")[0] if mk_h else p_home_raw
+        if mk_h:
+            p_home, _ml_fired = _apply_credibility_cap_dispatched(
+                p_home_raw, mk_h, _cred_cap("cfb", CFB_CRED_CAP, "credibility_moneyline"),
+                "cfb", "credibility_moneyline")[:2]
+        else:
+            p_home, _ml_fired = p_home_raw, False
         p_away = 1.0 - p_home
-        _emit(home, "Moneyline", p_home, mk_h, p_home_raw)
-        _emit(away, "Moneyline", p_away, mk_a, 1.0 - p_home_raw)
+        _emit(home, "Moneyline", p_home, mk_h, p_home_raw, cap_fired=_ml_fired)
+        _emit(away, "Moneyline", p_away, mk_a, 1.0 - p_home_raw, cap_fired=_ml_fired)
         markets_for_log += [
             ("Moneyline", home, p_home, p_home_raw, mk_h, None),
             ("Moneyline", away, p_away, 1.0 - p_home_raw, mk_a, None),
@@ -5019,11 +5029,16 @@ def analyze_cfb_game(
                 _mm = float(_norm.ppf(min(0.999, max(0.001, mk_hc)))) * CFB_MARGIN_STD
                 mk_hc = float(_norm.cdf((_mm + _d) / CFB_MARGIN_STD))
                 mk_ac = 1.0 - mk_hc
-        cov = _apply_credibility_cap_dispatched(
-            cov_raw, mk_hc, _cred_cap("cfb", CFB_CRED_CAP, "credibility_spread"),
-            "cfb", "credibility_spread")[0] if mk_hc else cov_raw
-        _emit(f"{home} {line:+.1f}", "Spread", cov, mk_hc, cov_raw, line=line)
-        _emit(f"{away} {-line:+.1f}", "Spread", 1.0 - cov, mk_ac, 1.0 - cov_raw, line=-line)
+        if mk_hc:
+            cov, _sp_fired = _apply_credibility_cap_dispatched(
+                cov_raw, mk_hc, _cred_cap("cfb", CFB_CRED_CAP, "credibility_spread"),
+                "cfb", "credibility_spread")[:2]
+        else:
+            cov, _sp_fired = cov_raw, False
+        _emit(f"{home} {line:+.1f}", "Spread", cov, mk_hc, cov_raw, line=line,
+              cap_fired=_sp_fired)
+        _emit(f"{away} {-line:+.1f}", "Spread", 1.0 - cov, mk_ac, 1.0 - cov_raw,
+              line=-line, cap_fired=_sp_fired)
         markets_for_log += [
             ("Spread", home, cov, cov_raw, mk_hc, line),
             ("Spread", away, 1.0 - cov, 1.0 - cov_raw, mk_ac, -line),

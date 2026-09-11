@@ -25,7 +25,12 @@
     WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate,
     MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _soccerDates,
     WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _soccerDates,
-    LIGAMX: "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard?dates=" + _soccerDates
+    LIGAMX: "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard?dates=" + _soccerDates,
+    // College football needs two extra params the pro leagues do not: groups=80
+    // restricts to FBS, and limit lifts ESPN's default page of 25 — a Saturday
+    // slate runs past 60 games, so without it the later games (and their logos,
+    // scores and settlement) simply are not in the response.
+    CFB: "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=300&dates=" + _espnDate
   };
 
   // ── Local timezone formatting ────────────────────────────────────────────

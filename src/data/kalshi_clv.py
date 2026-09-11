@@ -104,6 +104,17 @@ def fetch_markets(series: str, status: str, max_pages: int = 60) -> List[Dict]:
     return out
 
 
+def _anchor_series(sports: set) -> set:
+    """Moneyline series for each sport — the join key for the other books."""
+    out = set()
+    for sp in sports:
+        m = SPORT_SERIES.get(sp) or {}
+        for k in ("Moneyline", "F5 Moneyline"):
+            if m.get(k):
+                out.add(m[k])
+    return out
+
+
 def build_index(series_list: List[str], dates: set,
                 max_pages: int = 60) -> Dict[str, List[Dict]]:
     """Open + settled markets for each series, filtered to the dates we need.
@@ -291,6 +302,11 @@ def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
         # ±0.5 F5 spreads resolve against the F5 winner book.
         if any(e["market_type"] == "F5 Spread" for _, e in todo):
             series_needed = sorted(set(series_needed) | {"KXMLBF5"})
+        # The moneyline book of every sport in play is the ticker ANCHOR that
+        # spread/total resolution joins on, so it must be indexed even when we
+        # have no moneyline pick of our own that day.
+        series_needed = sorted(set(series_needed) | _anchor_series(
+            {(e.get("sport") or "").upper() for _, e in todo}))
         logger.info(f"Kalshi CLV: {len(todo)} entries, {len(dates)} date(s), "
                     f"series {series_needed}")
         idx = build_index(series_needed, dates)
@@ -426,6 +442,8 @@ def update_decision_log_kalshi_clv(since: str = "0000-00-00",
                          for _, e in todo})
         if any(e["market_type"] == "F5 Spread" for _, e in todo):
             series = sorted(set(series) | {"KXMLBF5"})
+        series = sorted(set(series) | _anchor_series(
+            {(e.get("sport") or "").upper() for _, e in todo}))
         logger.info(f"Kalshi decision CLV: {len(todo)} candidates, {len(dates)} date(s)")
         idx = build_index(series, dates)
 

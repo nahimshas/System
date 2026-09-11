@@ -298,6 +298,123 @@ def _quote(market: Dict, side: str) -> Optional[Dict[str, float]]:
     return {"bid": round(bid, 4), "ask": round(ask, 4), "mid": round((bid + ask) / 2, 4)}
 
 
+def _game_code(market: Dict) -> str:
+    """The game segment of a Kalshi ticker: KXNFLTOTAL-26SEP10SFLAR-49 -> 26SEP10SFLAR.
+
+    Every market for one game carries the SAME segment in every series, so it
+    is an exact join key across books — unlike the rules prose, which drifts
+    between series for the same game (KXNFLSPREAD says "Los Angeles R", while
+    KXNFLTOTAL says plain "Los Angeles" for the identical matchup).
+    """
+    parts = str(market.get("event_ticker") or market.get("ticker") or "").split("-")
+    return parts[1] if len(parts) > 1 else ""
+
+
+def _anchor_game_code(markets: Dict[str, List[Dict]], anchor_series: Optional[str],
+                      home: str, away: str, game_date: str,
+                      cfb: bool = False) -> Optional[str]:
+    """Find a game's ticker segment via the MONEYLINE book.
+
+    The moneyline series is the reliable anchor because each of its markets is
+    titled with exactly one team token ("San Francisco" / "Los Angeles R"), so
+    both sides match cleanly. Once the segment is known, every other book for
+    that game can be filtered exactly, with no prose involved.
+    """
+    if not anchor_series:
+        return None
+    pool = [m for m in markets.get(anchor_series, []) if event_date(m) == game_date]
+    by_code: Dict[str, List[Dict]] = {}
+    for m in pool:
+        by_code.setdefault(_game_code(m), []).append(m)
+    for code, ms in by_code.items():
+        if not code:
+            continue
+        titles = [str(m.get("yes_sub_title") or "") for m in ms]
+        if cfb:
+            ok_home = any(cfb_team_matches(home, t) for t in titles)
+            ok_away = any(cfb_team_matches(away, t) for t in titles)
+        else:
+            norm = {_norm(t) for t in titles}
+            ok_home, ok_away = _norm(home) in norm, _norm(away) in norm
+        if ok_home and ok_away:
+            return code
+    return None
+
+
+def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
+            is_cfb: bool, home: str, away: str,
+            markets: Dict[str, List[Dict]],
+            require_quote: bool,
+            tok_src: Optional[List[Dict]] = None) -> Optional[Dict[str, Any]]:
+    """Choose the exact strike within an already game-filtered pool."""
+    pick_txt = str(pick.get("pick") or "")
+    if bet_type in ("Total", "F5 Total"):
+        team = None
+    elif is_cfb:
+        # CFB must use the structural matcher here too — the static map has
+        # no college teams, so this silently returned None and every CFB
+        # pick failed to resolve even though the tokens were found.
+        team = _cfb_token_from_markets(_strip_point(pick_txt),
+                                       tok_src if tok_src else markets.get(series, []))
+    else:
+        team = _team_token(_strip_point(pick_txt))
+    opp = away if team == home else home
+    pt = _pick_point(pick_txt)
+
+    want, side = None, "yes"
+    if bet_type == "Moneyline":
+        want, side = team, "yes"
+    elif bet_type == "F5 Moneyline":
+        want, side = f"{team} wins first 5 innings", "yes"
+    elif bet_type == "F5 Tie":
+        want, side = "Tie", "yes"
+    elif bet_type == "Spread" and pt is not None:
+        # UNIT WORD VARIES BY SPORT: MLB says "runs", NFL/CFB/NBA say
+        # "points". Hardcoding "runs" meant spread CLV never resolved for
+        # ANY non-MLB sport — silently, since a miss just looks like a
+        # market that is not listed. Match on the numeric part instead.
+        if pt < 0:
+            want, side = f"{team} wins by over {abs(pt)}", "yes"
+        else:
+            want, side = f"{opp} wins by over {pt}", "no"
+    elif bet_type == "F5 Spread" and pt is not None:
+        if abs(pt) == 0.5:      # ±0.5 in F5 is just "wins the first 5"
+            want = f"{team} wins first 5 innings" if pt < 0 else f"{opp} wins first 5 innings"
+            side = "yes" if pt < 0 else "no"
+        elif pt < 0:
+            want, side = f"{team} -{abs(pt)} first 5 innings", "yes"
+        else:
+            want, side = f"{opp} -{pt} first 5 innings", "no"
+    elif bet_type in ("Total", "F5 Total") and pt is not None:
+        # Same unit problem for totals: "Over 8.5 runs scored" (MLB) vs
+        # "Over 63.5 points scored" (NFL/CFB). F5 keeps its own suffix
+        # because a 5-inning total must not match the full-game one.
+        want = (f"Over {pt} runs in the first 5" if bet_type == "F5 Total"
+                else f"Over {pt}")
+        side = "yes" if "over" in pick_txt.lower() else "no"
+
+    if not want:
+        return None
+    target = _norm(want)
+    m = next((x for x in pool if _norm(x.get("yes_sub_title")) == target), None)
+    if m is None:
+        # Prefix match, anchored at the START so "over 2.5" cannot match
+        # "over 12.5" — that would silently price a completely different line.
+        m = next((x for x in pool
+                  if _norm(x.get("yes_sub_title")).startswith(target)), None)
+    if m is None:
+        m = next((x for x in pool if target in _norm(x.get("yes_sub_title"))), None)
+    if m is None:
+        return None
+    q = _quote(m, side)
+    if not q:
+        if require_quote:
+            return None
+        q = {"bid": None, "ask": None, "mid": None}
+    return {"ticker": m.get("ticker"), "series": series, "side": side,
+            "sub_title": m.get("yes_sub_title"),
+            "open_interest": _f(m.get("open_interest_fp")) or 0.0, **q}
+
 def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
                  game_date: str, require_quote: bool = True,
                  series_map: Optional[Dict[str, str]] = None) -> Optional[Dict[str, Any]]:
@@ -326,18 +443,34 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
         if bet_type == "F5 Spread" and abs(_pick_point(pick_txt_early) or 0) == 0.5:
             series = "KXMLBF5"
         is_cfb = series.startswith("KXNCAAF")
+        anchor = (series_map or SERIES).get("F5 Moneyline" if bet_type.startswith("F5")
+                                            else "Moneyline")
+        # CFB tokens are derived from market TITLES, and only the moneyline book
+        # titles a market with a bare team name ("Georgia Tech"). The spread and
+        # total books title them as sentences ("Georgia Tech wins by over 6.5
+        # points"), which the structural matcher cannot read — so deriving from
+        # the pick's own series returned None and every CFB spread silently
+        # failed to resolve. Always derive from the moneyline book.
+        tok_src = markets.get(anchor or "", []) or markets.get(series, [])
         if is_cfb:
-            # CFB has no static token map — derive both tokens from the market
-            # list itself using the structural matcher.
-            home = _cfb_token_from_markets(pick.get("home_team"), markets.get(series, []))
-            away = _cfb_token_from_markets(pick.get("away_team"), markets.get(series, []))
+            home = _cfb_token_from_markets(pick.get("home_team"), tok_src)
+            away = _cfb_token_from_markets(pick.get("away_team"), tok_src)
         else:
             home = _team_token(pick.get("home_team"))
             away = _team_token(pick.get("away_team"))
         if not home or not away:
             return None
         pool = [m for m in markets.get(series, []) if event_date(m) == game_date]
-        # Identify the right GAME by event, not by prose. Kalshi's rules text is
+        # PREFERRED: join on the ticker's game segment, resolved off the
+        # moneyline book. Exact, and immune to the prose drift below.
+        code = _anchor_game_code(markets, anchor, home, away, game_date,
+                                 cfb=is_cfb)
+        if code:
+            by_code = [m for m in pool if _game_code(m) == code]
+            if by_code:
+                return _select(by_code, pick, bet_type, series, is_cfb,
+                               home, away, markets, require_quote, tok_src)
+        # FALLBACK: identify the right GAME by event, not by prose. Kalshi's rules text is
         # inconsistent — the same series mixes "Dallas vs New York G" with
         # "NY Giants vs LA Rams" — so a rules-only filter silently dropped half
         # of NFL (16 of 32 moneylines) even with a correct team map.
@@ -363,72 +496,8 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
         if not pool:
             return None
 
-        pick_txt = str(pick.get("pick") or "")
-        if bet_type in ("Total", "F5 Total"):
-            team = None
-        elif is_cfb:
-            # CFB must use the structural matcher here too — the static map has
-            # no college teams, so this silently returned None and every CFB
-            # pick failed to resolve even though the tokens were found.
-            team = _cfb_token_from_markets(_strip_point(pick_txt), markets.get(series, []))
-        else:
-            team = _team_token(_strip_point(pick_txt))
-        opp = away if team == home else home
-        pt = _pick_point(pick_txt)
-
-        want, side = None, "yes"
-        if bet_type == "Moneyline":
-            want, side = team, "yes"
-        elif bet_type == "F5 Moneyline":
-            want, side = f"{team} wins first 5 innings", "yes"
-        elif bet_type == "F5 Tie":
-            want, side = "Tie", "yes"
-        elif bet_type == "Spread" and pt is not None:
-            # UNIT WORD VARIES BY SPORT: MLB says "runs", NFL/CFB/NBA say
-            # "points". Hardcoding "runs" meant spread CLV never resolved for
-            # ANY non-MLB sport — silently, since a miss just looks like a
-            # market that is not listed. Match on the numeric part instead.
-            if pt < 0:
-                want, side = f"{team} wins by over {abs(pt)}", "yes"
-            else:
-                want, side = f"{opp} wins by over {pt}", "no"
-        elif bet_type == "F5 Spread" and pt is not None:
-            if abs(pt) == 0.5:      # ±0.5 in F5 is just "wins the first 5"
-                want = f"{team} wins first 5 innings" if pt < 0 else f"{opp} wins first 5 innings"
-                side = "yes" if pt < 0 else "no"
-            elif pt < 0:
-                want, side = f"{team} -{abs(pt)} first 5 innings", "yes"
-            else:
-                want, side = f"{opp} -{pt} first 5 innings", "no"
-        elif bet_type in ("Total", "F5 Total") and pt is not None:
-            # Same unit problem for totals: "Over 8.5 runs scored" (MLB) vs
-            # "Over 63.5 points scored" (NFL/CFB). F5 keeps its own suffix
-            # because a 5-inning total must not match the full-game one.
-            want = (f"Over {pt} runs in the first 5" if bet_type == "F5 Total"
-                    else f"Over {pt}")
-            side = "yes" if "over" in pick_txt.lower() else "no"
-
-        if not want:
-            return None
-        target = _norm(want)
-        m = next((x for x in pool if _norm(x.get("yes_sub_title")) == target), None)
-        if m is None:
-            # Prefix match, anchored at the START so "over 2.5" cannot match
-            # "over 12.5" — that would silently price a completely different line.
-            m = next((x for x in pool
-                      if _norm(x.get("yes_sub_title")).startswith(target)), None)
-        if m is None:
-            m = next((x for x in pool if target in _norm(x.get("yes_sub_title"))), None)
-        if m is None:
-            return None
-        q = _quote(m, side)
-        if not q:
-            if require_quote:
-                return None
-            q = {"bid": None, "ask": None, "mid": None}
-        return {"ticker": m.get("ticker"), "series": series, "side": side,
-                "sub_title": m.get("yes_sub_title"),
-                "open_interest": _f(m.get("open_interest_fp")) or 0.0, **q}
+        return _select(pool, pick, bet_type, series, is_cfb, home, away,
+                       markets, require_quote, tok_src)
     except Exception as e:
         logger.warning(f"Kalshi resolve failed for {pick.get('pick')!r}: {e}")
         return None

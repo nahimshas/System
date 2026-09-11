@@ -790,9 +790,39 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # Own-tile display gate: same PWA filter (totals/draws + sub-floor longshots
     # hidden from the WC/MLS/WNBA/IPL tabs) applied BEFORE the cap so hidden picks
     # don't waste a tile slot. `own_display` itself stays full for the logs.
+    # ONE PICK PER GAME on the watchlist tiles too (Sep 11 2026). The CFB tab
+    # shipped "Kansas Jayhawks" ML alongside "Kansas Jayhawks +5.5" off a single
+    # projected 26-26 game: the same directional view twice, and NESTED — every
+    # world where the moneyline wins is a world where +5.5 also wins, so the
+    # pair adds risk without adding information. Keep the best-ranked one (the
+    # list is already in _slot_sort_key order), exactly as the budget card has
+    # done since Aug 10.
+    #
+    # Measurement is unaffected: `own_display` itself stays FULL and is what
+    # feeds the shadow log below, and the decision log records both sides of
+    # every market regardless. Only the card is thinned — so validation samples
+    # keep accruing at the same rate, and they stop double-counting two
+    # near-identical bets as two independent observations.
+    def _one_per_game(recs: list, slug: str = "") -> list:
+        # IPL is exempt: its tile is rebuilt from the rolling pending file just
+        # below, and its picks are tracked per match over several days.
+        if slug == "ipl":
+            return recs
+        seen: dict = {}
+        out = []
+        for r in recs:
+            n = seen.get(r.game, 0)
+            if n >= MAX_BUDGET_BETS_PER_GAME:
+                continue
+            seen[r.game] = n + 1
+            out.append(r)
+        return out
+
     fresh_own_displays: dict[str, list] = {
         slug: [_to_dict_with_eff(r)
-               for r in sorted(raw, key=_slot_sort_key) if _pwa_display_eligible(r)]
+               for r in _one_per_game(
+                   [r for r in sorted(raw, key=_slot_sort_key)
+                    if _pwa_display_eligible(r)], slug)]
               [:MAX_SINGLE_BETS if slug != "ipl" else len(raw)]
         for slug, raw in own_display.items()
     }
