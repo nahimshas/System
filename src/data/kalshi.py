@@ -341,6 +341,22 @@ def _anchor_game_code(markets: Dict[str, List[Dict]], anchor_series: Optional[st
     return None
 
 
+def _ladder_points(pool: List[Dict]) -> List[float]:
+    """The strike points actually listed in a pool of markets, ascending.
+
+    Kalshi ladders are VARIABLE RESOLUTION: every half point near a coin flip,
+    then 2- and 3-point steps as the line widens (NFL has no 8.5/12.5/15.5 at
+    all). So "it is a half point" does not imply "it is listed".
+    """
+    out = set()
+    for m in pool:
+        hit = re.search(r"(?:over|under)\s+(\d+(?:\.\d+)?)",
+                        _norm(m.get("yes_sub_title")))
+        if hit:
+            out.add(float(hit.group(1)))
+    return sorted(out)
+
+
 def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
             is_cfb: bool, home: str, away: str,
             markets: Dict[str, List[Dict]],
@@ -405,6 +421,21 @@ def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
     if m is None:
         m = next((x for x in pool if target in _norm(x.get("yes_sub_title"))), None)
     if m is None:
+        # UNBUYABLE, not merely unlisted. We reached here with a NON-EMPTY pool,
+        # so the game was found and its ladder was read — the specific strike we
+        # quoted simply is not on it. Those two cases used to be the same silent
+        # None, which is how NFL spread/total stayed broken from the day they
+        # shipped: a resolver bug looks exactly like a market Kalshi does not
+        # offer. Say which, and name the rungs that DO exist, because a line the
+        # exchange will not sell is a line the user cannot actually bet.
+        _av = _ladder_points(pool)
+        if _av and pt is not None:
+            _lo = max([x for x in _av if x < abs(pt)], default=None)
+            _hi = min([x for x in _av if x > abs(pt)], default=None)
+            logger.warning(
+                f"Kalshi has no {abs(pt)} rung for {bet_type} in {series} "
+                f"({pick.get('pick')!r}) — nearest listed: {_lo} / {_hi}. "
+                f"This line is NOT BUYABLE; the quote cannot be measured or placed.")
         return None
     q = _quote(m, side)
     if not q:

@@ -23,6 +23,7 @@ import json
 import os
 import re
 from datetime import date, timedelta
+from typing import Dict
 
 from tools.analysis import backtest
 
@@ -212,6 +213,42 @@ def check_subsystem_liveness(recent_days=3, window_days=14):
                    and r.get("outcome") in ("win", "loss", "push")]
         kx = [r for r in settled if r.get("kalshi_clv") is not None]
 
+        # PER-MARKET breakdown, not just the aggregate.
+        #
+        # The aggregate is dominated by whatever we bet most. MLB carries ~3,500
+        # shadow rows against CFB's 15, so CFB Spread sat at 37.5% coverage
+        # (4 of 7 picks quoted a spread Kalshi does not list) while the headline
+        # read 84.4% and nothing alarmed. A market can go fully dark without
+        # moving the aggregate by a point — which is exactly how the NFL spread
+        # and total feeds stayed broken from the day they shipped.
+        by_market: Dict[tuple, list] = {}
+        for r in settled:
+            by_market.setdefault(
+                ((r.get("sport") or "?"), (r.get("market_type") or "?")), []
+            ).append(r)
+        # Separate NOT WIRED from WIRED-BUT-FAILING. WNBA/MLS/LigaMX have no
+        # Kalshi team map yet and MLS "Draw" has no series at all, so they sit
+        # at 0% by construction. Alerting on those trains the reader to ignore
+        # the alert, which is how the genuinely broken feeds stay hidden.
+        try:
+            from src.data.kalshi_clv import SPORT_SERIES, _teams_mappable
+        except Exception:
+            SPORT_SERIES, _teams_mappable = {}, None
+
+        markets = {}
+        for (sp, mt), rows in by_market.items():
+            got = sum(1 for r in rows if r.get("kalshi_clv") is not None)
+            wired = mt in (SPORT_SERIES.get(sp.upper()) or {})
+            if wired and _teams_mappable is not None:
+                # Wired only counts if at least one game can actually be mapped.
+                wired = any(_teams_mappable(r.get("game", ""), sp) for r in rows)
+            markets[f"{sp} {mt}"] = {
+                "n": len(rows),
+                "covered": got,
+                "pct": round(got / len(rows) * 100, 1),
+                "wired": bool(wired),
+            }
+
         out.update(
             execution_rows_recent=len(recent),
             execution_rows_total=len(exec_rows),
@@ -219,6 +256,7 @@ def check_subsystem_liveness(recent_days=3, window_days=14):
                                    if mature else None),
             kalshi_clv_coverage_pct=(round(len(kx) / len(settled) * 100, 1)
                                      if settled else None),
+            kalshi_clv_by_market=markets,
             ok=len(recent) > 0,
         )
     except Exception as e:
@@ -232,6 +270,12 @@ DRAWDOWN_ALERT_7D = -40.0     # last-7-days budget P&L below this → alert
 SETTLEMENT_RATE_MIN = 60.0    # % of 2+ day-old shadow entries settled
 CLV_COVERAGE_MIN = 40.0       # % of settled entries carrying CLV (14d window)
 KALSHI_CLV_COVERAGE_MIN = 40.0  # % of settled entries carrying kalshi_clv (primary feed)
+# Per-market floor. Deliberately LOWER than the aggregate and paired with a
+# minimum sample, because one market going dark is a structural failure (a
+# resolver bug, or lines we quote that the exchange does not list) rather than
+# the ordinary shortfall the aggregate tolerates.
+MARKET_CLV_COVERAGE_MIN = 50.0
+MARKET_CLV_MIN_N = 5            # below this, coverage % is noise — stay quiet
 
 
 def compute_alerts(report):
@@ -263,6 +307,16 @@ def compute_alerts(report):
         alerts.append(
             f"Kalshi CLV coverage {kc}% (14d) — Kalshi is the PRIMARY CLV feed "
             f"since Aug 25, so this is the signal going dark, not a nicety")
+    # One market can go fully dark without moving the aggregate — MLB's volume
+    # hides everything else. Alert per market so the next dark feed is loud.
+    for name, m in sorted((sl.get("kalshi_clv_by_market") or {}).items()):
+        if (m.get("wired") and m["n"] >= MARKET_CLV_MIN_N
+                and m["pct"] < MARKET_CLV_COVERAGE_MIN):
+            alerts.append(
+                f"{name} Kalshi CLV coverage {m['pct']}% "
+                f"({m['covered']}/{m['n']}, 14d) — this market is dark while the "
+                f"aggregate looks fine; usually a resolver miss or a line we "
+                f"quote that Kalshi does not list")
     return alerts
 
 
@@ -543,6 +597,19 @@ def main():
     print(f"[{_mark}] Subsystems: execution rows(3d)={sl.get('execution_rows_recent')} "
           f"total={sl.get('execution_rows_total')} settled={sl.get('execution_settled_pct')}% "
           f"kalshi_clv_cov={sl.get('kalshi_clv_coverage_pct')}%")
+    # Per-market coverage. The aggregate above is dominated by whatever we bet
+    # most, so a single market can go fully dark without moving it.
+    _bm = sl.get("kalshi_clv_by_market") or {}
+    if _bm:
+        _live = {k: v for k, v in _bm.items() if v.get("wired")}
+        _cold = sorted(k for k, v in _bm.items() if not v.get("wired"))
+        for _name, _m in sorted(_live.items(), key=lambda kv: kv[1]["pct"]):
+            _f = "!!" if (_m["n"] >= MARKET_CLV_MIN_N
+                          and _m["pct"] < MARKET_CLV_COVERAGE_MIN) else "--"
+            print(f"[{_f}]   {_name:22} {_m['pct']:5.1f}%  "
+                  f"({_m['covered']}/{_m['n']})")
+        if _cold:
+            print(f"[--]   not wired for Kalshi CLV: {', '.join(_cold)}")
     print(f"[--] CLV gates: {g.get('clv_gates') or 'none'}")
     print(f"[--] Calibration phases beyond 0: {g.get('calibration_phases') or 'none'}")
     print(f"[--] MLB caps: {g.get('mlb_caps')}")
