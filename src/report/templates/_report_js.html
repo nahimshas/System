@@ -3073,16 +3073,16 @@
   // all of them before re-rendering cards / recomputing P&L, so every league's
   // events — NHL included (now a budget sport) — are present when today's P&L,
   // by-sport, and the heatmap are computed.
-  var SCOREBOARD_SOURCES = [
-    { url: ESPN.NBA,  sport: "NBA"  },
-    { url: ESPN.MLB,  sport: "MLB"  },
-    { url: ESPN.NHL,  sport: "NHL"  },
-    { url: ESPN.NFL,  sport: "NFL"  },
-    { url: ESPN.WNBA, sport: "WNBA" },
-    { url: ESPN.MLS,  sport: "MLS"  },
-    { url: ESPN.WC,   sport: "WC"   },
-    { url: ESPN.LIGAMX, sport: "LIGAMX" },
-  ];
+  //
+  // DERIVED FROM THE ESPN MAP, not hand-listed. This used to repeat every sport
+  // by name, so adding CFB to the map above did nothing: the key existed, no
+  // call site read it, and the tab rendered with no logos, no live scores and no
+  // settlement — silently, because a sport that is never polled looks exactly
+  // like a sport with no games. Keying off the map means adding an endpoint is
+  // the whole change.
+  var SCOREBOARD_SOURCES = Object.keys(ESPN).map(function (s) {
+    return { url: ESPN[s], sport: s };
+  });
 
   function refresh() {
     var allEvents = [];
