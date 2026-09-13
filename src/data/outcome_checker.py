@@ -1609,180 +1609,65 @@ def check_and_settle_watchlist(today: date) -> int:
     settled_keys = {(r["date"], r["sport"], r["pick"], r["game"]) for r in existing}
     new_records: List[Dict] = []
 
-    # ── NHL ──────────────────────────────────────────────────────────────────
-    nhl_picks = [p for p in (state.get("singles_display") or []) if p.get("sport") == "NHL"]
-    nhl_scores = _fetch_watchlist_final_scores("NHL", yesterday) if nhl_picks else {}
+    # ── Watchlist sports ─────────────────────────────────────────────────────
+    # TABLE-DRIVEN, not one hand-written block per sport. This was five
+    # near-identical ~35-line blocks differing only in (sport, state key,
+    # grader), and CFB was simply never added to the pile — so CFB picks were
+    # produced and displayed but NEVER settled, and the tile sat at 0-0 forever.
+    # Silent, because an unsettled sport looks exactly like a sport that has not
+    # played yet. Adding a watchlist sport is now one row here.
+    #
+    # `grader` differs only for soccer, where a draw LOSES a team bet rather
+    # than pushing, and the score is the 90-minute score.
+    WATCHLIST_SETTLERS = [
+        ("NHL",    "singles_display", _determine_outcome),
+        ("WNBA",   "wnba_display",    _determine_outcome),
+        ("CFB",    "cfb_display",     _determine_outcome),
+        ("MLS",    "mls_display",     _determine_mls_outcome),
+        ("WC",     "wc_display",      _determine_mls_outcome),
+        ("LIGAMX", "ligamx_display",  _determine_mls_outcome),
+    ]
 
-    for pick in nhl_picks:
-        key = (yesterday.isoformat(), "NHL", pick.get("pick", ""), pick.get("game", ""))
-        if key in settled_keys:
+    for _sport, _state_key, _grade in WATCHLIST_SETTLERS:
+        picks = [p for p in (state.get(_state_key) or [])
+                 if p.get("sport") == _sport]
+        if not picks:
             continue
-        score_data = _find_game_score(nhl_scores, pick.get("home_team", ""), pick.get("away_team", ""))
-        if not score_data:
-            logger.debug(f"NHL watchlist: score not found for {pick.get('game')} on {yesterday}")
-            continue
-        result = _determine_outcome(
-            pick.get("pick", ""), pick.get("bet_type", ""),
-            pick.get("home_team", ""), pick.get("away_team", ""),
-            score_data["home_score"], score_data["away_score"],
-        )
-        if result not in ("WON", "LOST"):
-            continue
-        new_records.append({
-            "date":            yesterday.isoformat(),
-            "sport":           "NHL",
-            "game":            pick.get("game", ""),
-            "pick":            pick.get("pick", ""),
-            "bet_type":        pick.get("bet_type", "Moneyline"),
-            "home_team":       pick.get("home_team", ""),
-            "away_team":       pick.get("away_team", ""),
-            "edge_pct":        pick.get("edge_pct", 0),
-            "confidence":      pick.get("confidence", "MEDIUM"),
-            "model_prob_pct":  pick.get("model_prob_pct", 0),
-            "market_prob_pct": pick.get("market_prob_pct", 0),
-            "result":          result,
-        })
-        logger.info(f"NHL watchlist settled: {pick.get('pick')} → {result}")
+        scores = _fetch_watchlist_final_scores(_sport, yesterday)
+        for pick in picks:
+            key = (yesterday.isoformat(), _sport,
+                   pick.get("pick", ""), pick.get("game", ""))
+            if key in settled_keys:
+                continue
+            score_data = _find_game_score(scores, pick.get("home_team", ""),
+                                          pick.get("away_team", ""))
+            if not score_data:
+                logger.debug(f"{_sport} watchlist: score not found for "
+                             f"{pick.get('game')} on {yesterday}")
+                continue
+            result = _grade(
+                pick.get("pick", ""), pick.get("bet_type", ""),
+                pick.get("home_team", ""), pick.get("away_team", ""),
+                score_data["home_score"], score_data["away_score"],
+            )
+            if result not in ("WON", "LOST"):
+                continue
+            new_records.append({
+                "date":            yesterday.isoformat(),
+                "sport":           _sport,
+                "game":            pick.get("game", ""),
+                "pick":            pick.get("pick", ""),
+                "bet_type":        pick.get("bet_type", "Moneyline"),
+                "home_team":       pick.get("home_team", ""),
+                "away_team":       pick.get("away_team", ""),
+                "edge_pct":        pick.get("edge_pct", 0),
+                "confidence":      pick.get("confidence", "MEDIUM"),
+                "model_prob_pct":  pick.get("model_prob_pct", 0),
+                "market_prob_pct": pick.get("market_prob_pct", 0),
+                "result":          result,
+            })
+            logger.info(f"{_sport} watchlist settled: {pick.get('pick')} → {result}")
 
-    # ── WNBA ─────────────────────────────────────────────────────────────────
-    wnba_picks = [p for p in (state.get("wnba_display") or []) if p.get("sport") == "WNBA"]
-    wnba_scores = _fetch_watchlist_final_scores("WNBA", yesterday) if wnba_picks else {}
-
-    for pick in wnba_picks:
-        key = (yesterday.isoformat(), "WNBA", pick.get("pick", ""), pick.get("game", ""))
-        if key in settled_keys:
-            continue
-        score_data = _find_game_score(wnba_scores, pick.get("home_team", ""), pick.get("away_team", ""))
-        if not score_data:
-            logger.debug(f"WNBA watchlist: score not found for {pick.get('game')} on {yesterday}")
-            continue
-        result = _determine_outcome(
-            pick.get("pick", ""), pick.get("bet_type", ""),
-            pick.get("home_team", ""), pick.get("away_team", ""),
-            score_data["home_score"], score_data["away_score"],
-        )
-        if result not in ("WON", "LOST"):
-            continue
-        new_records.append({
-            "date":            yesterday.isoformat(),
-            "sport":           "WNBA",
-            "game":            pick.get("game", ""),
-            "pick":            pick.get("pick", ""),
-            "bet_type":        pick.get("bet_type", "Moneyline"),
-            "home_team":       pick.get("home_team", ""),
-            "away_team":       pick.get("away_team", ""),
-            "edge_pct":        pick.get("edge_pct", 0),
-            "confidence":      pick.get("confidence", "MEDIUM"),
-            "model_prob_pct":  pick.get("model_prob_pct", 0),
-            "market_prob_pct": pick.get("market_prob_pct", 0),
-            "result":          result,
-        })
-        logger.info(f"WNBA watchlist settled: {pick.get('pick')} → {result}")
-
-    # ── MLS ──────────────────────────────────────────────────────────────────
-    mls_picks = [p for p in (state.get("mls_display") or []) if p.get("sport") == "MLS"]
-    mls_scores = _fetch_watchlist_final_scores("MLS", yesterday) if mls_picks else {}
-
-    for pick in mls_picks:
-        key = (yesterday.isoformat(), "MLS", pick.get("pick", ""), pick.get("game", ""))
-        if key in settled_keys:
-            continue
-        score_data = _find_game_score(mls_scores, pick.get("home_team", ""), pick.get("away_team", ""))
-        if not score_data:
-            logger.debug(f"MLS watchlist: score not found for {pick.get('game')} on {yesterday}")
-            continue
-        result = _determine_mls_outcome(
-            pick.get("pick", ""), pick.get("bet_type", ""),
-            pick.get("home_team", ""), pick.get("away_team", ""),
-            score_data["home_score"], score_data["away_score"],
-        )
-        if result not in ("WON", "LOST"):
-            continue
-        new_records.append({
-            "date":            yesterday.isoformat(),
-            "sport":           "MLS",
-            "game":            pick.get("game", ""),
-            "pick":            pick.get("pick", ""),
-            "bet_type":        pick.get("bet_type", "Moneyline"),
-            "home_team":       pick.get("home_team", ""),
-            "away_team":       pick.get("away_team", ""),
-            "edge_pct":        pick.get("edge_pct", 0),
-            "confidence":      pick.get("confidence", "MEDIUM"),
-            "model_prob_pct":  pick.get("model_prob_pct", 0),
-            "market_prob_pct": pick.get("market_prob_pct", 0),
-            "result":          result,
-        })
-        logger.info(f"MLS watchlist settled: {pick.get('pick')} → {result}")
-
-    # ── World Cup ──────────────────────────────────────────────────────────────
-    wc_picks = [p for p in (state.get("wc_display") or []) if p.get("sport") == "WC"]
-    wc_scores = _fetch_watchlist_final_scores("WC", yesterday) if wc_picks else {}
-
-    for pick in wc_picks:
-        key = (yesterday.isoformat(), "WC", pick.get("pick", ""), pick.get("game", ""))
-        if key in settled_keys:
-            continue
-        score_data = _find_game_score(wc_scores, pick.get("home_team", ""), pick.get("away_team", ""))
-        if not score_data:
-            logger.debug(f"WC watchlist: score not found for {pick.get('game')} on {yesterday}")
-            continue
-        result = _determine_mls_outcome(
-            pick.get("pick", ""), pick.get("bet_type", ""),
-            pick.get("home_team", ""), pick.get("away_team", ""),
-            score_data["home_score"], score_data["away_score"],
-        )
-        if result not in ("WON", "LOST"):
-            continue
-        new_records.append({
-            "date":            yesterday.isoformat(),
-            "sport":           "WC",
-            "game":            pick.get("game", ""),
-            "pick":            pick.get("pick", ""),
-            "bet_type":        pick.get("bet_type", "Moneyline"),
-            "home_team":       pick.get("home_team", ""),
-            "away_team":       pick.get("away_team", ""),
-            "edge_pct":        pick.get("edge_pct", 0),
-            "confidence":      pick.get("confidence", "MEDIUM"),
-            "model_prob_pct":  pick.get("model_prob_pct", 0),
-            "market_prob_pct": pick.get("market_prob_pct", 0),
-            "result":          result,
-        })
-        logger.info(f"WC watchlist settled: {pick.get('pick')} → {result}")
-
-    # ── Liga MX ─────────────────────────────────────────────────────────────
-    ligamx_picks = [p for p in (state.get("ligamx_display") or []) if p.get("sport") == "LIGAMX"]
-    ligamx_scores = _fetch_watchlist_final_scores("LIGAMX", yesterday) if ligamx_picks else {}
-
-    for pick in ligamx_picks:
-        key = (yesterday.isoformat(), "LIGAMX", pick.get("pick", ""), pick.get("game", ""))
-        if key in settled_keys:
-            continue
-        score_data = _find_game_score(ligamx_scores, pick.get("home_team", ""), pick.get("away_team", ""))
-        if not score_data:
-            logger.debug(f"Liga MX watchlist: score not found for {pick.get('game')} on {yesterday}")
-            continue
-        result = _determine_mls_outcome(
-            pick.get("pick", ""), pick.get("bet_type", ""),
-            pick.get("home_team", ""), pick.get("away_team", ""),
-            score_data["home_score"], score_data["away_score"],
-        )
-        if result not in ("WON", "LOST"):
-            continue
-        new_records.append({
-            "date":            yesterday.isoformat(),
-            "sport":           "LIGAMX",
-            "game":            pick.get("game", ""),
-            "pick":            pick.get("pick", ""),
-            "bet_type":        pick.get("bet_type", "Moneyline"),
-            "home_team":       pick.get("home_team", ""),
-            "away_team":       pick.get("away_team", ""),
-            "edge_pct":        pick.get("edge_pct", 0),
-            "confidence":      pick.get("confidence", "MEDIUM"),
-            "model_prob_pct":  pick.get("model_prob_pct", 0),
-            "market_prob_pct": pick.get("market_prob_pct", 0),
-            "result":          result,
-        })
-        logger.info(f"Liga MX watchlist settled: {pick.get('pick')} → {result}")
 
     # ── First 5 innings (MLB, watchlist probation) ──────────────────────────
     # F5 picks live in singles_display with sport="MLB" but are their own market
@@ -2146,7 +2031,23 @@ def load_watchlist_performance() -> Dict[str, Dict]:
     """
     records = _load_watchlist_history()
     result: Dict[str, Dict] = {}
-    for sport in ("NHL", "IPL", "WNBA", "MLS", "WC", "LIGAMX", "F5"):
+    # DERIVED, not hand-listed. CFB settled 8 picks into the history and still
+    # showed an empty tile because it was never added to this tuple — the third
+    # hand-maintained sport list in the same path. Take the registry's
+    # watchlist sports UNION whatever the history actually contains, so a sport
+    # is counted the moment it produces a settled row (and pseudo-sports like
+    # F5, which have no registry entry, keep working).
+    sports = {r.get("sport") for r in records if r.get("sport")}
+    try:
+        from src.sports.registry import REGISTRY
+        # slug.upper(), NOT label: history rows key on the slug ("LIGAMX"),
+        # while label is the display string ("Liga MX") and would create a
+        # second, permanently-empty tile entry for the same sport.
+        sports |= {e.slug.upper() for e in REGISTRY.values()
+                   if not e.caps.track_in_main_history}
+    except Exception:      # registry import must never break the tiles
+        pass
+    for sport in sorted(sports):
         subset = [r for r in records if r.get("sport") == sport and r.get("result") in ("WON", "LOST")]
         # Deduplicate: one entry per (date, game, pick) so that multiple
         # legitimate picks for the same game (ML + spread + total) are all
