@@ -114,3 +114,118 @@ class TestRealSettledData:
         assert by_pick.get("Iowa State Cyclones +13.5") == "WON"
         # NDSU 38 @ Air Force 32 — won by 6, covers -1.5.
         assert by_pick.get("North Dakota State Bison -1.5") == "WON"
+
+
+class TestSettlementRetryWindow:
+    """A pick that missed its one attempt used to sit PENDING forever."""
+
+    def _patch(self, monkeypatch, states, scores):
+        import src.state.manager as mgr
+        from src.data import outcome_checker as oc
+        fetched = []
+
+        monkeypatch.setattr(mgr, "load_state",
+                            lambda d: states.get(d.isoformat()))
+
+        def _wl(sport, day):
+            fetched.append((sport, day.isoformat()))
+            return scores.get((sport, day.isoformat()), {})
+        monkeypatch.setattr(oc, "_fetch_watchlist_final_scores", _wl)
+
+        def _mlb(sport, day, *a, **k):
+            fetched.append(("MLB_F5", day.isoformat()))
+            return {}
+        monkeypatch.setattr(oc, "_fetch_espn_final_scores", _mlb)
+
+        saved = {}
+        monkeypatch.setattr(oc, "_load_watchlist_history",
+                            lambda: saved.get("rows", []))
+        monkeypatch.setattr(oc, "_save_watchlist_history",
+                            lambda rows: saved.__setitem__("rows", rows))
+        monkeypatch.setattr(oc, "_find_game_score",
+                            lambda sc, h, a, **k: sc.get((h, a)))
+        return fetched, saved
+
+    def _pick(self):
+        return {"sport": "CFB", "pick": "Kansas Jayhawks", "bet_type": "Moneyline",
+                "game": "Missouri Tigers @ Kansas Jayhawks",
+                "home_team": "Kansas Jayhawks", "away_team": "Missouri Tigers"}
+
+    def test_constant_is_a_real_window(self):
+        from src.data.outcome_checker import WATCHLIST_SETTLE_LOOKBACK_DAYS as L
+        assert L >= 3
+
+    def test_recovers_a_pick_from_several_days_back(self, monkeypatch):
+        """The whole point: day-4 pick, scores only available now."""
+        from datetime import date
+        from src.data import outcome_checker as oc
+        states = {"2026-09-09": {"cfb_display": [self._pick()]}}
+        scores = {("CFB", "2026-09-09"):
+                  {("Kansas Jayhawks", "Missouri Tigers"):
+                   {"home_score": 21, "away_score": 38}}}
+        _, saved = self._patch(monkeypatch, states, scores)
+        n = oc.check_and_settle_watchlist(date(2026, 9, 13))
+        assert n == 1
+        assert saved["rows"][0]["result"] == "LOST"
+        assert saved["rows"][0]["date"] == "2026-09-09"
+
+    def test_does_not_settle_today(self, monkeypatch):
+        """Today's games may still be running."""
+        from datetime import date
+        from src.data import outcome_checker as oc
+        states = {"2026-09-13": {"cfb_display": [self._pick()]}}
+        scores = {("CFB", "2026-09-13"):
+                  {("Kansas Jayhawks", "Missouri Tigers"):
+                   {"home_score": 21, "away_score": 38}}}
+        _, saved = self._patch(monkeypatch, states, scores)
+        assert oc.check_and_settle_watchlist(date(2026, 9, 13)) == 0
+
+    def test_no_fetch_when_nothing_outstanding(self, monkeypatch):
+        """A wider window must cost nothing on an ordinary day."""
+        from datetime import date
+        from src.data import outcome_checker as oc
+        states = {"2026-09-12": {"cfb_display": [self._pick()]}}
+        fetched, saved = self._patch(monkeypatch, states, {})
+        saved["rows"] = [{"date": "2026-09-12", "sport": "CFB",
+                          "pick": "Kansas Jayhawks",
+                          "game": "Missouri Tigers @ Kansas Jayhawks",
+                          "result": "LOST"}]
+        assert oc.check_and_settle_watchlist(date(2026, 9, 13)) == 0
+        assert not [f for f in fetched if f[0] == "CFB"]
+
+    def test_is_idempotent_across_runs(self, monkeypatch):
+        from datetime import date
+        from src.data import outcome_checker as oc
+        states = {"2026-09-12": {"cfb_display": [self._pick()]}}
+        scores = {("CFB", "2026-09-12"):
+                  {("Kansas Jayhawks", "Missouri Tigers"):
+                   {"home_score": 21, "away_score": 38}}}
+        _, saved = self._patch(monkeypatch, states, scores)
+        first = oc.check_and_settle_watchlist(date(2026, 9, 13))
+        second = oc.check_and_settle_watchlist(date(2026, 9, 13))
+        assert (first, second) == (1, 0)
+        assert len(saved["rows"]) == 1
+
+    def test_unresolvable_pick_is_retried_not_poisoned(self, monkeypatch):
+        """No score today -> stays outstanding -> settles once ESPN catches up."""
+        from datetime import date
+        from src.data import outcome_checker as oc
+        states = {"2026-09-12": {"cfb_display": [self._pick()]}}
+        _, saved = self._patch(monkeypatch, states, {})      # no scores at all
+        assert oc.check_and_settle_watchlist(date(2026, 9, 13)) == 0
+        assert saved.get("rows", []) == []
+        # ESPN publishes; same call now settles it.
+        monkeypatch.setattr(
+            oc, "_fetch_watchlist_final_scores",
+            lambda s, d: {("Kansas Jayhawks", "Missouri Tigers"):
+                          {"home_score": 21, "away_score": 38}})
+        assert oc.check_and_settle_watchlist(date(2026, 9, 13)) == 1
+
+    def test_f5_is_inside_the_window_too(self):
+        """F5 used to sit outside the day loop on `yesterday`."""
+        with open("src/data/outcome_checker.py") as f:
+            src = f.read()
+        body = src.split("def check_and_settle_watchlist")[1].split("\ndef ")[0]
+        assert "F5 watchlist settled" in body
+        # no stale single-day variables left in the function
+        assert "yesterday.isoformat()" not in body

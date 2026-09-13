@@ -28,6 +28,14 @@ ESPN_SPORT_PATHS = {
 
 # Watchlist-only leagues (NHL, IPL, WNBA, MLS) — separate history file, no PnL tracking
 WATCHLIST_HISTORY_PATH = Path("state/watchlist_history.json")
+# How far back check_and_settle_watchlist() re-scans for picks that never
+# settled. A single shot at yesterday meant one missed attempt (game not
+# final at run time, transient ESPN error, name mismatch) stranded a pick
+# PENDING forever. Re-scanning is idempotent -- settlement is keyed on
+# (date, sport, pick, game) -- and costs one fetch per (sport, date) that
+# still has something outstanding, so a quiet day costs nothing.
+WATCHLIST_SETTLE_LOOKBACK_DAYS = 7
+
 ESPN_WATCHLIST_PATHS = {
     "NHL": "hockey/nhl",
     "IPL": "cricket/ipl",
@@ -1585,11 +1593,25 @@ def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
     return scores
 
 
-def check_and_settle_watchlist(today: date) -> int:
+def check_and_settle_watchlist(today: date,
+                               lookback_days: int = WATCHLIST_SETTLE_LOOKBACK_DAYS) -> int:
     """
-    Settle yesterday's NHL, WNBA, and MLS watchlist picks against ESPN final scores.
-    NHL, WNBA, and MLS games always finish before the 9am PST morning run, so date-based
-    settlement (look at yesterday's state) is correct.
+    Settle watchlist picks against ESPN final scores.
+
+    SELF-HEALING over a window, not a single shot at yesterday. This used to
+    look only at `today - 1`, so a pick that missed its ONE attempt was never
+    retried and sat PENDING forever — the game not final yet at run time, a
+    transient ESPN error, or a team-name mismatch were all permanent. CFB is
+    the most exposed (late Saturday kickoffs), but every watchlist sport had it.
+
+    Re-scanning is cheap and safe because settlement is keyed on
+    (date, sport, pick, game) and already-settled picks are skipped, so this is
+    idempotent; the only cost is one ESPN fetch per (sport, date) that still
+    has something outstanding, and those are cached within a run.
+
+    Games from TODAY are deliberately not settled — they may still be running.
+    That matches the previous behaviour; same-day resolution is the nightly
+    results snapshot's job.
 
     IPL (and other WATCHLIST_PENDING_SPORTS) are settled by
     settle_watchlist_pending() instead, which uses the rolling pending file.
@@ -1597,17 +1619,12 @@ def check_and_settle_watchlist(today: date) -> int:
     Appends new WON/LOST records to state/watchlist_history.json.
     Returns the number of newly settled picks.
     """
-    yesterday = today - timedelta(days=1)
-
     from src.state.manager import load_state
-    state = load_state(yesterday)
-    if not state:
-        logger.info(f"No state for {yesterday} — no NHL watchlist picks to settle")
-        return 0
 
     existing = _load_watchlist_history()
     settled_keys = {(r["date"], r["sport"], r["pick"], r["game"]) for r in existing}
     new_records: List[Dict] = []
+    _score_cache: Dict[tuple, Dict] = {}
 
     # ── Watchlist sports ─────────────────────────────────────────────────────
     # TABLE-DRIVEN, not one hand-written block per sport. This was five
@@ -1628,87 +1645,113 @@ def check_and_settle_watchlist(today: date) -> int:
         ("LIGAMX", "ligamx_display",  _determine_mls_outcome),
     ]
 
-    for _sport, _state_key, _grade in WATCHLIST_SETTLERS:
-        picks = [p for p in (state.get(_state_key) or [])
-                 if p.get("sport") == _sport]
-        if not picks:
+    # Oldest first, so a backfill reads chronologically in the log.
+    for _offset in range(max(1, lookback_days), 0, -1):
+        _day = today - timedelta(days=_offset)
+        state = load_state(_day)
+        if not state:
             continue
-        scores = _fetch_watchlist_final_scores(_sport, yesterday)
-        for pick in picks:
-            key = (yesterday.isoformat(), _sport,
-                   pick.get("pick", ""), pick.get("game", ""))
-            if key in settled_keys:
-                continue
-            score_data = _find_game_score(scores, pick.get("home_team", ""),
-                                          pick.get("away_team", ""))
-            if not score_data:
-                logger.debug(f"{_sport} watchlist: score not found for "
-                             f"{pick.get('game')} on {yesterday}")
-                continue
-            result = _grade(
-                pick.get("pick", ""), pick.get("bet_type", ""),
-                pick.get("home_team", ""), pick.get("away_team", ""),
-                score_data["home_score"], score_data["away_score"],
-            )
-            if result not in ("WON", "LOST"):
-                continue
-            new_records.append({
-                "date":            yesterday.isoformat(),
-                "sport":           _sport,
-                "game":            pick.get("game", ""),
-                "pick":            pick.get("pick", ""),
-                "bet_type":        pick.get("bet_type", "Moneyline"),
-                "home_team":       pick.get("home_team", ""),
-                "away_team":       pick.get("away_team", ""),
-                "edge_pct":        pick.get("edge_pct", 0),
-                "confidence":      pick.get("confidence", "MEDIUM"),
-                "model_prob_pct":  pick.get("model_prob_pct", 0),
-                "market_prob_pct": pick.get("market_prob_pct", 0),
-                "result":          result,
-            })
-            logger.info(f"{_sport} watchlist settled: {pick.get('pick')} → {result}")
+        _day_str = _day.isoformat()
 
+        for _sport, _state_key, _grade in WATCHLIST_SETTLERS:
+            picks = [p for p in (state.get(_state_key) or [])
+                     if p.get("sport") == _sport]
+            # Only picks still outstanding — this is what keeps a wider window
+            # from costing anything on the ordinary day where nothing is stale.
+            picks = [p for p in picks
+                     if (_day_str, _sport, p.get("pick", ""), p.get("game", ""))
+                     not in settled_keys]
+            if not picks:
+                continue
+            if (_sport, _day) not in _score_cache:
+                _score_cache[(_sport, _day)] = _fetch_watchlist_final_scores(_sport, _day)
+            scores = _score_cache[(_sport, _day)]
+            for pick in picks:
+                key = (_day_str, _sport,
+                       pick.get("pick", ""), pick.get("game", ""))
+                score_data = _find_game_score(scores, pick.get("home_team", ""),
+                                              pick.get("away_team", ""))
+                if not score_data:
+                    logger.debug(f"{_sport} watchlist: score not found for "
+                                 f"{pick.get('game')} on {_day} — will retry")
+                    continue
+                result = _grade(
+                    pick.get("pick", ""), pick.get("bet_type", ""),
+                    pick.get("home_team", ""), pick.get("away_team", ""),
+                    score_data["home_score"], score_data["away_score"],
+                )
+                if result not in ("WON", "LOST"):
+                    continue
+                # Claim the key immediately so the same pick appearing in two
+                # state files cannot be written twice within one run.
+                settled_keys.add(key)
+                new_records.append({
+                    "date":            _day_str,
+                    "sport":           _sport,
+                    "game":            pick.get("game", ""),
+                    "pick":            pick.get("pick", ""),
+                    "bet_type":        pick.get("bet_type", "Moneyline"),
+                    "home_team":       pick.get("home_team", ""),
+                    "away_team":       pick.get("away_team", ""),
+                    "edge_pct":        pick.get("edge_pct", 0),
+                    "confidence":      pick.get("confidence", "MEDIUM"),
+                    "model_prob_pct":  pick.get("model_prob_pct", 0),
+                    "market_prob_pct": pick.get("market_prob_pct", 0),
+                    "result":          result,
+                })
+                _late = " (late)" if _offset > 1 else ""
+                logger.info(f"{_sport} watchlist settled{_late}: "
+                            f"{pick.get('pick')} [{_day_str}] → {result}")
 
-    # ── First 5 innings (MLB, watchlist probation) ──────────────────────────
-    # F5 picks live in singles_display with sport="MLB" but are their own market
-    # family, so they settle here into watchlist_history under sport "F5" — that
-    # gives them an independent W-L tile without touching MLB's budget record.
-    # Graded on the 5-INNING score; if the breakdown is missing, left unsettled.
-    f5_picks = [p for p in (state.get("singles_display") or [])
-                if str(p.get("bet_type", "")).startswith("F5 ")]
-    if f5_picks:
-        f5_scores = _fetch_espn_final_scores("MLB", yesterday)
-        for pick in f5_picks:
-            key = (yesterday.isoformat(), "F5", pick.get("pick", ""), pick.get("game", ""))
-            if key in settled_keys:
-                continue
-            sd = _find_game_score(f5_scores, pick.get("home_team", ""), pick.get("away_team", ""),
-                                  commence_time=pick.get("commence_time", ""))
-            if not sd or sd.get("home_f5") is None or sd.get("away_f5") is None:
-                continue
-            result = _determine_f5_outcome(
-                pick.get("pick", ""), pick.get("bet_type", ""),
-                sd.get("home_name", pick.get("home_team", "")),
-                sd.get("away_name", pick.get("away_team", "")),
-                sd["home_f5"], sd["away_f5"],
-            )
-            if result not in ("WON", "LOST"):
-                continue
-            new_records.append({
-                "date":            yesterday.isoformat(),
-                "sport":           "F5",
-                "game":            pick.get("game", ""),
-                "pick":            pick.get("pick", ""),
-                "bet_type":        pick.get("bet_type", "F5 Moneyline"),
-                "home_team":       pick.get("home_team", ""),
-                "away_team":       pick.get("away_team", ""),
-                "edge_pct":        pick.get("edge_pct", 0),
-                "confidence":      pick.get("confidence", "MEDIUM"),
-                "model_prob_pct":  pick.get("model_prob_pct", 0),
-                "market_prob_pct": pick.get("market_prob_pct", 0),
-                "result":          result,
-            })
-            logger.info(f"F5 watchlist settled: {pick.get('pick')} ({pick.get('bet_type')}) → {result}")
+        # ── First 5 innings (MLB, watchlist probation) ──────────────────────
+        # F5 picks live in singles_display with sport="MLB" but are their own
+        # market family, so they settle into watchlist_history under sport "F5"
+        # — an independent W-L tile that never touches MLB's budget record.
+        # Graded on the 5-INNING score; if the breakdown is missing the pick is
+        # left unsettled and RETRIED on a later day, which is the whole point of
+        # the window: ESPN often publishes the linescore after our morning run.
+        f5_picks = [p for p in (state.get("singles_display") or [])
+                    if str(p.get("bet_type", "")).startswith("F5 ")
+                    and (_day_str, "F5", p.get("pick", ""), p.get("game", ""))
+                    not in settled_keys]
+        if f5_picks:
+            if ("MLB_F5", _day) not in _score_cache:
+                _score_cache[("MLB_F5", _day)] = _fetch_espn_final_scores("MLB", _day)
+            f5_scores = _score_cache[("MLB_F5", _day)]
+            for pick in f5_picks:
+                key = (_day_str, "F5", pick.get("pick", ""), pick.get("game", ""))
+                sd = _find_game_score(f5_scores, pick.get("home_team", ""),
+                                      pick.get("away_team", ""),
+                                      commence_time=pick.get("commence_time", ""))
+                if not sd or sd.get("home_f5") is None or sd.get("away_f5") is None:
+                    continue
+                result = _determine_f5_outcome(
+                    pick.get("pick", ""), pick.get("bet_type", ""),
+                    sd.get("home_name", pick.get("home_team", "")),
+                    sd.get("away_name", pick.get("away_team", "")),
+                    sd["home_f5"], sd["away_f5"],
+                )
+                if result not in ("WON", "LOST"):
+                    continue
+                settled_keys.add(key)
+                new_records.append({
+                    "date":            _day_str,
+                    "sport":           "F5",
+                    "game":            pick.get("game", ""),
+                    "pick":            pick.get("pick", ""),
+                    "bet_type":        pick.get("bet_type", "F5 Moneyline"),
+                    "home_team":       pick.get("home_team", ""),
+                    "away_team":       pick.get("away_team", ""),
+                    "edge_pct":        pick.get("edge_pct", 0),
+                    "confidence":      pick.get("confidence", "MEDIUM"),
+                    "model_prob_pct":  pick.get("model_prob_pct", 0),
+                    "market_prob_pct": pick.get("market_prob_pct", 0),
+                    "result":          result,
+                })
+                _late = " (late)" if _offset > 1 else ""
+                logger.info(f"F5 watchlist settled{_late}: {pick.get('pick')} "
+                            f"({pick.get('bet_type')}) [{_day_str}] → {result}")
+
 
     if new_records:
         _save_watchlist_history(existing + new_records)
