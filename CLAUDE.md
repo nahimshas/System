@@ -27,7 +27,7 @@ Read it at the start of any session that involves model changes, new sport integ
 ---
 
 ## What the system does
-Runs daily at 9am PDT (GitHub Actions). Fetches odds for NBA/MLB/NFL/NHL/IPL/WNBA/MLS/WC, runs edge models, picks top-5 singles + parlays + props, saves state, generates an HTML report, deploys to GitHub Pages, and sends an email. A nightly Results Snapshot workflow (dispatched by the user's debrief routine at ~10:50pm) resolves results AND captures closing lines (CLV) for every pick; a CLV governor automatically gates negative-CLV markets out of the budget pool.
+Runs daily at 9am PDT (GitHub Actions). Fetches odds for **budget** sports (NBA/MLB/NFL/NHL) and **watchlist** sports (IPL/WNBA/MLS/WC/LigaMX/CFB), runs edge models, picks top-5 singles + parlays + props, saves state, generates an HTML report, deploys to GitHub Pages, and sends an email. A nightly Results Snapshot workflow (dispatched by the user's debrief routine at ~10:50pm) resolves results AND captures closing lines (CLV) for every pick; a CLV governor automatically gates negative-CLV markets out of the budget pool.
 
 Report URL: `https://nahimshas.github.io/System/`
 
@@ -35,6 +35,8 @@ Report URL: `https://nahimshas.github.io/System/`
 
 ## Architecture in one paragraph
 Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_games`, `fetch_context`, `analyze_games`, `fetch_props`, and `settle`. Modules are registered in `src/sports/registry.py` with **capability flags** (`enters_budget`, `in_main_display_pool`, `has_props`, etc.). `src/main.py` runs **one loop** over the registry — no per-sport if/else blocks exist anywhere in main.py. The flags tell the loop where to route each sport's picks automatically.
+
+⚠️ **The registry is necessary but NOT sufficient.** Several surfaces outside main.py still need the sport — and every one that was ever hand-written has broken silently. See the "hardcoded sport lists" rule below.
 
 ---
 
@@ -46,7 +48,10 @@ Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_ga
 | "Make [sport] a budget sport" | Flip 3 flags in `registry.py`: `enters_budget=True`, `enters_parlays=True`, `track_in_main_history=True`. See memory file "HOW TO GRADUATE". |
 | "Add props to NFL" | Implement `fetch_props()` in `src/sports/nfl.py` + the model in `props_analyzer.py` + flip `has_props=True` in registry. No main.py changes. |
 | "The pick isn't showing up" | Check: is the sport active this month? Is it in `leagues`? Did `fetch_games` return games? Did `analyze_games` return picks above `min_edge`? Is it a subsequent run overwriting morning picks? |
-| "Add [sport] to the watchlist" | Same as "add [sport]" but watchlist-only: `enters_budget=False`, `in_main_display_pool=False`. |
+| "Add [sport] to the watchlist" | Same as "add [sport]" but watchlist-only: `enters_budget=False`, `in_main_display_pool=False`. **Then grep for every hand-written sport list** (ESPN map, settlement, tiles, shadow settler) — the registry entry alone leaves the sport unpolled and unsettled, silently. |
+| "No logos / no live scores for [sport]" | The sport is missing from the `ESPN` map in `_report_js.html`. Adding the key is only half — `SCOREBOARD_SOURCES` must actually consume it (it is derived from the map now; keep it that way). |
+| "The [sport] tile shows no wins/losses" | Nothing is settling it. Check `WATCHLIST_SETTLERS` in `outcome_checker.py` and that `load_watchlist_performance()` counts it. |
+| "CLV is missing for [sport]/[market]" | Check the per-market table in `health_report.py` output. Either the team map cannot resolve the name, or we quoted a line Kalshi does not list (look for the NOT BUYABLE warning in the run log). |
 | "Update the result for [game]" | Add the settled record to `state/watchlist_history.json` with correct `result: "WON"` or `"LOST"`. |
 | "Run the code-only deploy" | Tell them: Actions → Daily Betting Report → Run workflow → check "code_only" → Run workflow. |
 | "Reset today's picks" | Tell them: Actions → Daily Betting Report → Run workflow → check "Reset state" → Run workflow. |
@@ -75,7 +80,13 @@ Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_ga
 | `state/watchlist_history.json` | All-time watchlist results (NHL/IPL/WNBA/MLS) |
 | `state/watchlist_pending.json` | Rolling IPL picks in-progress |
 | `backfill_shadow_log.py` | One-time root script — imports historical settled picks into shadow log |
-| `src/data/closing_lines.py` | CLV capture — historical Odds API fetch, self-healing shadow-log stamping (`market_prob_at_close`, `clv`), credit-budgeted. See "CLV system" below. |
+| `src/data/closing_lines.py` | CLV capture via the **paid Odds API** — OFF by default since Aug 25 2026 (`ENABLE_ODDS_API_CLV=true` resumes it). Kalshi is the primary feed. |
+| `src/data/kalshi.py` | **Kalshi/Robinhood client + resolver.** `resolve_pick()` maps our picks onto the contract we would actually buy. ⚠️ Matches on the **ticker segment**, never the rules prose (Kalshi's prose is inconsistent between series for the same game). `_ladder_points()` + the NOT BUYABLE warning. Non-MLB callers MUST pass `series_map=`. |
+| `src/data/kalshi_clv.py` | Kalshi CLV passes over the shadow + decision logs. `SPORT_SERIES`, `prices_at()` (1-minute candles, 15-min windowed mean), `_anchor_series()`. |
+| `src/data/team_names.py` | `expand_city()` — the feed says "NY Jets", our maps and ESPN say "New York Jets". **One module on purpose:** this single mismatch broke CLV *and* settlement in ways that look unrelated. |
+| `src/data/cfb_stats.py` | College football **SRS margin ratings** (points, no Elo→points conversion). `compute_srs()`, `effective_games()`, `rating_for()`. |
+| `src/state/execution_log.py` + `state/execution_log/` | Fill-price measurement — what a resting bid would have cost vs what we assumed. |
+| `tools/hooks/pre-commit` + `install.sh` | Blocks committing locally-generated `docs/` and `state/picks_<today>.json`. **A fresh clone must run `sh tools/hooks/install.sh`** (git does not version `.git/hooks`). Override: `ALLOW_GENERATED=1 git commit`. |
 | `src/state/clv_governor.py` | Phase-gated budget gating per (sport, market_type) by average CLV. `clv_gate(rec)`, `persist_state()` → `state/clv_state.json` |
 | `backfill_clv.py` + `clv_backfill.yml` | Throttled historical CLV backfill (workflow button, ~900 credits/run, idempotent — run until "Nothing left to backfill") |
 | `state/clv_state.json` | Per-market CLV snapshot — read by the CLV panels (classic report + PWA Analytics tab) |
@@ -128,6 +139,8 @@ Full deep reference: see "Self-Calibration System" section in the project memory
 
 ## CLV system (June 2026) — closing-line value capture + governor
 
+⚠️ **Since Aug 25 2026 the PRIMARY feed is Kalshi, not the Odds API** — Kalshi *is* Robinhood's book, so it measures the market we actually trade in, and it is free and keyless. Kalshi values live in their own `kalshi_*` fields (`kalshi_prob_at_pick` / `kalshi_prob_at_close` / `kalshi_clv`); the Odds API fields are untouched and the paid job is off by default. **Never mix the two ends of one measurement** — a sportsbook open against a Kalshi close folds the venue difference into the signal.
+
 CLV = `market_prob_at_close − market_prob_at_first_pick` (positive = beat the close). The fastest reliable skill signal: ~50 graded picks per (sport, market) gives a verdict win/loss needs 500+ for. **Set and forget — do not work around it manually.**
 
 | Concept | Where | Quick reference |
@@ -173,6 +186,10 @@ Captures, for EVERY analyzed game, BOTH sides of EVERY market (made **and reject
 ---
 
 ## Critical rules
+
+- **⚠️ HARDCODED SPORT LISTS ARE THE #1 RECURRING BUG.** Five broke in one week (Sep 2026): the `ESPN` map and `SCOREBOARD_SOURCES` in `_report_js.html`, the per-sport settle blocks and `load_watchlist_performance` tuple in `outcome_checker.py`, and `MAIN_SPORTS` in `shadow_log.py`. **Every one failed silently** — a sport that is never polled, settled, or counted looks exactly like a sport with no games. All five are now DERIVED; keep them that way. **Treat any literal set/tuple of sport names as a bug until proven otherwise, and grep for CONSUMERS, not just maps** — adding a key that nothing reads fixes nothing.
+- **⚠️ VERIFY ON LIVE DATA, NOT BY READING CODE.** Three fixes in Sep 2026 looked correct in the diff and were wrong in production. The CFB logo fix was caught only by loading the page and counting `<img>` elements; the NFL settlement gap only by querying the shadow log. A passing diff is not evidence — check the artefact. (Corollary from Aug 26: verifying a module in isolation does not verify its call site.)
+- **Spreads must be HALF-POINT** — Kalshi/Robinhood contracts are binary, so no whole-number line exists. `half_point_line()` in `edge_finder.py` snaps and **reprices both sides**. ⚠️ A half point is not necessarily a *listed* point: NFL has no 8.5/12.5/15.5 rung, so an unbuyable line can still reach the card (it warns). Grading uses our stored line, so an unbuyable line can log a result that does not match what the user actually bet.
 - `report.html` is ~3100 lines. Always use `offset` and `limit` when reading it — never read the whole file.
 - The `today` parameter in sport modules is always a **string** `"YYYY-MM-DD"`. Stats functions need `datetime.date` — always convert with `date.fromisoformat(today)` inside the module.
 - Never change main.py's analysis loop to add per-sport special cases — add a capability flag to the registry instead.
