@@ -30,6 +30,8 @@ import urllib.request
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from src.data.team_names import expand_city
+
 logger = logging.getLogger(__name__)
 
 BASE = "https://api.elections.kalshi.com/trade-api/v2"
@@ -277,7 +279,18 @@ def _team_token(name: str) -> Optional[str]:
         for full, tok in table.items():                # tolerate minor variants
             if _norm(full) == _norm(name):
                 return tok
+    # CITY ABBREVIATIONS. The odds feed says "NY Jets" / "NY Giants" while the
+    # map keys on "New York Jets" / "New York Giants", so both New York teams
+    # resolved to None and their games were never found — silently, and WITHOUT
+    # the not-buyable warning, because an unmapped team empties the pool before
+    # any ladder is read. Expanded rather than alias-keyed so the same feed
+    # shorthand cannot bite for LA / SF / KC / TB / NE / GB the first time it
+    # appears in a slate.
+    expanded = expand_city(name)
+    if expanded != name:
+        return _team_token(expanded)
     return None
+
 
 
 def _quote(market: Dict, side: str) -> Optional[Dict[str, float]]:

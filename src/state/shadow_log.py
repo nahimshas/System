@@ -446,12 +446,16 @@ def settle_shadow_from_espn(today: date) -> int:
     would remain permanently unsettled without this function.
 
     Supported sports:
-      • NBA, MLB       — via _fetch_espn_final_scores (ESPN_SPORT_PATHS)
-      • NHL, WNBA, MLS — via _fetch_watchlist_final_scores (ESPN_WATCHLIST_PATHS)
-      • IPL            — via Cricbuzz (_settle_ipl_pick), using commence_time
-                         to recover the actual game date (shadow run-date is
-                         always one day earlier than the game date for IPL)
-      • NFL            — skipped (out of season)
+    Supported sports are DERIVED from the ESPN path maps, so a sport is covered
+    the moment it has a path — no hand-maintained list to fall out of date:
+      • ESPN_SPORT_PATHS      — via _fetch_espn_final_scores (NBA/MLB/NHL/NFL)
+      • ESPN_WATCHLIST_PATHS  — via _fetch_watchlist_final_scores (WNBA/MLS/
+                                WC/LIGAMX/CFB), minus anything already covered
+                                by the main map
+      • IPL                   — via Cricbuzz (_settle_ipl_pick), using
+                                commence_time to recover the actual game date
+                                (shadow run-date is always one day earlier than
+                                the game date for IPL)
 
     Idempotent: entries already settled (outcome != None) are skipped.
     Today's picks are never settled (games not yet finished).
@@ -469,10 +473,20 @@ def settle_shadow_from_espn(today: date) -> int:
     )
     from collections import defaultdict
 
-    # Sports that have ESPN paths we can use
-    MAIN_SPORTS      = {"NBA", "MLB"}               # _fetch_espn_final_scores
-    WATCHLIST_SPORTS = {"NHL", "WNBA", "MLS", "WC", "LIGAMX", "CFB"} # _fetch_watchlist_final_scores
+    # Sports that have ESPN paths we can use.
+    #
+    # DERIVED FROM THE PATH MAPS, not hand-listed. MAIN_SPORTS was literally
+    # {"NBA", "MLB"} with a docstring reading "NFL — skipped (out of season)":
+    # a seasonal assumption that went stale the moment the season started, so
+    # every NFL shadow entry stayed permanently unsettled (25 of 30 rows in the
+    # Sep 13-14 slate) even though NFL is a REAL-MONEY budget sport with an
+    # ESPN path sitting right there in ESPN_SPORT_PATHS.
+    #
+    # IPL is excluded from the watchlist set because it settles via Cricbuzz.
+    from src.data.outcome_checker import ESPN_SPORT_PATHS, ESPN_WATCHLIST_PATHS
     IPL_SPORTS       = {"IPL"}                      # Cricbuzz via _settle_ipl_pick
+    MAIN_SPORTS      = set(ESPN_SPORT_PATHS) - IPL_SPORTS
+    WATCHLIST_SPORTS = (set(ESPN_WATCHLIST_PATHS) - MAIN_SPORTS) - IPL_SPORTS
     SUPPORTED        = MAIN_SPORTS | WATCHLIST_SPORTS | IPL_SPORTS
 
     OUTCOME_MAP = {"WON": "win", "LOST": "loss", "PUSH": "push"}

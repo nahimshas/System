@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from src.config import HISTORY_FILE
+from src.data.team_names import expand_city
 
 logger = logging.getLogger(__name__)
 
@@ -632,6 +633,14 @@ def _determine_outcome(
     Returns 'WON', 'LOST', or 'PUSH'.
     Handles Moneyline, Total (Over/Under), and Spread bets.
     """
+    # Team matching below is bidirectional substring, and "ny jets" is NOT a
+    # substring of "new york jets" (nor the reverse), so a pick carrying the
+    # feed's city shorthand matched neither side and returned UNKNOWN — leaving
+    # every New York pick permanently unsettled. Expand both ends first.
+    pick      = expand_city(pick)
+    home_team = expand_city(home_team)
+    away_team = expand_city(away_team)
+
     bt = bet_type.lower().strip()
 
     # ── Moneyline ────────────────────────────────────────────────────────────
