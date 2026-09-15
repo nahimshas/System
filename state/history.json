@@ -20191,5 +20191,161 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-09-14",
+    "type": "single",
+    "sport": "NFL",
+    "game": "Denver Broncos @ Kansas City Chiefs",
+    "bet_type": "Spread",
+    "pick": "Denver Broncos +2.5",
+    "home_team": "Kansas City Chiefs",
+    "away_team": "Denver Broncos",
+    "edge_pct": 12.1,
+    "confidence": "HIGH",
+    "model_prob_pct": 62.1,
+    "market_prob_pct": 50.0,
+    "cost": 6.24,
+    "profit_if_win": 5.76,
+    "result": "LOST",
+    "actual_pnl": -6.24,
+    "actual_home_score": 31.0,
+    "actual_away_score": 10.0
+  },
+  {
+    "date": "2026-09-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "San Diego Padres @ Colorado Rockies",
+    "bet_type": "Spread",
+    "pick": "Colorado Rockies +1.5",
+    "home_team": "Colorado Rockies",
+    "away_team": "San Diego Padres",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 55.6,
+    "market_prob_pct": 45.6,
+    "cost": 3.81,
+    "profit_if_win": 4.19,
+    "result": "WON",
+    "actual_pnl": 4.19,
+    "actual_home_score": 7.0,
+    "actual_away_score": 8.0
+  },
+  {
+    "date": "2026-09-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Baltimore Orioles @ New York Mets",
+    "bet_type": "Spread",
+    "pick": "New York Mets +1.5",
+    "home_team": "New York Mets",
+    "away_team": "Baltimore Orioles",
+    "edge_pct": 9.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 73.9,
+    "market_prob_pct": 64.4,
+    "cost": 5.97,
+    "profit_if_win": 3.03,
+    "result": "WON",
+    "actual_pnl": 3.03,
+    "actual_home_score": 1.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-09-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Chicago White Sox @ Cleveland Guardians",
+    "bet_type": "Moneyline",
+    "pick": "Cleveland Guardians",
+    "home_team": "Cleveland Guardians",
+    "away_team": "Chicago White Sox",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 68.0,
+    "market_prob_pct": 58.0,
+    "cost": 4.8,
+    "profit_if_win": 3.2,
+    "result": "LOST",
+    "actual_pnl": -4.8,
+    "actual_home_score": 3.0,
+    "actual_away_score": 7.0
+  },
+  {
+    "date": "2026-09-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ Cincinnati Reds",
+    "bet_type": "Spread",
+    "pick": "Cincinnati Reds +1.5",
+    "home_team": "Cincinnati Reds",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 9.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 55.6,
+    "market_prob_pct": 46.3,
+    "cost": 3.87,
+    "profit_if_win": 4.13,
+    "result": "LOST",
+    "actual_pnl": -3.87,
+    "actual_home_score": 1.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-09-14",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "New York Mets +1.5 + Denver Broncos +2.5",
+    "bet_type": "Parlay",
+    "pick": "New York Mets +1.5 + Denver Broncos +2.5",
+    "edge_pct": 13.3,
+    "confidence": "HIGH",
+    "model_prob_pct": 45.5,
+    "market_prob_pct": 0,
+    "cost": 4.1,
+    "profit_if_win": 7.9,
+    "result": "LOST",
+    "actual_pnl": -4.1,
+    "legs": [
+      {
+        "game": "Baltimore Orioles @ New York Mets",
+        "pick": "New York Mets +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Denver Broncos @ Kansas City Chiefs",
+        "pick": "Denver Broncos +2.5",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-09-14",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Cleveland Guardians (ML) + New York Mets (ML)",
+    "bet_type": "Parlay",
+    "pick": "Cleveland Guardians (ML) + New York Mets (ML)",
+    "edge_pct": 10.4,
+    "confidence": "HIGH",
+    "model_prob_pct": 41.2,
+    "market_prob_pct": 0,
+    "cost": 2.95,
+    "profit_if_win": 6.05,
+    "result": "LOST",
+    "actual_pnl": -2.95,
+    "legs": [
+      {
+        "game": "Chicago White Sox @ Cleveland Guardians",
+        "pick": "Cleveland Guardians",
+        "result": "LOST"
+      },
+      {
+        "game": "Baltimore Orioles @ New York Mets",
+        "pick": "New York Mets",
+        "result": "LOST"
+      }
+    ]
   }
 ]
