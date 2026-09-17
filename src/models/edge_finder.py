@@ -662,9 +662,6 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         if not home_inj_list and not away_inj_list:
             research.append("No significant injuries reported for either team")
 
-        # --- Model projected score (pre-computed above; same formula as Total block) ---
-        if _proj_score_signal:
-            signals.append(_proj_score_signal)
 
         # Calibration capture: raw prob (pre-any-cap) + cap firing trackers.
         # Stamped onto each rec at the end so the shadow log can later run
@@ -722,6 +719,26 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                     f"injured players; model probability anchored near market "
                     f"({max_away_prob*100:.0f}% vs raw {(adjusted_away_prob)*100:.0f}%)"
                 )
+
+        # ── Projected score — derived from the FINAL (post-cap) probability ──
+        # Built here, not up front, so it reflects home field, injuries, rest
+        # and every cap. The Spread/Total blocks reuse this exact string, so all
+        # three cards for a game agree with each other AND with the pick.
+        if _nfl_proj_total is not None:
+            _ph, _pa = _score_from_prob(_nfl_proj_total, adjusted_home_prob,
+                                        NFL_SPREAD_STD)
+            _nfl_proj_signal = (f"Model projected score: {home} {_ph:.0f} — "
+                                f"{away} {_pa:.0f}")
+            signals.append(_nfl_proj_signal)
+
+        # Projected score — margin derived from the FINAL probability so the
+        # card cannot contradict its own pick. See _score_from_prob().
+        if _proj_score_signal:
+            _nba_tot = _proj_home + _proj_away
+            _ph, _pa = _score_from_prob(_nba_tot, adjusted_home_prob, NBA_SPREAD_STD)
+            _proj_score_signal = (f"Model projected score: {home} {_ph:.0f} — "
+                                  f"{away} {_pa:.0f}")
+            signals.append(_proj_score_signal)
 
         home_edge = adjusted_home_prob - market_home_prob
         away_edge = adjusted_away_prob - market_away_prob
@@ -2176,6 +2193,48 @@ def _nfl_margin_to_prob(expected_margin: float) -> float:
     return float(norm.cdf(expected_margin, 0, NFL_SPREAD_STD))
 
 
+def _score_from_prob(total: float, p_home: float, std: float) -> Tuple[float, float]:
+    """Split a projected TOTAL into (home, away) whose margin matches the
+    model's OWN win probability.
+
+    ⚠️ WHY: the projected score used to be built from season scoring averages
+    alone, while the win probability came from a different path entirely (team
+    strength + home field + injuries + rest). The two then disagreed — measured
+    Sep 2026 across live cards: NFL mean 6.2 points off, worst **27.7**, and the
+    SIGN FLIPPED (Sep 10 SF@LAR projected "LAR by 24" while the model believed
+    SF by 3.7). A card that shows one team winning while we bet the other is
+    indefensible regardless of which number is right.
+
+    Deriving the margin from the probability makes them consistent BY
+    CONSTRUCTION, so this class of bug cannot come back. The total still comes
+    from scoring data, which is what scoring data is actually good for; only
+    the split is model-driven.
+
+    NOTE: it stays legitimate for the projected score to favour the team we did
+    NOT pick — that is an underdog value bet, where we take a price rather than
+    predict a winner. The card says so explicitly (see `_value_dog_note`).
+    """
+    p = min(max(float(p_home), 0.001), 0.999)
+    margin = float(norm.ppf(p)) * float(std)
+    return (float(total) + margin) / 2.0, (float(total) - margin) / 2.0
+
+
+def _value_dog_note(pick_team: str, model_prob: float, market_prob: float) -> Optional[str]:
+    """Explain a pick on a side the model expects to LOSE more often than win.
+
+    Without this the card reads as self-contradictory: it names a pick and then
+    projects the other team ahead. Both are correct — we are buying a price,
+    not forecasting a winner — but nothing on the card said so, and the user
+    reasonably read it as a bug.
+    """
+    if model_prob >= 0.50:
+        return None
+    return (f"Value pick, not a predicted win: {pick_team} priced at "
+            f"{market_prob * 100:.1f}% but the model says {model_prob * 100:.1f}% "
+            f"— we expect them to lose more often than not, and are backing the "
+            f"price. The projected score below shows the more likely outcome.")
+
+
 def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: float = None) -> List[BetRecommendation]:
     from src.data.nfl_stats import normalize as nfl_normalize
     home = nfl_normalize(game["home_team"])
@@ -2195,13 +2254,18 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
     # ── Pre-compute projected score shared by all bet types ───────────────────
     # Mirrors the Total block formula (season ppg/oppg average) so ML, Spread,
     # and Total cards always show the same number for a given game.
+    # Scoring averages give the projected TOTAL. They must NOT set the margin:
+    # the margin has to come from the model's own win probability or the card
+    # can contradict its own pick (measured Sep 2026: mean 6.2 pts off, worst
+    # 27.7, sign flipped). See _score_from_prob().
     _nfl_proj_signal: Optional[str] = None
+    _nfl_proj_total: Optional[float] = None
     _nfl_hs_pre = nfl_ctx["season_stats"].get(home, {})
     _nfl_as_pre = nfl_ctx["season_stats"].get(away, {})
     if _nfl_hs_pre and _nfl_as_pre:
         _nfl_ph = (_nfl_hs_pre.get("ppg", 21.0) + _nfl_as_pre.get("oppg", 21.0)) / 2
         _nfl_pa = (_nfl_as_pre.get("ppg", 21.0) + _nfl_hs_pre.get("oppg", 21.0)) / 2
-        _nfl_proj_signal = f"Model projected score: {home} {_nfl_ph:.0f} — {away} {_nfl_pa:.0f}"
+        _nfl_proj_total = _nfl_ph + _nfl_pa
 
     ml = game.get("moneyline")
     if ml:
@@ -2315,10 +2379,6 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
         if not home_inj_list and not away_inj_list:
             research.append("No significant injuries reported for either team")
 
-        # Projected score (pre-computed above; same formula as Total block)
-        if _nfl_proj_signal:
-            signals.append(_nfl_proj_signal)
-
         # Calibration capture: raw prob + cap firing trackers.
         _nfl_raw_home = _nfl_margin_to_prob(base_margin) + adj
         _nfl_hardcap_fired = (_nfl_raw_home > 0.90) or (_nfl_raw_home < 0.10)
@@ -2358,12 +2418,16 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                 conf = _confidence_label(home_edge, len(signals), stats_available)
                 if home_injury_capped:
                     conf = "MEDIUM"
+                _res = research[:]
+                _dog = _value_dog_note(home, adjusted_home_prob, market_home_prob)
+                if _dog:
+                    _res.insert(0, _dog)
                 recs.append(BetRecommendation(
                     sport="NFL", game=label, bet_type="Moneyline", pick=home,
                     market_prob=market_home_prob, model_prob=adjusted_home_prob,
                     edge=home_edge, contract_price=market_home_prob,
                     sizing=sizing, confidence=conf,
-                    signals=signals[:], research=research[:],
+                    signals=signals[:], research=_res,
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
                 ))
@@ -2374,12 +2438,16 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                 conf = _confidence_label(away_edge, len(signals), stats_available)
                 if away_injury_capped:
                     conf = "MEDIUM"
+                _res = research[:]
+                _dog = _value_dog_note(away, adjusted_away_prob, market_away_prob)
+                if _dog:
+                    _res.insert(0, _dog)
                 recs.append(BetRecommendation(
                     sport="NFL", game=label, bet_type="Moneyline", pick=away,
                     market_prob=market_away_prob, model_prob=adjusted_away_prob,
                     edge=away_edge, contract_price=market_away_prob,
                     sizing=sizing, confidence=conf,
-                    signals=signals[:], research=research[:],
+                    signals=signals[:], research=_res,
                     home_team=home, away_team=away, game_time=game_time,
                     commence_time=commence_time,
                 ))
@@ -2647,6 +2715,7 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
     # Uses the blended formula (season + recent form + B2B + playoff factor) so
     # ML, Spread, and Total cards always show the same number for a given game.
     _nhl_proj_signal: Optional[str] = None
+    _nhl_proj_total: Optional[float] = None
     _nhl_hs_pre = nhl_ctx["season_stats"].get(home, {})
     _nhl_as_pre = nhl_ctx["season_stats"].get(away, {})
     if _nhl_hs_pre and _nhl_as_pre:
@@ -2670,7 +2739,9 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
         if playoff:
             _nhl_ph *= NHL_PLAYOFF_SCORING_FACTOR
             _nhl_pa *= NHL_PLAYOFF_SCORING_FACTOR
-        _nhl_proj_signal = f"Model projected score: {home} {_nhl_ph:.1f} — {away} {_nhl_pa:.1f}"
+        # Blended rates give the TOTAL; the margin comes from the model's own
+        # probability below so the card cannot contradict its pick.
+        _nhl_proj_total = _nhl_ph + _nhl_pa
 
     ml = game.get("moneyline")
     if ml:
@@ -2777,8 +2848,6 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             research.append("No significant injuries reported for either team")
 
         # Projected score (pre-computed above; same formula as Total block)
-        if _nhl_proj_signal:
-            signals.append(_nhl_proj_signal)
 
         # Calibration capture: raw prob + cap firing trackers.
         # Add the accumulated adjustments (home ice / B2B / injuries) in MARGIN
@@ -2814,6 +2883,14 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
                 adjusted_away_prob = max_away_prob
                 adjusted_home_prob = 1 - adjusted_away_prob
                 away_injury_capped = True
+
+        # Projected score — margin from the FINAL probability (see _score_from_prob).
+        if _nhl_proj_total is not None:
+            _ph, _pa = _score_from_prob(_nhl_proj_total, adjusted_home_prob,
+                                        NHL_SPREAD_STD)
+            _nhl_proj_signal = (f"Model projected score: {home} {_ph:.1f} — "
+                                f"{away} {_pa:.1f}")
+            signals.append(_nhl_proj_signal)
 
         home_edge = adjusted_home_prob - market_home_prob
         away_edge = adjusted_away_prob - market_away_prob
@@ -3586,7 +3663,11 @@ def analyze_wnba_game(
     _proj_away_pts = max(50.0, min(120.0, away_ppg + _home_def_allowed - _wnba_avg))
     _proj_home_pts -= min(home_lineup_pen * _WNBA_INJ_TO_PTS, 6.0)
     _proj_away_pts -= min(away_lineup_pen * _WNBA_INJ_TO_PTS, 6.0)
-    signals.append(f"Model projected score: {home_raw} {_proj_home_pts:.0f} — {away_raw} {_proj_away_pts:.0f}")
+    # NOTE: the projected score is APPENDED BELOW, after the caps, so its margin
+    # comes from the final probability. The injury adjustment above (Jul 15) made
+    # the total honest but left the MARGIN free to disagree with the win
+    # probability — measured Sep 2026: mean 4.9 pts off with a sign flip.
+    _wnba_proj_total = _proj_home_pts + _proj_away_pts
 
     # Injury research lines
     for key, inj_list in wnba_injuries.items():
@@ -3624,6 +3705,10 @@ def analyze_wnba_game(
         adj_home_prob, market_home_prob, _cred_cap("wnba", WNBA_CRED_CAP, "credibility_moneyline"), "wnba", "credibility_moneyline"
     )
     adj_away_prob = 1.0 - adj_home_prob
+
+    # Projected score — margin from the FINAL probability (see _score_from_prob).
+    _ph, _pa = _score_from_prob(_wnba_proj_total, adj_home_prob, WNBA_SPREAD_STD)
+    signals.append(f"Model projected score: {home_raw} {_ph:.0f} — {away_raw} {_pa:.0f}")
 
     # ── Build recommendations ─────────────────────────────────────────────────
     for team_raw, model_prob, market_prob in [

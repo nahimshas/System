@@ -240,6 +240,19 @@
       },
       "rationale": "Found Sep 11 2026 while checking why two Kansas picks both carried an edge of exactly 0.08000: analyze_cfb_game called _apply_credibility_cap_dispatched(...)[0], taking the capped probability and DISCARDING [1], the fired flag. _stamp_recs_calibration only fills that flag in when model_prob_raw is still None, and CFB always sets it — so credibility_cap_fired was False on every CFB pick ever produced, including ones where the cap clipped a 12.6pp raw edge down to 8.0pp. || WHY IT MATTERS BEYOND DISPLAY: cap_state.evaluate_and_adjust_caps reads ONLY cap-fired rows to run its raw_mae-vs-capped_mae counterfactual. With zero rows ever flagged, the CFB cap was structurally unable to self-tune — it would have sat at 0.08 forever while every other sport adapted. The cap firing on BOTH picks of a slate is the same symptom flagged Sep 4: a cap that fires on ~100% of picks is a model-disagreement signal, not a safety net. || WHAT TO CHECK: with >=60 recorded firings, does the counterfactual widen the cap (model adds signal past 8pp), tighten it (drift is noise), or hold? A cap still firing on a majority of CFB picks at evaluation time means the SRS margin and the market disagree systematically, and cfb_validation is the checkpoint that matters.",
       "status": "open"
+    },
+    {
+      "id": "projected_score_consistency",
+      "status": "open",
+      "title": "Projected score now derived from the model probability — does the card still read right?",
+      "created": "2026-09-17",
+      "evaluate_after": "2026-11-01",
+      "data_window_start": "2026-09-17",
+      "type": "note",
+      "rules": {
+        "min_cards": 100
+      },
+      "rationale": "User caught the Sep 17 NFL card picking Detroit while projecting Buffalo by 1. The projected score was built from season scoring averages alone while the win probability came from team strength + home field + injuries + rest + caps, so the two were free to disagree. Measured across live cards: NFL mean 6.2 pts off, worst 27.7 with the SIGN FLIPPED (Sep 10 SF@LAR projected LAR by 24 while the model believed SF by 3.7); WNBA mean 4.9. || CHANGE: the TOTAL still comes from scoring data, the MARGIN now comes from the final post-cap probability (_score_from_prob), so they agree by construction in NFL/NBA/NHL/WNBA. CFB already did this. DISPLAY ONLY — no probability, edge, or stake changes. || WHAT TO CHECK: that projected scores now look sane against actual results (the margin is a median-ish expectation, not a point forecast), and that the value-underdog note reads clearly on cards where we back a side the model expects to lose. If projected totals now look systematically off, the TOTAL formula is the suspect, not the split."
     }
   ]
 }
