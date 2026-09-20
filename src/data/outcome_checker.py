@@ -37,6 +37,11 @@ WATCHLIST_HISTORY_PATH = Path("state/watchlist_history.json")
 # still has something outstanding, so a quiet day costs nothing.
 WATCHLIST_SETTLE_LOOKBACK_DAYS = 7
 
+# Leagues ESPN dates by UTC, so an evening-Pacific kickoff lands on the next
+# ESPN date. These need a second single-date lookup (NEVER a range — see
+# _fetch_watchlist_final_scores).
+_SOCCER_WATCHLIST = {"MLS", "WC", "LIGAMX"}
+
 ESPN_WATCHLIST_PATHS = {
     "NHL": "hockey/nhl",
     "IPL": "cricket/ipl",
@@ -1533,21 +1538,30 @@ def _fetch_watchlist_final_scores(sport: str, game_date: date) -> Dict:
     if not path:
         return {}
 
-    # Soccer (MLS/WC) is dated by UTC on ESPN, so an evening-Pacific match rolls
-    # into the next ESPN date. Query a 2-day window so those boundary games are
-    # found and can settle (otherwise the pick sits PENDING forever).
-    if sport in ("MLS", "WC"):
-        date_str = f"{game_date.strftime('%Y%m%d')}-{(game_date + timedelta(days=1)).strftime('%Y%m%d')}"
-    else:
-        date_str = game_date.strftime("%Y%m%d")
+    # Soccer is dated by UTC on ESPN, so an evening-Pacific match rolls into the
+    # next ESPN date and must be looked for there too.
+    #
+    # ⚠️ IT MUST BE TWO SINGLE-DATE CALLS, NOT A RANGE. ESPN's soccer
+    # scoreboards return HTTP 400 for "?dates=A-B" (verified Sep 19 2026 on
+    # usa.1, mex.1 and fifa.world) even though the US sports accept exactly that
+    # form. The range was used here for MLS/WC, so BOTH fetched nothing at all —
+    # silently, since the handler logs and returns {}, which is indistinguishable
+    # from a day with no matches. LigaMX escaped only because it was never added
+    # to the tuple and so used a single date.
+    dates = [game_date.strftime("%Y%m%d")]
+    if sport in _SOCCER_WATCHLIST:
+        dates.append((game_date + timedelta(days=1)).strftime("%Y%m%d"))
+
     url = f"{ESPN_BASE}/{path}/scoreboard"
-    try:
-        r = requests.get(url, params={"dates": date_str}, timeout=15)
-        r.raise_for_status()
-        data = r.json()
-    except Exception as e:
-        logger.error(f"ESPN fetch failed ({sport}, {game_date}): {e}")
-        return {}
+    events: List[Dict] = []
+    for _d in dates:
+        try:
+            r = requests.get(url, params={"dates": _d}, timeout=15)
+            r.raise_for_status()
+            events.extend((r.json() or {}).get("events", []) or [])
+        except Exception as e:
+            logger.error(f"ESPN fetch failed ({sport}, {_d}): {e}")
+    data = {"events": events}
 
     scores: Dict = {}
     for event in data.get("events", []):

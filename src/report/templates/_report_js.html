@@ -16,16 +16,30 @@
     d.setUTCDate(d.getUTCDate() + 1);
     return d.toISOString().slice(0, 10).replace(/-/g, "");
   })();
-  var _soccerDates = _espnDate + "-" + _espnDateNext;
+  // ⚠️ ESPN's SOCCER scoreboards REJECT a date range — "?dates=20260919-20260920"
+  // returns HTTP 400 for usa.1, mex.1 AND fifa.world (verified Sep 19 2026),
+  // while the same range is fine for the US sports. So every soccer fetch was
+  // failing outright: no logos, no live scores, no ESPN settlement, and silent,
+  // because the fetch .catch() just reports zero events — which looks exactly
+  // like a day with no matches. Liga MX was the visible symptom (the user saw
+  // missing crests); MLS and WC were broken the same way.
+  //
+  // Two SINGLE-DATE fetches instead, keeping the reason the window existed:
+  // ESPN dates soccer by UTC, so a 9pm Pacific kickoff is filed under tomorrow.
+  function _soccerUrls(league) {
+    var base = "https://site.api.espn.com/apis/site/v2/sports/soccer/" +
+               league + "/scoreboard?dates=";
+    return [base + _espnDate, base + _espnDateNext];
+  }
   var ESPN = {
     NBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=" + _espnDate,
     MLB: "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=" + _espnDate,
     NHL: "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=" + _espnDate,
     NFL: "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=" + _espnDate,
     WNBA: "https://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard?dates=" + _espnDate,
-    MLS: "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard?dates=" + _soccerDates,
-    WC: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=" + _soccerDates,
-    LIGAMX: "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/scoreboard?dates=" + _soccerDates,
+    MLS: _soccerUrls("usa.1"),
+    WC: _soccerUrls("fifa.world"),
+    LIGAMX: _soccerUrls("mex.1"),
     // College football needs two extra params the pro leagues do not: groups=80
     // restricts to FBS, and limit lifts ESPN's default page of 25 — a Saturday
     // slate runs past 60 games, so without it the later games (and their logos,
@@ -3080,8 +3094,15 @@
   // settlement — silently, because a sport that is never polled looks exactly
   // like a sport with no games. Keying off the map means adding an endpoint is
   // the whole change.
-  var SCOREBOARD_SOURCES = Object.keys(ESPN).map(function (s) {
-    return { url: ESPN[s], sport: s };
+  // A map value may be a single URL or an ARRAY of them (soccer needs one
+  // fetch per UTC date — see _soccerUrls). Each becomes its own source; the
+  // completion gate counts sources and onFetch merges their events, so a sport
+  // contributing two responses needs no special handling.
+  var SCOREBOARD_SOURCES = [];
+  Object.keys(ESPN).forEach(function (s) {
+    var v = ESPN[s];
+    (Object.prototype.toString.call(v) === "[object Array]" ? v : [v])
+      .forEach(function (u) { SCOREBOARD_SOURCES.push({ url: u, sport: s }); });
   });
 
   function refresh() {

@@ -15,12 +15,19 @@ def _js():
 
 class TestSourcesAreDerived:
     def test_sources_are_built_from_the_map(self):
-        assert re.search(r"SCOREBOARD_SOURCES\s*=\s*Object\.keys\(ESPN\)", _js())
+        """Derived from ESPN, however it is spelled — a map value may now be a
+        single URL or an array of them (soccer needs one fetch per UTC date)."""
+        js = _js()
+        # NB: splitting on the name is unreliable — the push line contains it
+        # too — so assert against the construction region as a whole.
+        i = js.index("var SCOREBOARD_SOURCES")
+        block = js[i:i + 600]
+        assert "Object.keys(ESPN)" in block
+        assert "SCOREBOARD_SOURCES.push" in block or ".map(" in block
 
     def test_no_hand_listed_sports_remain(self):
         """The whole point: no `{ url: ESPN.XXX, sport: "XXX" }` rows."""
-        block = _js().split("SCOREBOARD_SOURCES")[1][:400]
-        assert not re.search(r"url:\s*ESPN\.[A-Z]+", block)
+        assert not re.search(r"url:\s*ESPN\.[A-Z]+", _js())
 
     def test_every_map_entry_is_polled(self):
         js = _js()
