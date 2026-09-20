@@ -50,9 +50,17 @@ SPORT_SERIES: Dict[str, Dict[str, str]] = {
     "NFL":  {"Moneyline": "KXNFLGAME",  "Spread": "KXNFLSPREAD",  "Total": "KXNFLTOTAL"},
     "NHL":  {"Moneyline": "KXNHLGAME",  "Spread": "KXNHLSPREAD",  "Total": "KXNHLTOTAL"},
     "WNBA": {"Moneyline": "KXWNBAGAME", "Spread": "KXWNBASPREAD", "Total": "KXWNBATOTAL"},
-    "MLS":  {"Moneyline": "KXMLSGAME",  "Spread": "KXMLSSPREAD",  "Total": "KXMLSTOTAL"},
+    # Soccer: "Draw" lives INSIDE the moneyline book as the "Tie" outcome, so it
+    # maps to the same series rather than one of its own.
+    "MLS":  {"Moneyline": "KXMLSGAME",  "Spread": "KXMLSSPREAD",
+             "Total": "KXMLSTOTAL", "Draw": "KXMLSGAME"},
+    # WC deliberately absent: the World Cup is out of season, so the series
+    # ticker cannot be verified against a live book right now — and guessing one
+    # would silently resolve nothing while LOOKING wired, which is the failure
+    # mode this whole exercise exists to remove. Add it (plus a country map)
+    # when matches are listed again.
     "LIGAMX": {"Moneyline": "KXLIGAMXGAME", "Spread": "KXLIGAMXSPREAD",
-               "Total": "KXLIGAMXTOTAL"},
+               "Total": "KXLIGAMXTOTAL", "Draw": "KXLIGAMXGAME"},
     # CFB resolves team tokens structurally (no static map) — see kalshi.py.
     "CFB":  {"Moneyline": "KXNCAAFGAME", "Spread": "KXNCAAFSPREAD",
              "Total": "KXNCAAFTOTAL"},
@@ -384,6 +392,12 @@ def _decision_entry_to_pick(e: Dict) -> Optional[Dict[str, Any]]:
         if line is None:
             return None
         pick = f"{'Over' if side.lower().startswith('o') else 'Under'} {float(line)}"
+    elif mt == "Draw":
+        # Soccer draws ARE priced on Kalshi, as the "Tie" outcome inside the
+        # moneyline book. This branch did not exist, so every Draw candidate
+        # fell through to None and was never even attempted — 58 MLS and 24
+        # LigaMX rows in September alone.
+        pick = "Draw"
     else:
         return None          # F5 Tie has no reliable draw price — skip
     return {"bet_type": mt, "pick": pick, "home_team": home, "away_team": away}

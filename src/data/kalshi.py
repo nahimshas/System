@@ -263,6 +263,95 @@ def _cfb_token_from_markets(full_name: str, markets: List[Dict]) -> Optional[str
     return hits[0]
 
 
+# ── Watchlist team maps (Sep 19 2026) ────────────────────────────────────────
+# These sports produced picks for months with ZERO CLV coverage — WNBA alone had
+# 243 shadow rows and not one measurable. `_teams_mappable()` skips a sport
+# whose names cannot be resolved, so the gap was silent by design: it looked
+# like "not wired yet" rather than "broken", which is correct but easy to leave
+# forever. Tokens below are the live `yes_sub_title` values from each league's
+# Kalshi MONEYLINE book (the only book titled with a bare team name).
+#
+# ⚠️ AMBIGUOUS PAIRS — collapsing either side resolves one team's CLV against
+# the other team's book, which is worse than no CLV at all:
+#     MLS  "Los Angeles F" (LAFC)  vs "Los Angeles G" (LA Galaxy)
+#     MLS  "New York City" (NYCFC) vs "New York RB"   (Red Bulls)
+WNBA_TEAM_TO_KALSHI = {
+    "Atlanta Dream": "Atlanta",
+    "Chicago Sky": "Chicago",
+    "Connecticut Sun": "Connecticut",
+    "Dallas Wings": "Dallas",
+    "Golden State Valkyries": "Golden State",
+    "Indiana Fever": "Indiana",
+    "Las Vegas Aces": "Las Vegas",
+    "Los Angeles Sparks": "Los Angeles",
+    "Minnesota Lynx": "Minnesota",
+    "New York Liberty": "New York",
+    "Phoenix Mercury": "Phoenix",
+    "Portland Fire": "Portland",
+    "Seattle Storm": "Seattle",
+    "Toronto Tempo": "Toronto",
+    "Washington Mystics": "Washington",
+}
+
+MLS_TEAM_TO_KALSHI = {
+    "Atlanta United FC": "Atlanta",
+    "Austin FC": "Austin",
+    "CF Montreal": "Montreal",
+    "Charlotte FC": "Charlotte",
+    "Chicago Fire": "Chicago Fire",
+    "Colorado Rapids": "Colorado",
+    "Columbus Crew SC": "Columbus",
+    "D.C. United": "DC United",
+    "FC Cincinnati": "Cincinnati",
+    "FC Dallas": "Dallas",
+    "Houston Dynamo": "Houston",
+    "Inter Miami CF": "Miami",
+    "LA Galaxy": "Los Angeles G",          # ⚠️ not "Los Angeles"
+    "Los Angeles FC": "Los Angeles F",     # ⚠️ not "Los Angeles"
+    "Minnesota United FC": "Minnesota",
+    "Nashville SC": "Nashville",
+    "New England Revolution": "New England",
+    "New York City FC": "New York City",   # ⚠️ distinct from Red Bulls
+    "New York Red Bulls": "New York RB",   # ⚠️
+    "Orlando City SC": "Orlando",
+    "Philadelphia Union": "Philadelphia",
+    "Portland Timbers": "Portland",
+    "Real Salt Lake": "Salt Lake",
+    "San Diego FC": "San Diego FC",
+    "San Jose Earthquakes": "San Jose",
+    "Seattle Sounders FC": "Seattle",
+    "Sporting Kansas City": "Kansas City",
+    "St. Louis City SC": "Saint Louis",
+    "Toronto FC": "Toronto",
+    "Vancouver Whitecaps FC": "Vancouver",
+}
+
+LIGAMX_TEAM_TO_KALSHI = {
+    "América": "America",
+    "Atlante FC": "Atlante",
+    "Atlas": "Atlas",
+    "Atlético San Luis": "San Luis",
+    "Cruz Azul": "Cruz Azul",
+    "FC Juárez": "Juarez",
+    "Guadalajara": "Guadalajara",
+    "León": "Leon",
+    "Monterrey": "Monterrey",
+    "Necaxa": "Necaxa",
+    "Pachuca": "Pachuca",
+    "Puebla": "Puebla",
+    "Pumas": "Pumas UNAM",
+    "Querétaro": "Queretaro",
+    "Santos Laguna": "Santos Laguna",
+    "Tigres": "Tigres",
+    "Tijuana": "Tijuana de Caliente",
+    "Toluca": "Toluca",
+}
+
+
+_TEAM_TABLES = (TEAM_TO_KALSHI, NFL_TEAM_TO_KALSHI, WNBA_TEAM_TO_KALSHI,
+                MLS_TEAM_TO_KALSHI, LIGAMX_TEAM_TO_KALSHI)
+
+
 def _team_token(name: str) -> Optional[str]:
     """Kalshi token for a team, across every sport with a static map.
 
@@ -272,10 +361,10 @@ def _team_token(name: str) -> Optional[str]:
     """
     if not name:
         return None
-    for table in (TEAM_TO_KALSHI, NFL_TEAM_TO_KALSHI):
+    for table in _TEAM_TABLES:
         if name in table:
             return table[name]
-    for table in (TEAM_TO_KALSHI, NFL_TEAM_TO_KALSHI):
+    for table in _TEAM_TABLES:
         for full, tok in table.items():                # tolerate minor variants
             if _norm(full) == _norm(name):
                 return tok
@@ -395,7 +484,10 @@ def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
         want, side = team, "yes"
     elif bet_type == "F5 Moneyline":
         want, side = f"{team} wins first 5 innings", "yes"
-    elif bet_type == "F5 Tie":
+    elif bet_type in ("F5 Tie", "Draw"):
+        # Soccer draws are a real Kalshi outcome inside the moneyline book,
+        # titled "Tie". MLS alone had 187 Draw rows with no CLV because "Draw"
+        # was simply never a recognised bet_type here.
         want, side = "Tie", "yes"
     elif bet_type == "Spread" and pt is not None:
         # UNIT WORD VARIES BY SPORT: MLB says "runs", NFL/CFB/NBA say
@@ -424,6 +516,32 @@ def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
 
     if not want:
         return None
+
+    # SPREAD PHRASING VARIES BY SPORT, not just the unit noun:
+    #     NFL/CFB/NBA : "Seattle wins by over 3.5 points"
+    #     soccer      : "Salt Lake wins by more than 2.5 goals"
+    # Fixing "runs"->"points" earlier was only half of it; the verb differs too,
+    # so every MLS/LigaMX spread still failed. Match the team, the connector and
+    # the number with a regex instead of guessing the exact sentence. \b after
+    # the number keeps 2.5 from matching 12.5 — the property the anchored prefix
+    # below exists to protect.
+    if bet_type == "Spread" and pt is not None:
+        _team_txt = (team if (pt is not None and pt < 0) else opp) or ""
+        _rx = re.compile(
+            r"^" + re.escape(_norm(_team_txt)) +
+            r"\s+wins by (?:over|more than)\s+" +
+            re.escape(f"{abs(pt)}") + r"\b")
+        m = next((x for x in pool if _rx.match(_norm(x.get("yes_sub_title")))), None)
+        if m is not None:
+            q = _quote(m, side)
+            if not q:
+                if require_quote:
+                    return None
+                q = {"bid": None, "ask": None, "mid": None}
+            return {"ticker": m.get("ticker"), "series": series, "side": side,
+                    "sub_title": m.get("yes_sub_title"),
+                    "open_interest": _f(m.get("open_interest_fp")) or 0.0, **q}
+
     target = _norm(want)
     m = next((x for x in pool if _norm(x.get("yes_sub_title")) == target), None)
     if m is None:
