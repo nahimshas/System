@@ -196,6 +196,71 @@
     );
   }
 
+  // ── Football situation: possession, down & distance, field position ─────
+  // NFL and CFB share one ESPN shape, so this serves both.
+  //
+  // Every field is treated as OPTIONAL and the renderer degrades one step at a
+  // time: prefer ESPN's pre-formatted `downDistanceText` / `possessionText`,
+  // fall back to composing from the raw `down` / `distance` / `yardLine`, and
+  // render nothing at all rather than a half-filled row. ESPN drops `situation`
+  // entirely once a game ends, and populates it inconsistently around
+  // kickoffs, timeouts and reviews — so "absent" is the normal case, not an
+  // error, and must never leave a stray football under a logo.
+  function _ordinalDown(d) {
+    return ({1: "1st", 2: "2nd", 3: "3rd", 4: "4th"})[d] || "";
+  }
+  function _footballSituation(ev) {
+    if (!ev || ev.stateId !== "2") return null;      // in-progress only
+    var st = ev.situation;
+    if (!st) return null;
+
+    // Which side has the ball. `possession` is a TEAM ID; fall back to reading
+    // the abbreviation off possessionText ("KC 35") when the id is missing.
+    var side = null;
+    var poss = st.possession != null ? String(st.possession) : "";
+    if (poss && poss === ev.homeId) side = "home";
+    else if (poss && poss === ev.awayId) side = "away";
+    else {
+      var pt = String(st.possessionText || "").toUpperCase();
+      if (pt && ev.homeAbbr && pt.indexOf(String(ev.homeAbbr).toUpperCase()) === 0) side = "home";
+      else if (pt && ev.awayAbbr && pt.indexOf(String(ev.awayAbbr).toUpperCase()) === 0) side = "away";
+    }
+
+    var dd = String(st.downDistanceText || st.shortDownDistanceText || "").trim();
+    if (!dd && st.down) {
+      var od = _ordinalDown(st.down);
+      if (od) {
+        dd = (st.distance === 0) ? (od + " & Goal")
+           : (st.distance != null ? od + " & " + st.distance : od);
+      }
+    }
+    var fieldPos = String(st.possessionText || "").trim();
+    if (!fieldPos && st.yardLine != null && side) {
+      fieldPos = (side === "home" ? ev.homeAbbr : ev.awayAbbr) + " " + st.yardLine;
+    }
+    if (!side && !dd && !fieldPos) return null;
+    return {side: side, downDistance: dd, fieldPos: fieldPos,
+            redZone: !!st.isRedZone};
+  }
+  // The 🏈 marker that sits under the possessing team's logo.
+  function _possessionMark(sit, which) {
+    if (!sit || sit.side !== which) return "";
+    return '<span title="Has the ball" style="font-size:0.72rem;line-height:1;">🏈</span>';
+  }
+  // Down & distance + field position, for the centre column.
+  function _footballSituationLine(sit) {
+    if (!sit) return "";
+    var bits = [];
+    if (sit.downDistance) bits.push(sit.downDistance);
+    if (sit.fieldPos)     bits.push("at " + sit.fieldPos);
+    if (!bits.length) return "";
+    var col = sit.redZone ? "#ef4444" : "#e2e8f0";
+    return '<span style="font-size:0.66rem;font-weight:600;color:' + col + ';' +
+             'white-space:nowrap;">' +
+             (sit.redZone ? "\u26A0 " : "") + bits.join(" \u00B7 ") +
+           '</span>';
+  }
+
   // ── MLB base diamond renderer ────────────────────────────────────────────
   // Short player name: first-initial + last name, preserving a generational
   // suffix. "Pedro Ortiz Jr" → "P. Ortiz Jr"; "Cam Sanders" → "C. Sanders".
@@ -976,6 +1041,10 @@
 
     var homeAbbr  = (homeComp.team || {}).abbreviation || "";
     var awayAbbr  = (awayComp.team || {}).abbreviation || "";
+    // Team ids — football's `situation.possession` names the team holding the
+    // ball by ID, so without these there is nothing to match it against.
+    var homeId    = String((homeComp.team || {}).id || "");
+    var awayId    = String((awayComp.team || {}).id || "");
     var homeName  = (homeComp.team || {}).displayName  || "";
     var awayName  = (awayComp.team || {}).displayName  || "";
     var homeLogo  = _bestLogo(homeComp.team || {});
@@ -1051,6 +1120,7 @@
       date: event.date || "",
       home: homeName, away: awayName,
       homeAbbr: homeAbbr, awayAbbr: awayAbbr,
+      homeId: homeId, awayId: awayId,
       homeLogo: homeLogo, awayLogo: awayLogo,
       homeRecord: homeRecord, awayRecord: awayRecord,
       homeScore: homeScore, awayScore: awayScore,
@@ -1772,13 +1842,22 @@
         setPickLive(card, true, prob);  // pass prob so border reflects win chance
         // MLB: always render full scoreboard; add diamond+BSO when ESPN has situation data
         // Other sports: scoreboard with ● LIVE badge + clock + win probability
+        // Football (NFL/CFB) adds possession + down & distance when ESPN has
+        // them: a 🏈 under the logo of whoever has the ball, and "2nd & 7 · at
+        // KC 35" under the clock. Absent situation data simply renders the
+        // normal card — see _footballSituation.
+        var _fSit = (sport === "NFL" || sport === "CFB")
+          ? _footballSituation(ev) : null;
         var centerLive = sport === "MLB"
           ? _mlbLiveHtml(ev.situation, ev, prob)
           : _renderScoreboard(ev,
               '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;">' +
                 '<span style="color:#14b8a6;font-size:0.7rem;font-weight:600;">' + (ev.detail || '') + '</span>' +
+                _footballSituationLine(_fSit) +
                 probHtml(prob) +
-              '</div>'
+              '</div>',
+              _possessionMark(_fSit, "away"),
+              _possessionMark(_fSit, "home")
             );
         // Per-period line score on live cards — sport tabs and Today's Card.
         if (sport === "MLB") {
