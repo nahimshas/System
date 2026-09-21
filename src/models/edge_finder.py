@@ -566,28 +566,28 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             _h_w, _h_l = home_stats.get('wins', 0), home_stats.get('losses', 0)
             _h_rec = f"{_h_w}W-{_h_l}L | " if _h_w + _h_l > 0 else ""
             research.append(
-                f"{home}: {_h_rec}OffRtg {home_stats.get('off_rtg', '?'):.1f} | "
-                f"DefRtg {home_stats.get('def_rtg', '?'):.1f} | "
-                f"NetRtg {home_stats.get('net_rtg', '?'):.1f}"
+                f"{home}: {_h_rec}OffRtg {_stat(home_stats.get('off_rtg'), 1)} | "
+                f"DefRtg {_stat(home_stats.get('def_rtg'), 1)} | "
+                f"NetRtg {_stat(home_stats.get('net_rtg'), 1)}"
             )
         if away_stats:
             _a_w, _a_l = away_stats.get('wins', 0), away_stats.get('losses', 0)
             _a_rec = f"{_a_w}W-{_a_l}L | " if _a_w + _a_l > 0 else ""
             research.append(
-                f"{away}: {_a_rec}OffRtg {away_stats.get('off_rtg', '?'):.1f} | "
-                f"DefRtg {away_stats.get('def_rtg', '?'):.1f} | "
-                f"NetRtg {away_stats.get('net_rtg', '?'):.1f}"
+                f"{away}: {_a_rec}OffRtg {_stat(away_stats.get('off_rtg'), 1)} | "
+                f"DefRtg {_stat(away_stats.get('def_rtg'), 1)} | "
+                f"NetRtg {_stat(away_stats.get('net_rtg'), 1)}"
             )
 
         # --- Recent form ---
         if home_recent:
             research.append(
-                f"{home} last 14 days: NetRtg {home_recent.get('recent_net_rtg', '?'):.1f} | "
+                f"{home} last 14 days: NetRtg {_stat(home_recent.get('recent_net_rtg'), 1)} | "
                 f"Win% {home_recent.get('recent_w_pct', 0)*100:.0f}%"
             )
         if away_recent:
             research.append(
-                f"{away} last 14 days: NetRtg {away_recent.get('recent_net_rtg', '?'):.1f} | "
+                f"{away} last 14 days: NetRtg {_stat(away_recent.get('recent_net_rtg'), 1)} | "
                 f"Win% {away_recent.get('recent_w_pct', 0)*100:.0f}%"
             )
 
@@ -1476,17 +1476,17 @@ def analyze_mlb_game(game: Dict, home_pitcher_stats: Dict, away_pitcher_stats: D
     _a_rec = f"{_a_w}W-{_a_l}L | " if _a_w + _a_l > 0 else ""
     if home_batting:
         research.append(
-            f"{home} offense: {_h_rec}OPS {home_batting.get('ops', '?'):.3f} | "
-            f"AVG {home_batting.get('avg', '?'):.3f} | "
-            f"R/G {home_batting.get('runs_per_game', '?'):.2f}"
+            f"{home} offense: {_h_rec}OPS {_stat(home_batting.get('ops'), 3)} | "
+            f"AVG {_stat(home_batting.get('avg'), 3)} | "
+            f"R/G {_stat(home_batting.get('runs_per_game'), 2)}"
         )
     elif _h_w + _h_l > 0:
         research.append(f"{home}: {_h_rec.rstrip(' | ')}")
     if away_batting:
         research.append(
-            f"{away} offense: {_a_rec}OPS {away_batting.get('ops', '?'):.3f} | "
-            f"AVG {away_batting.get('avg', '?'):.3f} | "
-            f"R/G {away_batting.get('runs_per_game', '?'):.2f}"
+            f"{away} offense: {_a_rec}OPS {_stat(away_batting.get('ops'), 3)} | "
+            f"AVG {_stat(away_batting.get('avg'), 3)} | "
+            f"R/G {_stat(away_batting.get('runs_per_game'), 2)}"
         )
     elif _a_w + _a_l > 0:
         research.append(f"{away}: {_a_rec.rstrip(' | ')}")
@@ -2178,6 +2178,30 @@ def _nfl_team_strength(team: str, ctx: dict, playoff: bool = False) -> float:
     return (1 - w) * season_net + w * recent_net
 
 
+def _stat(value, nd: int = 1, default: str = "?") -> str:
+    """Format a possibly-missing stat for a research line.
+
+    ⚠️ WHY THIS EXISTS: the idiom this replaces passed a "?" string as the
+    dict default and then applied a float format spec to it. That fallback
+    CAN NEVER FORMAT — `f"{'?':.1f}"` raises
+    ValueError. So the fallback that looked like graceful degradation was
+    actually a guaranteed crash, and because these lines sit inside the
+    analyzer it would take down an ENTIRE SPORT's analysis for the day rather
+    than drop one research line. Found Sep 21 2026 when a test fixture omitted
+    net_rtg and analyze_nfl_game raised.
+
+    Low probability in practice — the stats modules populate these fields — but
+    the blast radius is a whole sport, and the cost of being safe is nil.
+    """
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return default
+    if v != v:          # NaN is a missing stat, not the text "nan" on a card
+        return default
+    return f"{v:.{int(nd)}f}"
+
+
 def _nfl_margin_to_prob(expected_margin: float) -> float:
     return float(norm.cdf(expected_margin, 0, NFL_SPREAD_STD))
 
@@ -2299,28 +2323,28 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
             _h_w, _h_l = home_stats.get('wins', 0), home_stats.get('losses', 0)
             _h_rec = f"{_h_w}W-{_h_l}L | " if _h_w + _h_l > 0 else ""
             research.append(
-                f"{home}: {_h_rec}{home_stats.get('ppg', '?'):.1f} PPG | "
-                f"{home_stats.get('oppg', '?'):.1f} OPP PPG | "
-                f"NetRtg {home_stats.get('net_rtg', '?'):.1f}"
+                f"{home}: {_h_rec}{_stat(home_stats.get('ppg'), 1)} PPG | "
+                f"{_stat(home_stats.get('oppg'), 1)} OPP PPG | "
+                f"NetRtg {_stat(home_stats.get('net_rtg'), 1)}"
             )
         if away_stats:
             _a_w, _a_l = away_stats.get('wins', 0), away_stats.get('losses', 0)
             _a_rec = f"{_a_w}W-{_a_l}L | " if _a_w + _a_l > 0 else ""
             research.append(
-                f"{away}: {_a_rec}{away_stats.get('ppg', '?'):.1f} PPG | "
-                f"{away_stats.get('oppg', '?'):.1f} OPP PPG | "
-                f"NetRtg {away_stats.get('net_rtg', '?'):.1f}"
+                f"{away}: {_a_rec}{_stat(away_stats.get('ppg'), 1)} PPG | "
+                f"{_stat(away_stats.get('oppg'), 1)} OPP PPG | "
+                f"NetRtg {_stat(away_stats.get('net_rtg'), 1)}"
             )
 
         # Recent form
         if home_recent:
             research.append(
-                f"{home} last 14 days: NetRtg {home_recent.get('recent_net_rtg', '?'):.1f} | "
+                f"{home} last 14 days: NetRtg {_stat(home_recent.get('recent_net_rtg'), 1)} | "
                 f"Win% {home_recent.get('recent_w_pct', 0)*100:.0f}%"
             )
         if away_recent:
             research.append(
-                f"{away} last 14 days: NetRtg {away_recent.get('recent_net_rtg', '?'):.1f} | "
+                f"{away} last 14 days: NetRtg {_stat(away_recent.get('recent_net_rtg'), 1)} | "
                 f"Win% {away_recent.get('recent_w_pct', 0)*100:.0f}%"
             )
 
@@ -2565,8 +2589,8 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                 f"Model expected total: {expected_total:.1f} vs market line {market_line}",
             ]
             total_research = [
-                f"{home} PPG: {home_stats.get('ppg','?'):.1f} vs {away} OPP PPG: {away_stats.get('oppg','?'):.1f}",
-                f"{away} PPG: {away_stats.get('ppg','?'):.1f} vs {home} OPP PPG: {home_stats.get('oppg','?'):.1f}",
+                f"{home} PPG: {_stat(home_stats.get('ppg'), 1)} vs {away} OPP PPG: {_stat(away_stats.get('oppg'), 1)}",
+                f"{away} PPG: {_stat(away_stats.get('ppg'), 1)} vs {home} OPP PPG: {_stat(home_stats.get('oppg'), 1)}",
             ]
 
             _over_label  = f"Over {market_line - 0.5}"  if market_line % 1 == 0 else f"Over {market_line}"
@@ -2775,9 +2799,9 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             _h_otl = home_stats.get('ot_losses', 0)
             _h_rec = f"{_h_w}W-{_h_l}L-{_h_otl}OTL | " if _h_w + _h_l > 0 else ""
             research.append(
-                f"{home}: {_h_rec}{home_stats.get('gpg', '?'):.2f} GPG | "
-                f"{home_stats.get('gapg', '?'):.2f} GAPG | "
-                f"NetRtg {home_stats.get('net_rtg', '?'):.2f}"
+                f"{home}: {_h_rec}{_stat(home_stats.get('gpg'), 2)} GPG | "
+                f"{_stat(home_stats.get('gapg'), 2)} GAPG | "
+                f"NetRtg {_stat(home_stats.get('net_rtg'), 2)}"
             )
         if away_stats:
             _a_w  = away_stats.get('wins', 0)
@@ -2785,20 +2809,20 @@ def analyze_nhl_game(game: Dict, nhl_ctx: Dict, nhl_injuries: Dict, min_edge: fl
             _a_otl = away_stats.get('ot_losses', 0)
             _a_rec = f"{_a_w}W-{_a_l}L-{_a_otl}OTL | " if _a_w + _a_l > 0 else ""
             research.append(
-                f"{away}: {_a_rec}{away_stats.get('gpg', '?'):.2f} GPG | "
-                f"{away_stats.get('gapg', '?'):.2f} GAPG | "
-                f"NetRtg {away_stats.get('net_rtg', '?'):.2f}"
+                f"{away}: {_a_rec}{_stat(away_stats.get('gpg'), 2)} GPG | "
+                f"{_stat(away_stats.get('gapg'), 2)} GAPG | "
+                f"NetRtg {_stat(away_stats.get('net_rtg'), 2)}"
             )
 
         # Recent form
         if home_recent:
             research.append(
-                f"{home} last 14 days: NetRtg {home_recent.get('recent_net_rtg', '?'):.2f} | "
+                f"{home} last 14 days: NetRtg {_stat(home_recent.get('recent_net_rtg'), 2)} | "
                 f"Win% {home_recent.get('recent_w_pct', 0)*100:.0f}%"
             )
         if away_recent:
             research.append(
-                f"{away} last 14 days: NetRtg {away_recent.get('recent_net_rtg', '?'):.2f} | "
+                f"{away} last 14 days: NetRtg {_stat(away_recent.get('recent_net_rtg'), 2)} | "
                 f"Win% {away_recent.get('recent_w_pct', 0)*100:.0f}%"
             )
 
