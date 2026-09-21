@@ -720,17 +720,6 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
                     f"({max_away_prob*100:.0f}% vs raw {(adjusted_away_prob)*100:.0f}%)"
                 )
 
-        # ── Projected score — derived from the FINAL (post-cap) probability ──
-        # Built here, not up front, so it reflects home field, injuries, rest
-        # and every cap. The Spread/Total blocks reuse this exact string, so all
-        # three cards for a game agree with each other AND with the pick.
-        if _nfl_proj_total is not None:
-            _ph, _pa = _score_from_prob(_nfl_proj_total, adjusted_home_prob,
-                                        NFL_SPREAD_STD)
-            _nfl_proj_signal = (f"Model projected score: {home} {_ph:.0f} — "
-                                f"{away} {_pa:.0f}")
-            signals.append(_nfl_proj_signal)
-
         # Projected score — margin derived from the FINAL probability so the
         # card cannot contradict its own pick. See _score_from_prob().
         if _proj_score_signal:
@@ -2408,6 +2397,17 @@ def analyze_nfl_game(game: Dict, nfl_ctx: Dict, nfl_injuries: Dict, min_edge: fl
                 adjusted_away_prob = max_away_prob
                 adjusted_home_prob = 1 - adjusted_away_prob
                 away_injury_capped = True
+
+        # ── Projected score — derived from the FINAL (post-cap) probability ──
+        # Built here, not up front, so it reflects home field, injuries, rest
+        # and every cap. The Spread/Total blocks reuse this exact string, so all
+        # three cards for a game agree with each other AND with the pick.
+        if _nfl_proj_total is not None:
+            _ph, _pa = _score_from_prob(_nfl_proj_total, adjusted_home_prob,
+                                        NFL_SPREAD_STD)
+            _nfl_proj_signal = (f"Model projected score: {home} {_ph:.0f} — "
+                                f"{away} {_pa:.0f}")
+            signals.append(_nfl_proj_signal)
 
         home_edge = adjusted_home_prob - market_home_prob
         away_edge = adjusted_away_prob - market_away_prob
