@@ -21283,5 +21283,73 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-09-21",
+    "type": "single",
+    "sport": "NFL",
+    "game": "NY Giants @ Los Angeles Rams",
+    "bet_type": "Moneyline",
+    "pick": "NY Giants",
+    "home_team": "Los Angeles Rams",
+    "away_team": "NY Giants",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 42.6,
+    "market_prob_pct": 27.6,
+    "cost": 0.89,
+    "profit_if_win": 2.11,
+    "result": "LOST",
+    "actual_pnl": -0.89,
+    "actual_home_score": 28.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-09-21",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Minnesota Twins @ San Francisco Giants",
+    "bet_type": "Spread",
+    "pick": "San Francisco Giants +1.5",
+    "home_team": "San Francisco Giants",
+    "away_team": "Minnesota Twins",
+    "edge_pct": 7.9,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 68.0,
+    "market_prob_pct": 60.2,
+    "cost": 0.62,
+    "profit_if_win": 0.38,
+    "result": "WON",
+    "actual_pnl": 0.38,
+    "actual_home_score": 5.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-09-21",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "San Francisco Giants +1.5 + NY Giants (ML)",
+    "bet_type": "Parlay",
+    "pick": "San Francisco Giants +1.5 + NY Giants (ML)",
+    "edge_pct": 11.5,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 28.1,
+    "market_prob_pct": 0,
+    "cost": 2.79,
+    "profit_if_win": 12.21,
+    "result": "LOST",
+    "actual_pnl": -2.79,
+    "legs": [
+      {
+        "game": "Minnesota Twins @ San Francisco Giants",
+        "pick": "San Francisco Giants +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "NY Giants @ Los Angeles Rams",
+        "pick": "NY Giants",
+        "result": "LOST"
+      }
+    ]
   }
 ]
