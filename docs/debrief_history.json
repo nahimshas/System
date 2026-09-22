@@ -1,167 +1,6 @@
 {
   "entries": [
     {
-      "date": "2026-07-23",
-      "generated_at": "2026-07-24T09:10:39Z",
-      "generated_by": "workflow",
-      "headline": "2-2 on budget (+$1.25), avg CLV -0.87%",
-      "budget_record": "2-2",
-      "watchlist_record": "1-1",
-      "budget_pnl": 1.25,
-      "avg_budget_clv": -0.87,
-      "snapshot_timeout": false,
-      "picks": [
-        {
-          "game": "Minnesota Twins @ Cleveland Guardians",
-          "sport": "MLB",
-          "pick": "Cleveland Guardians",
-          "bet_type": "Moneyline",
-          "confidence": "HIGH",
-          "result": "LOST",
-          "score": "Minnesota Twins 3, Cleveland Guardians 1",
-          "pnl": "-$5.90",
-          "clv_pct": 0.2,
-          "why_picked": "Primary signal: Park Factor. (Park factor 0.96 (pitcher-friendly: Progressive Field))",
-          "what_happened": "Trevor Larnach and Luke Keaschall get RBIs in 12th as Twins beat Guardians 3-1 for series split.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.2%)",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "San Diego Padres @ Atlanta Braves",
-          "sport": "MLB",
-          "pick": "San Diego Padres +1.5",
-          "bet_type": "Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "San Diego Padres 5, Atlanta Braves 6",
-          "pnl": "+$6.13",
-          "clv_pct": -1.0,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.03 (hitter-friendly: Truist Park))",
-          "what_happened": "Chris Sale strikes out 11 as the Braves hit 4 home runs to edge the Padres 6-5.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "MIXED \u2014 won, but the market moved -1.0% against this pick",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "Kansas City Royals @ Detroit Tigers",
-          "sport": "MLB",
-          "pick": "Kansas City Royals +1.5",
-          "bet_type": "Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Kansas City Royals 3, Detroit Tigers 4",
-          "pnl": "+$3.32",
-          "clv_pct": -1.8,
-          "why_picked": "Primary signal: Park Factor. (Park factor 0.95 (pitcher-friendly: Comerica Park))",
-          "what_happened": "Outman has 3-run homer and Dingler the go-ahead RBI to lift surging Tigers to 4-3 win over Royals.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "MIXED \u2014 won, but the market moved -1.8% against this pick",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "San Diego Padres @ Atlanta Braves / Minnesota Twins @ Cleveland Guardians",
-          "pick": "San Diego Padres +1.5 + Cleveland Guardians (ML)",
-          "sport": "PARLAY",
-          "bet_type": "Parlay",
-          "result": "LOST",
-          "pnl": "-$2.30",
-          "legs": [
-            {
-              "pick": "San Diego Padres +1.5",
-              "sport": "MLB",
-              "result": "WON"
-            },
-            {
-              "pick": "Cleveland Guardians",
-              "sport": "MLB",
-              "result": "LOST"
-            }
-          ],
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 a leg missed",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "Tampa Bay Rays @ Toronto Blue Jays",
-          "sport": "MLB",
-          "pick": "Tampa Bay Rays",
-          "bet_type": "Moneyline",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Tampa Bay Rays 1, Toronto Blue Jays 3",
-          "pnl": "",
-          "clv_pct": 0.4,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.05 (hitter-friendly: Rogers Centre))",
-          "what_happened": "Shane Bieber pitches season-high 7 innings as Blue Jays beat Rays 3-1 to avoid 4-game sweep.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.4%)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Arizona Diamondbacks @ St. Louis Cardinals",
-          "sport": "MLB",
-          "pick": "Arizona Diamondbacks",
-          "bet_type": "Moneyline",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Arizona Diamondbacks 10, St. Louis Cardinals 6",
-          "pnl": "",
-          "clv_pct": -0.7,
-          "why_picked": "Primary signal: Park Factor. (Park factor 0.98 (pitcher-friendly: Busch Stadium))",
-          "what_happened": "Locklear, Pdaadt help the Diamondbacks beat the Cardinals 10-6.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.7%, noise range)",
-          "key_insight": "",
-          "in_budget": false
-        }
-      ],
-      "patterns": [
-        "HIGH confidence: 0-1 today",
-        "MEDIUM confidence: 2-0 today",
-        "MLB Moneyline: 0-1",
-        "MLB Spread: 2-0"
-      ],
-      "model_observations": [
-        "Park Factor picks: 2-1 with avg CLV -0.9%",
-        "Injury Impact picks: 2-1 with avg CLV -0.9%",
-        "Recent Form picks: 2-1 with avg CLV -0.9%",
-        "Schedule Load picks: 2-1 with avg CLV -0.9%"
-      ]
-    },
-    {
       "date": "2026-07-24",
       "generated_at": "2026-07-25T14:58:33Z",
       "generated_by": "workflow",
@@ -39625,6 +39464,174 @@
         "Rating Edge picks: 2-2 with avg CLV +0.2%",
         "Injury Impact picks: 2-2 with avg CLV +0.2%"
       ]
+    },
+    {
+      "date": "2026-09-21",
+      "generated_at": "2026-09-22T05:48:45Z",
+      "generated_by": "workflow",
+      "headline": "1-0 on budget (+$0.38), avg CLV +0.35%; 2 pending",
+      "budget_record": "1-0",
+      "watchlist_record": "2-2",
+      "budget_pnl": 0.38,
+      "avg_budget_clv": 0.35,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "NY Giants @ Los Angeles Rams",
+          "sport": "NFL",
+          "pick": "NY Giants",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "clv_pct": 2.0,
+          "why_picked": "Primary signal: Rating Edge. (Home field advantage: Los Angeles Rams (+2%))",
+          "what_happened": "",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Minnesota Twins @ San Francisco Giants",
+          "sport": "MLB",
+          "pick": "San Francisco Giants +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Minnesota Twins 2, San Francisco Giants 5",
+          "pnl": "+$0.38",
+          "clv_pct": -1.3,
+          "why_picked": "Primary signal: Park Factor. (Park factor 0.94 (pitcher-friendly: Oracle Park))",
+          "what_happened": "Drew Gilbert's homer and 2-run single lead Giants past Twins 5-2 to end 3-game losing streak.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor",
+            "Recent Form"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.3% against this pick",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Minnesota Twins @ San Francisco Giants / NY Giants @ Los Angeles Rams",
+          "pick": "San Francisco Giants +1.5 + NY Giants (ML)",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "PENDING",
+          "pnl": "",
+          "legs": [
+            {
+              "pick": "San Francisco Giants +1.5",
+              "sport": "MLB",
+              "result": "WON"
+            },
+            {
+              "pick": "NY Giants",
+              "sport": "NFL",
+              "result": "PENDING"
+            }
+          ],
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Toronto Blue Jays @ Baltimore Orioles",
+          "sport": "MLB",
+          "pick": "Baltimore Orioles +1.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Toronto Blue Jays 3, Baltimore Orioles 4",
+          "pnl": "",
+          "clv_pct": 0.0,
+          "why_picked": "Primary signal: Park Factor. (Park factor 1.01 (pitcher-friendly: Oriole Park at Camden Yards))",
+          "what_happened": "Pete Alonso homers twice to reach 40 on the season, helps Orioles rally to 4-3 win over Blue Jays.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.0%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Washington Nationals @ Detroit Tigers",
+          "sport": "MLB",
+          "pick": "Washington Nationals +0.5",
+          "bet_type": "F5 Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Washington Nationals 0, Detroit Tigers 9 (through 5)",
+          "pnl": "",
+          "clv_pct": -0.0,
+          "why_picked": "Primary signal: Model Projection.",
+          "what_happened": "River Ryan makes strong debut and Tigers hit 3 home runs in 9-2 win over Nationals.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.0%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Washington Nationals @ Detroit Tigers",
+          "sport": "MLB",
+          "pick": "Detroit Tigers",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Washington Nationals 2, Detroit Tigers 9",
+          "pnl": "",
+          "clv_pct": 0.0,
+          "why_picked": "Primary signal: Park Factor. (Park factor 0.95 (pitcher-friendly: Comerica Park))",
+          "what_happened": "River Ryan makes strong debut and Tigers hit 3 home runs in 9-2 win over Nationals.",
+          "signals": [
+            "Park Factor",
+            "Injury Impact",
+            "Weather Factor",
+            "Recent Form"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.0%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Toronto Blue Jays @ Baltimore Orioles",
+          "sport": "MLB",
+          "pick": "Baltimore Orioles -0.5",
+          "bet_type": "F5 Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Toronto Blue Jays 3, Baltimore Orioles 1 (through 5)",
+          "pnl": "",
+          "clv_pct": -0.1,
+          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Baltimore Orioles (0.54 quality gap over 5 innings))",
+          "what_happened": "Pete Alonso homers twice to reach 40 on the season, helps Orioles rally to 4-3 win over Blue Jays.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.1%)",
+          "key_insight": "",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "MEDIUM confidence: 1-0 today",
+        "MLB Spread: 1-0"
+      ],
+      "model_observations": []
     }
   ]
 }
