@@ -21907,5 +21907,93 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-09-26",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Atlanta Braves @ Miami Marlins",
+    "bet_type": "Spread",
+    "pick": "Miami Marlins +1.5",
+    "home_team": "Miami Marlins",
+    "away_team": "Atlanta Braves",
+    "edge_pct": 8.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 68.0,
+    "market_prob_pct": 60.0,
+    "cost": 0.62,
+    "profit_if_win": 0.38,
+    "result": "LOST",
+    "actual_pnl": -0.62,
+    "actual_home_score": 3.0,
+    "actual_away_score": 8.0
+  },
+  {
+    "date": "2026-09-26",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ San Francisco Giants",
+    "bet_type": "Spread",
+    "pick": "San Francisco Giants +1.5",
+    "home_team": "San Francisco Giants",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 10.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 55.0,
+    "market_prob_pct": 45.0,
+    "cost": 0.47,
+    "profit_if_win": 0.53,
+    "result": "WON",
+    "actual_pnl": 0.53,
+    "actual_home_score": 3.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-09-26",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Houston Astros @ Athletics",
+    "bet_type": "Spread",
+    "pick": "Athletics +1.5",
+    "home_team": "Athletics",
+    "away_team": "Houston Astros",
+    "edge_pct": 10.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 62.5,
+    "market_prob_pct": 52.5,
+    "cost": 0.54,
+    "profit_if_win": 0.46,
+    "result": "LOST",
+    "actual_pnl": -0.54,
+    "actual_home_score": 2.0,
+    "actual_away_score": 13.0
+  },
+  {
+    "date": "2026-09-26",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Miami Marlins +1.5 + Athletics +1.5",
+    "bet_type": "Parlay",
+    "pick": "Miami Marlins +1.5 + Athletics +1.5",
+    "edge_pct": 10.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 41.5,
+    "market_prob_pct": 0,
+    "cost": 2.68,
+    "profit_if_win": 5.32,
+    "result": "LOST",
+    "actual_pnl": -2.68,
+    "legs": [
+      {
+        "game": "Atlanta Braves @ Miami Marlins",
+        "pick": "Miami Marlins +1.5",
+        "result": "LOST"
+      },
+      {
+        "game": "Houston Astros @ Athletics",
+        "pick": "Athletics +1.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
