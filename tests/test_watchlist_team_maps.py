@@ -12,10 +12,16 @@ from collections import Counter
 import pytest
 
 from src.data.kalshi import (LIGAMX_TEAM_TO_KALSHI, MLS_TEAM_TO_KALSHI,
+                             NBA_TEAM_TO_KALSHI, NHL_TEAM_TO_KALSHI,
                              WNBA_TEAM_TO_KALSHI, _team_token)
 
 MAPS = {"WNBA": WNBA_TEAM_TO_KALSHI, "MLS": MLS_TEAM_TO_KALSHI,
-        "LIGAMX": LIGAMX_TEAM_TO_KALSHI}
+        "LIGAMX": LIGAMX_TEAM_TO_KALSHI, "NBA": NBA_TEAM_TO_KALSHI,
+        "NHL": NHL_TEAM_TO_KALSHI}
+
+# NHL deliberately carries two ALIAS keys for name variants that appear in our
+# own logs, so its token count is lower than its entry count.
+ALIASED = {"NHL": {"Montreal", "St. Louis"}}
 
 
 class TestNoCrossResolution:
@@ -24,7 +30,9 @@ class TestNoCrossResolution:
 
     @pytest.mark.parametrize("league", list(MAPS))
     def test_tokens_are_unique_within_a_league(self, league):
-        dupes = [t for t, c in Counter(MAPS[league].values()).items() if c > 1]
+        allowed = ALIASED.get(league, set())
+        dupes = [t for t, c in Counter(MAPS[league].values()).items()
+                 if c > 1 and t not in allowed]
         assert not dupes, f"{league} would cross-resolve: {dupes}"
 
     def test_the_two_los_angeles_mls_clubs_are_distinct(self):
@@ -65,7 +73,8 @@ class TestCoverage:
         unmapped = sorted(n for n in self._seen(league) if not _team_token(n))
         assert not unmapped, f"{league} unmapped: {unmapped}"
 
-    @pytest.mark.parametrize("league,n", [("WNBA", 15), ("MLS", 30), ("LIGAMX", 18)])
+    @pytest.mark.parametrize("league,n", [("WNBA", 15), ("MLS", 30), ("LIGAMX", 18),
+                                          ("NBA", 30), ("NHL", 34)])
     def test_map_is_the_expected_size(self, league, n):
         assert len(MAPS[league]) == n
 
@@ -108,3 +117,59 @@ class TestMappableGate:
     def test_now_mappable(self, sport, game):
         from src.data.kalshi_clv import _teams_mappable
         assert _teams_mappable(game, sport) is True
+
+
+class TestNbaNhlAreBudgetSports:
+    """Both place REAL money, so an unmapped team is a real-money blind spot.
+
+    history.json at the time these maps were added: NBA 57 bets (Apr-Jun,
+    +$121.71 on $541 staked) and NHL 22 (Jun-Oct, 17 of them in the first days
+    of October). Neither had a Kalshi map, so neither had ever produced CLV.
+    """
+
+    def test_both_are_flagged_as_budget(self):
+        from src.sports.registry import REGISTRY
+        for slug in ("nba", "nhl"):
+            assert REGISTRY[slug].caps.enters_budget is True
+
+    def test_full_leagues_are_mapped_not_just_teams_seen(self):
+        """Our logs hold only NBA playoff teams; all 30 appear in the regular
+        season, so mapping what we had seen would break in October."""
+        assert len(set(NBA_TEAM_TO_KALSHI.values())) == 30
+        assert len(set(NHL_TEAM_TO_KALSHI.values())) == 32
+
+
+class TestAmbiguousPairsNbaNhl:
+    def test_two_los_angeles_nba_clubs_are_distinct(self):
+        assert (NBA_TEAM_TO_KALSHI["Los Angeles Lakers"]
+                != NBA_TEAM_TO_KALSHI["Los Angeles Clippers"])
+
+    def test_no_nba_club_uses_the_bare_city(self):
+        assert "Los Angeles" not in NBA_TEAM_TO_KALSHI.values()
+
+    def test_two_new_york_nhl_clubs_are_distinct(self):
+        assert (NHL_TEAM_TO_KALSHI["New York Rangers"]
+                != NHL_TEAM_TO_KALSHI["New York Islanders"])
+
+    def test_no_nhl_club_uses_the_bare_new_york(self):
+        assert "New York" not in NHL_TEAM_TO_KALSHI.values()
+
+    def test_la_shorthand_resolves_via_expand_city(self):
+        assert _team_token("LA Clippers") == NBA_TEAM_TO_KALSHI["Los Angeles Clippers"]
+
+
+class TestNameVariants:
+    """_team_token's fallback normalises whitespace and case only — it does not
+    strip accents or punctuation, so both forms need explicit keys."""
+
+    def test_accented_montreal(self):
+        assert _team_token("Montréal Canadiens") == _team_token("Montreal Canadiens")
+
+    def test_unpunctuated_st_louis(self):
+        assert _team_token("St Louis Blues") == _team_token("St. Louis Blues")
+
+    def test_utah_is_shared_across_leagues_safely(self):
+        """Utah Jazz (NBA) and Utah Mammoth (NHL) both map to "Utah". That is
+        fine because the series map scopes each lookup to one league's book."""
+        assert _team_token("Utah Jazz") == "Utah"
+        assert _team_token("Utah Mammoth") == "Utah"

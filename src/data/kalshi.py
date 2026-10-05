@@ -348,8 +348,95 @@ LIGAMX_TEAM_TO_KALSHI = {
 }
 
 
+# ── NBA / NHL team maps (Oct 5 2026) ─────────────────────────────────────────
+# Both are BUDGET sports with real money (history.json: NBA 57 bets since Apr,
+# NHL 22 with 17 in the first days of Oct) and neither had a Kalshi map, so
+# neither has ever had CLV. Full leagues are mapped, not just the teams seen so
+# far: our logs only hold NBA playoff teams because the last season ended in
+# June, and all 30 will appear once the regular season starts.
+#
+# ⚠️ AMBIGUOUS PAIRS — Kalshi disambiguates these and so must we; collapsing
+# either resolves one team's CLV against the other team's book:
+#     NBA  "Los Angeles C" (Clippers) vs "Los Angeles L" (Lakers)
+#     NHL  "New York I" (Islanders)   vs "New York R"   (Rangers)
+NBA_TEAM_TO_KALSHI = {
+    "Atlanta Hawks": "Atlanta",
+    "Boston Celtics": "Boston",
+    "Brooklyn Nets": "Brooklyn",
+    "Charlotte Hornets": "Charlotte",
+    "Chicago Bulls": "Chicago",
+    "Cleveland Cavaliers": "Cleveland",
+    "Dallas Mavericks": "Dallas",
+    "Denver Nuggets": "Denver",
+    "Detroit Pistons": "Detroit",
+    "Golden State Warriors": "Golden State",
+    "Houston Rockets": "Houston",
+    "Indiana Pacers": "Indiana",
+    "Los Angeles Clippers": "Los Angeles C",   # ⚠️ not "Los Angeles"
+    "Los Angeles Lakers": "Los Angeles L",     # ⚠️
+    "Memphis Grizzlies": "Memphis",
+    "Miami Heat": "Miami",
+    "Milwaukee Bucks": "Milwaukee",
+    "Minnesota Timberwolves": "Minnesota",
+    "New Orleans Pelicans": "New Orleans",
+    "New York Knicks": "New York",
+    "Oklahoma City Thunder": "Oklahoma City",
+    "Orlando Magic": "Orlando",
+    "Philadelphia 76ers": "Philadelphia",
+    "Phoenix Suns": "Phoenix",
+    "Portland Trail Blazers": "Portland",
+    "Sacramento Kings": "Sacramento",
+    "San Antonio Spurs": "San Antonio",
+    "Toronto Raptors": "Toronto",
+    "Utah Jazz": "Utah",
+    "Washington Wizards": "Washington",
+}
+
+# ⚠️ The accented and unpunctuated variants below are NOT cosmetic: both forms
+# appear in our own logs ("Montreal Canadiens" AND "Montréal Canadiens",
+# "St Louis Blues" vs Kalshi's "St. Louis"), and _team_token's fallback only
+# normalises whitespace and case — it does not strip accents or punctuation.
+NHL_TEAM_TO_KALSHI = {
+    "Anaheim Ducks": "Anaheim",
+    "Boston Bruins": "Boston",
+    "Buffalo Sabres": "Buffalo",
+    "Calgary Flames": "Calgary",
+    "Carolina Hurricanes": "Carolina",
+    "Chicago Blackhawks": "Chicago",
+    "Colorado Avalanche": "Colorado",
+    "Columbus Blue Jackets": "Columbus",
+    "Dallas Stars": "Dallas",
+    "Detroit Red Wings": "Detroit",
+    "Edmonton Oilers": "Edmonton",
+    "Florida Panthers": "Florida",
+    "Los Angeles Kings": "Los Angeles",
+    "Minnesota Wild": "Minnesota",
+    "Montreal Canadiens": "Montreal",
+    "Montréal Canadiens": "Montreal",          # accented variant, seen in logs
+    "Nashville Predators": "Nashville",
+    "New Jersey Devils": "New Jersey",
+    "New York Islanders": "New York I",        # ⚠️ not "New York"
+    "New York Rangers": "New York R",          # ⚠️
+    "Ottawa Senators": "Ottawa",
+    "Philadelphia Flyers": "Philadelphia",
+    "Pittsburgh Penguins": "Pittsburgh",
+    "San Jose Sharks": "San Jose",
+    "Seattle Kraken": "Seattle",
+    "St. Louis Blues": "St. Louis",
+    "St Louis Blues": "St. Louis",             # unpunctuated variant, in logs
+    "Tampa Bay Lightning": "Tampa Bay",
+    "Toronto Maple Leafs": "Toronto",
+    "Utah Mammoth": "Utah",
+    "Vancouver Canucks": "Vancouver",
+    "Vegas Golden Knights": "Vegas",
+    "Washington Capitals": "Washington",
+    "Winnipeg Jets": "Winnipeg",
+}
+
+
 _TEAM_TABLES = (TEAM_TO_KALSHI, NFL_TEAM_TO_KALSHI, WNBA_TEAM_TO_KALSHI,
-                MLS_TEAM_TO_KALSHI, LIGAMX_TEAM_TO_KALSHI)
+                MLS_TEAM_TO_KALSHI, LIGAMX_TEAM_TO_KALSHI,
+                NBA_TEAM_TO_KALSHI, NHL_TEAM_TO_KALSHI)
 
 
 def _team_token(name: str) -> Optional[str]:
