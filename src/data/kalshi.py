@@ -546,11 +546,34 @@ def _ladder_points(pool: List[Dict]) -> List[float]:
     return sorted(out)
 
 
+def _abbrevs_for_game(markets: Dict[str, List[Dict]], anchor_series: Optional[str],
+                      code: str) -> Dict[str, str]:
+    """{our token -> Kalshi's ticker abbreviation} for one game.
+
+    The MONEYLINE book is titled with tokens we can map ("Los Angeles R") and
+    its tickers end in the abbreviation ("...-LAR"). Pairing the two gives a
+    prose-free handle on each side, which the spread book needs because Kalshi
+    titles it DIFFERENTLY ("LA Chargers wins by over 1.5 points").
+    """
+    out: Dict[str, str] = {}
+    if not anchor_series or not code:
+        return out
+    for m in markets.get(anchor_series, []):
+        if _game_code(m) != code:
+            continue
+        tkr = str(m.get("ticker") or "")
+        sub = str(m.get("yes_sub_title") or "").strip()
+        if "-" in tkr and sub:
+            out[_norm(sub)] = tkr.rsplit("-", 1)[1]
+    return out
+
+
 def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
             is_cfb: bool, home: str, away: str,
             markets: Dict[str, List[Dict]],
             require_quote: bool,
-            tok_src: Optional[List[Dict]] = None) -> Optional[Dict[str, Any]]:
+            tok_src: Optional[List[Dict]] = None,
+            abbrevs: Optional[Dict[str, str]] = None) -> Optional[Dict[str, Any]]:
     """Choose the exact strike within an already game-filtered pool."""
     pick_txt = str(pick.get("pick") or "")
     if bet_type in ("Total", "F5 Total"):
@@ -570,7 +593,14 @@ def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
     if bet_type == "Moneyline":
         want, side = team, "yes"
     elif bet_type == "F5 Moneyline":
-        want, side = f"{team} wins first 5 innings", "yes"
+        # Kalshi RESHAPED the F5 books (seen Oct 2026): the winner market is now
+        # titled with a bare team name ("Atlanta"), the spread book reads
+        # "Atlanta wins by over 1.5 runs" and totals "Over 0.5 runs" — i.e.
+        # identical in form to the full-game books, where they used to carry a
+        # "first 5 innings" suffix. All three F5 markets went dark until this
+        # was updated. The SERIES mapping was already correct; only the prose
+        # changed, which is the third Kalshi rename to break matching.
+        want, side = team, "yes"
     elif bet_type in ("F5 Tie", "Draw"):
         # Soccer draws are a real Kalshi outcome inside the moneyline book,
         # titled "Tie". MLS alone had 187 Draw rows with no CLV because "Draw"
@@ -587,18 +617,23 @@ def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
             want, side = f"{opp} wins by over {pt}", "no"
     elif bet_type == "F5 Spread" and pt is not None:
         if abs(pt) == 0.5:      # ±0.5 in F5 is just "wins the first 5"
-            want = f"{team} wins first 5 innings" if pt < 0 else f"{opp} wins first 5 innings"
+            # ±0.5 has no rung on KXMLBF5SPREAD, so it resolves against the F5
+            # WINNER book (series was switched to KXMLBF5 above) — which is now
+            # titled with a bare team name, same as the full-game moneyline.
+            want = team if pt < 0 else opp
             side = "yes" if pt < 0 else "no"
         elif pt < 0:
-            want, side = f"{team} -{abs(pt)} first 5 innings", "yes"
+            want, side = f"{team} wins by over {abs(pt)}", "yes"
         else:
-            want, side = f"{opp} -{pt} first 5 innings", "no"
+            want, side = f"{opp} wins by over {pt}", "no"
     elif bet_type in ("Total", "F5 Total") and pt is not None:
         # Same unit problem for totals: "Over 8.5 runs scored" (MLB) vs
         # "Over 63.5 points scored" (NFL/CFB). F5 keeps its own suffix
         # because a 5-inning total must not match the full-game one.
-        want = (f"Over {pt} runs in the first 5" if bet_type == "F5 Total"
-                else f"Over {pt}")
+        # Both F5 and full-game totals now read "Over {line} runs" / "...points",
+        # so one prefix serves both. The line number is what disambiguates, and
+        # the anchored-prefix match below keeps 2.5 from hitting 12.5.
+        want = f"Over {pt}"
         side = "yes" if "over" in pick_txt.lower() else "no"
 
     if not want:
@@ -614,6 +649,26 @@ def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
     # below exists to protect.
     if bet_type == "Spread" and pt is not None:
         _team_txt = (team if (pt is not None and pt < 0) else opp) or ""
+        # PREFERRED: identify the side from the TICKER, the number from the
+        # title. Kalshi renamed the NFL spread book in Oct 2026 — moneyline
+        # still says "Los Angeles R" while spreads now say "LA Chargers" — and
+        # every NFL spread went dark (1 of 14) until the per-market alert caught
+        # it. The ticker suffix ("...-PHI4") has stayed stable through every
+        # prose change, so match on that and read only the LINE from the text.
+        _ab = (abbrevs or {}).get(_norm(_team_txt))
+        if _ab:
+            _num = re.compile(r"\bover\s+" + re.escape(f"{abs(pt)}") + r"\b")
+            for x in pool:
+                _sfx = str(x.get("ticker") or "").rsplit("-", 1)[-1]
+                if _sfx.startswith(_ab) and _num.search(_norm(x.get("yes_sub_title"))):
+                    q = _quote(x, side)
+                    if not q:
+                        if require_quote:
+                            return None
+                        q = {"bid": None, "ask": None, "mid": None}
+                    return {"ticker": x.get("ticker"), "series": series, "side": side,
+                            "sub_title": x.get("yes_sub_title"),
+                            "open_interest": _f(x.get("open_interest_fp")) or 0.0, **q}
         _rx = re.compile(
             r"^" + re.escape(_norm(_team_txt)) +
             r"\s+wins by (?:over|more than)\s+" +
@@ -714,11 +769,13 @@ def resolve_pick(pick: Dict, markets: Dict[str, List[Dict]],
         # moneyline book. Exact, and immune to the prose drift below.
         code = _anchor_game_code(markets, anchor, home, away, game_date,
                                  cfb=is_cfb)
+        _abbr = _abbrevs_for_game(markets, anchor, code or "")
         if code:
             by_code = [m for m in pool if _game_code(m) == code]
             if by_code:
                 return _select(by_code, pick, bet_type, series, is_cfb,
-                               home, away, markets, require_quote, tok_src)
+                               home, away, markets, require_quote, tok_src,
+                               _abbr)
         # FALLBACK: identify the right GAME by event, not by prose. Kalshi's rules text is
         # inconsistent — the same series mixes "Dallas vs New York G" with
         # "NY Giants vs LA Rams" — so a rules-only filter silently dropped half
