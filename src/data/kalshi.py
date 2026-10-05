@@ -553,7 +553,15 @@ def _abbrevs_for_game(markets: Dict[str, List[Dict]], anchor_series: Optional[st
     The MONEYLINE book is titled with tokens we can map ("Los Angeles R") and
     its tickers end in the abbreviation ("...-LAR"). Pairing the two gives a
     prose-free handle on each side, which the spread book needs because Kalshi
-    titles it DIFFERENTLY ("LA Chargers wins by over 1.5 points").
+    titles the SAME team differently there — city-only in the moneyline book
+    versus abbreviation+nickname in the spread book:
+
+        Rams      "Los Angeles R" -> "LA Rams wins by over 3.5 points"
+        Chargers  "Los Angeles C" -> "LA Chargers wins by over 1.5 points"
+        Eagles    "Philadelphia"  -> "PHI Eagles wins by over 3.5 points"
+
+    The ticker abbreviation (LAR / LAC / PHI) is identical in both books, which
+    is why it is the join key.
     """
     out: Dict[str, str] = {}
     if not anchor_series or not code:
@@ -651,9 +659,9 @@ def _select(pool: List[Dict], pick: Dict, bet_type: str, series: str,
         _team_txt = (team if (pt is not None and pt < 0) else opp) or ""
         # PREFERRED: identify the side from the TICKER, the number from the
         # title. Kalshi renamed the NFL spread book in Oct 2026 — moneyline
-        # still says "Los Angeles R" while spreads now say "LA Chargers" — and
-        # every NFL spread went dark (1 of 14) until the per-market alert caught
-        # it. The ticker suffix ("...-PHI4") has stayed stable through every
+        # still says "Los Angeles R" while spreads now say "LA Rams" (city-only
+        # vs abbreviation+nickname, same team) — and every NFL spread went dark
+        # (1 of 14) until the per-market alert caught it. The ticker suffix ("...-PHI4") has stayed stable through every
         # prose change, so match on that and read only the LINE from the text.
         _ab = (abbrevs or {}).get(_norm(_team_txt))
         if _ab:
