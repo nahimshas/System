@@ -145,6 +145,33 @@ def _consensus_probs(bookmakers: List[Dict], market_key: str) -> Optional[Dict]:
                 book_count += 1
 
             elif market_key in ("totals", "totals_1st_5_innings"):
+                # ⚠️⚠️ KNOWN BUG, DELIBERATELY NOT FIXED — DO NOT "CORRECT" THIS
+                # WITHOUT READING THE WHOLE NOTE. (Decision: Oct 5 2026.)
+                #
+                # Unlike the h2h/spreads branch above, this does NOT call
+                # remove_vig, so totals probabilities keep the book's full
+                # overround. Measured across every sport: moneyline sides sum
+                # to exactly 1.0000 while totals sides sum to 1.046-1.063.
+                # Each totals side is therefore inflated by roughly 2.3pp, and
+                # `edge = model_prob - market_prob` is UNDERSTATED by the same
+                # amount, which also makes totals under-rank against moneylines
+                # and spreads in slot selection.
+                #
+                # WHY IT IS STILL HERE: de-vigging makes 46% MORE totals
+                # candidates clear the edge floor (674 -> 984 measured on the
+                # decision log), and totals are our worst market. MLB/MLS/NBA/WC
+                # Totals are already CLV-gated out of the budget; the two that
+                # are NOT gated are NFL Total and NHL Total, and NHL Total's
+                # early CLV is -1.81% on only n=11 (phase 0, too small to gate).
+                # So the bug is currently PROTECTIVE: fixing it would raise
+                # real-money exposure in exactly the markets we suspect.
+                #
+                # TRIGGER TO FIX: once NHL Total has enough CLV for the governor
+                # to decide (phase 1 starts at n=30) — then fix the de-vig and
+                # let the gates, not an arithmetic error, control exposure.
+                # Tracked as checkpoint `totals_devig`.
+                # ⚠️ tests/test_price_compare.py::test_totals_sides_do_NOT_sum_to_one
+                # pins the current behaviour and must be inverted with the fix.
                 for o in outcomes:
                     p = american_to_prob(o["price"])
                     probs_by_name.setdefault(o["name"], []).append(p)
