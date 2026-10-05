@@ -278,6 +278,28 @@ MARKET_CLV_COVERAGE_MIN = 50.0
 MARKET_CLV_MIN_N = 5            # below this, coverage % is noise — stay quiet
 
 
+def check_kalshi_maps():
+    """Are our Kalshi team maps still in step with the live moneyline books?
+
+    Kalshi renamed four books in a month (NFL spreads, all three MLB F5 books,
+    and LigaMX's Tijuana token). Each was found by accident or by a CLV alert
+    AFTER the data went dark. This checks the one thing everything anchors on —
+    the moneyline book — so a rename surfaces the same week instead of showing
+    up later as a mysteriously empty market.
+    """
+    out = {"name": "kalshi_maps", "sports": {}, "ok": True}
+    try:
+        from src.data.kalshi_pricing import map_health
+        for sport in ("MLB", "NFL", "NBA", "NHL", "WNBA", "MLS", "LIGAMX"):
+            h = map_health(sport)
+            out["sports"][sport] = h
+            if not h.get("ok"):
+                out["ok"] = False
+    except Exception as e:
+        out.update(ok=False, error=str(e))
+    return out
+
+
 def compute_alerts(report):
     alerts = []
     b = report["bankroll"]
@@ -302,6 +324,14 @@ def compute_alerts(report):
             f"the last 3 days (total {sl.get('execution_rows_total', 0)}) — the "
             f"Kalshi snapshot is exception-guarded, so a silent failure looks "
             f"exactly like this")
+    km = report.get("kalshi_maps") or {}
+    for _sport, _h in sorted((km.get("sports") or {}).items()):
+        if not _h.get("ok") and _h.get("unknown"):
+            alerts.append(
+                f"{_sport} Kalshi team map is STALE — live tokens we cannot "
+                f"resolve: {_h['unknown'][:5]}. Everything anchors on the "
+                f"moneyline book, so this sport cannot be priced or measured "
+                f"from Kalshi until the map is updated")
     kc = sl.get("kalshi_clv_coverage_pct")
     if kc is not None and kc < KALSHI_CLV_COVERAGE_MIN:
         alerts.append(
@@ -558,6 +588,7 @@ def main():
         "promoted_pattern": check_promoted_pattern(),
         "log_liveness": check_log_liveness(),
         "subsystem_liveness": check_subsystem_liveness(),
+        "kalshi_maps": check_kalshi_maps(),
         "governors": check_governors(),
         "checkpoints": evaluate_checkpoints(),
     }
@@ -610,6 +641,11 @@ def main():
                   f"({_m['covered']}/{_m['n']})")
         if _cold:
             print(f"[--]   not wired for Kalshi CLV: {', '.join(_cold)}")
+    _km = report.get("kalshi_maps") or {}
+    _stale = [k for k, v in (_km.get("sports") or {}).items() if not v.get("ok")]
+    print(f"[{'OK' if _km.get('ok') else '!!'}] Kalshi team maps: "
+          f"{len(_km.get('sports') or {})} sports checked"
+          + (f" — STALE: {_stale}" if _stale else " — all in step"))
     print(f"[--] CLV gates: {g.get('clv_gates') or 'none'}")
     print(f"[--] Calibration phases beyond 0: {g.get('calibration_phases') or 'none'}")
     print(f"[--] MLB caps: {g.get('mlb_caps')}")

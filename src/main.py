@@ -607,6 +607,19 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         except Exception as _dec_err:
             logger.warning(f"Decision-log capture failed (non-fatal): {_dec_err}")
 
+        # Kalshi pricing trial (Oct 2026) — BEHIND THE SCENES, logs only.
+        # The card above is priced by the Odds API exactly as before; this
+        # records whether pricing the SAME slate off Kalshi alone would have
+        # produced a complete, sane line set. Price AGREEMENT is already settled
+        # by 9,698 decision-log rows carrying both prices, so this measures only
+        # the half that has never run: discovery and completeness. Costs no Odds
+        # API credits (Kalshi is free) and cannot affect the card.
+        try:
+            from src.data.kalshi_pricing import record_coverage as _kp_cov
+            _kp_cov(today, slug, odds_games=games)
+        except Exception as _kp_err:
+            logger.warning(f"Kalshi coverage trial failed (non-fatal): {_kp_err}")
+
         # Honest confidence: downgrade HIGH picks whose calibrated edge no longer
         # clears the HIGH bar (overconfident markets like totals), so they don't
         # jump the confidence-first slot queue ahead of better-calibrated picks.

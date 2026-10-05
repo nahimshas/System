@@ -343,7 +343,11 @@ LIGAMX_TEAM_TO_KALSHI = {
     "Querétaro": "Queretaro",
     "Santos Laguna": "Santos Laguna",
     "Tigres": "Tigres",
-    "Tijuana": "Tijuana de Caliente",
+    # Kalshi shortened this token from "Tijuana de Caliente" (caught Oct 5 2026
+    # by map_health on its first run — the FOURTH rename in a month). Only the
+    # CURRENT token is mapped: our own feed name has always been "Tijuana", and
+    # a speculative alias would create a duplicate token for no observed need.
+    "Tijuana": "Tijuana",
     "Toluca": "Toluca",
 }
 
