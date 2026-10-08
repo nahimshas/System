@@ -22,3 +22,25 @@ NBA_TOTAL_STD              = 16.5    # model prediction uncertainty for game tot
 NBA_PLAYOFF_TOTAL_STD      = 16.5    # was 13.0 (tighter than regular season — backwards: that
                                      # raised totals confidence in exactly the worst-performing
                                      # period). Now equal to the regular-season value.
+
+# ── Cold-start warm start (Oct 2026) ─────────────────────────────────────────
+# NBA had NO prior-season blending, unlike NFL. Measured on the live preseason
+# sample: net ratings from one game spanned -34..+34 with sd 13.7, against a
+# real NBA spread of roughly -12..+11, sd 6.1 — 3.4x too wide. A simulated
+# matchup produced a +15.0% moneyline edge with the credibility cap FIRING,
+# which is the same "cap-pinned phantom edge" signature as the CFB first slate.
+#
+# NBA_PRIOR_REGRESSION is MEASURED, not guessed: the season-over-season
+# regression slope of team net rating across four pairs (2022->23 .. 2025->26)
+# was 0.445 / 0.779 / 0.633 / 0.543, mean 0.600, with a notably stable
+# correlation of r = 0.52-0.59. NBA regresses slightly MORE than NFL (0.67),
+# which is the opposite of what roster stability would suggest — hence measuring.
+NBA_PRIOR_REGRESSION    = 0.60   # keep 60% of last season's net rating
+NBA_LEAGUE_AVG_PPG      = 113.0  # anchor for regressing ppg/oppg toward the mean
+
+# Ramp derived from when the current season out-informs the prior. With a
+# game-margin sd of 12.0, the standard error of a team's mean net rating is
+# 12/sqrt(n); the prior's residual sd is 6.0*sqrt(1-r^2) ~ 5.0. They cross at
+# about 8 games, so a linear ramp to full-current by 15 leaves the blend
+# prior-weighted exactly while the prior is still the better estimate.
+NBA_WARMSTART_RAMP_GAMES = 15

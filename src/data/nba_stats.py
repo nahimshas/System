@@ -14,6 +14,9 @@ import requests
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional
 
+from src.config import (NBA_LEAGUE_AVG_PPG, NBA_PRIOR_REGRESSION,
+                        NBA_WARMSTART_RAMP_GAMES)
+
 logger = logging.getLogger(__name__)
 
 ESPN_NBA      = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
@@ -55,13 +58,21 @@ def _get(url: str, params: dict = None) -> Optional[dict]:
 # Season stats — ONE call for all 30 teams via the standings endpoint
 # ---------------------------------------------------------------------------
 
-def _fetch_all_team_stats() -> Dict[str, Dict]:
+def _fetch_all_team_stats(season: Optional[int] = None) -> Dict[str, Dict]:
     """
     Returns {espn_display_name: stats_dict} for every NBA team.
     Keys match what normalize() returns so edge_finder lookups work directly.
     """
-    season = _espn_season()
-    data = _get(f"{ESPN_NBA_V2}/standings", params={"season": season})
+    season = season or _espn_season()
+    # ⚠️ seasontype=2 (REGULAR SEASON) is required. ESPN defaults to whatever
+    # phase the league is in, so before opening night the default returns
+    # PRESEASON standings — verified Oct 8 2026: the default gave Atlanta
+    # 0W-1L while seasontype=2 gave 0W-0L. Exhibition games are already skipped
+    # for BETTING (see game_types.py); ingesting them as season stats was the
+    # same mistake one layer down, and a single preseason game produced net
+    # ratings of +/-34 against a real NBA spread of about +/-12.
+    data = _get(f"{ESPN_NBA_V2}/standings",
+                params={"season": season, "seasontype": 2})
     if not data:
         return {}
 
@@ -97,6 +108,7 @@ def _fetch_all_team_stats() -> Dict[str, Dict]:
                 "win_pct": win_pct,
                 "wins":    int(wins),
                 "losses":  int(losses),
+                "games_played": int(total),
             }
 
     logger.info(f"ESPN standings: {len(result)} teams (season {season})")
@@ -757,6 +769,46 @@ def get_nba_player_props_stats(
 # Public interface
 # ---------------------------------------------------------------------------
 
+def _apply_warm_start(current: Dict[str, Dict], prior: Dict[str, Dict]) -> Dict[str, Dict]:
+    """Blend current-season ratings with last season's, regressed toward the mean.
+
+    Mirrors the NFL warm start, which NBA never had. Opening night (0 games)
+    uses the regressed prior; by NBA_WARMSTART_RAMP_GAMES the blend is pure
+    current season.
+
+    ⚠️ WHY THIS MATTERS MORE THAN IT LOOKS: without it, a 1-game sample gives
+    net ratings spanning +/-34 against a true spread of about +/-12, and the
+    analyzer turns that into double-digit edges with the credibility cap firing
+    — the exact signature that made the CFB first slate worthless. The cap
+    bounds the damage but does not fix it: a cap firing on most picks is a
+    symptom of an overconfident model, not a safety net.
+
+    NBA_PRIOR_REGRESSION is measured, not assumed — see the note in config/nba.
+    """
+    if not prior:
+        logger.warning("NBA warm-start: no prior-season data — using current only")
+        return current
+    for name, cur in current.items():
+        gp = cur.get("games_played", 0)
+        w = min(1.0, gp / NBA_WARMSTART_RAMP_GAMES) if NBA_WARMSTART_RAMP_GAMES else 1.0
+        pri = prior.get(name, {})
+        pri_net  = pri.get("net_rtg", 0.0) * NBA_PRIOR_REGRESSION
+        pri_ppg  = NBA_LEAGUE_AVG_PPG + (pri.get("ppg",  NBA_LEAGUE_AVG_PPG) - NBA_LEAGUE_AVG_PPG) * NBA_PRIOR_REGRESSION
+        pri_oppg = NBA_LEAGUE_AVG_PPG + (pri.get("oppg", NBA_LEAGUE_AVG_PPG) - NBA_LEAGUE_AVG_PPG) * NBA_PRIOR_REGRESSION
+        cur["ppg"]     = round(w * cur["ppg"]  + (1 - w) * pri_ppg, 3)
+        cur["oppg"]    = round(w * cur["oppg"] + (1 - w) * pri_oppg, 3)
+        cur["net_rtg"] = round(w * cur["net_rtg"] + (1 - w) * pri_net, 3)
+        cur["off_rtg"] = cur["ppg"]
+        cur["def_rtg"] = cur["oppg"]
+        cur["warm_start_weight"] = round(w, 3)   # 0 = pure prior, 1 = pure current
+    active = sum(1 for c in current.values() if c.get("warm_start_weight", 1.0) < 1.0)
+    if active:
+        logger.info(f"NBA warm-start ACTIVE: {active} team(s) blending last-season "
+                    f"priors (regressed x{NBA_PRIOR_REGRESSION}, ramp "
+                    f"{NBA_WARMSTART_RAMP_GAMES} games)")
+    return current
+
+
 def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
     """
     Fetch NBA context from ESPN.
@@ -771,6 +823,17 @@ def get_nba_context(today: date, team_names: List[str] = None) -> Dict:
 
     # ── Season stats — all 30 teams, one standings call ──────────────────────
     season_stats = _fetch_all_team_stats()
+
+    # Warm start: blend last season's regressed ratings in while the current
+    # sample is still tiny. One extra standings call, and only while it matters —
+    # once every team has NBA_WARMSTART_RAMP_GAMES games the blend is a no-op.
+    try:
+        if season_stats and any(c.get("games_played", 0) < NBA_WARMSTART_RAMP_GAMES
+                                for c in season_stats.values()):
+            _prior = _fetch_all_team_stats(_espn_season() - 1)
+            season_stats = _apply_warm_start(season_stats, _prior)
+    except Exception as _ws_err:          # never block the slate
+        logger.warning(f"NBA warm-start skipped (non-fatal): {_ws_err}")
     if not season_stats:
         logger.error("ESPN standings unavailable — NBA model will have no stats")
         return {"season_stats": {}, "recent_form": {}, "rest_days": {}, "team_leaders": {}}

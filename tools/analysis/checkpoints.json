@@ -268,6 +268,19 @@
         "min_nhl_total_clv_n": 30
       },
       "rationale": "Found Oct 5 2026 while comparing Kalshi and Odds API pricing. _consensus_probs in odds_client.py de-vigs h2h and spreads per book but NOT totals: moneyline sides sum to exactly 1.0000 while totals sides sum to 1.046-1.063 in EVERY sport. Each totals side is inflated ~2.3pp, so edge = model - market is understated by the same amount and totals under-rank against ML/spread in slot selection. || NOT FIXED ON PURPOSE (user decision): de-vigging makes 46% more totals candidates clear the edge floor (674 -> 984 measured on the decision log), and totals are our worst market. MLB Total (-0.70%), MLS Total (-1.39%), NBA Total (-2.19%) and WC Total (-2.04%) are already CLV-gated out of the budget. The ungated ones are NFL Total (+0.00%, n=38) and NHL Total (-1.81%, n=11, phase 0). So the arithmetic error is currently PROTECTIVE and fixing it would add real-money exposure precisely where CLV is weakest. || TRIGGER: NHL Total reaching n>=30 lets the governor decide for itself (phase 1). At that point fix the de-vig so exposure is controlled by the gates rather than by a bug, and INVERT tests/test_price_compare.py::test_totals_sides_do_NOT_sum_to_one. || NOTE CLV is unaffected by this bug: it is a difference of two market probs, so a constant overround cancels. The existing totals CLV verdicts stand."
+    },
+    {
+      "id": "nba_warm_start",
+      "status": "open",
+      "title": "NBA warm start + preseason exclusion — did the opening weeks behave?",
+      "created": "2026-10-08",
+      "evaluate_after": "2026-12-01",
+      "data_window_start": "2026-10-21",
+      "type": "note",
+      "rules": {
+        "min_graded_picks": 60
+      },
+      "rationale": "Asked ahead of the opener. TWO defects, both would have shipped. (1) The standings call omitted seasontype and ESPN defaults to the league's current phase — PRESEASON before opening night. Verified live: default gave Atlanta 0W-1L, seasontype=2 gave 0W-0L. One preseason game produced net ratings of -34..+34 (sd 13.7) vs a real NBA spread of -12..+11 (sd 6.1), and a simulated matchup yielded a +15.0% moneyline edge with the credibility cap FIRING — the CFB first-slate signature. (2) NBA had no warm start, unlike NFL, so with preseason excluded every team sits at the 110/110 default and EVERY matchup prices identically at 58% — no signal at all. Fixing one alone leaves garbage or flatness. || FIX: seasontype=2 on the standings call, games_played captured, and _apply_warm_start blending last season regressed by NBA_PRIOR_REGRESSION=0.60 over a 15-game ramp. The 0.60 is MEASURED: season-over-season net-rating slope across four pairs (2022->23..2025->26) was 0.445/0.779/0.633/0.543, mean 0.600, with a stable r of 0.52-0.59. NBA regresses slightly MORE than NFL (0.67), the opposite of what roster stability suggests — hence measuring. The 15-game ramp outlasts the ~8-game crossover where the current sample (se=12/sqrt(n)) beats the prior residual (~5.0). || RESULT: model win-prob spread 36-76%, sd 8.4pp, 9% outside 30-70% — a believable NBA distribution, versus flat-58% without the warm start. || WHAT TO CHECK: edge DISTRIBUTION on the first two weeks. If most picks sit at the credibility cap, the model is overconfident again and the ramp or regression needs work — a cap firing on most picks is a symptom, not a safety net. Also confirm warm_start_weight falls from 0.0 toward 1.0 as games accrue, and that it reaches 1.0 by ~mid-November."
     }
   ]
 }
