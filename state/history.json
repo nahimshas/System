@@ -23067,5 +23067,141 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-10-07",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Colorado Avalanche @ Winnipeg Jets",
+    "bet_type": "Moneyline",
+    "pick": "Colorado Avalanche",
+    "home_team": "Winnipeg Jets",
+    "away_team": "Colorado Avalanche",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 77.7,
+    "market_prob_pct": 62.7,
+    "cost": 1.29,
+    "profit_if_win": 0.71,
+    "result": "LOST",
+    "actual_pnl": -1.29,
+    "actual_home_score": 3.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-10-07",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Edmonton Oilers @ Anaheim Ducks",
+    "bet_type": "Moneyline",
+    "pick": "Edmonton Oilers",
+    "home_team": "Anaheim Ducks",
+    "away_team": "Edmonton Oilers",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 69.7,
+    "market_prob_pct": 54.7,
+    "cost": 1.13,
+    "profit_if_win": 0.87,
+    "result": "WON",
+    "actual_pnl": 0.87,
+    "actual_home_score": 2.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-10-07",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Pittsburgh Penguins @ Washington Capitals",
+    "bet_type": "Moneyline",
+    "pick": "Pittsburgh Penguins",
+    "home_team": "Washington Capitals",
+    "away_team": "Pittsburgh Penguins",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 55.7,
+    "market_prob_pct": 40.7,
+    "cost": 0.85,
+    "profit_if_win": 1.15,
+    "result": "LOST",
+    "actual_pnl": -0.85,
+    "actual_home_score": 5.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-10-07",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Los Angeles Dodgers @ Atlanta Braves",
+    "bet_type": "Spread",
+    "pick": "Atlanta Braves +1.5",
+    "home_team": "Atlanta Braves",
+    "away_team": "Los Angeles Dodgers",
+    "edge_pct": 8.6,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 64.6,
+    "market_prob_pct": 56.0,
+    "cost": 0.58,
+    "profit_if_win": 0.42,
+    "result": "LOST",
+    "actual_pnl": -0.58,
+    "actual_home_score": 1.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-10-07",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Colorado Avalanche (ML) + Pittsburgh Penguins +1.5",
+    "bet_type": "Parlay",
+    "pick": "Colorado Avalanche (ML) + Pittsburgh Penguins +1.5",
+    "edge_pct": 18.2,
+    "confidence": "HIGH",
+    "model_prob_pct": 57.0,
+    "market_prob_pct": 0,
+    "cost": 6.52,
+    "profit_if_win": 9.48,
+    "result": "LOST",
+    "actual_pnl": -6.52,
+    "legs": [
+      {
+        "game": "Colorado Avalanche @ Winnipeg Jets",
+        "pick": "Colorado Avalanche",
+        "result": "LOST"
+      },
+      {
+        "game": "Pittsburgh Penguins @ Washington Capitals",
+        "pick": "Pittsburgh Penguins +1.5",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-07",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Pittsburgh Penguins (ML) + Edmonton Oilers (ML)",
+    "bet_type": "Parlay",
+    "pick": "Pittsburgh Penguins (ML) + Edmonton Oilers (ML)",
+    "edge_pct": 14.6,
+    "confidence": "HIGH",
+    "model_prob_pct": 36.9,
+    "market_prob_pct": 0,
+    "cost": 4.13,
+    "profit_if_win": 12.87,
+    "result": "LOST",
+    "actual_pnl": -4.13,
+    "legs": [
+      {
+        "game": "Pittsburgh Penguins @ Washington Capitals",
+        "pick": "Pittsburgh Penguins",
+        "result": "LOST"
+      },
+      {
+        "game": "Edmonton Oilers @ Anaheim Ducks",
+        "pick": "Edmonton Oilers",
+        "result": "WON"
+      }
+    ]
   }
 ]
