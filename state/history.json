@@ -23359,5 +23359,141 @@
         "result": "WON"
       }
     ]
+  },
+  {
+    "date": "2026-10-09",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Seattle Kraken @ Detroit Red Wings",
+    "bet_type": "Moneyline",
+    "pick": "Seattle Kraken",
+    "home_team": "Detroit Red Wings",
+    "away_team": "Seattle Kraken",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 58.5,
+    "market_prob_pct": 43.5,
+    "cost": 0.91,
+    "profit_if_win": 1.09,
+    "result": "WON",
+    "actual_pnl": 1.09,
+    "actual_home_score": 3.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-10-09",
+    "type": "single",
+    "sport": "NHL",
+    "game": "New York Rangers @ Washington Capitals",
+    "bet_type": "Moneyline",
+    "pick": "New York Rangers",
+    "home_team": "Washington Capitals",
+    "away_team": "New York Rangers",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 58.4,
+    "market_prob_pct": 43.4,
+    "cost": 0.91,
+    "profit_if_win": 1.09,
+    "result": "LOST",
+    "actual_pnl": -0.91,
+    "actual_home_score": 3.0,
+    "actual_away_score": 1.0
+  },
+  {
+    "date": "2026-10-09",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Pittsburgh Penguins @ Columbus Blue Jackets",
+    "bet_type": "Moneyline",
+    "pick": "Pittsburgh Penguins",
+    "home_team": "Columbus Blue Jackets",
+    "away_team": "Pittsburgh Penguins",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 63.0,
+    "market_prob_pct": 48.0,
+    "cost": 1.0,
+    "profit_if_win": 1.0,
+    "result": "LOST",
+    "actual_pnl": -1.0,
+    "actual_home_score": 3.0,
+    "actual_away_score": 2.0
+  },
+  {
+    "date": "2026-10-09",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Anaheim Ducks @ Winnipeg Jets",
+    "bet_type": "Moneyline",
+    "pick": "Winnipeg Jets",
+    "home_team": "Winnipeg Jets",
+    "away_team": "Anaheim Ducks",
+    "edge_pct": 14.2,
+    "confidence": "HIGH",
+    "model_prob_pct": 66.8,
+    "market_prob_pct": 52.6,
+    "cost": 1.09,
+    "profit_if_win": 0.91,
+    "result": "LOST",
+    "actual_pnl": -1.09,
+    "actual_home_score": 1.0,
+    "actual_away_score": 5.0
+  },
+  {
+    "date": "2026-10-09",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Pittsburgh Penguins +1.5 + Seattle Kraken +1.5",
+    "bet_type": "Parlay",
+    "pick": "Pittsburgh Penguins +1.5 + Seattle Kraken +1.5",
+    "edge_pct": 18.5,
+    "confidence": "HIGH",
+    "model_prob_pct": 62.8,
+    "market_prob_pct": 0,
+    "cost": 7.4,
+    "profit_if_win": 8.6,
+    "result": "WON",
+    "actual_pnl": 8.6,
+    "legs": [
+      {
+        "game": "Pittsburgh Penguins @ Columbus Blue Jackets",
+        "pick": "Pittsburgh Penguins +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Seattle Kraken @ Detroit Red Wings",
+        "pick": "Seattle Kraken +1.5",
+        "result": "WON"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-09",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Pittsburgh Penguins (ML) + New York Rangers +1.5",
+    "bet_type": "Parlay",
+    "pick": "Pittsburgh Penguins (ML) + New York Rangers +1.5",
+    "edge_pct": 16.2,
+    "confidence": "HIGH",
+    "model_prob_pct": 47.5,
+    "market_prob_pct": 0,
+    "cost": 5.01,
+    "profit_if_win": 9.99,
+    "result": "LOST",
+    "actual_pnl": -5.01,
+    "legs": [
+      {
+        "game": "Pittsburgh Penguins @ Columbus Blue Jackets",
+        "pick": "Pittsburgh Penguins",
+        "result": "LOST"
+      },
+      {
+        "game": "New York Rangers @ Washington Capitals",
+        "pick": "New York Rangers +1.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
