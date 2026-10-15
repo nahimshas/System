@@ -24119,5 +24119,121 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-10-14",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Dallas Stars @ Colorado Avalanche",
+    "bet_type": "Moneyline",
+    "pick": "Colorado Avalanche",
+    "home_team": "Colorado Avalanche",
+    "away_team": "Dallas Stars",
+    "edge_pct": 15.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 70.5,
+    "market_prob_pct": 55.5,
+    "cost": 1.15,
+    "profit_if_win": 0.85,
+    "result": "LOST",
+    "actual_pnl": -1.15,
+    "actual_home_score": 2.0,
+    "actual_away_score": 3.0
+  },
+  {
+    "date": "2026-10-14",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Montreal Canadiens @ Washington Capitals",
+    "bet_type": "Moneyline",
+    "pick": "Washington Capitals",
+    "home_team": "Washington Capitals",
+    "away_team": "Montreal Canadiens",
+    "edge_pct": 11.8,
+    "confidence": "HIGH",
+    "model_prob_pct": 65.3,
+    "market_prob_pct": 53.5,
+    "cost": 0.56,
+    "profit_if_win": 0.44,
+    "result": "WON",
+    "actual_pnl": 0.44,
+    "actual_home_score": 5.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-10-14",
+    "type": "single",
+    "sport": "MLB",
+    "game": "Milwaukee Brewers @ Los Angeles Dodgers",
+    "bet_type": "Moneyline",
+    "pick": "Milwaukee Brewers",
+    "home_team": "Los Angeles Dodgers",
+    "away_team": "Milwaukee Brewers",
+    "edge_pct": 10.0,
+    "confidence": "HIGH",
+    "model_prob_pct": 48.9,
+    "market_prob_pct": 38.9,
+    "cost": 0.41,
+    "profit_if_win": 0.59,
+    "result": "WON",
+    "actual_pnl": 0.59,
+    "actual_home_score": 2.0,
+    "actual_away_score": 6.0
+  },
+  {
+    "date": "2026-10-14",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Washington Capitals (ML) + Colorado Avalanche (ML)",
+    "bet_type": "Parlay",
+    "pick": "Washington Capitals (ML) + Colorado Avalanche (ML)",
+    "edge_pct": 13.9,
+    "confidence": "HIGH",
+    "model_prob_pct": 43.6,
+    "market_prob_pct": 0,
+    "cost": 4.12,
+    "profit_if_win": 8.88,
+    "result": "LOST",
+    "actual_pnl": -4.12,
+    "legs": [
+      {
+        "game": "Montreal Canadiens @ Washington Capitals",
+        "pick": "Washington Capitals",
+        "result": "WON"
+      },
+      {
+        "game": "Dallas Stars @ Colorado Avalanche",
+        "pick": "Colorado Avalanche",
+        "result": "LOST"
+      }
+    ]
+  },
+  {
+    "date": "2026-10-14",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Milwaukee Brewers +1.5 + Colorado Avalanche -1.5",
+    "bet_type": "Parlay",
+    "pick": "Milwaukee Brewers +1.5 + Colorado Avalanche -1.5",
+    "edge_pct": 9.4,
+    "confidence": "HIGH",
+    "model_prob_pct": 28.9,
+    "market_prob_pct": 0,
+    "cost": 2.15,
+    "profit_if_win": 7.85,
+    "result": "LOST",
+    "actual_pnl": -2.15,
+    "legs": [
+      {
+        "game": "Milwaukee Brewers @ Los Angeles Dodgers",
+        "pick": "Milwaukee Brewers +1.5",
+        "result": "WON"
+      },
+      {
+        "game": "Dallas Stars @ Colorado Avalanche",
+        "pick": "Colorado Avalanche -1.5",
+        "result": "LOST"
+      }
+    ]
   }
 ]
