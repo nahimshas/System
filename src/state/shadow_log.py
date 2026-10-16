@@ -489,7 +489,11 @@ def settle_shadow_from_espn(today: date) -> int:
     WATCHLIST_SPORTS = (set(ESPN_WATCHLIST_PATHS) - MAIN_SPORTS) - IPL_SPORTS
     SUPPORTED        = MAIN_SPORTS | WATCHLIST_SPORTS | IPL_SPORTS
 
-    OUTCOME_MAP = {"WON": "win", "LOST": "loss", "PUSH": "push"}
+    # LOST_TIE is an NFL tie: Kalshi pays $0.50/contract, but for MODEL
+    # evaluation the pick ("this team wins") did not win, so it settles as a
+    # loss here. The real money is booked separately in outcome_checker.
+    OUTCOME_MAP = {"WON": "win", "LOST": "loss", "PUSH": "push",
+                   "LOST_TIE": "loss"}
 
     try:
         if not SHADOW_LOG_DIR.exists():
@@ -595,7 +599,7 @@ def settle_shadow_from_espn(today: date) -> int:
                     game = entry.get("game", "")
                     pick = entry.get("pick", "")
                     hist_result = ipl_hist_lookup.get((game, pick), "")
-                    if hist_result not in ("WON", "LOST", "PUSH"):
+                    if hist_result not in OUTCOME_MAP:
                         logger.debug(
                             f"IPL shadow: no history match for game='{game}' pick='{pick}'"
                             " — leaving unsettled"

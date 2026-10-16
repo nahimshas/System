@@ -174,12 +174,20 @@ def check_and_settle(today: date) -> int:
             score_data["home_score"],
             score_data["away_score"],
         )
-        if result not in ("WON", "LOST", "PUSH"):
+        if result not in ("WON", "LOST", "PUSH", "LOST_TIE"):
             continue
 
         cost        = pick.get("total_cost", 0) or 0
         profit      = pick.get("profit_if_win", 0) or 0
-        actual_pnl  = profit if result == "WON" else (0.0 if result == "PUSH" else -cost)
+        tie_settled = False
+        if result == "LOST_TIE":
+            # Booked as a LOSS (the pick did not win) but paid out at Kalshi's
+            # $0.50-per-contract tie settlement, so the money is real.
+            actual_pnl  = _tie_pnl(pick, cost)
+            tie_settled = True
+            result      = "LOST"
+        else:
+            actual_pnl = profit if result == "WON" else (0.0 if result == "PUSH" else -cost)
 
         new_records.append({
             "date":             yesterday.isoformat(),
@@ -198,6 +206,7 @@ def check_and_settle(today: date) -> int:
             "profit_if_win":    profit,
             "result":           result,
             "actual_pnl":       round(actual_pnl, 2),
+            "tie_settled":      tie_settled,
             # Calibration: actual final scores for post-mortem analysis
             "actual_home_score": score_data["home_score"],
             "actual_away_score": score_data["away_score"],
@@ -238,7 +247,10 @@ def check_and_settle(today: date) -> int:
                 score_data["home_score"],
                 score_data["away_score"],
             )
-            leg_results.append(r)
+            # A tied NFL leg is a LOSING leg: the leg said "this team wins".
+            # Kalshi's $0.50 settlement applies to a single contract, not to a
+            # parlay leg, which needs its condition met to carry the parlay.
+            leg_results.append("LOST" if r == "LOST_TIE" else r)
 
         if "UNKNOWN" in leg_results:
             continue  # genuinely pending — come back tomorrow
@@ -299,6 +311,7 @@ def check_and_settle(today: date) -> int:
             "profit_if_win":    profit,
             "result":           result,
             "actual_pnl":       round(actual_pnl, 2),
+            "tie_settled":      tie_settled,
             "legs":             [
                 {"game": l.get("game"), "pick": l.get("pick"), "result": leg_results[i],
                  **({"note": "postponed"} if leg_results[i] == "VOID" else {})}
@@ -626,6 +639,23 @@ def _find_game_score(
 # Outcome determination
 # ---------------------------------------------------------------------------
 
+def _tie_pnl(pick: Dict, cost: float) -> float:
+    """P&L when an NFL moneyline game ends tied.
+
+    Kalshi resolves the contract at $0.50 rather than $0 or a refund, so the
+    result depends on what we paid: buying under 50c profits on a tie, buying
+    over 50c loses. Falls back to treating it as a refund only when the
+    contract count is unknown, which is strictly safer than assuming a payout.
+    """
+    n = pick.get("num_contracts") or 0
+    if not n:
+        price = pick.get("contract_price") or 0
+        n = round(cost / price) if price else 0
+    if not n:
+        return 0.0
+    return round(0.50 * n - cost, 2)
+
+
 def _determine_outcome(
     pick: str,
     bet_type: str,
@@ -657,7 +687,19 @@ def _determine_outcome(
         away_lower = away_team.lower()
 
         if home_score == away_score:
-            return "PUSH"
+            # ⚠️ A TIED MONEYLINE IS NOT A PUSH ON KALSHI.
+            # Every KXNFLGAME market carries: "If the game ends in a tie, the
+            # market will resolve to $0.50 for each team" (verified across all
+            # 56 live markets Oct 2026). There is no separate Tie market in NFL,
+            # unlike soccer — where a "Tie" market DOES exist, so a draw
+            # correctly loses a team contract via _determine_mls_outcome.
+            #
+            # So a tie is neither a refund nor a total loss: the contract pays
+            # $0.50. Returning a distinct marker lets the caller book the real
+            # money while still recording the bet as a LOSS, which is the user's
+            # call (Oct 2026) and the right one for judging the MODEL — the pick
+            # was "this team wins", and the team did not win.
+            return "LOST_TIE"
 
         # Check if pick refers to home team
         if home_lower and (home_lower in pick_lower or pick_lower in home_lower):
@@ -1703,6 +1745,8 @@ def check_and_settle_watchlist(today: date,
                     pick.get("home_team", ""), pick.get("away_team", ""),
                     score_data["home_score"], score_data["away_score"],
                 )
+                if result == "LOST_TIE":
+                    result = "LOST"      # NFL tie — see _determine_outcome
                 if result not in ("WON", "LOST"):
                     continue
                 # Claim the key immediately so the same pick appearing in two

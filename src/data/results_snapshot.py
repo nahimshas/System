@@ -255,6 +255,8 @@ def _resolve(sport: str, pick: str, bet_type: str, home_team: str, away_team: st
     else:
         result = _determine_outcome(pick, bet_type, event["home_name"], event["away_name"],
                                     event["home_score"], event["away_score"])
+    if result == "LOST_TIE":
+        result = "LOST"          # NFL tie — see _determine_outcome
     if result not in ("WON", "LOST", "PUSH"):
         return {"result": "PENDING", "score": score_str}
     return {"result": result, "score": score_str}
