@@ -1,86 +1,18 @@
 {
-  "generated_at": "2026-10-17T15:28:49.966405+00:00",
-  "report_date": "2026-10-17",
-  "status": "WARN",
+  "generated_at": "2026-10-18T15:28:35.500550+00:00",
+  "report_date": "2026-10-18",
+  "status": "PASS",
   "warn_count": 0,
-  "info_count": 6,
-  "findings": [
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Travis Bazzana HRR Over' from 2026-10-16 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Brayan Rocchio HRR Over' from 2026-10-16 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Chandler Simpson Hits Over' from 2026-10-16 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Junior Caminero Hits Over' from 2026-10-16 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Jonathan Aranda Hits Over' from 2026-10-16 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    },
-    {
-      "check": "dropped_prop",
-      "severity": "info",
-      "what": "Prop 'Chase DeLauter Hits Over' from 2026-10-16 has no record at all in prop_history.json (not even pending).",
-      "why": "A prop with no record was lost between selection and settlement \u2014 missing from the prop-accuracy tracker entirely.",
-      "fix": "Check prop_history.json for the player; if absent, the prop settlement loop didn't pick it up (name-match or sport-routing issue)."
-    }
-  ],
+  "info_count": 0,
+  "findings": [],
   "stats": {
-    "date_checked": "2026-10-16",
-    "settled_singles": 1,
-    "settled_total_records": 1,
-    "yesterday_pnl": 0.47,
-    "placed_singles": 1,
+    "date_checked": "2026-10-17",
+    "settled_singles": 5,
+    "settled_total_records": 7,
+    "yesterday_pnl": 14.82,
+    "placed_singles": 5,
     "placed_props": 6
   },
   "flagged_dropped_bets": [],
-  "flagged_dropped_props": [
-    [
-      "Travis Bazzana",
-      "HRR Over"
-    ],
-    [
-      "Brayan Rocchio",
-      "HRR Over"
-    ],
-    [
-      "Chandler Simpson",
-      "Hits Over"
-    ],
-    [
-      "Junior Caminero",
-      "Hits Over"
-    ],
-    [
-      "Jonathan Aranda",
-      "Hits Over"
-    ],
-    [
-      "Chase DeLauter",
-      "Hits Over"
-    ]
-  ]
+  "flagged_dropped_props": []
 }
