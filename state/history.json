@@ -24739,5 +24739,97 @@
         "result": "LOST"
       }
     ]
+  },
+  {
+    "date": "2026-10-19",
+    "type": "single",
+    "sport": "NHL",
+    "game": "San Jose Sharks @ Toronto Maple Leafs",
+    "bet_type": "Moneyline",
+    "pick": "Toronto Maple Leafs",
+    "home_team": "Toronto Maple Leafs",
+    "away_team": "San Jose Sharks",
+    "edge_pct": 10.1,
+    "confidence": "HIGH",
+    "model_prob_pct": 64.8,
+    "market_prob_pct": 54.7,
+    "cost": 0.57,
+    "profit_if_win": 0.43,
+    "result": "WON",
+    "actual_pnl": 0.43,
+    "tie_settled": false,
+    "actual_home_score": 3.0,
+    "actual_away_score": 1.0
+  },
+  {
+    "date": "2026-10-19",
+    "type": "single",
+    "sport": "NHL",
+    "game": "Pittsburgh Penguins @ Utah Mammoth",
+    "bet_type": "Moneyline",
+    "pick": "Utah Mammoth",
+    "home_team": "Utah Mammoth",
+    "away_team": "Pittsburgh Penguins",
+    "edge_pct": 8.6,
+    "confidence": "HIGH",
+    "model_prob_pct": 71.1,
+    "market_prob_pct": 62.5,
+    "cost": 0.65,
+    "profit_if_win": 0.35,
+    "result": "WON",
+    "actual_pnl": 0.35,
+    "tie_settled": false,
+    "actual_home_score": 5.0,
+    "actual_away_score": 4.0
+  },
+  {
+    "date": "2026-10-19",
+    "type": "single",
+    "sport": "NFL",
+    "game": "Washington Commanders @ San Francisco 49ers",
+    "bet_type": "Spread",
+    "pick": "San Francisco 49ers -7.5",
+    "home_team": "San Francisco 49ers",
+    "away_team": "Washington Commanders",
+    "edge_pct": 15.0,
+    "confidence": "MEDIUM",
+    "model_prob_pct": 64.5,
+    "market_prob_pct": 49.5,
+    "cost": 1.03,
+    "profit_if_win": 0.97,
+    "result": "LOST",
+    "actual_pnl": -1.03,
+    "tie_settled": false,
+    "actual_home_score": 23.0,
+    "actual_away_score": 17.0
+  },
+  {
+    "date": "2026-10-19",
+    "type": "parlay",
+    "sport": "PARLAY",
+    "game": "Toronto Maple Leafs (ML) + Utah Mammoth (ML)",
+    "bet_type": "Parlay",
+    "pick": "Toronto Maple Leafs (ML) + Utah Mammoth (ML)",
+    "edge_pct": 9.9,
+    "confidence": "HIGH",
+    "model_prob_pct": 44.1,
+    "market_prob_pct": 0,
+    "cost": 2.9,
+    "profit_if_win": 5.1,
+    "result": "WON",
+    "actual_pnl": 5.1,
+    "tie_settled": false,
+    "legs": [
+      {
+        "game": "San Jose Sharks @ Toronto Maple Leafs",
+        "pick": "Toronto Maple Leafs",
+        "result": "WON"
+      },
+      {
+        "game": "Pittsburgh Penguins @ Utah Mammoth",
+        "pick": "Utah Mammoth",
+        "result": "WON"
+      }
+    ]
   }
 ]
