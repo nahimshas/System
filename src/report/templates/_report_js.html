@@ -47,6 +47,49 @@
     CFB: "https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=300&dates=" + _espnDate
   };
 
+  // ── Stale-page guard: reload when a suspended PWA resumes on a new day ───
+  //
+  // ⚠️ THE REPORTED SYMPTOM: "the notification says 7 bets today but the PWA
+  // still shows yesterday". Push notifications are handled by the SERVICE
+  // WORKER, which runs independently of any open page — so the alert fires
+  // while the installed app, suspended in the background since yesterday,
+  // still holds yesterday's DOM in memory. Resuming it does not re-navigate,
+  // nothing re-fetches, and the only refresh in the whole app was the manual
+  // pull-to-refresh gesture.
+  //
+  // So: whenever the page becomes visible again, compare the date it was BUILT
+  // for against today's Pacific date and reload if the page has been left
+  // behind.
+  //
+  // ⚠️ Guarded against reload loops. If the user opens the app at 6am, before
+  // the 9am run has published, the page is legitimately "yesterday's" and
+  // reloading cannot fix that — so each stale date gets at most one reload
+  // attempt every 5 minutes, remembered in sessionStorage.
+  function _pacificToday() {
+    try {
+      return new Date().toLocaleDateString("en-CA",
+        { timeZone: "America/Los_Angeles" });     // → "YYYY-MM-DD"
+    } catch (e) { return TODAY_DATE; }            // unsupported TZ → never reload
+  }
+  function _reloadIfStale() {
+    try {
+      var today = _pacificToday();
+      if (!today || today === TODAY_DATE) return;   // page is current
+      var key  = "bsr_stale_" + today;
+      var last = Number(sessionStorage.getItem(key) || 0);
+      if (Date.now() - last < 5 * 60 * 1000) return;   // cooled down
+      sessionStorage.setItem(key, String(Date.now()));
+      window.location.reload();
+    } catch (e) { /* storage blocked — never block the page */ }
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) _reloadIfStale();
+  });
+  // bfcache restores (iOS back-swipe, app resume) do not fire visibilitychange.
+  window.addEventListener("pageshow", function (ev) {
+    if (ev.persisted) _reloadIfStale();
+  });
+
   // ── Local timezone formatting ────────────────────────────────────────────
   // Converts a UTC ISO string to the browser's local time zone automatically.
   // e.g. "2026-05-03T22:10:00Z" → "6:10 PM ET" (in New York) or "3:10 PM PT" (in LA)

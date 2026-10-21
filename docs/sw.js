@@ -64,8 +64,20 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (!e.request.url.startsWith(self.location.origin)) return;
 
+  // ⚠️ NAVIGATIONS MUST BYPASS THE BROWSER'S HTTP CACHE.
+  // GitHub Pages serves the report with `cache-control: max-age=600`, so a
+  // plain fetch() can be answered from the HTTP cache without ever reaching
+  // the network — the service worker looks "network-first" while actually
+  // returning a stale page. Requesting the URL with cache:'no-store' forces a
+  // real request. The catch below still serves the cached copy when the device
+  // is genuinely offline, so this does not weaken offline support.
+  const isNav = e.request.mode === 'navigate';
+  const fresh = isNav
+    ? fetch(e.request.url, { cache: 'no-store', credentials: 'same-origin' })
+    : fetch(e.request);
+
   e.respondWith(
-    fetch(e.request)
+    fresh
       .then(response => {
         // Cache a copy of the fresh response
         const clone = response.clone();
