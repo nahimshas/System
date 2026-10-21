@@ -1,116 +1,244 @@
 {
-  "date": "2026-10-19",
-  "generated_at": "2026-10-20T12:14:53Z",
+  "date": "2026-10-20",
+  "generated_at": "2026-10-21T05:48:20Z",
   "singles": [
     {
-      "game": "San Jose Sharks @ Toronto Maple Leafs",
+      "game": "Boston Bruins @ Dallas Stars",
+      "sport": "NHL",
+      "bet_type": "Moneyline",
+      "pick": "Boston Bruins",
+      "result": "LOST",
+      "score": "Boston Bruins 2, Dallas Stars 3",
+      "clv": 0.0097,
+      "clv_pct": 1.0,
+      "market_prob_at_close": 0.40469
+    },
+    {
+      "game": "Toronto Maple Leafs @ Columbus Blue Jackets",
       "sport": "NHL",
       "bet_type": "Moneyline",
       "pick": "Toronto Maple Leafs",
       "result": "WON",
-      "score": "San Jose Sharks 1, Toronto Maple Leafs 3",
-      "clv": 0.0106,
-      "clv_pct": 1.1,
-      "market_prob_at_close": 0.56562
+      "score": "Toronto Maple Leafs 6, Columbus Blue Jackets 2",
+      "clv": -0.01,
+      "clv_pct": -1.0,
+      "market_prob_at_close": 0.395
     },
     {
-      "game": "Pittsburgh Penguins @ Utah Mammoth",
+      "game": "Los Angeles Kings @ Washington Capitals",
       "sport": "NHL",
       "bet_type": "Moneyline",
-      "pick": "Utah Mammoth",
-      "result": "WON",
-      "score": "Pittsburgh Penguins 4, Utah Mammoth 5",
-      "clv": 0.0,
-      "clv_pct": 0.0,
-      "market_prob_at_close": 0.625
+      "pick": "Washington Capitals",
+      "result": "LOST",
+      "score": "Los Angeles Kings 5, Washington Capitals 2",
+      "clv": 0.01,
+      "clv_pct": 1.0,
+      "market_prob_at_close": 0.595
     },
     {
-      "game": "Washington Commanders @ San Francisco 49ers",
-      "sport": "NFL",
-      "bet_type": "Spread",
-      "pick": "San Francisco 49ers -7.5",
+      "game": "Tampa Bay Lightning @ Vegas Golden Knights",
+      "sport": "NHL",
+      "bet_type": "Moneyline",
+      "pick": "Vegas Golden Knights",
       "result": "LOST",
-      "score": "Washington Commanders 17, San Francisco 49ers 23",
-      "clv": -0.03,
-      "clv_pct": -3.0,
-      "market_prob_at_close": 0.465
+      "score": "Tampa Bay Lightning 6, Vegas Golden Knights 2",
+      "clv": 0.0,
+      "clv_pct": 0.0,
+      "market_prob_at_close": 0.495
+    },
+    {
+      "game": "Minnesota Wild @ Edmonton Oilers",
+      "sport": "NHL",
+      "bet_type": "Moneyline",
+      "pick": "Edmonton Oilers",
+      "result": "WON",
+      "score": "Minnesota Wild 3, Edmonton Oilers 4",
+      "clv": -0.0162,
+      "clv_pct": -1.6,
+      "market_prob_at_close": 0.52875
     }
   ],
   "parlays": [
     {
-      "label": "Toronto Maple Leafs (ML) + Utah Mammoth (ML)",
+      "label": "Toronto Maple Leafs +1.5 + Carolina Hurricanes (ML)",
       "result": "WON",
       "void_legs": 0,
       "legs": [
         {
-          "game": "San Jose Sharks @ Toronto Maple Leafs",
+          "game": "Toronto Maple Leafs @ Columbus Blue Jackets",
           "sport": "NHL",
-          "bet_type": "Moneyline",
-          "pick": "Toronto Maple Leafs",
+          "bet_type": "Spread",
+          "pick": "Toronto Maple Leafs +1.5",
           "result": "WON",
-          "score": "San Jose Sharks 1, Toronto Maple Leafs 3",
-          "clv": 0.0106,
-          "clv_pct": 1.1,
-          "market_prob_at_close": 0.56562
-        },
-        {
-          "game": "Pittsburgh Penguins @ Utah Mammoth",
-          "sport": "NHL",
-          "bet_type": "Moneyline",
-          "pick": "Utah Mammoth",
-          "result": "WON",
-          "score": "Pittsburgh Penguins 4, Utah Mammoth 5",
+          "score": "Toronto Maple Leafs 6, Columbus Blue Jackets 2",
           "clv": 0.0,
           "clv_pct": 0.0,
           "market_prob_at_close": 0.625
+        },
+        {
+          "game": "Carolina Hurricanes @ Vancouver Canucks",
+          "sport": "NHL",
+          "bet_type": "Moneyline",
+          "pick": "Carolina Hurricanes",
+          "result": "WON",
+          "score": "Carolina Hurricanes 6, Vancouver Canucks 3",
+          "clv": -0.0169,
+          "clv_pct": -1.7,
+          "market_prob_at_close": 0.71812
+        }
+      ]
+    },
+    {
+      "label": "Washington Capitals (ML) + Boston Bruins +1.5",
+      "result": "LOST",
+      "void_legs": 0,
+      "legs": [
+        {
+          "game": "Los Angeles Kings @ Washington Capitals",
+          "sport": "NHL",
+          "bet_type": "Moneyline",
+          "pick": "Washington Capitals",
+          "result": "LOST",
+          "score": "Los Angeles Kings 5, Washington Capitals 2",
+          "clv": 0.01,
+          "clv_pct": 1.0,
+          "market_prob_at_close": 0.595
+        },
+        {
+          "game": "Boston Bruins @ Dallas Stars",
+          "sport": "NHL",
+          "bet_type": "Spread",
+          "pick": "Boston Bruins +1.5",
+          "result": "WON",
+          "score": "Boston Bruins 2, Dallas Stars 3",
+          "clv": 0.0159,
+          "clv_pct": 1.6,
+          "market_prob_at_close": 0.64344
         }
       ]
     }
   ],
   "watchlist": [
     {
-      "game": "Cleveland Guardians @ Tampa Bay Rays",
-      "sport": "MLB",
-      "bet_type": "F5 Total",
-      "pick": "Over 3.5",
-      "result": "LOST",
-      "score": "Cleveland Guardians 0, Tampa Bay Rays 3 (through 5)",
-      "clv": 0.0017,
-      "clv_pct": 0.2,
-      "market_prob_at_close": 0.50667
-    },
-    {
-      "game": "Colorado Avalanche @ Philadelphia Flyers",
+      "game": "Carolina Hurricanes @ Vancouver Canucks",
       "sport": "NHL",
       "bet_type": "Moneyline",
-      "pick": "Colorado Avalanche",
+      "pick": "Carolina Hurricanes",
+      "result": "WON",
+      "score": "Carolina Hurricanes 6, Vancouver Canucks 3",
+      "clv": -0.0169,
+      "clv_pct": -1.7,
+      "market_prob_at_close": 0.71812
+    },
+    {
+      "game": "Philadelphia 76ers @ New York Knicks",
+      "sport": "NBA",
+      "bet_type": "Moneyline",
+      "pick": "New York Knicks",
       "result": "LOST",
-      "score": "Colorado Avalanche 2, Philadelphia Flyers 3",
+      "score": "Philadelphia 76ers 106, New York Knicks 100",
+      "clv": 0.0,
+      "clv_pct": 0.0,
+      "market_prob_at_close": 0.615
+    },
+    {
+      "game": "Boston Celtics @ Detroit Pistons",
+      "sport": "NBA",
+      "bet_type": "Spread",
+      "pick": "Detroit Pistons +1.5",
+      "result": "WON",
+      "score": "Boston Celtics 113, Detroit Pistons 121",
+      "clv": -0.0042,
+      "clv_pct": -0.4,
+      "market_prob_at_close": 0.49469
+    },
+    {
+      "game": "Detroit Red Wings @ Seattle Kraken",
+      "sport": "NHL",
+      "bet_type": "Moneyline",
+      "pick": "Seattle Kraken",
+      "result": "WON",
+      "score": "Detroit Red Wings 3, Seattle Kraken 4",
+      "clv": -0.0334,
+      "clv_pct": -3.3,
+      "market_prob_at_close": 0.47156
+    },
+    {
+      "game": "Colorado Avalanche @ New Jersey Devils",
+      "sport": "NHL",
+      "bet_type": "Spread",
+      "pick": "Colorado Avalanche +1.5",
+      "result": "WON",
+      "score": "Colorado Avalanche 3, New Jersey Devils 4",
+      "clv": -0.01,
+      "clv_pct": -1.0,
+      "market_prob_at_close": 0.685
+    },
+    {
+      "game": "Oklahoma City Thunder @ San Antonio Spurs",
+      "sport": "NBA",
+      "bet_type": "Spread",
+      "pick": "Oklahoma City Thunder +1.5",
+      "result": "WON",
+      "score": "Oklahoma City Thunder 116, San Antonio Spurs 104",
+      "clv": 0.0169,
+      "clv_pct": 1.7,
+      "market_prob_at_close": 0.535
+    },
+    {
+      "game": "Anaheim Ducks @ New York Islanders",
+      "sport": "NHL",
+      "bet_type": "Moneyline",
+      "pick": "New York Islanders",
+      "result": "WON",
+      "score": "Anaheim Ducks 2, New York Islanders 3",
+      "clv": 0.0,
+      "clv_pct": 0.0,
+      "market_prob_at_close": 0.585
+    },
+    {
+      "game": "San Jose Sharks @ Montreal Canadiens",
+      "sport": "NHL",
+      "bet_type": "Spread",
+      "pick": "San Jose Sharks +1.5",
+      "result": "WON",
+      "score": "San Jose Sharks 4, Montreal Canadiens 3",
+      "clv": 0.0019,
+      "clv_pct": 0.2,
+      "market_prob_at_close": 0.55688
+    },
+    {
+      "game": "Necaxa @ Guadalajara",
+      "sport": "LIGAMX",
+      "bet_type": "Moneyline",
+      "pick": "Guadalajara",
+      "result": "PENDING",
+      "score": "Score not available",
+      "clv": 0.05,
+      "clv_pct": 5.0,
+      "market_prob_at_close": 0.735
+    },
+    {
+      "game": "Le\u00f3n @ Tigres",
+      "sport": "LIGAMX",
+      "bet_type": "Moneyline",
+      "pick": "Tigres",
+      "result": "PENDING",
+      "score": "Score not available",
+      "clv": 0.0019,
+      "clv_pct": 0.2,
+      "market_prob_at_close": 0.45687
+    },
+    {
+      "game": "Quer\u00e9taro @ Atl\u00e9tico San Luis",
+      "sport": "LIGAMX",
+      "bet_type": "Moneyline",
+      "pick": "Quer\u00e9taro",
+      "result": "PENDING",
+      "score": "Score not available",
       "clv": 0.01,
       "clv_pct": 1.0,
-      "market_prob_at_close": 0.695
-    },
-    {
-      "game": "Anaheim Ducks @ New York Rangers",
-      "sport": "NHL",
-      "bet_type": "Moneyline",
-      "pick": "New York Rangers",
-      "result": "WON",
-      "score": "Anaheim Ducks 2, New York Rangers 5",
-      "clv": 0.0284,
-      "clv_pct": 2.8,
-      "market_prob_at_close": 0.59344
-    },
-    {
-      "game": "Cleveland Guardians @ Tampa Bay Rays",
-      "sport": "MLB",
-      "bet_type": "Moneyline",
-      "pick": "Cleveland Guardians",
-      "result": "LOST",
-      "score": "Cleveland Guardians 3, Tampa Bay Rays 7",
-      "clv": 0.0013,
-      "clv_pct": 0.1,
-      "market_prob_at_close": 0.41625
+      "market_prob_at_close": 0.325
     }
   ]
 }
