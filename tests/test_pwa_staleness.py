@@ -70,27 +70,39 @@ class TestResumeGuard:
         assert "return TODAY_DATE" in block    # equal to page date -> no reload
 
 
-class TestServiceWorkerBypassesHttpCache:
-    def test_navigations_use_no_store(self):
-        sw = _sw()
-        assert "no-store" in sw
-        assert "mode === 'navigate'" in sw
+class TestServiceWorkerDoesNotRewrapNavigations:
+    """⚠️ A no-store rewrap of navigations BROKE THE PWA (Oct 21-22 2026).
 
-    def test_non_navigations_are_untouched(self):
-        """Only HTML needs the bypass; assets stay normally cacheable."""
-        sw = _sw()
-        assert "isNav" in sw
-        assert ": fetch(e.request)" in sw
+    Safari refused every launch with "Response served by service worker has
+    redirections". Cause: Cloudflare Pages 301-redirects /index_spa.html ->
+    /index_spa, and the notification opens the .html URL. fetch(url, ...)
+    defaults to redirect:'follow', so the response carries redirected === true —
+    and the spec forbids a service worker returning a redirected response to a
+    NAVIGATION request. Passing e.request through preserves the navigation's own
+    redirect mode.
 
-    def test_offline_fallback_survives(self):
-        """The bypass must not weaken offline support."""
+    The premise was wrong too: this host already sends
+    `cache-control: public, max-age=0, must-revalidate`, so there was no HTTP
+    cache staleness to defeat. The real fix is the in-page resume guard above.
+    """
+
+    def test_navigations_are_not_refetched_by_url(self):
         sw = _sw()
-        assert "caches.match(e.request)" in sw
+        assert "cache: 'no-store'" not in sw
+        assert "fetch(e.request.url" not in sw
+
+    def test_the_original_request_is_passed_through(self):
+        assert "fetch(e.request)" in _sw()
+
+    def test_the_reason_is_recorded_so_it_is_not_retried(self):
+        sw = _sw()
+        assert "redirections" in sw
+        assert "redirect" in sw
+
+    def test_still_network_first_with_offline_fallback(self):
+        sw = _sw()
+        assert sw.index("fetch(e.request)") < sw.index("caches.match(e.request)")
         assert ".catch(" in sw
-
-    def test_still_network_first(self):
-        sw = _sw()
-        assert sw.index("fresh") < sw.index("caches.match(e.request)")
 
 
 class TestCacheKeyStaysRunUnique:

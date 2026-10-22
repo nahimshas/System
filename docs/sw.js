@@ -64,20 +64,24 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (!e.request.url.startsWith(self.location.origin)) return;
 
-  // ⚠️ NAVIGATIONS MUST BYPASS THE BROWSER'S HTTP CACHE.
-  // GitHub Pages serves the report with `cache-control: max-age=600`, so a
-  // plain fetch() can be answered from the HTTP cache without ever reaching
-  // the network — the service worker looks "network-first" while actually
-  // returning a stale page. Requesting the URL with cache:'no-store' forces a
-  // real request. The catch below still serves the cached copy when the device
-  // is genuinely offline, so this does not weaken offline support.
-  const isNav = e.request.mode === 'navigate';
-  const fresh = isNav
-    ? fetch(e.request.url, { cache: 'no-store', credentials: 'same-origin' })
-    : fetch(e.request);
-
+  // ⚠️ DO NOT wrap navigations in a fresh fetch(url, {cache:'no-store'}).
+  // Tried Oct 21 2026 to defeat an HTTP-cache staleness that does not exist on
+  // this host, and it BROKE THE PWA outright: Safari refused every launch with
+  // "Response served by service worker has redirections".
+  //
+  // Why: Cloudflare Pages 301-redirects /index_spa.html -> /index_spa, and the
+  // notification opens the .html URL. fetch(url, ...) defaults to
+  // redirect:'follow', so the response comes back with redirected === true —
+  // and the spec forbids a service worker returning a redirected response to a
+  // NAVIGATION request. Passing e.request through preserves the navigation's
+  // own redirect mode, which is why the original form works.
+  //
+  // The staleness this was meant to fix is handled correctly in the page
+  // itself (_reloadIfStale on visibilitychange/pageshow), and this host already
+  // sends `cache-control: public, max-age=0, must-revalidate`, so there was
+  // nothing here to fix in the first place.
   e.respondWith(
-    fresh
+    fetch(e.request)
       .then(response => {
         // Cache a copy of the fresh response
         const clone = response.clone();
