@@ -121,3 +121,64 @@ class TestMapHealth:
         src = open("tools/analysis/health_report.py").read()
         assert "check_kalshi_maps" in src
         assert '"kalshi_maps": check_kalshi_maps()' in src
+
+
+class TestTickerOrderIsPerLeague:
+    """⚠️ Kalshi's ticker segment orders the teams DIFFERENTLY by league.
+
+        US sports : <date><AWAY><HOME>   26OCT04 LAR PHI  (LAR @ PHI)
+        SOCCER    : <date><HOME><AWAY>   26OCT06 CHI VAN  (VAN @ CHI)
+
+    Both verified against ESPN's own homeAway flags. Assuming one order
+    everywhere SILENTLY SWAPS home and away for soccer — worse than no price,
+    because every edge would be computed against the wrong team while the
+    pipeline looks healthy. The coverage trial caught it: MLS and LigaMX
+    discovered games normally but `matched` sat at 0 across 15 slates.
+    """
+
+    def test_soccer_leagues_are_marked_home_first(self):
+        from src.data.kalshi_pricing import _CODE_HOME_FIRST
+        assert _CODE_HOME_FIRST == {"MLS", "LIGAMX"}
+
+    def test_us_sports_are_not_marked(self):
+        from src.data.kalshi_pricing import _CODE_HOME_FIRST
+        for sport in ("NFL", "NBA", "NHL", "MLB", "WNBA"):
+            assert sport not in _CODE_HOME_FIRST
+
+    def test_the_reason_is_recorded(self):
+        src = open("src/data/kalshi_pricing.py").read()
+        assert "SWAPS home and away" in src or "SWAPS" in src
+
+    @pytest.mark.parametrize("sport,path,date", [
+        ("NHL", "hockey/nhl", "2026-10-22"),
+        ("MLS", "soccer/usa.1", "2026-10-25"),
+        ("LIGAMX", "soccer/mex.1", "2026-10-25"),
+    ])
+    def test_home_away_matches_espn(self, sport, path, date):
+        """The only check that actually proves it — ESPN is authoritative."""
+        import json
+        import urllib.request
+        pytest.importorskip("requests")
+        from src.data.kalshi_pricing import discover
+        url = (f"https://site.api.espn.com/apis/site/v2/sports/{path}"
+               f"/scoreboard?dates={date.replace('-', '')}")
+        try:
+            events = json.load(urllib.request.urlopen(url, timeout=20)).get("events", [])
+            games = discover(sport, date)
+        except Exception as e:
+            pytest.skip(f"network unavailable: {e}")
+        if not events or not games:
+            pytest.skip("no games listed for that date")
+
+        def last(s):
+            return s.split()[-1].lower()
+
+        espn = set()
+        for e in events:
+            c = e["competitions"][0]
+            h = next(x for x in c["competitors"] if x["homeAway"] == "home")
+            a = next(x for x in c["competitors"] if x["homeAway"] == "away")
+            espn.add((last(a["team"]["displayName"]), last(h["team"]["displayName"])))
+        ours = {(last(g["away_team"]), last(g["home_team"])) for g in games}
+        flipped = {(h, a) for a, h in espn} & ours
+        assert not flipped, f"{sport}: home/away inverted for {flipped}"

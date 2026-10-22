@@ -35,6 +35,10 @@ logger = logging.getLogger(__name__)
 # Reverse team lookup is built per sport from the static maps, so a Kalshi token
 # ("Los Angeles R") can be turned back into the name our analyzers expect
 # ("Los Angeles Rams"). CFB is excluded: it has no static map by design.
+# Leagues whose ticker segment is <date><HOME><AWAY> rather than
+# <date><AWAY><HOME>. Verified against ESPN homeAway flags Oct 2026.
+_CODE_HOME_FIRST = {"MLS", "LIGAMX"}
+
 _REVERSE_SOURCES = {
     "MLB": "TEAM_TO_KALSHI", "NFL": "NFL_TEAM_TO_KALSHI",
     "NBA": "NBA_TEAM_TO_KALSHI", "NHL": "NHL_TEAM_TO_KALSHI",
@@ -116,10 +120,25 @@ def discover(sport: str, game_date: str) -> List[Dict[str, Any]]:
         named = [(n, s) for n, s in named if n]
         if len(named) != 2:
             continue                       # unmappable or incomplete — skip
-        # Ticker segment is <date><away><home>, so the side whose abbreviation
-        # ends the segment is the home team.
+        # ⚠️ TICKER ORDER IS NOT THE SAME ACROSS LEAGUES.
+        #   US sports : <date><AWAY><HOME>   e.g. 26OCT04 LAR PHI  (LAR @ PHI)
+        #   SOCCER    : <date><HOME><AWAY>   e.g. 26OCT06 CHI VAN  (VAN @ CHI)
+        # Both verified against ESPN's own homeAway flags. Assuming one order
+        # everywhere silently SWAPS home and away for soccer, which is worse
+        # than having no price at all — every edge would be computed against the
+        # wrong team while looking perfectly healthy. Caught by the coverage
+        # trial's `matched` count sitting at 0 for MLS and LigaMX across 15
+        # slates while games were being discovered normally.
+        _date_len = len(re.match(r"^\d{2}[A-Z]{3}\d{2}", code).group(0)) if re.match(
+            r"^\d{2}[A-Z]{3}\d{2}", code) else 7
+        _rest = code[_date_len:]
+
         def _is_home(mk: Dict) -> bool:
-            return code.endswith(str(mk.get("ticker") or "").rsplit("-", 1)[-1])
+            ab = str(mk.get("ticker") or "").rsplit("-", 1)[-1]
+            if not ab:
+                return False
+            return _rest.startswith(ab) if sport in _CODE_HOME_FIRST \
+                else _rest.endswith(ab)
         home = next((n for n, s in named if _is_home(s)), None)
         away = next((n for n, s in named if n != home), None)
         if not home or not away:
