@@ -29,7 +29,27 @@ Read it at the start of any session that involves model changes, new sport integ
 ## What the system does
 Runs daily at 9am PDT (GitHub Actions). Fetches odds for **budget** sports (NBA/MLB/NFL/NHL) and **watchlist** sports (IPL/WNBA/MLS/WC/LigaMX/CFB), runs edge models, picks top-5 singles + parlays + props, saves state, generates an HTML report, deploys to GitHub Pages, and sends an email. A nightly Results Snapshot workflow (dispatched by the user's debrief routine at ~10:50pm) resolves results AND captures closing lines (CLV) for every pick; a CLV governor automatically gates negative-CLV markets out of the budget pool.
 
-Report URL: `https://nahimshas.github.io/System/`
+## ⚠️ WHERE THE REPORT IS ACTUALLY SERVED — read before touching docs/ or sw.js
+
+There are **TWO** hosts, and they behave differently:
+
+| host | what it is | cache headers |
+|---|---|---|
+| **`https://system-83q.pages.dev`** | **Cloudflare Pages — THE PWA the user actually opens.** Auto-deploys from `main` (CF git integration, no workflow in this repo). | `public, max-age=0, must-revalidate` |
+| `https://nahimshas.github.io/System/` | GitHub Pages mirror | `max-age=600` |
+
+⚠️ **ALWAYS verify front-end behaviour against `system-83q.pages.dev`.** Measuring
+the github.io mirror and "fixing" what you find there broke the PWA outright on
+Oct 21 2026: GitHub Pages' `max-age=600` looked like a staleness bug, the
+no-store navigation rewrap shipped to fix it, and Cloudflare's **301 redirect of
+`/index_spa.html` → `/index_spa`** then made every launch fail with
+*"Response served by service worker has redirections"*. Cloudflare already sends
+`max-age=0`, so there was nothing to fix.
+
+⚠️ **Cloudflare Pages ≠ the Cloudflare Worker.** The Worker
+(`notifications-worker/`) handles push notifications and KV and deploys via
+`deploy_worker.yml`. Pages serves `docs/` and has no workflow here at all —
+which is exactly why it is easy to forget it exists.
 
 ---
 
