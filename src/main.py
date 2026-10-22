@@ -620,6 +620,19 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         except Exception as _kp_err:
             logger.warning(f"Kalshi coverage trial failed (non-fatal): {_kp_err}")
 
+        # Card comparison — the decisive half of the trial. Re-runs THIS sport's
+        # analyzer over Kalshi-priced games with the SAME context, so the only
+        # variable is the price source, and logs whether the same bets come out.
+        # Still behind the scenes: the card above is untouched.
+        # ⚠️ Does NOT replay budget routing (slot limits, one-per-game, CLV
+        # gates, Kelly) — those run ACROSS sports in this loop and cannot be
+        # reproduced per sport. See compare_picks().
+        try:
+            from src.data.kalshi_pricing import record_card_comparison as _kp_card
+            _kp_card(today, slug, module, ctx, display_raw)
+        except Exception as _kc_err:
+            logger.warning(f"Kalshi card comparison failed (non-fatal): {_kc_err}")
+
         # Honest confidence: downgrade HIGH picks whose calibrated edge no longer
         # clears the HIGH bar (overconfident markets like totals), so they don't
         # jump the confidence-first slot queue ahead of better-calibrated picks.

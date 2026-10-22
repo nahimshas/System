@@ -325,3 +325,87 @@ def map_health(sport: str) -> Dict[str, Any]:
     except Exception as e:
         out["error"] = str(e)
     return out
+
+
+# ── Card comparison (Oct 2026 trial) ─────────────────────────────────────────
+def _pick_key(rec) -> tuple:
+    """Identity of a recommendation, independent of price source."""
+    return (getattr(rec, "game", ""), getattr(rec, "bet_type", ""),
+            str(getattr(rec, "pick", "")))
+
+
+def compare_picks(module, ctx, odds_recs, sport: str, game_date: str,
+                  top_n: int = 5) -> Dict[str, Any]:
+    """Would the CARD change if this sport were priced off Kalshi?
+
+    Runs the sport's own analyzer a second time over Kalshi-priced games, using
+    the SAME context (stats, injuries, rest) so the only variable is the price
+    source, and compares the resulting recommendations.
+
+    ⚠️ WHAT THIS DOES NOT DO: it does not replay budget routing. Slot limits,
+    one-bet-per-game, CLV gates and Kelly sizing all sit in main.py and run
+    ACROSS sports, so they cannot be reproduced per sport here. Read `top_overlap`
+    as "would the same bets be in contention", not "the card would be identical".
+    The full-set fields are the honest measure; top_n is the headline.
+    """
+    out: Dict[str, Any] = {"sport": sport.upper(), "date": game_date, "ok": False}
+    try:
+        kgames = discover(sport, game_date)
+        out["kalshi_games"] = len(kgames)
+        if not kgames:
+            out["skipped"] = "no Kalshi games discovered"
+            out["ok"] = True
+            return out
+
+        krecs = module.analyze_games(kgames, ctx) or []
+        o_keys = {_pick_key(r) for r in (odds_recs or [])}
+        k_keys = {_pick_key(r) for r in krecs}
+
+        def _top(recs):
+            return [_pick_key(r) for r in
+                    sorted(recs or [], key=lambda r: -float(getattr(r, "edge", 0) or 0))[:top_n]]
+
+        o_top, k_top = _top(odds_recs), _top(krecs)
+        out.update(
+            odds_recs=len(o_keys), kalshi_recs=len(k_keys),
+            both=len(o_keys & k_keys),
+            only_odds=sorted(f"{g}|{b}|{p}" for g, b, p in (o_keys - k_keys))[:8],
+            only_kalshi=sorted(f"{g}|{b}|{p}" for g, b, p in (k_keys - o_keys))[:8],
+            top_overlap=len(set(o_top) & set(k_top)),
+            top_n=top_n,
+            ok=True,
+        )
+    except Exception as e:                       # never block the card
+        out["error"] = str(e)
+        logger.warning(f"Kalshi card comparison failed ({sport}): {e}")
+    return out
+
+
+def record_card_comparison(run_date, sport: str, module, ctx, odds_recs) -> bool:
+    """Append the card comparison onto the same (date, sport) coverage row."""
+    try:
+        import json
+        import os
+        d = run_date.isoformat() if hasattr(run_date, "isoformat") else str(run_date)
+        rep = compare_picks(module, ctx, odds_recs, sport, d)
+
+        os.makedirs(COVERAGE_DIR, exist_ok=True)
+        path = os.path.join(COVERAGE_DIR, f"{d[:7]}.json")
+        shard = {"schema_version": 1, "month": d[:7], "entries": {}}
+        if os.path.exists(path):
+            try:
+                shard = json.load(open(path)) or shard
+            except Exception:
+                pass
+        key = f"{d}|{sport.upper()}"
+        row = shard.setdefault("entries", {}).get(key, {})
+        row["card_compare"] = rep
+        shard["entries"][key] = row
+        tmp = path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(shard, f, indent=2)
+        os.replace(tmp, path)
+        return True
+    except Exception as e:
+        logger.warning(f"Kalshi card comparison log failed ({sport}): {e}")
+        return False

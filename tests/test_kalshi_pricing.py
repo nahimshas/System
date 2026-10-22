@@ -182,3 +182,90 @@ class TestTickerOrderIsPerLeague:
         ours = {(last(g["away_team"]), last(g["home_team"])) for g in games}
         flipped = {(h, a) for a, h in espn} & ours
         assert not flipped, f"{sport}: home/away inverted for {flipped}"
+
+
+class TestCardComparison:
+    """The decisive half of the trial: would the same BETS come out?
+
+    Coverage counts only prove the games were found. This re-runs the sport's
+    own analyzer over Kalshi-priced games with the SAME context, so the only
+    variable is the price source.
+    """
+
+    def test_pick_key_is_price_source_independent(self):
+        from src.data.kalshi_pricing import _pick_key
+
+        class R:
+            game, bet_type, pick = "A @ B", "Moneyline", "A"
+        assert _pick_key(R()) == ("A @ B", "Moneyline", "A")
+
+    def test_no_kalshi_games_is_not_an_error(self):
+        """Out-of-season or unmapped sports must report ok, not fail."""
+        from src.data.kalshi_pricing import compare_picks
+        rep = compare_picks(None, None, [], "CFB", "2026-10-22")
+        assert rep["ok"] is True
+        assert rep.get("skipped")
+
+    def test_analyzer_errors_are_contained(self):
+        from src.data.kalshi_pricing import compare_picks
+
+        class Boom:
+            def analyze_games(self, g, c):
+                raise RuntimeError("boom")
+        rep = compare_picks(Boom(), {}, [], "NHL", "2026-10-22")
+        assert rep["ok"] is False and rep.get("error")
+
+    def test_it_states_what_it_does_not_replay(self):
+        """Budget routing runs ACROSS sports and cannot be reproduced here —
+        the limitation must be recorded, not implied."""
+        src = open("src/data/kalshi_pricing.py").read()
+        body = src.split("def compare_picks")[1][:1200]
+        assert "does not replay budget routing" in body.lower() or \
+               "DOES NOT DO" in body
+
+    def test_wired_behind_the_scenes(self):
+        src = open("src/main.py").read()
+        assert "record_card_comparison" in src
+        block = src.split("Card comparison")[1][:1200]
+        assert "try:" in block and "except Exception" in block
+        assert "record_card_comparison" in block
+
+
+class TestDiscoverMatchesTheValidatedResolver:
+    """discover() must assemble the same prices the CLV resolver reads — that
+    resolver is validated by 9,698 rows carrying both feeds."""
+
+    def test_moneylines_agree_to_three_decimals(self):
+        pytest.importorskip("requests")
+        from datetime import date, timedelta
+        from src.data.kalshi import resolve_pick
+        from src.data.kalshi_clv import SPORT_SERIES, build_index
+        from src.data.kalshi_pricing import discover
+
+        for offset in range(0, 4):           # find a date with a live slate
+            d = (date.today() + timedelta(days=offset)).isoformat()
+            try:
+                games = discover("NHL", d)
+            except Exception as e:
+                pytest.skip(f"network unavailable: {e}")
+            if games:
+                break
+        else:
+            pytest.skip("no NHL slate in the next few days")
+
+        sm = SPORT_SERIES["NHL"]
+        idx = build_index(sorted(set(sm.values())), {d})
+        checked = 0
+        for g in games:
+            ml = g.get("moneyline")
+            if not ml:
+                continue
+            r = resolve_pick({"bet_type": "Moneyline", "pick": g["home_team"],
+                              "home_team": g["home_team"], "away_team": g["away_team"]},
+                             idx, d, require_quote=True, series_map=sm)
+            if not r or r.get("mid") is None:
+                continue
+            assert abs(ml["home_prob"] - r["mid"]) < 0.005, g["game_id"]
+            checked += 1
+        if not checked:
+            pytest.skip("no two-sided quotes available")
