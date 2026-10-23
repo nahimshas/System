@@ -1,847 +1,6 @@
 {
   "entries": [
     {
-      "date": "2026-08-23",
-      "generated_at": "2026-08-24T07:44:45Z",
-      "generated_by": "workflow",
-      "headline": "1-6 on budget (-$21.06), avg CLV -0.38%",
-      "budget_record": "1-6",
-      "watchlist_record": "19-15",
-      "budget_pnl": -21.06,
-      "avg_budget_clv": -0.38,
-      "snapshot_timeout": false,
-      "picks": [
-        {
-          "game": "Cleveland Guardians @ Colorado Rockies",
-          "sport": "MLB",
-          "pick": "Colorado Rockies +1.5",
-          "bet_type": "Spread",
-          "confidence": "HIGH",
-          "result": "LOST",
-          "score": "Cleveland Guardians 7, Colorado Rockies 2",
-          "pnl": "-$5.68",
-          "clv_pct": 0.6,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.30 (hitter-friendly: Coors Field))",
-          "what_happened": "Chase DeLauter hits 2 triples and the Guardians beat the Rockies 7-2 to sweep their 3-game series.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Schedule Load"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.6%)",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "Pittsburgh Pirates @ Los Angeles Dodgers",
-          "sport": "MLB",
-          "pick": "Pittsburgh Pirates +1.5",
-          "bet_type": "Spread",
-          "confidence": "HIGH",
-          "result": "LOST",
-          "score": "Pittsburgh Pirates 0, Los Angeles Dodgers 4",
-          "pnl": "-$5.33",
-          "clv_pct": -1.6,
-          "why_picked": "Primary signal: Park Factor. (Park factor 0.97 (pitcher-friendly: UNIQLO Field at Dodger Stadium))",
-          "what_happened": "Final: Pittsburgh Pirates 0, Los Angeles Dodgers 4.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Schedule Load"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.6% against us",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "Chicago Cubs @ Seattle Mariners",
-          "sport": "MLB",
-          "pick": "Seattle Mariners +1.5",
-          "bet_type": "Spread",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Chicago Cubs 19, Seattle Mariners 2",
-          "pnl": "-$5.03",
-          "clv_pct": -1.4,
-          "why_picked": "Primary signal: Park Factor. (Park factor 0.93 (pitcher-friendly: T-Mobile Park))",
-          "what_happened": "Happ and Ram\u00edrez hit grand slams to propel the Cubs to a 19-2 blowout of the Mariners.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.4% against us",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "St. Louis Cardinals @ Philadelphia Phillies",
-          "sport": "MLB",
-          "pick": "St. Louis Cardinals +1.5",
-          "bet_type": "Spread",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "St. Louis Cardinals 4, Philadelphia Phillies 6",
-          "pnl": "-$3.77",
-          "clv_pct": 0.5,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.10 (hitter-friendly: Citizens Bank Park))",
-          "what_happened": "Schwarber's 2-run HR with 2 out in 9th rallies Phillies for a 6-4 win over the Cardinals.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Umpire Factor",
-            "Recent Form"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.5%)",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "Athletics @ Houston Astros",
-          "sport": "MLB",
-          "pick": "Athletics +1.5",
-          "bet_type": "Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Athletics 7, Houston Astros 6",
-          "pnl": "+$3.01",
-          "clv_pct": -0.0,
-          "why_picked": "Primary signal: Injury Impact. (Houston Astros injury impact (-4.0%))",
-          "what_happened": "Muncy's solo homer caps off A's rally as Oakland beats Houston 7-6.",
-          "signals": [
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load",
-            "Starter Edge"
-          ],
-          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.0%, noise range)",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "Cleveland Guardians @ Colorado Rockies / Pittsburgh Pirates @ Los Angeles Dodgers",
-          "pick": "Colorado Rockies +1.5 + Pittsburgh Pirates +1.5",
-          "sport": "PARLAY",
-          "bet_type": "Parlay",
-          "result": "LOST",
-          "pnl": "-$2.50",
-          "legs": [
-            {
-              "pick": "Colorado Rockies +1.5",
-              "sport": "MLB",
-              "result": "LOST"
-            },
-            {
-              "pick": "Pittsburgh Pirates +1.5",
-              "sport": "MLB",
-              "result": "LOST"
-            }
-          ],
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 a leg missed",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "Chicago Cubs @ Seattle Mariners / Pittsburgh Pirates @ Los Angeles Dodgers",
-          "pick": "Seattle Mariners +1.5 + Pittsburgh Pirates (ML)",
-          "sport": "PARLAY",
-          "bet_type": "Parlay",
-          "result": "LOST",
-          "pnl": "-$1.76",
-          "legs": [
-            {
-              "pick": "Seattle Mariners +1.5",
-              "sport": "MLB",
-              "result": "LOST"
-            },
-            {
-              "pick": "Pittsburgh Pirates",
-              "sport": "MLB",
-              "result": "LOST"
-            }
-          ],
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 a leg missed",
-          "key_insight": "",
-          "in_budget": true
-        },
-        {
-          "game": "Detroit Tigers @ Kansas City Royals",
-          "sport": "MLB",
-          "pick": "Kansas City Royals +1.5",
-          "bet_type": "Spread",
-          "confidence": "HIGH",
-          "result": "WON",
-          "score": "Detroit Tigers 7, Kansas City Royals 11",
-          "pnl": "",
-          "clv_pct": -0.4,
-          "why_picked": "Primary signal: Injury Impact. (Kansas City Royals injury impact (-6.1%))",
-          "what_happened": "Loftin and Rave HRs, Isbel's 3 RBIs help Royals win 8th straight game, 11-7 over Tigers.",
-          "signals": [
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load",
-            "Starter Edge"
-          ],
-          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.4%, noise range)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Tampa Bay Rays @ Baltimore Orioles",
-          "sport": "MLB",
-          "pick": "Baltimore Orioles +1.5",
-          "bet_type": "Spread",
-          "confidence": "HIGH",
-          "result": "LOST",
-          "score": "Tampa Bay Rays 3, Baltimore Orioles 1",
-          "pnl": "",
-          "clv_pct": -0.3,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.01 (pitcher-friendly: Oriole Park at Camden Yards))",
-          "what_happened": "Nick Martinez allows 1 hit in 6 innings as Rays avert sweep with 3-1 win over Orioles.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Weather Factor",
-            "Schedule Load"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.3%)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Pittsburgh Pirates @ Los Angeles Dodgers",
-          "sport": "MLB",
-          "pick": "Pittsburgh Pirates +1.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Pittsburgh Pirates 0, Los Angeles Dodgers 4 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Los Angeles Dodgers (0.50 quality gap over 5 innings))",
-          "what_happened": "Final: Pittsburgh Pirates 0, Los Angeles Dodgers 4 (through 5).",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Athletics @ Houston Astros",
-          "sport": "MLB",
-          "pick": "Athletics +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Athletics 6, Houston Astros 6 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Athletics (1.05 quality gap over 5 innings))",
-          "what_happened": "Muncy's solo homer caps off A's rally as Oakland beats Houston 7-6.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Cleveland Guardians @ Colorado Rockies",
-          "sport": "MLB",
-          "pick": "Under 5.5",
-          "bet_type": "F5 Total",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Cleveland Guardians 6, Colorado Rockies 2 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Cleveland Guardians (0.63 quality gap over 5 innings))",
-          "what_happened": "Chase DeLauter hits 2 triples and the Guardians beat the Rockies 7-2 to sweep their 3-game series.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Cleveland Guardians @ Colorado Rockies",
-          "sport": "MLB",
-          "pick": "Colorado Rockies +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Cleveland Guardians 6, Colorado Rockies 2 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Cleveland Guardians (0.63 quality gap over 5 innings))",
-          "what_happened": "Chase DeLauter hits 2 triples and the Guardians beat the Rockies 7-2 to sweep their 3-game series.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Cincinnati Reds @ Arizona Diamondbacks",
-          "sport": "MLB",
-          "pick": "Over 4.5",
-          "bet_type": "F5 Total",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Cincinnati Reds 3, Arizona Diamondbacks 0 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Cincinnati Reds (0.70 quality gap over 5 innings))",
-          "what_happened": "Ildemaro Vargas' 2-run triple highlights rally that pushes the Diamondbacks past Reds 5-3.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "St. Louis Cardinals @ Philadelphia Phillies",
-          "sport": "MLB",
-          "pick": "Under 4.5",
-          "bet_type": "F5 Total",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "St. Louis Cardinals 3, Philadelphia Phillies 0 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Philadelphia Phillies (0.82 quality gap over 5 innings))",
-          "what_happened": "Schwarber's 2-run HR with 2 out in 9th rallies Phillies for a 6-4 win over the Cardinals.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Los Angeles Angels @ Texas Rangers",
-          "sport": "MLB",
-          "pick": "Los Angeles Angels +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Los Angeles Angels 0, Texas Rangers 5 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Los Angeles Angels (0.46 quality gap over 5 innings))",
-          "what_happened": "Dur\u00e1n and D\u00edaz homers, Quantrill's 6 scoreless innings help Rangers beat Angels 5-3.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Athletics @ Houston Astros",
-          "sport": "MLB",
-          "pick": "Athletics",
-          "bet_type": "F5 Moneyline",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Athletics 6, Houston Astros 6 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Athletics (1.05 quality gap over 5 innings))",
-          "what_happened": "Muncy's solo homer caps off A's rally as Oakland beats Houston 7-6.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Cincinnati Reds @ Arizona Diamondbacks",
-          "sport": "MLB",
-          "pick": "Cincinnati Reds +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Cincinnati Reds 3, Arizona Diamondbacks 0 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Cincinnati Reds (0.70 quality gap over 5 innings))",
-          "what_happened": "Ildemaro Vargas' 2-run triple highlights rally that pushes the Diamondbacks past Reds 5-3.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Minnesota Twins @ San Diego Padres",
-          "sport": "MLB",
-          "pick": "Minnesota Twins +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Minnesota Twins 1, San Diego Padres 1 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection.",
-          "what_happened": "Tatis homers twice, drives in 4 runs to lead Padres to 8-1 win, 3-game sweep of Twins.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "St. Louis Cardinals @ Philadelphia Phillies",
-          "sport": "MLB",
-          "pick": "St. Louis Cardinals +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "St. Louis Cardinals 3, Philadelphia Phillies 0 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Philadelphia Phillies (0.82 quality gap over 5 innings))",
-          "what_happened": "Schwarber's 2-run HR with 2 out in 9th rallies Phillies for a 6-4 win over the Cardinals.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Washington Nationals @ Miami Marlins",
-          "sport": "MLB",
-          "pick": "Over 4.5",
-          "bet_type": "F5 Total",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Washington Nationals 1, Miami Marlins 3 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Miami Marlins (0.85 quality gap over 5 innings))",
-          "what_happened": "Edwards hits go-ahead single to lift Marlins to win over Nationals and series sweep.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Tampa Bay Rays @ Baltimore Orioles",
-          "sport": "MLB",
-          "pick": "Tampa Bay Rays +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Tampa Bay Rays 0, Baltimore Orioles 0 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection.",
-          "what_happened": "Nick Martinez allows 1 hit in 6 innings as Rays avert sweep with 3-1 win over Orioles.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Toronto Blue Jays @ New York Yankees",
-          "sport": "MLB",
-          "pick": "Toronto Blue Jays +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Toronto Blue Jays 2, New York Yankees 2 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Toronto Blue Jays (0.44 quality gap over 5 innings))",
-          "what_happened": "Ben Rice hits two-run single to cap 3-run sixth as Yankees pull away for 8-3 victory over Blue Jays.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Washington Nationals @ Miami Marlins",
-          "sport": "MLB",
-          "pick": "Miami Marlins",
-          "bet_type": "Moneyline",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Washington Nationals 2, Miami Marlins 6",
-          "pnl": "",
-          "clv_pct": -0.0,
-          "why_picked": "Primary signal: Park Factor. (Park factor 0.94 (pitcher-friendly: loanDepot park))",
-          "what_happened": "Edwards hits go-ahead single to lift Marlins to win over Nationals and series sweep.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Umpire Factor",
-            "Recent Form"
-          ],
-          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.0%, noise range)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Minnesota Twins @ San Diego Padres",
-          "sport": "MLB",
-          "pick": "San Diego Padres",
-          "bet_type": "Moneyline",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Minnesota Twins 1, San Diego Padres 8",
-          "pnl": "",
-          "clv_pct": 2.4,
-          "why_picked": "Primary signal: Park Factor. (Park factor 0.93 (pitcher-friendly: Petco Park))",
-          "what_happened": "Tatis homers twice, drives in 4 runs to lead Padres to 8-1 win, 3-game sweep of Twins.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "CORRECT \u2014 won and beat the close (+2.4%)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "New York Mets @ Chicago White Sox",
-          "sport": "MLB",
-          "pick": "Chicago White Sox +1.5",
-          "bet_type": "Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "New York Mets 1, Chicago White Sox 2",
-          "pnl": "",
-          "clv_pct": -0.0,
-          "why_picked": "Primary signal: Park Factor. (Park factor 0.95 (pitcher-friendly: Rate Field))",
-          "what_happened": "Tristan Peters homers in the ninth inning to give the White Sox a 2-1 win over the Mets.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Weather Factor",
-            "Recent Form"
-          ],
-          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.0%, noise range)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Atlanta Braves @ Milwaukee Brewers",
-          "sport": "MLB",
-          "pick": "Milwaukee Brewers",
-          "bet_type": "Moneyline",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Atlanta Braves 4, Milwaukee Brewers 2",
-          "pnl": "",
-          "clv_pct": -3.2,
-          "why_picked": "Primary signal: Injury Impact. (Milwaukee Brewers injury impact (-3.9%))",
-          "what_happened": "Harris homers, Mahle pitches 5 strong innings as Braves beat Brewers 4-2 in Little League Classic.",
-          "signals": [
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -3.2% against us",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Los Angeles Angels @ Texas Rangers",
-          "sport": "MLB",
-          "pick": "Los Angeles Angels +1.5",
-          "bet_type": "Spread",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Los Angeles Angels 3, Texas Rangers 5",
-          "pnl": "",
-          "clv_pct": 0.0,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.05 (hitter-friendly: Globe Life Field))",
-          "what_happened": "Dur\u00e1n and D\u00edaz homers, Quantrill's 6 scoreless innings help Rangers beat Angels 5-3.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.0%)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Toronto Blue Jays @ New York Yankees",
-          "sport": "MLB",
-          "pick": "Toronto Blue Jays",
-          "bet_type": "Moneyline",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Toronto Blue Jays 3, New York Yankees 8",
-          "pnl": "",
-          "clv_pct": 1.6,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.07 (hitter-friendly: Yankee Stadium))",
-          "what_happened": "Ben Rice hits two-run single to cap 3-run sixth as Yankees pull away for 8-3 victory over Blue Jays.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Weather Factor",
-            "Recent Form"
-          ],
-          "signal_verdict": "CORRECT \u2014 beat the close (+1.6%), lost on variance",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Washington Nationals @ Miami Marlins",
-          "sport": "MLB",
-          "pick": "Washington Nationals +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "Washington Nationals 1, Miami Marlins 3 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Miami Marlins (0.85 quality gap over 5 innings))",
-          "what_happened": "Edwards hits go-ahead single to lift Marlins to win over Nationals and series sweep.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Chicago Cubs @ Seattle Mariners",
-          "sport": "MLB",
-          "pick": "Over 3.5",
-          "bet_type": "F5 Total",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Chicago Cubs 6, Seattle Mariners 2 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection.",
-          "what_happened": "Happ and Ram\u00edrez hit grand slams to propel the Cubs to a 19-2 blowout of the Mariners.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "San Francisco Giants @ Boston Red Sox",
-          "sport": "MLB",
-          "pick": "Over 4.5",
-          "bet_type": "F5 Total",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "San Francisco Giants 3, Boston Red Sox 5 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Boston Red Sox (1.12 quality gap over 5 innings))",
-          "what_happened": "Sogard's solo homer starts Red Sox rally in 5-4 win over Giants.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "San Francisco Giants @ Boston Red Sox",
-          "sport": "MLB",
-          "pick": "Boston Red Sox",
-          "bet_type": "Moneyline",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "San Francisco Giants 4, Boston Red Sox 5",
-          "pnl": "",
-          "clv_pct": 0.1,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.08 (hitter-friendly: Fenway Park))",
-          "what_happened": "Sogard's solo homer starts Red Sox rally in 5-4 win over Giants.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.1%, noise range)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "New York Mets @ Chicago White Sox",
-          "sport": "MLB",
-          "pick": "Chicago White Sox +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "New York Mets 0, Chicago White Sox 0 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: New York Mets (0.63 quality gap over 5 innings))",
-          "what_happened": "Tristan Peters homers in the ninth inning to give the White Sox a 2-1 win over the Mets.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Atlanta Braves @ Milwaukee Brewers",
-          "sport": "MLB",
-          "pick": "Atlanta Braves +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Atlanta Braves 2, Milwaukee Brewers 1 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection.",
-          "what_happened": "Harris homers, Mahle pitches 5 strong innings as Braves beat Brewers 4-2 in Little League Classic.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "CORRECT \u2014 won (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "San Francisco Giants @ Boston Red Sox",
-          "sport": "MLB",
-          "pick": "San Francisco Giants +1.5",
-          "bet_type": "Spread",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "San Francisco Giants 4, Boston Red Sox 5",
-          "pnl": "",
-          "clv_pct": -0.3,
-          "why_picked": "Primary signal: Park Factor. (Park factor 1.08 (hitter-friendly: Fenway Park))",
-          "what_happened": "Sogard's solo homer starts Red Sox rally in 5-4 win over Giants.",
-          "signals": [
-            "Park Factor",
-            "Injury Impact",
-            "Recent Form",
-            "Schedule Load"
-          ],
-          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.3%, noise range)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "San Francisco Giants @ Boston Red Sox",
-          "sport": "MLB",
-          "pick": "San Francisco Giants +0.5",
-          "bet_type": "F5 Spread",
-          "confidence": "MEDIUM",
-          "result": "LOST",
-          "score": "San Francisco Giants 3, Boston Red Sox 5 (through 5)",
-          "pnl": "",
-          "why_picked": "Primary signal: Model Projection. (F5 starter edge: Boston Red Sox (1.12 quality gap over 5 innings))",
-          "what_happened": "Sogard's solo homer starts Red Sox rally in 5-4 win over Giants.",
-          "signals": [
-            "Model Projection"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Indiana Fever @ Chicago Sky",
-          "sport": "WNBA",
-          "pick": "Indiana Fever",
-          "bet_type": "Moneyline",
-          "confidence": "HIGH",
-          "result": "WON",
-          "score": "Indiana Fever 113, Chicago Sky 90",
-          "pnl": "",
-          "clv_pct": -3.2,
-          "why_picked": "Primary signal: Rest Advantage. (Home court: Chicago Sky (+2%))",
-          "what_happened": "Caitlin Clark scores 37 points as the Fever beat the Sky 113-90.",
-          "signals": [
-            "Rest Advantage",
-            "Injury Impact"
-          ],
-          "signal_verdict": "MIXED \u2014 won, but the market moved -3.2% against this pick",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Seattle Storm @ Dallas Wings",
-          "sport": "WNBA",
-          "pick": "Seattle Storm",
-          "bet_type": "Moneyline",
-          "confidence": "HIGH",
-          "result": "LOST",
-          "score": "Seattle Storm 70, Dallas Wings 92",
-          "pnl": "",
-          "clv_pct": -1.4,
-          "why_picked": "Primary signal: Injury Impact. (Home court: Dallas Wings (+2%))",
-          "what_happened": "Paige Bueckers scores 18 of her 32 in 1st quarter, Wings beat Storm 92-70.",
-          "signals": [
-            "Injury Impact"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.4% against us",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Washington Mystics @ Portland Fire",
-          "sport": "WNBA",
-          "pick": "Washington Mystics",
-          "bet_type": "Moneyline",
-          "confidence": "HIGH",
-          "result": "WON",
-          "score": "Washington Mystics 105, Portland Fire 100",
-          "pnl": "",
-          "clv_pct": -2.0,
-          "why_picked": "Primary signal: Rest Advantage. (Home court: Portland Fire (+2%))",
-          "what_happened": "Austin scores career-high 31, Mystics rally from 14-point deficit and beat Fire 105-100.",
-          "signals": [
-            "Rest Advantage",
-            "Injury Impact"
-          ],
-          "signal_verdict": "MIXED \u2014 won, but the market moved -2.0% against this pick",
-          "key_insight": "",
-          "in_budget": false
-        },
-        {
-          "game": "Necaxa @ Pumas",
-          "sport": "LIGAMX",
-          "pick": "Pumas",
-          "bet_type": "Moneyline",
-          "confidence": "HIGH",
-          "result": "LOST",
-          "score": "Necaxa 1, Pumas UNAM 1",
-          "pnl": "",
-          "why_picked": "Primary signal: Elo Edge. (Home advantage: Pumas (+70 Elo))",
-          "what_happened": "Final: Necaxa 1, Pumas UNAM 1.",
-          "signals": [
-            "Elo Edge"
-          ],
-          "signal_verdict": "INCORRECT \u2014 lost (no closing line captured)",
-          "key_insight": "",
-          "in_budget": false
-        }
-      ],
-      "patterns": [
-        "HIGH confidence: 0-2 today",
-        "MEDIUM confidence: 1-2 today",
-        "MLB Spread: 1-4"
-      ],
-      "model_observations": [
-        "Injury Impact picks: 1-4 with avg CLV -0.4%",
-        "Park Factor picks: 0-4 with avg CLV -0.5%",
-        "Schedule Load picks: 1-3 with avg CLV -0.6%",
-        "Recent Form picks: 1-2 with avg CLV -0.3%",
-        "Starter Edge picks: 1-0 with avg CLV +0.0%"
-      ]
-    },
-    {
       "date": "2026-08-24",
       "generated_at": "2026-08-25T07:31:14Z",
       "generated_by": "workflow",
@@ -35599,6 +34758,410 @@
       "model_observations": [
         "Injury Impact picks: 1-4 with avg CLV +0.6%",
         "Rating Edge picks: 0-2 with avg CLV +1.1%"
+      ]
+    },
+    {
+      "date": "2026-10-22",
+      "generated_at": "2026-10-23T05:48:34Z",
+      "generated_by": "workflow",
+      "headline": "2-5 on budget (-$1.88), avg CLV +1.32%",
+      "budget_record": "2-5",
+      "watchlist_record": "6-4",
+      "budget_pnl": -1.88,
+      "avg_budget_clv": 1.32,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "Minnesota Wild @ Calgary Flames",
+          "sport": "NHL",
+          "pick": "Minnesota Wild",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Minnesota Wild 1, Calgary Flames 2",
+          "pnl": "-$1.32",
+          "clv_pct": 2.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Calgary Flames (+2%))",
+          "what_happened": "Cooley makes 36 saves in the Flames' 2-1 victory over the Wild.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+2.0%), lost on variance",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Nashville Predators @ Boston Bruins",
+          "sport": "NHL",
+          "pick": "Boston Bruins",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Nashville Predators 0, Boston Bruins 6",
+          "pnl": "+$0.83",
+          "clv_pct": 0.6,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Boston Bruins (+2%))",
+          "what_happened": "Michael DiPietro has first career shutout, David Pastrnak scores 2 as Bruins beat Predators 6-0.",
+          "signals": [
+            "Rating Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.6%, noise range)",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Florida Panthers @ Pittsburgh Penguins",
+          "sport": "NHL",
+          "pick": "Florida Panthers",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Florida Panthers 0, Pittsburgh Penguins 4",
+          "pnl": "-$1.02",
+          "clv_pct": 1.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Pittsburgh Penguins (+2%))",
+          "what_happened": "Silovs, Penguins blank Panthers 4-0 to spoil Florida goalie Cooper Black\u2019s record-setting NHL debut.",
+          "signals": [
+            "Rating Edge",
+            "Rest Advantage"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.0%), lost on variance",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Denver Nuggets @ Oklahoma City Thunder",
+          "sport": "NBA",
+          "pick": "Denver Nuggets +8.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Denver Nuggets 84, Oklahoma City Thunder 96",
+          "pnl": "-$0.52",
+          "clv_pct": 2.0,
+          "why_picked": "Primary signal: Rating Edge. (Home court advantage: Oklahoma City Thunder (+2%))",
+          "what_happened": "Thunder overcome SGA's shooting woes to beat Nuggets 96-84 in home opener.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+2.0%), lost on variance",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "San Jose Sharks @ Ottawa Senators",
+          "sport": "NHL",
+          "pick": "Ottawa Senators",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "San Jose Sharks 6, Ottawa Senators 2",
+          "pnl": "-$0.57",
+          "clv_pct": 1.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Ottawa Senators (+2%))",
+          "what_happened": "Sharks beat the Senators 6-2 for their 1st regulation victory of the season.",
+          "signals": [
+            "Rating Edge",
+            "Rest Advantage",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.0%), lost on variance",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Florida Panthers @ Pittsburgh Penguins / Minnesota Wild @ Calgary Flames",
+          "pick": "Florida Panthers +1.5 + Minnesota Wild (ML)",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "LOST",
+          "pnl": "-$7.29",
+          "legs": [
+            {
+              "pick": "Florida Panthers +1.5",
+              "sport": "NHL",
+              "result": "LOST"
+            },
+            {
+              "pick": "Minnesota Wild",
+              "sport": "NHL",
+              "result": "LOST"
+            }
+          ],
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 a leg missed",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Nashville Predators @ Boston Bruins / Winnipeg Jets @ Dallas Stars",
+          "pick": "Boston Bruins (ML) + Dallas Stars (ML)",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "WON",
+          "pnl": "+$8.01",
+          "legs": [
+            {
+              "pick": "Boston Bruins",
+              "sport": "NHL",
+              "result": "WON"
+            },
+            {
+              "pick": "Dallas Stars",
+              "sport": "NHL",
+              "result": "WON"
+            }
+          ],
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "CORRECT \u2014 all legs hit",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Winnipeg Jets @ Dallas Stars",
+          "sport": "NHL",
+          "pick": "Dallas Stars",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Winnipeg Jets 2, Dallas Stars 3",
+          "pnl": "",
+          "clv_pct": -1.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Dallas Stars (+2%))",
+          "what_happened": "Roope Hintz scores overtime breakaway goal after tying game late as Stars beat Jets 3-2.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.0% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Detroit Red Wings @ Vancouver Canucks",
+          "sport": "NHL",
+          "pick": "Detroit Red Wings",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Detroit Red Wings 5, Vancouver Canucks 2",
+          "pnl": "",
+          "clv_pct": 2.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Vancouver Canucks (+2%))",
+          "what_happened": "Raymond scores twice in the Red Wings' 5-2 victory over the Canucks.",
+          "signals": [
+            "Rating Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+2.0%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Utah Mammoth @ Seattle Kraken",
+          "sport": "NHL",
+          "pick": "Seattle Kraken +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Utah Mammoth 3, Seattle Kraken 5",
+          "pnl": "",
+          "clv_pct": -1.3,
+          "why_picked": "Primary signal: Model Projection. (Home ice advantage: Seattle Kraken (+2%))",
+          "what_happened": "Mackie Samoskevich's late goal lifts Kraken over Mammoth 5-3.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.3% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Vegas Golden Knights @ St Louis Blues",
+          "sport": "NHL",
+          "pick": "Vegas Golden Knights",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Vegas Golden Knights 2, St. Louis Blues 6",
+          "pnl": "",
+          "clv_pct": -2.2,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: St Louis Blues (+2%))",
+          "what_happened": "Barron's 4-point night powers Blues past Golden Knights, 6-2.",
+          "signals": [
+            "Rating Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -2.2% against us",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Cleveland Cavaliers @ Philadelphia 76ers",
+          "sport": "NBA",
+          "pick": "Cleveland Cavaliers +3.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Cleveland Cavaliers 106, Philadelphia 76ers 114",
+          "pnl": "",
+          "clv_pct": 3.1,
+          "why_picked": "Primary signal: Injury Impact. (Home court advantage: Philadelphia 76ers (+2%))",
+          "what_happened": "James, Embiid, Maxey spark 76ers' rally from 29 points down in home opener to stun Cavs 114-106.",
+          "signals": [
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+3.1%), lost on variance",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Los Angeles Kings @ New York Islanders",
+          "sport": "NHL",
+          "pick": "New York Islanders +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Los Angeles Kings 3, New York Islanders 2",
+          "pnl": "",
+          "clv_pct": -0.2,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: New York Islanders (+2%))",
+          "what_happened": "Artemi Panarin scores twice and the Kings beat the Islanders in OT for a 2nd straight win.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.2%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Anaheim Ducks @ New Jersey Devils",
+          "sport": "NHL",
+          "pick": "Anaheim Ducks +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Anaheim Ducks 1, New Jersey Devils 4",
+          "pnl": "",
+          "clv_pct": -1.3,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: New Jersey Devils (+2%))",
+          "what_happened": "Gritsyuk and Hischier score in 1st period in the Devils' 4-1 victory over the Ducks.",
+          "signals": [
+            "Rating Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.3% against us",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Carolina Hurricanes @ Edmonton Oilers",
+          "sport": "NHL",
+          "pick": "Edmonton Oilers +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Carolina Hurricanes 5, Edmonton Oilers 6",
+          "pnl": "",
+          "clv_pct": -1.8,
+          "why_picked": "Primary signal: Injury Impact. (Home ice advantage: Edmonton Oilers (+2%))",
+          "what_happened": "Final: Carolina Hurricanes 5, Edmonton Oilers 6.",
+          "signals": [
+            "Injury Impact"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.8% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "New England Patriots @ Chicago Bears",
+          "sport": "NFL",
+          "pick": "New England Patriots",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "New England Patriots 24, Chicago Bears 30",
+          "pnl": "",
+          "clv_pct": 0.0,
+          "why_picked": "Primary signal: Rating Edge. (Home field advantage: Chicago Bears (+2%))",
+          "what_happened": "Caleb Williams throws 2 TD passes as the Bears beat Drake Maye and the Patriots 30-24.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.0%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "New York Rangers @ Toronto Maple Leafs",
+          "sport": "NHL",
+          "pick": "Toronto Maple Leafs +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "New York Rangers 4, Toronto Maple Leafs 5",
+          "pnl": "",
+          "clv_pct": 0.3,
+          "why_picked": "Primary signal: Model Projection. (Home ice advantage: Toronto Maple Leafs (+2%))",
+          "what_happened": "Stecher scores late goal to lift the Maple Leafs past the Rangers, 5-4.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.3%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Liberty Flames @ Kennesaw State Owls",
+          "sport": "CFB",
+          "pick": "Kennesaw State Owls +9.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "why_picked": "Primary signal: Model Projection. (Power ratings +1.1 vs +8.6 (points vs average) \u2192 projected margin -4.8 for Liberty Flames)",
+          "what_happened": "",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "East Carolina Pirates @ Memphis Tigers",
+          "sport": "CFB",
+          "pick": "East Carolina Pirates +10.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "why_picked": "Primary signal: Model Projection. (Power ratings +9.1 vs +3.4 (points vs average) \u2192 projected margin +8.2 for Memphis Tigers)",
+          "what_happened": "",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "HIGH confidence: 1-4 today",
+        "NHL Moneyline: 1-3",
+        "NBA Spread: 0-1"
+      ],
+      "model_observations": [
+        "Rating Edge picks: 1-4 with avg CLV +1.3%",
+        "Injury Impact picks: 0-3 with avg CLV +1.7%",
+        "Rest Advantage picks: 0-2 with avg CLV +1.0%"
       ]
     }
   ]
