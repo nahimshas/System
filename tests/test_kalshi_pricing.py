@@ -206,13 +206,18 @@ class TestCardComparison:
         assert rep["ok"] is True
         assert rep.get("skipped")
 
-    def test_analyzer_errors_are_contained(self):
-        from src.data.kalshi_pricing import compare_picks
+    def test_analyzer_errors_are_contained(self, monkeypatch):
+        """Must not depend on a live slate — Kalshi only serves OPEN markets,
+        so any hard-coded date stops discovering once its games settle."""
+        import src.data.kalshi_pricing as KP
+        monkeypatch.setattr(KP, "discover",
+                            lambda s, d: [{"game_id": "x", "home_team": "A",
+                                           "away_team": "B"}])
 
         class Boom:
             def analyze_games(self, g, c):
                 raise RuntimeError("boom")
-        rep = compare_picks(Boom(), {}, [], "NHL", "2026-10-22")
+        rep = KP.compare_picks(Boom(), {}, [], "NHL", "2026-10-22")
         assert rep["ok"] is False and rep.get("error")
 
     def test_it_states_what_it_does_not_replay(self):
@@ -269,3 +274,70 @@ class TestDiscoverMatchesTheValidatedResolver:
             checked += 1
         if not checked:
             pytest.skip("no two-sided quotes available")
+
+
+class TestLiquidityGuard:
+    """An untraded placeholder quote must never become a price.
+
+    MLS totals quote bid 2c / ask 98c with zero open interest on every rung.
+    The midpoint is 0.50, which looks exactly like a real coin-flip price — so
+    `_best_total` happily selected "Over 0.5 goals at 50%" and the model found
+    a 10% edge against a line that does not exist. Measured medians: NFL
+    spread/total 2.0c, NBA 2.0/3.0c, NHL spread 3.0c, NHL total 19.0c, MLS
+    spread/total ~40c.
+    """
+
+    def test_threshold_is_set(self):
+        from src.data.kalshi_pricing import MAX_SPREAD_CENTS
+        assert 1.0 <= MAX_SPREAD_CENTS <= 20.0
+
+    def test_placeholder_quote_is_rejected(self):
+        from src.data.kalshi_pricing import _mid
+        assert _mid({"yes_bid_dollars": "0.02", "yes_ask_dollars": "0.98"}) is None
+
+    def test_wide_but_plausible_quote_is_rejected(self):
+        from src.data.kalshi_pricing import _mid
+        assert _mid({"yes_bid_dollars": "0.40", "yes_ask_dollars": "0.60"}) is None
+
+    def test_tight_quote_is_accepted(self):
+        from src.data.kalshi_pricing import _mid
+        assert _mid({"yes_bid_dollars": "0.48", "yes_ask_dollars": "0.52"}) == 0.50
+
+    def test_one_sided_book_is_rejected(self):
+        from src.data.kalshi_pricing import _mid
+        assert _mid({"yes_bid_dollars": "0.00", "yes_ask_dollars": "0.05"}) is None
+
+
+class TestThreeWaySoccer:
+    """analyze_mls_game bails on `"draw_prob" not in ml`, so a 2-way moneyline
+    produced ZERO soccer recs across the entire trial while discovery looked
+    healthy — 13 MLS games found on Oct 24, 0 recommendations."""
+
+    def test_soccer_leagues_are_marked_three_way(self):
+        from src.data.kalshi_pricing import _THREE_WAY
+        assert {"MLS", "LIGAMX"} <= _THREE_WAY
+
+    def test_us_sports_are_not(self):
+        from src.data.kalshi_pricing import _THREE_WAY
+        for s in ("NFL", "NBA", "NHL", "MLB"):
+            assert s not in _THREE_WAY
+
+    def test_draw_is_included_and_normalised(self):
+        pytest.importorskip("requests")
+        from datetime import date, timedelta
+        from src.data.kalshi_pricing import discover
+        for off in range(0, 8):
+            d = (date.today() + timedelta(days=off)).isoformat()
+            try:
+                games = [g for g in discover("MLS", d) if g.get("moneyline")]
+            except Exception as e:
+                pytest.skip(f"network unavailable: {e}")
+            if games:
+                break
+        else:
+            pytest.skip("no MLS slate in the next week")
+        for g in games:
+            ml = g["moneyline"]
+            assert "draw_prob" in ml, g["game_id"]
+            total = ml["home_prob"] + ml["draw_prob"] + ml["away_prob"]
+            assert abs(total - 1.0) < 0.01, total

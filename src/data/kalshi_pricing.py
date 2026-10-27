@@ -39,6 +39,9 @@ logger = logging.getLogger(__name__)
 # <date><AWAY><HOME>. Verified against ESPN homeAway flags Oct 2026.
 _CODE_HOME_FIRST = {"MLS", "LIGAMX"}
 
+# Leagues whose moneyline is 3-way (home / draw / away).
+_THREE_WAY = {"MLS", "LIGAMX", "WC"}
+
 _REVERSE_SOURCES = {
     "MLB": "TEAM_TO_KALSHI", "NFL": "NFL_TEAM_TO_KALSHI",
     "NBA": "NBA_TEAM_TO_KALSHI", "NHL": "NHL_TEAM_TO_KALSHI",
@@ -56,6 +59,17 @@ def _reverse_map(sport: str) -> Dict[str, str]:
     return {_norm(v): k for k, v in table.items()}
 
 
+# Maximum bid-ask spread, in cents, for a rung to count as PRICED.
+# ⚠️ Without this, an untraded placeholder quote (bid 2c / ask 98c, open
+# interest 0) yields a "mid" of 0.50 that looks like a real coin-flip price.
+# That is exactly how MLS totals produced "Over 0.5 goals at 50%" — a nonsense
+# line the model then found a 10% edge against. Measured medians: NFL spread
+# and total 2.0c, NBA 2.0/3.0c, NHL spread 3.0c, but NHL total 19.0c and MLS
+# spread/total ~40c. A 10c cap keeps 88-100% of the real books and discards
+# the empty ones.
+MAX_SPREAD_CENTS = 10.0
+
+
 def _mid(market: Dict) -> Optional[float]:
     """Mid of the two-sided book, or None when it is not quoted both ways.
 
@@ -65,6 +79,8 @@ def _mid(market: Dict) -> Optional[float]:
     b, a = _f(market.get("yes_bid_dollars")), _f(market.get("yes_ask_dollars"))
     if b is None or a is None or not (0 < b < a < 1):
         return None
+    if (a - b) * 100.0 > MAX_SPREAD_CENTS:
+        return None            # no real market here — see MAX_SPREAD_CENTS
     return round((a + b) / 2.0, 4)
 
 
@@ -155,12 +171,35 @@ def discover(sport: str, game_date: str) -> List[Dict[str, Any]]:
             "f5_moneyline": None, "f5_spread": None, "f5_total": None,
         }
         h_mid, a_mid = _mid(hm), _mid(am)
+
+        # ⚠️ SOCCER MONEYLINES ARE THREE-WAY. analyze_mls_game bails on
+        # `if not ml or "draw_prob" not in ml`, so a 2-way moneyline produced
+        # ZERO recs for MLS and LigaMX across every slate of the trial while
+        # discovery looked perfectly healthy. Kalshi carries the draw as the
+        # "Tie" market inside the same book.
+        d_mid = None
+        if sport in _THREE_WAY:
+            tie = next((m for m in sides if _norm(m.get("yes_sub_title")) == "tie"), None)
+            d_mid = _mid(tie) if tie is not None else None
+            if h_mid is None or a_mid is None or d_mid is None:
+                h_mid = a_mid = None          # incomplete 3-way → no moneyline
+            else:
+                # Kalshi quotes the three independently; normalise so they sum
+                # to 1 the way the analyzer expects of a no-vig 3-way price.
+                tot = h_mid + d_mid + a_mid
+                if tot > 0:
+                    h_mid, d_mid, a_mid = (round(h_mid / tot, 4),
+                                           round(d_mid / tot, 4),
+                                           round(a_mid / tot, 4))
+
         if h_mid is not None and a_mid is not None:
             # Both sides are the SAME binary market, so they already sum to ~1
             # and need no de-vigging. (Contrast the Odds API totals path, which
             # keeps the overround — see the note in odds_client.)
             entry["moneyline"] = {"book": "kalshi", "home_prob": h_mid,
                                   "away_prob": a_mid}
+            if d_mid is not None:
+                entry["moneyline"]["draw_prob"] = d_mid
 
         home_tok = _team_token(home)
         entry["spread"] = _best_spread(books.get(series.get("Spread") or "", []),
