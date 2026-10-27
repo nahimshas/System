@@ -426,7 +426,11 @@ _CAT_TO_STAT: Dict[str, str] = {
 _BLANK_STATS = lambda team="": {
     "pts": 0.0, "reb": 0.0, "ast": 0.0,
     "stl": 0.0, "blk": 0.0, "three_pm": 0.0,
-    "games": 40, "team": team,
+    # ⚠️ 0 means UNKNOWN sample, not "no games". This was 40, a placeholder
+    # that the props shrink then read as forty games of evidence — the opposite
+    # of what a missing stat line should buy. Unknown must be the untrusted
+    # value, because the shrink SKIPS a prop it cannot size the sample for.
+    "games": 0, "team": team,
 }
 
 
@@ -489,7 +493,11 @@ def _stats_from_vals(vals: Dict[str, float]) -> Dict:
         "blk":      _pick("avgBlocks", "blocks", "blocksPerGame"),
         "three_pm": _pick("avgThreePointFieldGoalsMade", "avgThreesMade",
                           "threePointFieldGoalsMade", "threePointersMade"),
-        "games":    int(_pick("gamesPlayed", "games") or 1),
+        # Absent gamesPlayed means we do not know the sample, not that the
+        # player has played once. Defaulting to 1 made every leaderboard
+        # player look like a one-game sample; defaulting to 0 makes the props
+        # shrink skip them instead of projecting off an unknown.
+        "games":    int(_pick("gamesPlayed", "games") or 0),
     }
 
 

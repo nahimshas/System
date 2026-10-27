@@ -75,6 +75,26 @@ class MLBModule:
                 logger.info(f"No MLB odds available today")
 
         # Enrich odds games with schedule data (pitcher IDs, venue, team IDs)
+        self._enrich_with_schedule(games, today_date)
+        return games
+
+    def enrich_kalshi_games(self, games: list[dict[str, Any]], today: str) -> None:
+        """Add the MLB-only fields a Kalshi-priced slate cannot carry.
+
+        ⚠️ Kalshi routing bypasses fetch_games entirely, and MLB's fetch_games
+        is the only one with SIDE EFFECTS the rest of the sport depends on: the
+        MLB StatsAPI merge (probable pitchers, venue, team ids) and the
+        `_last_schedule` stash that fetch_context reads. Without this hook MLB
+        props silently produce nothing — verified Oct 27 2026: 12 players were
+        priced from Kalshi and zero picks came out, because every batter path
+        needs a probable pitcher. The schedule source is free and keyless, so
+        nothing here depends on the cancelled subscription.
+        """
+        from datetime import date
+        self._enrich_with_schedule(games, date.fromisoformat(today))
+
+    def _enrich_with_schedule(self, games: list[dict[str, Any]], today_date) -> None:
+        from src.data.mlb_stats import get_todays_games
         schedule = get_todays_games(today_date)
         schedule_map = {g["home_team"]: g for g in schedule}
         schedule_map.update({g["away_team"]: g for g in schedule})
@@ -98,7 +118,6 @@ class MLBModule:
 
         # Stash schedule on the module for fetch_context() to pick up
         self._last_schedule = schedule
-        return games
 
     def fetch_context(self, today: str, games: list[dict[str, Any]]) -> dict[str, Any]:
         """

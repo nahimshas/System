@@ -88,9 +88,87 @@ def _cover_prob(prop_type: str, model_line: float, market_line: float) -> float:
         k   = int(market_line)       # Over 0.5 → k=0, Over 1.5 → k=1
         lam = max(0.01, model_line)
         return float(1 - _poisson.cdf(k, lam))
-    coef  = _SIGMA_COEF.get(prop_type, 0.40)
-    sigma = max(_SIGMA_MIN.get(prop_type, 2.0), model_line * coef)
-    return float(1 - _norm.cdf(market_line, model_line, sigma))
+    # Same sigma the shrink uses — see _sigma_for. Two copies of this
+    # expression would let the cover prob and the shrink drift apart silently.
+    return float(1 - _norm.cdf(market_line, model_line,
+                               _sigma_for(prop_type, model_line)))
+
+
+# ---------------------------------------------------------------------------
+# Small-sample shrinkage — ⚠️ READ BEFORE LOOSENING
+# ---------------------------------------------------------------------------
+# Props wired to Kalshi on Oct 27 2026 produced 50 picks with a MEDIAN edge of
+# +14.0%, maxing out at the +15% credibility cap, with 48 of 54 projections
+# ABOVE the market. That is not signal, and the cause was measurable:
+#
+#   * median games played was ONE — the NBA season was six days old
+#   * the Tier-1 stats source is ESPN's TOP-25 LEADERBOARD, so a thin sample is
+#     also a SELECTED one: the players on it after one game are the ones who
+#     had an outlying game, and we were reading that outlier as their average
+#
+# Toumani Camara projected 18.4 points against a 9.5 line; Zach LaVine 28.3
+# against 19.5. Both off one game. This is the same defect the nba_warm_start
+# checkpoint was opened for on the TEAM side (one preseason game gave net
+# ratings of -34..+34 and a +15.0% edge with the cap firing) — players never
+# got the equivalent treatment.
+#
+# The fix shrinks the projection toward the MARKET'S OWN implied mean with
+# weight n/(n+PROP_SHRINK_K), and refuses to project at all below
+# MIN_PROP_GAMES. Shrinking toward the market rather than toward a league
+# average is deliberate: the market already prices minutes, role and injury
+# risk, which is exactly what a season-average projection cannot see. A thin
+# sample therefore yields ~zero edge and no pick, which is the honest outcome.
+#
+# Consequence to expect, and NOT a bug: NBA props stay quiet for the first few
+# weeks of a season and warm up as samples build. MLB props are unaffected in
+# mid-season because n is large.
+MIN_PROP_GAMES = 4      # below this the sample cannot support a projection
+PROP_SHRINK_K  = 12.0   # games at which the model carries half the weight
+
+
+def _sigma_for(prop_type: str, model_line: float) -> float:
+    """Per-game spread used by both the cover prob and the shrink."""
+    coef = _SIGMA_COEF.get(prop_type, 0.40)
+    return max(_SIGMA_MIN.get(prop_type, 2.0), model_line * coef)
+
+
+def _market_implied_mean(prop_type: str, market_line: float,
+                         market_prob: float, model_line: float) -> Optional[float]:
+    """The mean the market's own price implies, under our distribution.
+
+    market_prob = P(X > market_line), so inverting the normal CDF gives
+    mean = line + sigma * z(market_prob). Uses our sigma on purpose: the point
+    is to compare like with like, not to claim the market's true variance.
+    """
+    if not (0.0 < market_prob < 1.0):
+        return None
+    try:
+        z = float(_norm.ppf(market_prob))
+    except Exception:
+        return None
+    if z != z or abs(z) == float("inf"):
+        return None
+    return market_line + _sigma_for(prop_type, model_line) * z
+
+
+def shrink_projection(prop_type: str, model_line: float, market_line: float,
+                      market_prob: float, games: int) -> Optional[float]:
+    """Model projection pulled toward the market by sample size.
+
+    Returns None when the sample is too thin to project at all — the caller
+    must skip the prop rather than fall back to the raw average.
+    """
+    try:
+        n = int(games or 0)
+    except (TypeError, ValueError):
+        n = 0
+    if n < MIN_PROP_GAMES:
+        return None
+    implied = _market_implied_mean(prop_type, market_line, market_prob, model_line)
+    if implied is None:
+        return model_line
+    w = n / (n + PROP_SHRINK_K)
+    return round(w * model_line + (1.0 - w) * implied, 2)
 
 
 def _confidence(edge: float, model_line: float, market_line: float) -> str:
@@ -368,6 +446,27 @@ def nba_player_props(games: List[Dict], nba_ctx: Dict, min_edge: float = None) -
                 )
                 if model_line is None:
                     continue
+                # ⚠️ Shrink toward the market by sample size, and SKIP
+                # outright when the sample is too thin. Without this, one-game
+                # averages off ESPN's top-25 leaderboard produced 50 picks at a
+                # median +14.0% edge. See the shrinkage block at the top of
+                # this file.
+                # ⚠️ SAMPLE SIZE COMES FROM THE TEAM, not the player. ESPN's
+                # player endpoints return NO games-played count at all for prop
+                # players — verified Oct 27 2026: every one of 43 players came
+                # back 0. The two defaults that hid this were both fabrications
+                # (the leaders tier defaulted to 1, _BLANK_STATS to 40), so the
+                # model had never known how many games its averages covered.
+                # A player cannot have played more than their team, so the
+                # team's games_played (added for the NBA warm start, and real)
+                # is a sound upper bound on the sample.
+                _team_gp = int(team_stats.get("games_played", 0) or 0)
+                _n = pstats.get("games") or 0
+                _n = min(int(_n), _team_gp) if _n else _team_gp
+                model_line = shrink_projection(
+                    prop_label, model_line, market_line, market_prob, _n)
+                if model_line is None:
+                    continue
 
                 model_prob = _cover_prob(prop_label, model_line, market_line)
                 _prop_raw = model_prob
@@ -559,6 +658,14 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
 
                     k9_adj     = round(k9 * ump_k_factor * (opp_k_pct / LEAGUE_K_PCT), 1)
                     model_line = round(k9_adj / 9 * expected_innings, 1)
+                    # Starters have no `games` field here, so innings stand in:
+                    # ~5.5 IP per start. 20 IP is four starts of evidence, not
+                    # a season.
+                    model_line = shrink_projection(
+                        prop_label, model_line, market_line, market_prob,
+                        int((ip or 0) / 5.5))
+                    if model_line is None:
+                        continue
 
                     model_prob = _cover_prob(prop_label, model_line, market_line)
                     _prop_raw = model_prob
@@ -634,6 +741,16 @@ def mlb_player_props(games: List[Dict], pitcher_stats_map: Dict, min_edge: float
                     pitcher_k9=pitcher_k9,
                     game_total_scale=mlb_game_scale,
                 )
+                if model_line is None:
+                    continue
+                # ⚠️ Shrink toward the market by sample size, and SKIP
+                # outright when the sample is too thin. Without this, one-game
+                # averages off ESPN's top-25 leaderboard produced 50 picks at a
+                # median +14.0% edge. See the shrinkage block at the top of
+                # this file.
+                model_line = shrink_projection(
+                    prop_label, model_line, market_line, market_prob,
+                    bstats.get("games", 0))
                 if model_line is None:
                     continue
 

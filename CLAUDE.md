@@ -179,7 +179,33 @@ so open and close are finally measured at the same venue.
 - **An empty Kalshi slate is ambiguous**, so `_espn_game_count()` cross-checks before warning. NFL on a
   Tuesday must be silent — ⚠️ an alert that fires every quiet day is one the reader learns to ignore,
   which is exactly how the earlier silent failures survived for days.
-- **Player props are DARK, not impossible.** ⚠️ I claimed Kalshi has no player markets when the
+- **Player props now come from Kalshi** (`src/data/kalshi_props.py`, wired Oct 27 2026).
+  ⚠️ **Kalshi's ladder IS the market — do not translate it into a book's Over/Under.** Kalshi lists a
+  binary contract per threshold ("Tatum: 25+" = `P(pts >= 25)`), so there is no single "the line" to
+  pick. We price EVERY rung and send the one nearest 50% per (player, market) to the analyzer; a rung
+  at N is passed as `line = N - 0.5`, which is the continuity correction and is **exact** for the
+  Poisson markets. One rung per player-market, or a single projection error repeats six times on one
+  card.
+- ⚠️ **PROPS ARE DISPLAY-AND-LOG ONLY. Do not route them to money.** The first working run produced
+  50 picks at a **median +14.0% edge**, 48/54 above the market — the known inflation signature.
+  Causes, measured: (1) median games played was ONE, (2) the Tier-1 stats source is ESPN's **top-25
+  leaderboard**, so a thin sample is also a *selected* one, and (3) **ESPN returns no games-played
+  count for prop players at all** — all 43 came back 0 once two fabricated defaults were removed
+  (the leaders tier defaulted to 1, `_BLANK_STATS` to 40), meaning the props model had never known
+  its own sample size. Sample size now comes from the **team's** `games_played`, which is real.
+  `shrink_projection()` pulls the projection toward the market's implied mean with weight
+  `n/(n+12)` and refuses below 4 games. After: +3.9% median at 4 games, +10.2% at 25, +12.3% at 60.
+  **The residual +12.3% at a full sample is still one-directional and is NOT a sample artefact** —
+  same shape as the MLB full-game result. Run `market_test.py` on prop features before any money.
+  Checkpoint: `kalshi_props_rebuild`. Expect NBA props to be quiet early in a season; that is the
+  gate working, not a bug.
+- ⚠️ **Kalshi routing bypasses `fetch_games`, so its SIDE EFFECTS are lost.** MLB's is the only one
+  that matters: the StatsAPI merge (probable pitchers, venue, team ids) and the `_last_schedule`
+  stash `fetch_context` reads. Modules may expose `enrich_kalshi_games(games, today)` and the
+  routing layer calls it — duck-typed, never a per-sport branch. Without it MLB props silently
+  produced nothing. **Known gap:** MLB props still yield zero because `get_batter_props_stats`
+  returns empty for correct names/ids (likely postseason-empty endpoints), not a Kalshi problem.
+- **(Historical, kept because the mistake is instructive) Player props were DARK, not impossible.** ⚠️ I claimed Kalshi has no player markets when the
   switch shipped — that was wrong, and verified wrong on live data the same day. Kalshi lists **all
   eleven** markets we model, two-sided and liquid: `KXNBAPTS/REB/AST/STL/BLK/3PT` and
   `KXMLBKS/HIT/TB/HR/HRR`. Oct 27 2026 sample: 734 NBA contracts across 4 games, **75% quoted inside

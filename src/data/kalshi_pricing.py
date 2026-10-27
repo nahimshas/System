@@ -523,6 +523,29 @@ def fetch_games_routed(slug: str, module, today_str: str,
             games = []
         if games:
             logger.info(f"{sport}: priced {len(games)} game(s) from Kalshi")
+            # Props come from Kalshi too. Stamped HERE rather than inside
+            # discover() because this is the one place that knows a Kalshi
+            # slate was built — the Odds API path stamps them inside its own
+            # fetch_games(), which Kalshi bypasses entirely. Isolated: a props
+            # failure must never cost us the game card.
+            try:
+                # Some sports' fetch_games has SIDE EFFECTS the rest of the
+                # sport depends on (MLB's probable-pitcher merge and its
+                # _last_schedule stash). Kalshi bypasses fetch_games, so a
+                # module may expose this hook to re-add them. Registry-driven
+                # by duck-typing rather than a per-sport branch here.
+                _enrich = getattr(module, "enrich_kalshi_games", None)
+                if callable(_enrich):
+                    _enrich(games, today_str)
+            except Exception as e:
+                logger.warning(f"{sport}: Kalshi game enrichment failed: {e}")
+            try:
+                from src.data.kalshi_props import fetch_props_for_games
+                fetch_props_for_games(sport, games, today_str)
+            except Exception as e:
+                logger.warning(f"{sport}: Kalshi props stamping failed: {e}")
+                for _g in games:
+                    _g.setdefault("player_props", {})
             return games, "kalshi", False
         # Is this an empty slate, or a broken one? ESPN decides.
         espn_n = _espn_game_count(sport, today_str)

@@ -584,12 +584,13 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         game_counts[slug] = len(games)
 
         # Surface prop-line API errors before checking game count.
-        # ⚠️ Only meaningful when the ODDS API priced this sport. Kalshi game
-        # dicts carry no `player_props` key at all, so without this guard every
-        # Kalshi-priced slate would report a phantom "props unavailable" error
-        # every single day. Props remain an Odds-API-only feature; they carry
-        # ZERO money (1,219 logged rows, no stake on any of them), so losing
-        # them with the subscription costs display and analysis, not P&L.
+        # ⚠️ Scoped to the ODDS API path because `get_last_api_error()` reports
+        # Odds API errors specifically — on a Kalshi slate it would attach a
+        # stale or unrelated error to a prop set that is fine. Kalshi props
+        # have their own reporting in `kalshi_props.fetch_props_for_games`.
+        # (This comment previously claimed props were an Odds-API-only feature.
+        # They are not: Kalshi lists all eleven markets we model. See the price
+        # source section in CLAUDE.md.)
         if (caps.has_props and games and _price_src == "oddsapi"
                 and not any(g.get("player_props") for g in games)):
             _prop_err = get_last_api_error()
