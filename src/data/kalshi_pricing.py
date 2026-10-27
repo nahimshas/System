@@ -479,7 +479,8 @@ def _espn_game_count(sport: str, game_date: str) -> Optional[int]:
     Tuesday, WNBA out of season, a soccer league with no fixtures. An alert
     that cries wolf daily is one the reader learns to ignore, which is exactly
     how the earlier silent failures survived. Returns None when ESPN cannot be
-    reached, and the caller then stays quiet rather than guessing.
+    reached, and an unreachable ESPN must NOT be read as "no games" — that
+    would silence the very gap this check exists to find.
     """
     try:
         import requests
@@ -548,7 +549,22 @@ def fetch_games_routed(slug: str, module, today_str: str,
     if not odds_key_available:
         return [], "oddsapi", False
     try:
-        return (module.fetch_games(today_str) or []), "oddsapi", False
+        games = module.fetch_games(today_str) or []
     except Exception as e:
         logger.warning(f"{sport}: Odds API fetch failed: {e}")
         return [], "oddsapi", False
+    if games:
+        return games, "oddsapi", False
+    # ⚠️ A dead key is now the likeliest failure on this path — the paid
+    # subscription is cancelled and CFB/IPL/WC run on a free-tier key that can
+    # expire or exhaust its quota. get_odds() swallows HTTP errors and returns
+    # [], which is indistinguishable from a quiet day. Ask ESPN. IPL has no
+    # ESPN scoreboard at all (espn_n is None), so only a positive count warns.
+    espn_n = _espn_game_count(sport, today_str)
+    if espn_n:
+        logger.warning(
+            f"{sport}: the Odds API returned NO games but ESPN lists {espn_n} — "
+            f"check the ODDS_API_KEY secret (expired key? free-tier quota "
+            f"exhausted?). This is a real gap, not a quiet day.")
+        return [], "oddsapi", True
+    return games, "oddsapi", False

@@ -436,3 +436,31 @@ class TestPropsAreOddsApiOnly:
         every Kalshi slate would report a phantom props error daily."""
         src = open("src/main.py").read()
         assert '_price_src == "oddsapi"' in src
+
+
+class TestDeadOddsApiKeyIsLoud:
+    """The paid subscription is cancelled; CFB/IPL/WC run on a free-tier key
+    that can expire or exhaust its quota. get_odds() swallows HTTP errors and
+    returns [], which looks exactly like a quiet day."""
+
+    def test_empty_slate_with_games_on_espn_warns(self, monkeypatch):
+        import src.data.kalshi_pricing as KP
+        monkeypatch.setattr(KP, "_espn_game_count", lambda s, d: 42)
+
+        class M:
+            def fetch_games(self, d):
+                return []
+        games, src, fell = KP.fetch_games_routed("CFB", M(), "2026-11-07",
+                                                 odds_key_available=True)
+        assert src == "oddsapi" and fell is True
+
+    def test_ipl_has_no_espn_scoreboard_and_stays_quiet(self, monkeypatch):
+        import src.data.kalshi_pricing as KP
+        monkeypatch.setattr(KP, "_espn_game_count", lambda s, d: None)
+
+        class M:
+            def fetch_games(self, d):
+                return []
+        games, src, fell = KP.fetch_games_routed("IPL", M(), "2026-11-07",
+                                                 odds_key_available=True)
+        assert fell is False
