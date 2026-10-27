@@ -448,3 +448,107 @@ def record_card_comparison(run_date, sport: str, module, ctx, odds_recs) -> bool
     except Exception as e:
         logger.warning(f"Kalshi card comparison log failed ({sport}): {e}")
         return False
+
+
+# ── Primary price source routing (Oct 27 2026) ───────────────────────────────
+# Sports Kalshi can price end-to-end: a verified series map AND a team map that
+# resolves both sides. Anything absent here keeps the Odds API.
+#
+#   CFB — no static team map by design (279 tokens that rebrand; matched
+#         structurally for CLV, which is not enough to DISCOVER a slate).
+#   IPL — Kalshi lists no per-match markets at all.
+#   WC  — out of season, series ticker never verified against a live book.
+KALSHI_PRICEABLE = {"MLB", "NBA", "NFL", "NHL", "WNBA", "MLS", "LIGAMX"}
+
+
+def price_source_for(sport: str) -> str:
+    """'kalshi' or 'oddsapi' for this sport, honouring the env override."""
+    import os
+    forced = (os.getenv("PRICE_SOURCE") or "").strip().lower()
+    if forced in ("oddsapi", "odds_api"):
+        return "oddsapi"
+    if forced == "kalshi":
+        return "kalshi"
+    return "kalshi" if sport.upper() in KALSHI_PRICEABLE else "oddsapi"
+
+
+def _espn_game_count(sport: str, game_date: str) -> Optional[int]:
+    """How many games ESPN lists — the free second opinion on an empty slate.
+
+    Without this the fallback warning fires on every quiet day: NFL on a
+    Tuesday, WNBA out of season, a soccer league with no fixtures. An alert
+    that cries wolf daily is one the reader learns to ignore, which is exactly
+    how the earlier silent failures survived. Returns None when ESPN cannot be
+    reached, and the caller then stays quiet rather than guessing.
+    """
+    try:
+        import requests
+        from src.data.outcome_checker import (ESPN_BASE, ESPN_SPORT_PATHS,
+                                              ESPN_WATCHLIST_PATHS)
+        path = (ESPN_SPORT_PATHS.get(sport.upper())
+                or ESPN_WATCHLIST_PATHS.get(sport.upper()))
+        if not path:
+            return None
+        params = {"dates": game_date.replace("-", "")}
+        if sport.upper() == "CFB":
+            params.update({"groups": 80, "limit": 300})
+        r = requests.get(f"{ESPN_BASE}/{path}/scoreboard", params=params, timeout=12)
+        r.raise_for_status()
+        return len((r.json() or {}).get("events", []) or [])
+    except Exception:
+        return None
+
+
+def fetch_games_routed(slug: str, module, today_str: str,
+                       odds_key_available: bool = True):
+    """Game list for one sport, from whichever source can price it.
+
+    Returns (games, source, fell_back).
+
+    ⚠️ FALLS BACK RATHER THAN FAILING. If Kalshi yields nothing for a sport
+    that should be priceable, the Odds API is tried instead when a key exists.
+    A silent empty slate is the worst outcome: the sport simply vanishes from
+    the card and nothing says why — the exact failure mode that hid the CFB and
+    NFL bugs for days. The caller is told so it can be surfaced.
+    """
+    sport = slug.upper()
+    source = price_source_for(sport)
+
+    if source == "kalshi":
+        try:
+            games = discover(sport, today_str)
+        except Exception as e:
+            logger.warning(f"{sport}: Kalshi pricing raised ({e}) — falling back")
+            games = []
+        if games:
+            logger.info(f"{sport}: priced {len(games)} game(s) from Kalshi")
+            return games, "kalshi", False
+        # Is this an empty slate, or a broken one? ESPN decides.
+        espn_n = _espn_game_count(sport, today_str)
+        genuinely_empty = (espn_n == 0)
+        if genuinely_empty:
+            logger.info(f"{sport}: no games today (ESPN agrees) — nothing to price")
+            return [], "kalshi", False
+        if odds_key_available:
+            logger.warning(
+                f"{sport}: Kalshi returned NO games but ESPN lists "
+                f"{espn_n if espn_n is not None else '?'} — falling back to the "
+                f"Odds API. This is a real gap, not a quiet day.")
+            try:
+                return (module.fetch_games(today_str) or []), "oddsapi", True
+            except Exception as e:
+                logger.warning(f"{sport}: Odds API fallback also failed: {e}")
+                return [], "kalshi", True
+        logger.warning(
+            f"{sport}: Kalshi returned no games, ESPN lists "
+            f"{espn_n if espn_n is not None else '?'}, and there is no Odds API "
+            f"key — THIS SPORT HAS NO PRICES TODAY.")
+        return [], "kalshi", True
+
+    if not odds_key_available:
+        return [], "oddsapi", False
+    try:
+        return (module.fetch_games(today_str) or []), "oddsapi", False
+    except Exception as e:
+        logger.warning(f"{sport}: Odds API fetch failed: {e}")
+        return [], "oddsapi", False

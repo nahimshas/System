@@ -102,6 +102,7 @@ Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_ga
 | `backfill_shadow_log.py` | One-time root script — imports historical settled picks into shadow log |
 | `src/data/closing_lines.py` | CLV capture via the **paid Odds API** — OFF by default since Aug 25 2026 (`ENABLE_ODDS_API_CLV=true` resumes it). Kalshi is the primary feed. |
 | `src/data/kalshi.py` | **Kalshi/Robinhood client + resolver.** `resolve_pick()` maps our picks onto the contract we would actually buy. ⚠️ Matches on the **ticker segment**, never the rules prose (Kalshi's prose is inconsistent between series for the same game). `_ladder_points()` + the NOT BUYABLE warning. Non-MLB callers MUST pass `series_map=`. |
+| `src/data/kalshi_pricing.py` | **THE PRICE SOURCE for every budget sport since Oct 27 2026.** `price_source_for(sport)` routes; `fetch_games_routed(...)` builds a slate from Kalshi order books and falls back to the Odds API only when Kalshi has nothing AND ESPN says games exist. `discover()`, `_mid()` (rejects quotes wider than `MAX_SPREAD_CENTS=10` — untraded 2c/98c books otherwise read as 50%), `_best_spread()`, `_best_total()`, `compare_picks()`, `map_health()`. |
 | `src/data/kalshi_clv.py` | Kalshi CLV passes over the shadow + decision logs. `SPORT_SERIES`, `prices_at()` (1-minute candles, 15-min windowed mean), `_anchor_series()`. |
 | `src/data/team_names.py` | `expand_city()` — the feed says "NY Jets", our maps and ESPN say "New York Jets". **One module on purpose:** this single mismatch broke CLV *and* settlement in ways that look unrelated. |
 | `src/data/cfb_stats.py` | College football **SRS margin ratings** (points, no Elo→points conversion). `compute_srs()`, `effective_games()`, `rating_for()`. |
@@ -156,6 +157,32 @@ A fully autonomous feedback loop. **Do not work around it manually** — it self
 Full deep reference: see "Self-Calibration System" section in the project memory file.
 
 ---
+
+## ⚠️ PRICE SOURCE — Kalshi is primary, the paid Odds API is gone (Oct 27 2026)
+
+The paid Odds API subscription is **cancelled**. Prices for every budget sport now come from
+**Kalshi order books** (`src/data/kalshi_pricing.py`), which is the book we actually trade in —
+so open and close are finally measured at the same venue.
+
+| sport | priced by | why |
+|---|---|---|
+| MLB, NBA, NFL, NHL, WNBA, MLS, Liga MX | **Kalshi** | verified static team map → discovery works |
+| CFB, IPL, WC | Odds API (**free tier**) | Kalshi cannot DISCOVER them: CFB has no static team map (it is matched structurally for CLV, which is enough to price a known game but not to build a slate), IPL has no Kalshi markets at all, WC's series ticker was never verified live |
+
+- **Routing happens at one place only** — the `fetch_games_routed(...)` call in `main.py`. Never add a
+  per-sport branch; add the sport to `KALSHI_PRICEABLE` (and give it a team map in `kalshi.py`).
+- **`PRICE_SOURCE=oddsapi` forces the old path for everything, no deploy needed.** Reverse switch if
+  Kalshi misbehaves — only useful while a free-tier key exists.
+- **Edges got SMALLER, not bigger** (measured before shipping: NBA median +7.8% vs +10.2%,
+  NHL +8.7% vs +10.5%). A two-sided midpoint carries less overround slack than a multi-book no-vig
+  consensus. That is the safe direction; if edges ever *inflate* after a change here, stop.
+- **An empty Kalshi slate is ambiguous**, so `_espn_game_count()` cross-checks before warning. NFL on a
+  Tuesday must be silent — ⚠️ an alert that fires every quiet day is one the reader learns to ignore,
+  which is exactly how the earlier silent failures survived for days.
+- **Player props are gone** (Kalshi has no player markets). They carried zero money. The props error
+  path in `main.py` is guarded by `_price_src == "oddsapi"` — without that guard every Kalshi slate
+  would report a phantom "props unavailable" every single day.
+- Checkpoint: `kalshi_as_primary_price_source`, evaluate after Dec 15 2026.
 
 ## CLV system (June 2026) — closing-line value capture + governor
 

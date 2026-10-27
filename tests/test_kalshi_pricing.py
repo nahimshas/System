@@ -341,3 +341,98 @@ class TestThreeWaySoccer:
             assert "draw_prob" in ml, g["game_id"]
             total = ml["home_prob"] + ml["draw_prob"] + ml["away_prob"]
             assert abs(total - 1.0) < 0.01, total
+
+
+class TestPriceSourceRouting:
+    """Kalshi is PRIMARY from Oct 27 2026; the Odds API subscription is being
+    cancelled. CFB/IPL/WC stay on the Odds API because Kalshi cannot DISCOVER
+    them — CFB has no static team map (matched structurally for CLV, which is
+    not enough to build a slate), IPL has no markets at all, and WC's series
+    ticker was never verified against a live book."""
+
+    def test_budget_sports_are_all_kalshi_priceable(self):
+        from src.data.kalshi_pricing import KALSHI_PRICEABLE
+        from src.sports.registry import REGISTRY
+        for slug, e in REGISTRY.items():
+            if e.caps.enters_budget:
+                assert slug.upper() in KALSHI_PRICEABLE, slug
+
+    def test_unpriceable_sports_keep_the_odds_api(self):
+        from src.data.kalshi_pricing import price_source_for
+        for s in ("CFB", "IPL", "WC"):
+            assert price_source_for(s) == "oddsapi"
+
+    def test_priceable_sports_use_kalshi(self):
+        from src.data.kalshi_pricing import price_source_for
+        for s in ("MLB", "NBA", "NFL", "NHL", "WNBA", "MLS", "LIGAMX"):
+            assert price_source_for(s) == "kalshi"
+
+    def test_env_override_forces_odds_api(self, monkeypatch):
+        """Reversible without a deploy if Kalshi goes wrong."""
+        from src.data.kalshi_pricing import price_source_for
+        monkeypatch.setenv("PRICE_SOURCE", "oddsapi")
+        assert price_source_for("NHL") == "oddsapi"
+
+    def test_env_override_forces_kalshi(self, monkeypatch):
+        from src.data.kalshi_pricing import price_source_for
+        monkeypatch.setenv("PRICE_SOURCE", "kalshi")
+        assert price_source_for("CFB") == "kalshi"
+
+
+class TestEmptySlateIsNotAnAlert:
+    """⚠️ An alert that fires on every quiet day is one the reader learns to
+    ignore — which is how the earlier silent failures survived for days. NFL on
+    a Tuesday, WNBA out of season and a soccer league with no fixtures must all
+    be silent; only a slate ESPN can see and Kalshi cannot is a real gap."""
+
+    def test_quiet_day_does_not_report_a_fallback(self, monkeypatch):
+        import src.data.kalshi_pricing as KP
+        monkeypatch.setattr(KP, "discover", lambda s, d: [])
+        monkeypatch.setattr(KP, "_espn_game_count", lambda s, d: 0)
+        games, src, fell = KP.fetch_games_routed("NFL", None, "2026-10-27",
+                                                 odds_key_available=False)
+        assert games == [] and fell is False
+
+    def test_real_gap_does_report_a_fallback(self, monkeypatch):
+        import src.data.kalshi_pricing as KP
+        monkeypatch.setattr(KP, "discover", lambda s, d: [])
+        monkeypatch.setattr(KP, "_espn_game_count", lambda s, d: 8)
+
+        class M:
+            def fetch_games(self, d):
+                return [{"game_id": "x"}]
+        games, src, fell = KP.fetch_games_routed("NHL", M(), "2026-10-27",
+                                                 odds_key_available=True)
+        assert fell is True and src == "oddsapi" and len(games) == 1
+
+    def test_unreachable_espn_does_not_silence_a_real_gap(self, monkeypatch):
+        """ESPN down must not be read as 'no games'."""
+        import src.data.kalshi_pricing as KP
+        monkeypatch.setattr(KP, "discover", lambda s, d: [])
+        monkeypatch.setattr(KP, "_espn_game_count", lambda s, d: None)
+        games, src, fell = KP.fetch_games_routed("NHL", None, "2026-10-27",
+                                                 odds_key_available=False)
+        assert fell is True
+
+    def test_discover_raising_falls_back(self, monkeypatch):
+        import src.data.kalshi_pricing as KP
+
+        def boom(s, d):
+            raise RuntimeError("kalshi down")
+        monkeypatch.setattr(KP, "discover", boom)
+        monkeypatch.setattr(KP, "_espn_game_count", lambda s, d: 5)
+
+        class M:
+            def fetch_games(self, d):
+                return [{"game_id": "x"}]
+        games, src, fell = KP.fetch_games_routed("NHL", M(), "2026-10-27",
+                                                 odds_key_available=True)
+        assert src == "oddsapi" and len(games) == 1
+
+
+class TestPropsAreOddsApiOnly:
+    def test_prop_error_is_scoped_to_odds_api_slates(self):
+        """Kalshi game dicts carry no player_props key, so without the guard
+        every Kalshi slate would report a phantom props error daily."""
+        src = open("src/main.py").read()
+        assert '_price_src == "oddsapi"' in src

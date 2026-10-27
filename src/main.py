@@ -537,6 +537,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     all_display_raw:   list = []   # main display pool (budget sports + NHL)
     props_raw:         list = []   # qualified props for P&L tracking
     props_display_raw: list = []   # all positive-EV props for display
+    price_sources: dict = {}   # slug -> which feed priced it today
     game_counts:       dict = {}   # slug → int  (0 if skipped / out of season)
     own_display:       dict = {}   # slug → list[BetRecommendation]  (own-tile sports)
     ipl_games_analyzed: int = 0   # raw Odds API game count, captured before pending override
@@ -552,7 +553,18 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         module = SPORT_MODULES[slug]
         logger.info(f"=== {entry.label} Analysis ===")
 
-        games = module.fetch_games(today_str) if ODDS_API_KEY else []
+        # Price source routing (Oct 27 2026). Kalshi is now PRIMARY for every
+        # sport it can price end-to-end; CFB/IPL/WC keep the Odds API because
+        # Kalshi cannot discover them (no static team map / no markets at all).
+        # Falls back to the Odds API rather than producing a silent empty slate.
+        from src.data.kalshi_pricing import fetch_games_routed as _route
+        games, _price_src, _fell_back = _route(
+            slug, module, today_str, odds_key_available=bool(ODDS_API_KEY))
+        price_sources[slug] = {"source": _price_src, "fell_back": _fell_back}
+        if _fell_back:
+            errors.append(
+                f"{entry.label}: Kalshi produced no games — "
+                f"{'fell back to the Odds API' if _price_src == 'oddsapi' else 'NO PRICES AVAILABLE'}")
 
         # Per-game season types (ESPN): stamps season_game_type so analyzers
         # apply playoff treatment per GAME instead of per calendar window, and
@@ -571,8 +583,15 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
 
         game_counts[slug] = len(games)
 
-        # Surface prop-line API errors before checking game count
-        if caps.has_props and games and not any(g.get("player_props") for g in games):
+        # Surface prop-line API errors before checking game count.
+        # ⚠️ Only meaningful when the ODDS API priced this sport. Kalshi game
+        # dicts carry no `player_props` key at all, so without this guard every
+        # Kalshi-priced slate would report a phantom "props unavailable" error
+        # every single day. Props remain an Odds-API-only feature; they carry
+        # ZERO money (1,219 logged rows, no stake on any of them), so losing
+        # them with the subscription costs display and analysis, not P&L.
+        if (caps.has_props and games and _price_src == "oddsapi"
+                and not any(g.get("player_props") for g in games)):
             _prop_err = get_last_api_error()
             if _prop_err:
                 errors.append(f"{entry.label} player props unavailable: {_prop_err}")
@@ -860,6 +879,17 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     fresh_wc_display   = fresh_own_displays.get("wc",   [])
     fresh_ligamx_display = fresh_own_displays.get("ligamx", [])
     fresh_cfb_display    = fresh_own_displays.get("cfb",    [])
+
+    # Which feed priced each sport today. Logged every run so a silent switch
+    # back to the Odds API — or a sport losing its price source entirely — is
+    # visible in the run log rather than only in a missing tile.
+    if price_sources:
+        _k = sorted(k for k, v in price_sources.items() if v["source"] == "kalshi")
+        _o = sorted(k for k, v in price_sources.items() if v["source"] == "oddsapi")
+        _fb = sorted(k for k, v in price_sources.items() if v["fell_back"])
+        logger.info(f"PRICE SOURCE — kalshi: {_k or 'none'} | oddsapi: {_o or 'none'}")
+        if _fb:
+            logger.warning(f"PRICE SOURCE FALLBACK fired for: {_fb}")
 
     # ------------------------------------------------------------------ #
     #  Shadow log — calibration data foundation.
