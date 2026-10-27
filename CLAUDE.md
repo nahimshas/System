@@ -179,9 +179,21 @@ so open and close are finally measured at the same venue.
 - **An empty Kalshi slate is ambiguous**, so `_espn_game_count()` cross-checks before warning. NFL on a
   Tuesday must be silent — ⚠️ an alert that fires every quiet day is one the reader learns to ignore,
   which is exactly how the earlier silent failures survived for days.
-- **Player props are gone** (Kalshi has no player markets). They carried zero money. The props error
-  path in `main.py` is guarded by `_price_src == "oddsapi"` — without that guard every Kalshi slate
-  would report a phantom "props unavailable" every single day.
+- **Player props are DARK, not impossible.** ⚠️ I claimed Kalshi has no player markets when the
+  switch shipped — that was wrong, and verified wrong on live data the same day. Kalshi lists **all
+  eleven** markets we model, two-sided and liquid: `KXNBAPTS/REB/AST/STL/BLK/3PT` and
+  `KXMLBKS/HIT/TB/HR/HRR`. Oct 27 2026 sample: 734 NBA contracts across 4 games, **75% quoted inside
+  the 10c spread filter** (points 91%, rebounds 80%, assists 83%, threes 72%; steals 28% and blocks
+  23% are genuinely thin), ~44 players per market. All 5 MLB prop series quoted on the live game.
+  Props simply are not WIRED to Kalshi yet — `fetch_props()` still calls the Odds API, so they went
+  dark with the subscription. They have never carried money (verified: zero prop rows in the shadow
+  log, zero in every picks file), so nothing is at risk either way.
+  - Two structural differences to handle when wiring them: Kalshi quotes **ladder rungs** ("25+",
+    i.e. Over 24.5) rather than a book's half-point Over/Under, and the **MLB prop ticker carries a
+    time segment** (`KXMLBHRR-26OCT272000MILTB`) that the NBA tickers do not
+    (`KXNBAPTS-26OCT27BKNBOS`). `yes_sub_title` gives `"Jayson Tatum: 25+"` for player mapping.
+- The props error path in `main.py` is guarded by `_price_src == "oddsapi"` — without that guard
+  every Kalshi slate would report a phantom "props unavailable" every single day.
 - Checkpoint: `kalshi_as_primary_price_source`, evaluate after Dec 15 2026.
 
 ## CLV system (June 2026) — closing-line value capture + governor
