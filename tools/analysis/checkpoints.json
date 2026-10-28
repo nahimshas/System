@@ -324,6 +324,32 @@
         "pass": "moneyline and spread agree on the favourite for every discovered game"
       },
       "rationale": "⚠️ COST: real money was staked on inverted lines before this was caught — two NHL spreads and one MLB spread, $3.28 of the day's $5.50. The bug was invisible in the diff and invisible in the test suite; it was caught only by reading the live card, noticing 'San Antonio +12.5' for a team that was a 13-point favourite, and pulling that game's actual Kalshi ladder. This is the third time the 'verify on live data, not by reading code' rule has paid for itself, and the second home/away inversion on the Kalshi path after the soccer ticker-order bug — both silently wrong rather than absent. LESSON NOW ENCODED AS A TEST: when two markets in one game dict imply the same fact (who is favoured), assert that they agree. That single invariant would have caught this on day one."
+    },
+    {
+      "id": "kalshi_start_times_from_espn",
+      "status": "resolved",
+      "title": "Kalshi has no start-time field — commence_time was the settlement moment, ~3h late",
+      "created": "2026-10-28",
+      "evaluate_after": "2026-10-28",
+      "type": "note",
+      "rules": {
+        "pass": "commence_time matches ESPN tip-off for every discovered game"
+      },
+      "resolution": "FIXED same day. `discover()` used Kalshi's `occurrence_datetime`, which equals `expected_expiration_time` — the expected SETTLEMENT moment, ~3h after tip for an NBA game. Verified: LAL@LAC on 2026-10-28 read 05:30Z when ESPN (authoritative) had 02:30Z. Corrected inside `stamp_game_types`, which already matched ESPN events to game dicts by team name within a 6h window, so no extra API calls: ESPN's `date` now overwrites commence_time when they differ by more than 10 minutes, logged with the worst drift. No-op on the Odds API path, which carries a real start time. Two further bugs surfaced while fixing it, both silent: (1) `_team_match` could not match ESPN's own displayName \"LA Clippers\" to our \"Los Angeles Clippers\" — token overlap gives one shared token against a two-token city difference — so LAL@LAC was the ONE game of twelve left uncorrected and the one game never stamped with a season type; fixed by routing both sides through `team_names.expand_city()`, the module that exists for exactly this. (2) `_ESPN_PATHS` was a hardcoded literal missing ligamx, wc and cfb, so those sports got neither a season type nor a time correction; it is now DERIVED from the settlement maps. After: 12/12 NBA, 4/4 NHL, 1/1 MLB, 14/14 MLS and 1/1 LigaMX corrected, worst drift 3.0h, and Liga MX moved from 11:00 PM to its real 8:00 PM.",
+      "rationale": "⚠️ NOT a cosmetic bug. commence_time drives the shadow log's GAME LOCK and the Kalshi CLV closing sample, so a 3h-late timestamp would have left picks editable deep into a game and sampled the 'close' AFTER the market had already resolved to 0 or 1 — silently corrupting the primary skill metric from its first Kalshi night. Caught because the user read the card and noticed a 10:30 PM tip for a game they knew was at 7:30 PM. Model-facing data should be checked against the authoritative feed, not the venue's own convenience fields."
+    },
+    {
+      "id": "mls_xgf_zero",
+      "status": "resolved",
+      "title": "Every MLS team's attacking xG read 0.0 — wrong ASA field name",
+      "created": "2026-10-28",
+      "evaluate_after": "2026-10-28",
+      "type": "note",
+      "rules": {
+        "pass": "no team has a real xGA and a zero xGF"
+      },
+      "resolution": "FIXED. `_get_asa_season_stats` tried `xGoals` / `xgoals` / `xgf`, none of which exist on the ASA response — the real field is `xgoals_for`. Meanwhile `xgoals_against` WAS in the defensive fallback list and resolved correctly, so xGA was right and xGF was 0.0 for all 30 teams. Fixed by putting the real key first in both chains. Measured on the 2026-10-28 slate: xGF non-zero on 30/30 teams (median 1.62/game), raw |model-market| median fell from 39.8pp to 3.9pp, MLS produced 15 moneyline picks where it had produced ZERO before, totals went from uniformly 'Under' at the capped +10% to a mixed Over/Under spread at +1.5% to +3.9%, and draw edges fell from a capped +10% to +1.9%.",
+      "rationale": "⚠️ THE LESSON IS ONE-SIDED BREAKAGE. This survived because the working half kept the output plausible: with both teams' attack at zero the model still RANKED teams correctly off xGA, so MLS moneylines stayed well calibrated (2.2pp off the market) and nothing on the card looked wrong. Only the absolute goal level was destroyed — expected total goals ~1.3 against a market implying ~2.9 — which is why every total was 'Under' and draws were inflated (two teams projected to score nothing draw 0-0 very often). It was found by asking why MLS produced ONLY Draw and Total picks and never a moneyline, then reading the raw model probability (0.8686 for Under 2.5 against a market 0.395) rather than the post-cap number, which the credibility cap had flattened to a tidy-looking +10%. ⚠️ THE CAP HIDES THE SYMPTOM: a market pinned at exactly the cap on every pick is evidence of a broken input, not of edge. The invariant now asserted is that a team cannot have a real xGA and a zero xGF."
     }
   ]
 }

@@ -179,6 +179,25 @@ so open and close are finally measured at the same venue.
 - **An empty Kalshi slate is ambiguous**, so `_espn_game_count()` cross-checks before warning. NFL on a
   Tuesday must be silent — ⚠️ an alert that fires every quiet day is one the reader learns to ignore,
   which is exactly how the earlier silent failures survived for days.
+- ⚠️ **KALSHI HAS NO START TIME.** `occurrence_datetime` == `expected_expiration_time` is the expected
+  SETTLEMENT moment — ~3h after tip for an NBA game. `stamp_game_types()` now overwrites
+  `commence_time` from ESPN's authoritative `date` when they differ by >10 min (no extra API calls;
+  it already matched ESPN events there). This is NOT cosmetic: commence_time drives the shadow log's
+  **game lock** and the **Kalshi CLV closing sample**, so a late stamp leaves picks editable
+  mid-game and samples the "close" after the market has resolved. Two silent bugs surfaced with it:
+  `_team_match` could not match ESPN's own "LA Clippers" to our "Los Angeles Clippers" (fixed via
+  `team_names.expand_city()` — use that module, never a second alias list), and `_ESPN_PATHS` was a
+  hardcoded literal missing ligamx/wc/cfb (now DERIVED from the settlement maps).
+- ⚠️ **A MARKET PINNED AT EXACTLY THE CREDIBILITY CAP IS A BROKEN INPUT, NOT AN EDGE.** Read
+  `model_prob_raw`, not the post-cap number — the cap flattens a 47pp error into a tidy-looking
+  +10%. Oct 28 2026: every MLS team's attacking xG read 0.0 because the ASA field is `xgoals_for`
+  and the code tried `xGoals`/`xgoals`/`xgf`, while `xgoals_against` happened to be in the
+  defensive fallback list and worked. ⚠️ **One-sided breakage hides itself**: the model still ranked
+  teams correctly off xGA, so MLS moneylines stayed calibrated to 2.2pp and the card looked fine,
+  but expected goals collapsed to ~1.3 vs a market implying ~2.9 — so every total was "Under" at
+  the capped +10% and draws were inflated. Fixing it took MLS's raw gap from 39.8pp to **3.9pp** and
+  produced 15 moneyline picks where there had been zero. The tell was MLS emitting ONLY Draw and
+  Total picks, never a moneyline.
 - ⚠️ **SPREAD SIGN: assert that the moneyline and the spread agree on who is favoured.** Each Kalshi
   spread rung's ticker names the **favoured** side (`...-SAS14` = "San Antonio wins by over 13.5"),
   so `home_spread`'s sign depends on whether that side is our home team. `_best_spread` must be

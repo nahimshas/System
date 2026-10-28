@@ -100,8 +100,22 @@ def _get_asa_season_stats(season: int, team_map: Dict[str, str]) -> Dict[str, di
         gp = rec.get("games_played") or rec.get("count_games") or 1
         if gp == 0:
             gp = 1
-        xgf = rec.get("xGoals") or rec.get("xgoals") or rec.get("xgf") or 0.0
-        xga = rec.get("xGoalsAgainst") or rec.get("xgoals_against") or rec.get("xga") or 0.0
+        # ⚠️ The ASA field is `xgoals_for`. None of the three names tried
+        # before it ("xGoals", "xgoals", "xgf") exist on the response, so EVERY
+        # team's attacking xG silently read 0.0 — while `xgoals_against` WAS in
+        # the defensive fallback list and worked. One-sided breakage is why
+        # this survived: the model still ranked teams correctly off xGA, so
+        # MLS moneylines stayed well calibrated (2.2pp off the market on
+        # 2026-10-28) and nothing looked wrong on the card, but expected total
+        # goals collapsed to ~1.3 against a market implying ~2.9. Every MLS
+        # total became "Under" at the capped +10% edge and the draw
+        # probability was inflated, because two teams projected to score
+        # nothing draw 0-0 very often. Raw model-vs-market gap was 47pp on
+        # totals and ~40pp median across MLS.
+        xgf = (rec.get("xgoals_for") or rec.get("xGoals") or rec.get("xgoals")
+               or rec.get("xgf") or 0.0)
+        xga = (rec.get("xgoals_against") or rec.get("xGoalsAgainst")
+               or rec.get("xga") or 0.0)
         result[name] = {
             "xgf_per_game": round(xgf / gp, 3),
             "xga_per_game": round(xga / gp, 3),

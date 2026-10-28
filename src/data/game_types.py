@@ -40,14 +40,25 @@ ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports"
 # Sport slug (registry) → ESPN path. Only sports whose feeds expose season.type
 # are listed; others (IPL via Cricbuzz, WC single-tournament) keep their
 # existing date-based logic.
-_ESPN_PATHS = {
-    "nba":  "basketball/nba",
-    "mlb":  "baseball/mlb",
-    "nfl":  "football/nfl",
-    "nhl":  "hockey/nhl",
-    "wnba": "basketball/wnba",
-    "mls":  "soccer/usa.1",
-}
+# ⚠️ DERIVED, never hand-written. A literal list here silently excluded
+# ligamx, wc and cfb: `stamp_game_types` returns 0 for any slug it cannot find,
+# so those sports got no season type AND (since Oct 28 2026) no start-time
+# correction — Liga MX kept Kalshi's settlement timestamp and showed a game
+# three hours late with nothing in the log to say why. Hardcoded sport lists
+# are the #1 recurring bug in this repo and every one of them has failed
+# silently; keep this derived from the settlement maps, which are themselves
+# the single source of ESPN paths.
+def _espn_paths() -> Dict[str, str]:
+    try:
+        from src.data.outcome_checker import (ESPN_SPORT_PATHS,
+                                              ESPN_WATCHLIST_PATHS)
+        merged = {**ESPN_WATCHLIST_PATHS, **ESPN_SPORT_PATHS}
+        return {k.lower(): v for k, v in merged.items()}
+    except Exception:
+        return {}
+
+
+_ESPN_PATHS = _espn_paths()
 
 # ESPN season.type → canonical label. Unknown types map to None (no stamp →
 # calendar fallback) rather than guessing.
@@ -112,7 +123,20 @@ def _canonical_type(event: Dict) -> Optional[str]:
 
 
 def _team_match(query: str, candidate: str) -> bool:
-    """Fuzzy match using the settlement matcher (aliases + token overlap)."""
+    """Fuzzy match using the settlement matcher (aliases + token overlap).
+
+    ⚠️ Both sides go through `expand_city()` first. ESPN's own displayName is
+    "LA Clippers" while our maps say "Los Angeles Clippers", and token overlap
+    alone does NOT bridge that: "clippers" is one shared token against a
+    two-token city difference, so the match failed. The cost was invisible —
+    the LAL@LAC game on 2026-10-28 was the ONE game of twelve that kept
+    Kalshi's settlement timestamp and so displayed 10:30 PM for a 7:30 PM
+    tip-off, and the one game that never got its season type stamped. This is
+    the same city-abbreviation mismatch `team_names` exists for; use it here
+    rather than growing a second alias list.
+    """
+    from src.data.team_names import expand_city
+    query, candidate = expand_city(query or ""), expand_city(candidate or "")
     q, c = (query or "").lower(), (candidate or "").lower()
     if not q or not c:
         return False
@@ -128,8 +152,8 @@ def _team_match(query: str, candidate: str) -> bool:
 def stamp_game_types(games: List[Dict], slug: str, today: str) -> int:
     """
     Stamp `season_game_type` (and `season_game_note` when ESPN provides a
-    headline) onto each game dict from the Odds API. Matches by team names +
-    commence-time proximity. Games that can't be matched stay unstamped →
+    headline) onto each game dict, AND correct `commence_time` from ESPN's
+    authoritative tip-off. Matches by team names + commence-time proximity. Games that can't be matched stay unstamped →
     analyzers use the legacy calendar fallback.
 
     `today` is "YYYY-MM-DD". Looks at today and tomorrow's scoreboards
@@ -137,6 +161,7 @@ def stamp_game_types(games: List[Dict], slug: str, today: str) -> int:
     stamped. Never raises.
     """
     stamped = 0
+    corrected: List[tuple] = []
     try:
         if slug not in _ESPN_PATHS or not games:
             return 0
@@ -164,6 +189,23 @@ def stamp_game_types(games: List[Dict], slug: str, today: str) -> int:
                 ev_dt = _parse_iso(ev.get("date", ""))
                 if g_dt and ev_dt and abs((ev_dt - g_dt).total_seconds()) > 6 * 3600:
                     continue
+                # ⚠️ ESPN's `date` is the authoritative TIP-OFF; correct the
+                # game's commence_time from it when they disagree materially.
+                # Kalshi has no start-time field: `occurrence_datetime` is the
+                # expected SETTLEMENT moment, which for an NBA game is ~3h
+                # after tip (LAL@LAC 2026-10-28 read 05:30Z when the game was
+                # at 02:30Z). That matters far beyond the displayed time —
+                # commence_time drives the shadow log's GAME LOCK and the
+                # Kalshi CLV closing sample, so a late timestamp would leave
+                # picks editable deep into a game and sample the "close" after
+                # the market had already resolved. The Odds API carries a real
+                # start time, so this is a no-op on that path.
+                if ev_dt is not None:
+                    drift = abs((ev_dt - g_dt).total_seconds()) if g_dt else None
+                    if drift is None or drift > 600:
+                        game["commence_time"] = ev.get("date", "")
+                        if drift is not None:
+                            corrected.append((game.get("home_team", ""), drift / 3600.0))
                 gtype = _canonical_type(ev)
                 if gtype:
                     game["season_game_type"] = gtype
@@ -176,6 +218,11 @@ def stamp_game_types(games: List[Dict], slug: str, today: str) -> int:
                     stamped += 1
                 break
 
+        if corrected:
+            worst = max(h for _t, h in corrected)
+            logger.info(
+                f"Start times ({slug}): corrected {len(corrected)}/{len(games)} from ESPN "
+                f"(worst drift {worst:.1f}h) — Kalshi reports settlement, not tip-off")
         if stamped:
             types = {g.get("season_game_type") for g in games if g.get("season_game_type")}
             logger.info(f"Game types ({slug}): {stamped}/{len(games)} stamped — {sorted(types)}")
