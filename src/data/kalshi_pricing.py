@@ -201,9 +201,15 @@ def discover(sport: str, game_date: str) -> List[Dict[str, Any]]:
             if d_mid is not None:
                 entry["moneyline"]["draw_prob"] = d_mid
 
-        home_tok = _team_token(home)
+        # ⚠️ Pass the home team's TICKER ABBREVIATION, not its display token.
+        # `_team_token` returns "San Antonio", while spread tickers say "SAS",
+        # so a display token can never match a ticker suffix. `hm` is the home
+        # moneyline market, resolved by the same ticker-order logic above, so
+        # its own suffix IS the home abbreviation — exact, with no second map
+        # to drift out of sync.
+        home_abbr = str(hm.get("ticker") or "").rsplit("-", 1)[-1]
         entry["spread"] = _best_spread(books.get(series.get("Spread") or "", []),
-                                       code, home_tok)
+                                       code, home_abbr)
         entry["total"] = _best_total(books.get(series.get("Total") or "", []), code)
         out.append(entry)
     return out
@@ -215,21 +221,37 @@ def _rungs(markets: List[Dict], code: str) -> List[Tuple[float, Dict]]:
                   key=lambda t: t[0])
 
 
-def _best_spread(markets: List[Dict], code: str, home_token: Optional[str]):
+def _best_spread(markets: List[Dict], code: str, home_abbr: Optional[str]):
     """The listed rung closest to a coin flip — the market's own view of the line.
 
     Kalshi quotes a LADDER, not one line, so there is no single "the spread".
     The rung priced nearest 50% is the one the market treats as the handicap,
     which is the closest analogue to a sportsbook's posted line.
+
+    ⚠️ `home_abbr` MUST be the home team's ticker abbreviation ("UTA"), not its
+    display token ("Utah"). Each rung's ticker names the FAVOURED side
+    (`...-SAS14` = "San Antonio wins by over 13.5"), so the sign of the line
+    depends entirely on whether that side is our home team.
+
+    This was broken on the first Kalshi slate (Oct 28 2026) and it is the
+    costliest kind of bug — silently wrong, not absent. The old orientation
+    test compared a rung's suffix against the first three characters of THAT
+    SAME SUFFIX, so `"SAS14".startswith("SAS")` made `fav_is_home`
+    unconditionally True. Every spread was labelled "home favoured by X",
+    right by luck when the home team was favoured and inverted otherwise. On
+    Oct 28 every one of 8 NBA spread picks came out as a "+X.5" underdog
+    priced near 50c, including "San Antonio +12.5" when SAS were in fact ~13
+    point FAVOURITES — and the same game's moneyline correctly had them at
+    84.5%. Two NHL spreads and one MLB spread were bet real money on inverted
+    lines. ⚠️ A game dict whose moneyline and spread disagree about who is
+    favoured is the signature; assert on it, do not eyeball it.
     """
     best = None
     for pt, m in _rungs(markets, code):
         mid = _mid(m)
         if mid is None:
             continue
-        # The ticker names the favoured side; sign the line from our home team.
-        fav_is_home = bool(home_token and str(m.get("ticker") or "")
-                           .rsplit("-", 1)[-1].startswith(_abbr(home_token, m)))
+        fav_is_home = bool(home_abbr) and _fav_abbr(m) == home_abbr
         hp = mid if fav_is_home else 1 - mid
         if best is None or abs(hp - 0.5) < abs(best["home_prob"] - 0.5):
             best = {"book": "kalshi",
@@ -238,9 +260,11 @@ def _best_spread(markets: List[Dict], code: str, home_token: Optional[str]):
     return best
 
 
-def _abbr(token: str, market: Dict) -> str:
-    """Kalshi's abbreviation for a token, read off this market's own ticker."""
-    return str(market.get("ticker") or "").rsplit("-", 1)[-1][:3]
+def _fav_abbr(market: Dict) -> str:
+    """The team abbreviation a rung's ticker names, e.g. ...-SAS14 -> "SAS"."""
+    suffix = str(market.get("ticker") or "").rsplit("-", 1)[-1]
+    m = re.match(r"^([A-Za-z]+)", suffix)
+    return m.group(1) if m else ""
 
 
 def _best_total(markets: List[Dict], code: str):

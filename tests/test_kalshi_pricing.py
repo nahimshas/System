@@ -464,3 +464,67 @@ class TestDeadOddsApiKeyIsLoud:
         games, src, fell = KP.fetch_games_routed("IPL", M(), "2026-11-07",
                                                  odds_key_available=True)
         assert fell is False
+
+
+class TestSpreadOrientation:
+    """⚠️ REGRESSION — the costliest bug of the Kalshi switch, because it was
+    silently WRONG rather than absent. Each spread rung's ticker names the
+    FAVOURED side (`...-SAS14` = "San Antonio wins by over 13.5"), so the sign
+    of home_spread depends on whether that side is our home team. The original
+    test compared a rung's suffix against the first three characters of THAT
+    SAME SUFFIX, so `"SAS14".startswith("SAS")` was unconditionally True and
+    every spread came out "home favoured by X". On the first Kalshi slate
+    (Oct 28 2026) all 8 NBA spread picks were "+X.5" underdogs priced near 50c
+    — including "San Antonio +12.5" when SAS were ~13 point FAVOURITES, while
+    the SAME game's moneyline correctly had them at 84.5%. Two NHL spreads and
+    one MLB spread were bet with real money on inverted lines."""
+
+    @staticmethod
+    def _mkt(ticker, bid, ask, title):
+        return {"ticker": ticker, "yes_bid_dollars": bid,
+                "yes_ask_dollars": ask, "yes_sub_title": title}
+
+    def test_away_favourite_gives_home_a_positive_line(self):
+        from src.data.kalshi_pricing import _best_spread
+        # SAS (away) favoured; home is UTA. Home must be GETTING points.
+        ms = [self._mkt("KXNBASPREAD-26OCT28SASUTA-SAS13", 0.51, 0.52,
+                        "San Antonio wins by over 12.5 points")]
+        sp = _best_spread(ms, "26OCT28SASUTA", "UTA")
+        assert sp["home_spread"] == 12.5
+        assert sp["home_prob"] == pytest.approx(1 - 0.515, abs=1e-4)
+
+    def test_home_favourite_gives_home_a_negative_line(self):
+        from src.data.kalshi_pricing import _best_spread
+        ms = [self._mkt("KXNBASPREAD-26OCT28SASUTA-UTA13", 0.51, 0.52,
+                        "Utah wins by over 12.5 points")]
+        sp = _best_spread(ms, "26OCT28SASUTA", "UTA")
+        assert sp["home_spread"] == -12.5
+        assert sp["home_prob"] == pytest.approx(0.515, abs=1e-4)
+
+    def test_the_old_always_home_bug_is_gone(self):
+        """The exact shape of the bug: an away-favourite rung must NOT be
+        signed as if the home team were favoured."""
+        from src.data.kalshi_pricing import _best_spread
+        ms = [self._mkt("KXNBASPREAD-26OCT28SASUTA-SAS8", 0.66, 0.67,
+                        "San Antonio wins by over 7.5 points")]
+        sp = _best_spread(ms, "26OCT28SASUTA", "UTA")
+        assert sp["home_spread"] > 0, "away favourite signed as home favourite"
+
+    def test_fav_abbr_reads_the_team_not_the_number(self):
+        from src.data.kalshi_pricing import _fav_abbr
+        assert _fav_abbr({"ticker": "KXNBASPREAD-26OCT28SASUTA-SAS14"}) == "SAS"
+        assert _fav_abbr({"ticker": "KXNHLSPREAD-26OCT28TORSEA-TOR2"}) == "TOR"
+        assert _fav_abbr({"ticker": "no-suffix-123"}) == ""
+
+    def test_moneyline_and_spread_must_agree_on_the_favourite(self):
+        """The signature to assert on, not eyeball: a game dict whose
+        moneyline and spread disagree about who is favoured is broken."""
+        from src.data.kalshi_pricing import _best_spread
+        for abbr, title, home, expect_home_fav in [
+            ("SAS13", "San Antonio wins by over 12.5 points", "UTA", False),
+            ("UTA13", "Utah wins by over 12.5 points", "UTA", True),
+        ]:
+            ms = [self._mkt(f"KXNBASPREAD-26OCT28SASUTA-{abbr}", 0.60, 0.61, title)]
+            sp = _best_spread(ms, "26OCT28SASUTA", home)
+            assert (sp["home_spread"] < 0) is expect_home_fav
+            assert (sp["home_prob"] > 0.5) is expect_home_fav

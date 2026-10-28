@@ -179,6 +179,19 @@ so open and close are finally measured at the same venue.
 - **An empty Kalshi slate is ambiguous**, so `_espn_game_count()` cross-checks before warning. NFL on a
   Tuesday must be silent — ⚠️ an alert that fires every quiet day is one the reader learns to ignore,
   which is exactly how the earlier silent failures survived for days.
+- ⚠️ **SPREAD SIGN: assert that the moneyline and the spread agree on who is favoured.** Each Kalshi
+  spread rung's ticker names the **favoured** side (`...-SAS14` = "San Antonio wins by over 13.5"),
+  so `home_spread`'s sign depends on whether that side is our home team. `_best_spread` must be
+  handed the home team's **ticker abbreviation** ("UTA"), never its display token ("Utah", which is
+  what `_team_token` returns and can never match a ticker). On Oct 28 2026 the orientation test
+  compared a rung's suffix against the first three characters of that same suffix, so it was always
+  True: every spread was signed "home favoured", right by luck when home was the favourite and
+  **inverted whenever the away team was favoured** (9 of 17 games). All 8 NBA spread picks came out
+  as "+X.5" underdogs near 50c — including "San Antonio +12.5" for a 13-point favourite, while the
+  same game's moneyline correctly had them at 84.5%. **Real money was staked on inverted lines.**
+  Fixing it dropped NBA median edge from cap-pinned ~15% to +6.8%, cap firing from 70% to 37%, and
+  NBA raw |model−market| from 17.2pp to 12.1pp — the pre-switch baseline, which also proved Kalshi
+  pricing had NOT inflated edges. Pinned by `TestSpreadOrientation`.
 - **Player props now come from Kalshi** (`src/data/kalshi_props.py`, wired Oct 27 2026).
   ⚠️ **Kalshi's ladder IS the market — do not translate it into a book's Over/Under.** Kalshi lists a
   binary contract per threshold ("Tatum: 25+" = `P(pts >= 25)`), so there is no single "the line" to
