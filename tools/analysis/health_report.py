@@ -278,6 +278,34 @@ MARKET_CLV_COVERAGE_MIN = 50.0
 MARKET_CLV_MIN_N = 5            # below this, coverage % is noise — stay quiet
 
 
+def check_outcome_governor():
+    """The second budget-gating arm: did we beat the prices we paid?
+
+    Reported separately from the CLV gates because the two disagree, and the
+    disagreement is the useful part — NFL carries positive CLV while losing
+    7.3pp on outcomes, which is why this arm exists at all.
+    """
+    out = {"name": "outcome_governor", "gates": [], "exemptions": [],
+           "would_gate": [], "ok": True}
+    try:
+        d = _load("state/outcome_state.json")
+        for m in d.get("markets", []):
+            label = f"{m['sport']} {m['market_type']}"
+            if m.get("gated"):
+                out["gates"].append(
+                    f"{label} ({m['deficit_pp']:+.1f}pp vs market, z={m['z']}, n={m['n']})")
+            elif m.get("gated_on_own_record") and m.get("exempt_until"):
+                out["would_gate"].append(
+                    f"{label} ({m['deficit_pp']:+.1f}pp, z={m['z']}, n={m['n']}) "
+                    f"— EXEMPT until {m['exempt_until']}")
+        out["exemptions"] = [f"{e['sport']} {e['market']} until {e['until']}"
+                             for e in d.get("exemptions", [])]
+    except Exception as e:
+        out["ok"] = False
+        out["error"] = str(e)
+    return out
+
+
 def check_model_sanity():
     """Does the model's output look like a model, or like a broken input?
 
@@ -403,6 +431,10 @@ def compute_alerts(report):
                 f"({m['covered']}/{m['n']}, 14d) — this market is dark while the "
                 f"aggregate looks fine; usually a resolver miss or a line we "
                 f"quote that Kalshi does not list")
+    for w in (report.get("outcome_governor") or {}).get("would_gate") or []:
+        alerts.append(
+            f"outcome governor held off by an exemption: {w} — this is a market "
+            f"the system would stop betting if the exemption were dropped")
     # Model-output sanity. The only alert here that reads what the model SAID
     # rather than whether the pipes are open. High severity only: the medium
     # signals are drift warnings worth reading, not worth waking someone for.
@@ -662,6 +694,7 @@ def main():
         "kalshi_maps": check_kalshi_maps(),
         "quarantine": check_quarantine(),
         "model_sanity": check_model_sanity(),
+        "outcome_governor": check_outcome_governor(),
         "governors": check_governors(),
         "checkpoints": evaluate_checkpoints(),
     }
@@ -719,6 +752,12 @@ def main():
     print(f"[{'OK' if _km.get('ok') else '!!'}] Kalshi team maps: "
           f"{len(_km.get('sports') or {})} sports checked"
           + (f" — STALE: {_stale}" if _stale else " — all in step"))
+    _og = report.get("outcome_governor") or {}
+    print(f"[--] Outcome gates: {_og.get('gates') or 'none'}")
+    for _w in _og.get("would_gate") or []:
+        # An exemption that is not printed is worse than no governor: the panel
+        # would claim protection the system is not providing.
+        print(f"[!!]   WOULD GATE: {_w}")
     _ms = report.get("model_sanity") or {}
     _msf = _ms.get("findings") or []
     print(f"[{'OK' if not any(f['severity'] == 'high' for f in _msf) else '!!'}] "

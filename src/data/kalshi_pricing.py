@@ -162,8 +162,9 @@ def _price_entry(sport: str, code: str, home: str, away: str,
     # its own suffix IS the home abbreviation — exact, with no second map
     # to drift out of sync.
     home_abbr = str(hm.get("ticker") or "").rsplit("-", 1)[-1]
-    entry["spread"] = _best_spread(books.get(series.get("Spread") or "", []),
-                                   code, home_abbr)
+    entry["spread"] = _best_spread(
+        books.get(series.get("Spread") or "", []), code, home_abbr,
+        ml_home_prob=(entry["moneyline"] or {}).get("home_prob"))
     entry["total"] = _best_total(books.get(series.get("Total") or "", []), code)
     return entry
 
@@ -337,7 +338,14 @@ def _rungs(markets: List[Dict], code: str) -> List[Tuple[float, Dict]]:
                   key=lambda t: t[0])
 
 
-def _best_spread(markets: List[Dict], code: str, home_abbr: Optional[str]):
+# How far from a coin flip the chosen rung may sit before we say so. A ladder
+# that brackets the handicap always has a rung near 50%; one that does not is
+# quoting a handicap we cannot see, so the "line" we derive is a guess.
+_SPREAD_RUNG_WARN_DISTANCE = 0.25
+
+
+def _best_spread(markets: List[Dict], code: str, home_abbr: Optional[str],
+                 ml_home_prob: Optional[float] = None):
     """The listed rung closest to a coin flip — the market's own view of the line.
 
     Kalshi quotes a LADDER, not one line, so there is no single "the spread".
@@ -373,6 +381,42 @@ def _best_spread(markets: List[Dict], code: str, home_abbr: Optional[str]):
             best = {"book": "kalshi",
                     "home_spread": (-pt if fav_is_home else pt),
                     "home_prob": round(hp, 4), "away_prob": round(1 - hp, 4)}
+    if best is None:
+        return None
+
+    # ⚠️ RUNTIME GUARD, not just a test: the moneyline and the spread must
+    # agree on who is favoured. The Oct 28 2026 sign inversion was caught by a
+    # test only AFTER real money went on inverted lines, and the invariant was
+    # written down as a rule for humans to remember. It belongs in the code.
+    #
+    # This fires for a second, different reason too, which is how it was found:
+    # Kalshi's CFB ladders are thin and sometimes list rungs in ONE direction
+    # only. On 2026-10-31 Ohio State @ USC had just three rungs — "USC wins by
+    # over 5.5/6.5/7.5" — while the moneyline had USC at 30.5%, a clear
+    # underdog. With nothing else listed, "nearest to 50%" picked the 5.5 rung
+    # at 19% and produced "USC -5.5": a coherent quote, and a nonsense line to
+    # put on a card. We do not know this game's handicap, so we say nothing
+    # about it rather than inventing one. 1 of 11 CFB spreads dropped; none of
+    # the 37 NBA/NHL/NFL/CFB spreads that were right are affected.
+    if ml_home_prob is not None:
+        ml_home_fav = ml_home_prob > 0.5
+        sp_home_fav = best["home_spread"] < 0
+        if ml_home_fav != sp_home_fav:
+            logger.warning(
+                f"SPREAD DROPPED {code}: moneyline says home_prob="
+                f"{ml_home_prob:.3f} but the spread ladder implies "
+                f"home {best['home_spread']:+.1f} — the two disagree on who is "
+                f"favoured, so the ladder does not bracket this handicap")
+            return None
+
+    if abs(best["home_prob"] - 0.5) > _SPREAD_RUNG_WARN_DISTANCE:
+        # Favourite agrees, but no rung sits near a coin flip — the handicap we
+        # report is the end of a ladder rather than its middle. Kept (the sign
+        # is right) and surfaced, because a systematically off handicap shows up
+        # as one-sided spread picks, which model_sanity watches for.
+        logger.warning(
+            f"SPREAD LADDER THIN {code}: nearest rung to 50% is "
+            f"{best['home_prob']:.3f} at home {best['home_spread']:+.1f}")
     return best
 
 

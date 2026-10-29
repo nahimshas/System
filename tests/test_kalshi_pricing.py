@@ -656,3 +656,54 @@ class TestCFBLiveDiscovery:
             if not ml or not sp:
                 continue
             assert (ml["home_prob"] > ml["away_prob"]) == (sp["home_spread"] < 0), g
+
+
+class TestSpreadOrientationIsEnforcedAtRuntime:
+    """The ML/spread agreement rule must be CODE, not only a test.
+
+    Oct 28 2026 the invariant was written down for humans and a test caught the
+    inversion only after real money went on inverted lines. Oct 31 it fired
+    again for a different reason: Kalshi's thin CFB ladders sometimes list rungs
+    in one direction only, so "nearest to 50%" invented a handicap that
+    contradicted the moneyline (Ohio State @ USC: the ladder implied USC -5.5
+    while the moneyline had USC at 30.5%).
+    """
+
+    @staticmethod
+    def _rung(code, abbr, pts, bid, ask):
+        return {"ticker": f"KXNCAAFSPREAD-{code}-{abbr}{pts}",
+                "event_ticker": f"KXNCAAFSPREAD-{code}",
+                "yes_sub_title": f"{abbr} wins by over {pts - 0.5} points",
+                "yes_bid_dollars": bid, "yes_ask_dollars": ask}
+
+    def test_a_ladder_that_contradicts_the_moneyline_is_dropped(self):
+        from src.data.kalshi_pricing import _best_spread
+        code = "26OCT31OSUUSC"
+        rungs = [self._rung(code, "USC", p, 0.18, 0.20) for p in (6, 7, 8)]
+        # Home (USC) is a 30.5% underdog on the moneyline.
+        assert _best_spread(rungs, code, "USC", ml_home_prob=0.305) is None
+
+    def test_an_agreeing_ladder_survives(self):
+        from src.data.kalshi_pricing import _best_spread
+        code = "26OCT31OSUUSC"
+        rungs = [self._rung(code, "USC", p, 0.48, 0.52) for p in (3, 6, 9)]
+        sp = _best_spread(rungs, code, "USC", ml_home_prob=0.62)
+        assert sp is not None
+        assert sp["home_spread"] < 0          # home favoured, as the ML says
+
+    def test_away_favourite_is_signed_positive_and_kept(self):
+        # The Oct 28 inversion case: the away team is favoured.
+        from src.data.kalshi_pricing import _best_spread
+        code = "26OCT28LALLAC"
+        rungs = [self._rung(code, "LAL", p, 0.48, 0.52) for p in (3, 5)]
+        sp = _best_spread(rungs, code, "LAC", ml_home_prob=0.38)
+        assert sp is not None
+        assert sp["home_spread"] > 0
+
+    def test_without_a_moneyline_the_guard_does_not_fire(self):
+        # Nothing to disagree with, so the spread is unchanged rather than
+        # silently discarded.
+        from src.data.kalshi_pricing import _best_spread
+        code = "26OCT31OSUUSC"
+        rungs = [self._rung(code, "USC", p, 0.18, 0.20) for p in (6, 7, 8)]
+        assert _best_spread(rungs, code, "USC", ml_home_prob=None) is not None

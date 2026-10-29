@@ -135,6 +135,33 @@ def _clv_gate_safe(rec) -> bool:
         return True
 
 
+def _outcome_gate_safe(rec) -> bool:
+    """
+    Outcome governor gate with a safe fail-open default.
+
+    The SECOND arm beside the CLV gate, and the two are combined with AND —
+    either may block a pick, neither can un-block what the other stopped.
+    That asymmetry is the point: CLV said NFL was fine (+0.14pp, the only
+    positive budget sport) while NFL picks won 43.4% against a market implying
+    50.7%. A single-signal governor is only as good as its blind spot.
+
+    Phase 0 (fewer than 200 graded picks for the sport) gates nothing, so
+    behaviour is unchanged until a market has earned a verdict. Any failure
+    returns True.
+    """
+    try:
+        from src.state.outcome_governor import outcome_gate
+        allowed, reason = outcome_gate(rec)
+        if not allowed:
+            logger.info(
+                f"Budget gate: {getattr(rec, 'sport', '?')} {getattr(rec, 'pick', '?')} "
+                f"excluded — {reason}"
+            )
+        return allowed
+    except Exception:
+        return True
+
+
 def _pwa_display_eligible(rec) -> bool:
     """
     DISPLAY/BUDGET gate for the PWA + today's card. Returns False to HIDE a pick
@@ -729,7 +756,8 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                     r for r in qualifying
                     if (r.bet_type not in BUDGET_EXCLUDED_MARKETS)
                     and _effective_edge_safe(r) >= BUDGET_MIN_EDGE
-                    and _clv_gate_safe(r) and getattr(r.sizing, "num_contracts", 0) > 0
+                    and _clv_gate_safe(r) and _outcome_gate_safe(r)
+                    and getattr(r.sizing, "num_contracts", 0) > 0
                     and _pwa_display_eligible(r)
                 )
         else:
@@ -1063,6 +1091,15 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         _persist_clv()
     except Exception as _clv_err:
         logger.error(f"CLV state persist failed (non-fatal): {_clv_err}")
+
+    # Outcome governor snapshot (state/outcome_state.json) — the second gating
+    # arm. Persisted every run so a gate, and any active exemption, is visible
+    # in the panels rather than only in the run log.
+    try:
+        from src.state.outcome_governor import persist_state as _persist_outcome
+        _persist_outcome()
+    except Exception as _og_err:
+        logger.error(f"Outcome state persist failed (non-fatal): {_og_err}")
 
     # ------------------------------------------------------------------ #
     #  IPL rolling pending management

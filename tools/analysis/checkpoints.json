@@ -467,6 +467,24 @@
       "on_fail": "If it mostly cries wolf, RAISE the floors or drop the weakest signal — do not leave a noisy alert in place. An alert that fires on healthy markets is worse than no alert, because the reader learns to skip it, and that is precisely how the MLS bug survived five months.",
       "measurement": "Count high-severity findings in the weekly reports over the window; for each, whether it led to a real fix, a quarantine, or nothing.",
       "status": "open"
+    },
+    {
+      "id": "outcome_governor",
+      "title": "Outcome governor: second gating arm — does it gate the right things?",
+      "created": "2026-10-29",
+      "evaluate_after": "2027-02-01",
+      "data_window_start": "2026-10-29",
+      "type": "note",
+      "rules": {
+        "min_n": 200,
+        "z_gate": -2.0,
+        "min_deficit_pp": -2.0
+      },
+      "rationale": "src/state/outcome_governor.py — gates budget routing on OUTCOMES, beside the CLV governor, combined with AND so either arm can block and neither can un-block the other. ⚠️ WHY: every automatic gate read CLV, and CLV missed the worst sport we price. NFL carries POSITIVE CLV (+0.14pp on budget picks, the only positive budget sport) while its picks won 43.4% against a market implying 50.7% — a 7.3pp deficit over 242 settled picks. A single-signal governor is only as good as its blind spot, and this was the second time our fastest signal failed to separate winners from losers (the first being MLB's inverted HIGH-confidence label). METRIC: actual win rate minus the mean market-implied probability of the same picks. Not raw win rate — 45% is excellent on 35c underdogs and terrible on 60c favourites, so only the difference is comparable across markets. THRESHOLDS ARE DERIVED, not tuned: se = sqrt(0.25/n), z = deficit/se, and a market gates only when z <= -2.0 AND deficit <= -2.0pp. Both conditions are load-bearing — z alone would gate a -0.3pp deficit at n=50,000 (real but meaningless), magnitude alone would gate one bad week. The -2.0pp floor also absorbs the residual overround that survives de-vigging, which biases every deficit slightly negative; a floor at zero would eventually gate everything. SPORT-LEVEL AND MARKET-LEVEL both computed, because outcomes are noisy: NFL's three markets hold 91/85/66 settled picks, all far below MIN_N, while the sport holds 242 and is clearly negative. Per-market gating alone would have missed NFL entirely. NFL's markets are -4.4/-6.0/-12.9pp, so the sport-level call is not hiding one bad market behind two good ones. MEASURED ON SHIPPING: 1 real gate (NFL, z=-2.27 — EXEMPT, see below), 1 redundant gate (MLB F5 Total, -5.3pp z=-2.01, already in BUDGET_EXCLUDED_MARKETS so it carries no money and this merely confirms the F5 probation independently), and ZERO false gates across 9 sports. NHL does NOT gate on full history (-1.7pp, z=-0.73, n=483) — the -3.5pp figure measured earlier was a since-Sep window effect, which is a useful reminder to quote the window with the number. ⚠️ THE NFL EXEMPTION is the user's explicit decision of Oct 29, taken with the -7.3pp figure in front of them, and it EXPIRES 2026-12-07 with nfl_budget_probation. Without it NFL gates today. The weekly health report raises an alert for any gate held off by an exemption — an invisible exemption would be worse than no governor, because the panel would claim protection that is not being provided. Do not extend it without a new decision from the user.",
+      "on_pass": "If the gates it fired were markets we would also have stopped by hand, and nothing healthy was gated, keep it and consider lowering MIN_N as samples grow.",
+      "on_fail": "If it gated a market that then recovered strongly, RAISE MIN_N or Z_GATE rather than adding exceptions. Gated markets keep producing in display and keep being measured, so recovery is automatic and a wrong gate is recoverable — but a governor nobody trusts gets exemptions bolted on until it does nothing, which is the failure mode to avoid.",
+      "measurement": "state/outcome_state.json per run, plus the outcome-gate lines in the daily log.",
+      "status": "open"
     }
   ]
 }
