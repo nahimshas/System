@@ -117,7 +117,7 @@ Every sport has a **module** (`src/sports/{sport}.py`) that implements `fetch_ga
 | `tools/analysis/market_test.py` | **The decisive test: do our features beat the market?** Time-split logistic regression (market-price-only vs market+features), pure numpy. Aug 2026: MLB features WORSEN out-of-sample log-loss in all 3 markets = no incremental signal. Run this on ANY new market before betting it. |
 | `tools/analysis/pattern_search.py` | Brute-force profitable-pattern hunt (ROI first, CLV ignored), with discovery/validation time split + multiple-comparisons discipline. Aug 2026: 28 segments, zero survivors. |
 | `tools/analysis/health_report.py` | Read-only health checks + automatic checkpoint evaluation + deterministic alerts (drawdown, log liveness, bankroll drift). Run any time: `python3 -m tools.analysis.health_report` |
-| `tools/analysis/checkpoints.json` | **Pre-registered model-change evaluations** with explicit pass/fail rules + dates. ⚠️ RULE: every model change ships with a checkpoint entry here; resolved ones get `status`+`resolution`, never deleted. |
+| `tools/analysis/checkpoints.json` | **Pre-registered model-change evaluations** with explicit pass/fail rules + dates. ⚠️ RULE: every model change ships with a checkpoint entry here; resolved ones get `status`+`resolution`, never deleted. A `note` checkpoint is also the project's **durable reminder** mechanism — the weekly health report raises ACTION_NEEDED once its `evaluate_after` arrives. |
 | `src/report/debrief_builder.py` | Deterministic nightly debrief page (docs/debrief_latest.html + debrief_history.json) built from the results snapshot inside `results_snapshot.yml` — verdict templates, canonical-signal regex map, ESPN-headline narratives, no-downgrade guard. The Claude routines are PAUSED (lost write access Jul 2026); workflows are the entire automation surface. |
 | `docs/health_routine_prompt.md` | Canonical prompt for the (PAUSED) weekly Claude routine — publishing now lives in `.github/workflows/health_report.yml` (Sundays 8am PT + external cron) |
 | `docs/DEVELOPMENT_PLAN.md` | Feature roadmap + model change log |
@@ -168,7 +168,17 @@ so open and close are finally measured at the same venue.
 |---|---|---|
 | MLB, NBA, NFL, NHL, WNBA, MLS, Liga MX | **Kalshi** | verified static team map → discovery works |
 | CFB | **Kalshi**, ESPN-anchored | no static map and no usable Kalshi date — see below |
-| IPL, WC | Odds API (**free tier**) | IPL has no Kalshi markets at all; WC's series ticker was never verified live |
+| IPL, WC | Odds API (**free tier**) | no per-match Kalshi book — see below. WC's series ticker was never verified live, and the next World Cup is 2030 |
+
+⚠️ **KALSHI DOES CARRY IPL — but only the TOURNAMENT WINNER** (verified live Oct 29
+2026). Event `KXIPL-27`, ten markets `KXIPL-27-<TEAM>` titled "Will <team> win the
+IPL?", closing 2027-06-20, quoted two-sided. That is **not** the per-match moneyline
+our model prices, and `KXIPLGAME` / `KXIPLMATCH` / `KXCRICKET` all return nothing
+while the season is months away. Do not repeat the flat claim that "Kalshi has no
+IPL markets" — it is false, and the distinction that matters is per-match vs
+outright. Whether a per-match book appears at season start can only be answered on
+live data. Checkpoint `ipl_on_kalshi`, dated 2027-03-05 (BCCI has signalled a
+Mar 10 – May 15 2027 season; no official schedule yet).
 
 ⚠️ **THE ODDS API KEY IS DEAD (401 since Oct 29 2026).** Cancelling the paid plan
 deactivated the key rather than downgrading it, so the "free tier" row above is

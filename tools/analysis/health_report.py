@@ -426,7 +426,14 @@ def evaluate_checkpoints(today=None):
                     else:
                         res["verdict"] = "borderline — keep watching (wr between demote and keep thresholds)"
             else:   # note
-                res["verdict"] = "manual note — see rationale"
+                # ⚠️ "DUE" is load-bearing: `_status()` raises ACTION_NEEDED on
+                # it. A manual note used to read "manual note — see rationale",
+                # which matched neither PASS nor FAIL, so a note that came due
+                # was listed in the report and never changed the weekly status.
+                # Six were overdue — one since Sep 1 2026 — while every weekly
+                # report said ALL_NORMAL. A checkpoint nobody is told about is
+                # not a checkpoint.
+                res["verdict"] = (f"DUE — manual review (due {cp['evaluate_after']})")
                 res["rationale"] = cp.get("rationale", "")
         except Exception as e:
             res["verdict"] = f"error: {e}"
@@ -446,7 +453,7 @@ def classify(report):
         return "ACTION_NEEDED"
     for c in report["checkpoints"]:
         v = c.get("verdict", "")
-        if v.startswith("PASS") or v.startswith("FAIL"):
+        if v.startswith("PASS") or v.startswith("FAIL") or v.startswith("DUE"):
             return "ACTION_NEEDED"
     return "ALL_NORMAL"
 

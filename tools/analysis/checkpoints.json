@@ -363,6 +363,19 @@
         "fail": "coverage below 90% on two consecutive Saturdays, OR any moneyline/spread orientation disagreement, OR raw gap median above 10pp (the inflation signature)"
       },
       "rationale": "Kalshi's CFB tickers carry a PLACEHOLDER date — KXNCAAFGAME-26OCT30ARIZTTU is Arizona at Texas Tech, which ESPN kicks off 2026-10-31T16:00Z, and occurrence_datetime (03:00Z) is not the kickoff either. Filtering that book by Kalshi's own date drops the entire Saturday slate (36 games read as Friday's) and keeps the wrong ones, so the ticker ORDER cannot be trusted to encode home/away either. The slate is therefore anchored on ESPN — which knows the date, the kickoff, the homeAway flags and the neutral-site flag — and Kalshi supplies only prices, joined by team. Two join keys are needed and neither suffices alone: structural NAME matching resolved 43/47 games on 2026-10-31 and ticker ABBREVIATION resolved a different 40/47 (ESPN says NCSU where Kalshi says NCST; ESPN says 'App State' where Kalshi says 'Appalachian St.'). Together: 52/52 across three measured slates. Measured first run: 47/47 games, 47 moneylines, 12 spreads and 15 totals surviving the 10c liquidity filter (CFB spread/total books have median open interest of ZERO, as cfb.py has documented since Aug), median edge +4.5%, raw |model-market| median 4.6pp, zero moneyline/spread orientation disagreements. ALSO A MODEL INPUT CHANGE: neutral_site was never set on the Odds API path, so every CFB game was silently modelled with a 2.6-point home advantage; ESPN supplies it and 2 of 47 games on the measured slate are genuinely neutral (Notre Dame-Navy, Florida-Georgia). CFB remains watchlist-only — no money is routed either way."
+    },
+    {
+      "id": "ipl_on_kalshi",
+      "status": "open",
+      "title": "Check whether Kalshi lists PER-MATCH IPL markets once the 2027 season starts",
+      "created": "2026-10-29",
+      "evaluate_after": "2027-03-05",
+      "type": "note",
+      "rules": {
+        "pass": "a per-match IPL series exists on Kalshi with two-sided quotes → add IPL to KALSHI_PRICEABLE and SPORT_SERIES, and the Odds API can go entirely",
+        "fail": "only the tournament-winner book exists → IPL still needs the Odds API, which means a free-tier key must be in the ODDS_API_KEY secret before the season"
+      },
+      "rationale": "Verified Oct 29 2026: Kalshi DOES carry IPL, but what is listed is the SEASON OUTRIGHT — event KXIPL-27, ten markets KXIPL-27-<TEAM> titled 'Will <team> win the IPL?', closing 2027-06-20, quoted two-sided (RCB 25/27c, MI 7/8c). That is a tournament-winner book, NOT the per-match moneyline our model prices, and no per-match series exists while the season is months away (KXIPLGAME / KXIPLMATCH / KXCRICKET all return nothing). Whether a per-match book appears at season start is the open question, and it can only be answered on live data once matches are listed. IPL 2027 has no official schedule yet: BCCI has signalled Mar 10 – May 15 2027 (moved earlier for heat), while a Nov 2024 tentative calendar said Mar 14 – May 30. This checkpoint is dated a few days before the earliest plausible start. ⚠️ If the answer is 'no per-match book', a free-tier ODDS_API_KEY must be in place BEFORE the season — the current key is dead (401 since the paid plan was cancelled)."
     }
   ]
 }
