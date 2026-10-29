@@ -384,7 +384,10 @@ def get_team_batting_leaders(team_id: int, top_n: int = 3, min_pa: int = 15) -> 
         "gameType": "R",
         "season":   date.today().year,
         "teamId":   team_id,
-        "limit":    50,
+        "limit":    200,
+        # See the note in get_batter_props_stats: the API default is QUALIFIED,
+        # which hides ~84% of a team's batters.
+        "playerPool": "ALL",
     })
     if not data:
         return []
@@ -424,9 +427,21 @@ def get_batter_props_stats(team_id: int, player_names: List[str], min_pa: int = 
     """
     if not team_id or not player_names:
         return {}
+    # ⚠️ playerPool=ALL is REQUIRED, and its absence is why MLB props produced
+    # ZERO picks rather than bad ones. The StatsAPI default is QUALIFIED —
+    # batting-title eligibility, ~3.1 PA per team game — so this returned a
+    # median of 5 batters per team instead of 27 (measured across all 30 teams
+    # on 2026-10-29: 130 of 830, i.e. 16%). Kalshi lists props for ~2 dozen
+    # batters a game, almost none of whom were in those 5, so every lookup came
+    # back empty and the failure looked like "the endpoint is empty in the
+    # postseason". It was not seasonal: this would have failed identically in
+    # June. get_bullpen_stats has carried this exact flag, and a comment saying
+    # it is required, since it was written — the lesson was learned for pitching
+    # and never applied to the three hitting calls.
     data = _get("/stats", {
         "stats": "season", "group": "hitting", "gameType": "R",
-        "season": date.today().year, "teamId": team_id, "limit": 50,
+        "season": date.today().year, "teamId": team_id, "limit": 200,
+        "playerPool": "ALL",
     })
     if not data:
         return {}
@@ -503,9 +518,19 @@ def get_injury_value_mults(team_id: int, player_names: List[str]) -> Dict[str, f
     """
     if not team_id or not player_names:
         return {}
+    # ⚠️ playerPool=ALL is REQUIRED here for a reason worse than elsewhere, and
+    # this one touches real-money full-game picks, not just props. The API
+    # default is QUALIFIED, which needs ~3.1 PA per team game — so the filter
+    # selects precisely for players who have NOT missed time, while this
+    # function exists to value players who are on the injury list. It could
+    # only ever resolve the handful of healthy everyday regulars, and every
+    # other injured hitter fell through to the caller's 1.0 default, i.e. the
+    # position-only behaviour this function was written to replace. The feature
+    # has been close to inert since it shipped.
     data = _get("/stats", {
         "stats": "season", "group": "hitting", "gameType": "R",
-        "season": date.today().year, "teamId": team_id, "limit": 50,
+        "season": date.today().year, "teamId": team_id, "limit": 200,
+        "playerPool": "ALL",
     })
     if not data:
         return {}
