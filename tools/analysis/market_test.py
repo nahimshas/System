@@ -33,14 +33,47 @@ import numpy as np
 
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-# Features to test, per market. Only inputs the model actually uses.
-_FEATURES = [
+# MLB's feature list is PINNED, not derived. The Aug 4 2026 finding that MLB
+# features worsen out-of-sample log-loss rests on exactly these columns, so
+# deriving them would silently change what that conclusion refers to.
+_MLB_FEATURES = [
     "run_diff", "run_diff_capped", "park_factor", "home_ops", "away_ops",
     "home_inj", "away_inj", "home_bp_era", "away_bp_era",
     "home_sp_score", "away_sp_score", "home_sp_ip", "away_sp_ip",
     "home_trap_sev", "away_trap_sev", "home_bullpen_score", "away_bullpen_score",
     "expected_home_runs", "expected_away_runs",
 ]
+
+# Columns that are bookkeeping rather than model signal.
+_NOT_FEATURES = {"stats_available"}
+
+
+def _features_for(sport: str, rows) -> list:
+    """The feature columns to test for this sport.
+
+    ⚠️ This used to be one hardcoded MLB list for every sport, while the CLI
+    happily accepted --sport NFL. Of NFL's 11 numeric features it would have
+    tested TWO (home_inj, away_inj), ignoring home_strength, away_strength,
+    effective_margin, win_prob_adj and the warm-start weights — the entire
+    model. The test would then have reported "features add no signal", which is
+    true of a feature set that is almost empty and says nothing about NFL. The
+    Dec 7 nfl_budget_probation evaluation would have read that as an answer.
+
+    Derived from the rows themselves for every sport but MLB, so a feature added
+    under the decision-log maintenance rule is picked up here without a second
+    edit — the same reason the sport path maps are derived.
+    """
+    if sport.upper() == "MLB":
+        return list(_MLB_FEATURES)
+    keys = set()
+    for r in rows:
+        for k, v in (r.get("features") or {}).items():
+            if isinstance(v, bool) or not isinstance(v, (int, float)):
+                continue
+            if k in _NOT_FEATURES:
+                continue
+            keys.add(k)
+    return sorted(keys)
 
 
 def _load(sport: str, market: str):
@@ -126,7 +159,12 @@ def run(sport="MLB", market="Moneyline", train_frac=0.7, l2=1.0):
     if len(rows) < 120:
         print(f"{sport} {market}: only {len(rows)} usable rows — skipping")
         return
-    X, y, mp, dates = _matrix(rows, _FEATURES)
+    feats = _features_for(sport, rows)
+    if not feats:
+        print(f"{sport} {market}: no numeric features logged — nothing to test")
+        return
+    print(f"{sport} {market}: testing {len(feats)} features — {', '.join(feats)}")
+    X, y, mp, dates = _matrix(rows, feats)
     n = len(y)
     cut = int(n * train_frac)
     split_date = dates[cut]
@@ -164,7 +202,7 @@ def run(sport="MLB", market="Moneyline", train_frac=0.7, l2=1.0):
     print(f"  → improvement from features: {delta:+.4f}   {verdict}")
 
     # which features carry weight (standardized coefficients)
-    coefs = sorted(zip(_FEATURES, w_f[2:]), key=lambda kv: -abs(kv[1]))[:8]
+    coefs = sorted(zip(feats, w_f[2:]), key=lambda kv: -abs(kv[1]))[:8]
     print("  top standardized coefficients:")
     for k, c in coefs:
         print(f"     {k:22} {c:+.3f}")

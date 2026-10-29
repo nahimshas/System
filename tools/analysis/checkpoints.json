@@ -401,7 +401,8 @@
       "on_fail": "If NFL is still worse than -2.0pp vs market with every team past the ramp, the problem is the model and not the cold start. Put NFL on watchlist-only and run market_test.py on NFL features before it is ever restored. Do not add constants.",
       "measurement": "Actual win rate minus mean market_prob_at_first_pick over NFL shadow-log rows, pool and displayed_in_top separately, alongside the same figure for MLB/NBA/NHL as the control.",
       "status": "open",
-      "interim_decision": "Oct 29 2026 — USER DECIDED: leave NFL on budget as is, unchanged, until this checkpoint evaluates. Presented with three options (leave / watchlist-only / reduced stake) alongside the -7.3pp finding and the Sep→Oct improvement, and chose to take the December read. ⚠️ This is a DELIBERATE decision, not an unreviewed default: NFL continuing to stake through Nov is the agreed plan, so do not re-raise it as an alarm before 2026-12-07 and do not quietly flip enters_budget. If NFL deteriorates sharply before then — materially worse than the -7.3pp already measured, on fresh picks rather than the same ones re-counted — that is new information and worth surfacing early; the ordinary variance of a 1-in-4 win-rate swing is not."
+      "interim_decision": "Oct 29 2026 — USER DECIDED: leave NFL on budget as is, unchanged, until this checkpoint evaluates. Presented with three options (leave / watchlist-only / reduced stake) alongside the -7.3pp finding and the Sep→Oct improvement, and chose to take the December read. ⚠️ This is a DELIBERATE decision, not an unreviewed default: NFL continuing to stake through Nov is the agreed plan, so do not re-raise it as an alarm before 2026-12-07 and do not quietly flip enters_budget. If NFL deteriorates sharply before then — materially worse than the -7.3pp already measured, on fresh picks rather than the same ones re-counted — that is new information and worth surfacing early; the ordinary variance of a 1-in-4 win-rate swing is not.",
+      "unblocked": "Oct 29 2026 — the data this checkpoint depends on was NOT being collected. NFL decision-log candidates had never been graded (596 rows, 0 settled, while every other sport ran 87-100%) because settle_decision_from_scores hand-listed MAIN = {\"NBA\", \"MLB\"}. Derived from the ESPN path maps and backfilled: 562 rows graded, NFL now at 94.3%. ⚠️ market_test.py would ALSO have answered wrongly: its feature list was a hardcoded MLB one while the CLI accepted --sport NFL, so of NFL's 11 numeric features it tested TWO (home_inj, away_inj) and ignored home_strength, away_strength, effective_margin, win_prob_adj and both warm_start_weight columns — the entire model. It would have printed \"features make it worse\" about a feature set that was essentially empty, and this checkpoint would have read that as the answer. Fixed: features are derived per sport, MLB's list stays pinned so the Aug 4 conclusion still refers to the same columns. NFL still has only ~95 usable rows per market against market_test's 120 minimum, so the test cannot run yet — roughly 2-3 more NFL weeks. It will clear by the Dec 7 date."
     },
     {
       "id": "mls_relearn_after_quarantine",
@@ -432,6 +433,22 @@
       "on_pass": "Before the 2027 season opens: either implement prior-season fallback with sample size taken from CURRENT-season games played, or decide explicitly that early-season MLB props and injury multipliers stay dark and record that choice here.",
       "on_fail": "If this is reached and nothing was decided, the default is the safe one — stay dark. Do NOT ship a bare prior-season fallback to make the panels look populated.",
       "measurement": "Call get_batter_props_stats and get_injury_value_mults for any team in January 2027 and confirm whether they return rows.",
+      "status": "open"
+    },
+    {
+      "id": "nhl_market_test",
+      "title": "NHL features make out-of-sample log-loss WORSE in all three markets",
+      "created": "2026-10-29",
+      "evaluate_after": "2026-12-20",
+      "data_window_start": "2026-10-01",
+      "type": "note",
+      "rules": {
+        "min_rows_per_market": 400
+      },
+      "rationale": "First real read on NHL, possible only because market_test's feature selection was fixed today (it had been testing MLB columns against NHL rows). Result, on the time split: features make out-of-sample log-loss WORSE in all three markets — Moneyline -0.0479 (n=189, test 57), Spread -0.0082 (n=188, test 57), Total -0.0149 (n=183, test 55). Train log-loss improves while test log-loss degrades in every case, which is the overfitting signature. ⚠️ THIS MATTERS BECAUSE NHL IS WHERE THE MONEY IS: 92 of 131 October money-card singles. It is the largest single block on the card, and it is also -3.5pp against market-implied on outcomes over 432 picks (vs MLB +0.6pp, NBA +1.2pp). Three independent markets pointing the same way, matching the MLB full-game result exactly in shape. ⚠️ DO NOT TREAT THIS AS SETTLED YET. Test sets of 55-57 rows are small and log-loss gaps of 0.008-0.015 at that n are inside noise; only the Moneyline figure (-0.0479) is large. The NHL season is young, so the sample roughly triples by late December. That is the honest reason to wait rather than act. If it holds at n>=400 per market, NHL joins MLB full-game as a closed question and the live options are subtractive, exactly as for NFL — do NOT respond by hunting NHL constants.",
+      "on_pass": "If features stop making log-loss worse at >= 400 rows per market, the early read was small-sample noise and NHL keeps its budget slot.",
+      "on_fail": "If features still worsen out-of-sample log-loss at >= 400 rows per market AND NHL is still negative vs market on outcomes, treat NHL full-game as closed: watchlist-only, or BUDGET_EXCLUDED_MARKETS for the worst market. It is the user's money, so present it as a choice.",
+      "measurement": "python3 -m tools.analysis.market_test --sport NHL --market {Moneyline,Spread,Total}, plus actual-minus-market-implied win rate over NHL shadow rows.",
       "status": "open"
     }
   ]

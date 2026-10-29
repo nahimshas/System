@@ -383,7 +383,19 @@ def merge_picks(
 
     # Sports that are watchlist-only and must never appear in the budget pool or parlays.
     # Picks saved from a buggy run where these entered the budget pool are silently dropped here.
-    _WATCHLIST_SPORTS = {"NHL", "IPL", "WNBA", "MLS"}
+    # ⚠️ DERIVED FROM THE REGISTRY. Hand-listed as {"NHL","IPL","WNBA","MLS"},
+    # it was never updated when NHL graduated to budget in June 2026 — so on
+    # every SUBSEQUENT run of the day this dropped the cached NHL singles,
+    # which are 92 of 131 October money-card picks, the largest block on the
+    # card. Started NHL games stopped being recognised as locked and were
+    # eligible for replacement. It was equally stale in the other direction:
+    # CFB, WC and LIGAMX are watchlist-only and were absent, so a buggy run
+    # putting them in the budget pool would NOT have been caught here, which is
+    # the whole purpose of the list. `slug.upper()` is how the sport token is
+    # produced in main.py, so it is what these dicts carry.
+    from src.sports.registry import REGISTRY as _REG
+    _WATCHLIST_SPORTS = {_slug.upper() for _slug, _e in _REG.items()
+                         if not _e.caps.enters_budget}
 
     # ── Singles ──────────────────────────────────────────────────────────────
     locked_singles: List[Dict] = _dedup_cached_singles([

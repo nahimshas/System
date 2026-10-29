@@ -197,17 +197,30 @@ def settle_decision_from_scores(today: date) -> int:
     the decision log. Never touches shadow/history settlement. Idempotent (already
     -graded rows skipped), never settles today's games, fully exception-safe.
 
-    Score-based sports only: NBA, MLB (main paths) + NHL, WNBA, MLS, WC (watchlist
-    paths; soccer uses the 90-minute score). IPL is skipped (no reliable historical
-    score source — mirrors the shadow log's caution). Returns rows newly graded.
+    Score-based sports only, and the set is DERIVED from the ESPN path maps
+    rather than listed here — an enumeration in this docstring is how NFL came
+    to be missing. Soccer uses the 90-minute score. IPL is skipped (no reliable
+    historical score source — mirrors the shadow log's caution). Returns rows
+    newly graded.
     """
-    MAIN = {"NBA", "MLB"}
-    WATCH = {"NHL", "WNBA", "MLS", "WC", "LIGAMX", "CFB"}
-    SUPPORTED = MAIN | WATCH
     try:
         from src.data.outcome_checker import (
+            ESPN_SPORT_PATHS, ESPN_WATCHLIST_PATHS,
             _fetch_espn_final_scores, _fetch_watchlist_final_scores, _find_game_score,
         )
+        # ⚠️ DERIVED FROM THE PATH MAPS, not hand-listed — identical to the
+        # derivation in shadow_log.settle_shadow_from_espn, and for the same
+        # reason. These were literally `MAIN = {"NBA", "MLB"}` and a WATCH set,
+        # written before NFL existed and never updated, so NFL was absent from
+        # SUPPORTED and its candidates were NEVER graded: 596 rows, 0 settled,
+        # while every other sport sat between 87% and 100%. The failure is
+        # invisible by construction — an ungraded sport looks exactly like a
+        # sport with no results yet. Each of the two fetchers below only knows
+        # the sports in its own map, so the maps ARE the right source.
+        IPL_SPORTS = {"IPL"}        # no reliable historical score source
+        MAIN  = set(ESPN_SPORT_PATHS) - IPL_SPORTS
+        WATCH = (set(ESPN_WATCHLIST_PATHS) - MAIN) - IPL_SPORTS
+        SUPPORTED = MAIN | WATCH
         from collections import defaultdict as _dd
         if not DECISION_LOG_DIR.exists():
             return 0
