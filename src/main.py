@@ -557,14 +557,34 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # sport it can price end-to-end; CFB/IPL/WC keep the Odds API because
         # Kalshi cannot discover them (no static team map / no markets at all).
         # Falls back to the Odds API rather than producing a silent empty slate.
-        from src.data.kalshi_pricing import fetch_games_routed as _route
+        from src.data.kalshi_pricing import (fetch_games_routed as _route,
+                                              price_source_for as _price_source_for)
         games, _price_src, _fell_back = _route(
             slug, module, today_str, odds_key_available=bool(ODDS_API_KEY))
         price_sources[slug] = {"source": _price_src, "fell_back": _fell_back}
+
+        # ⚠️ `get_last_api_error()` is MODULE-GLOBAL and stays set until the next
+        # Odds API call. A Kalshi-priced sport with a genuinely empty slate would
+        # otherwise inherit the PREVIOUS sport's error and report a failure it
+        # never had — Liga MX did exactly that on Oct 29 2026, wearing CFB's dead
+        # key on a day it simply had no fixtures. Only a sport that actually
+        # called the Odds API may claim its errors.
+        _api_err = get_last_api_error() if _price_src == "oddsapi" else None
+
         if _fell_back:
-            errors.append(
-                f"{entry.label}: Kalshi produced no games — "
-                f"{'fell back to the Odds API' if _price_src == 'oddsapi' else 'NO PRICES AVAILABLE'}")
+            if _api_err:
+                # The precise cause beats the generic one — and say it ONCE.
+                errors.append(f"{entry.label} odds unavailable: {_api_err}")
+            elif _price_source_for(slug) == "kalshi":
+                errors.append(
+                    f"{entry.label}: Kalshi produced no games — "
+                    f"{'fell back to the Odds API' if _price_src == 'oddsapi' else 'NO PRICES AVAILABLE'}")
+            else:
+                # Never routed to Kalshi in the first place: saying "Kalshi
+                # produced no games" here points the reader at the wrong system.
+                errors.append(
+                    f"{entry.label}: the Odds API returned no games but ESPN lists "
+                    f"some — check the ODDS_API_KEY secret")
 
         # Per-game season types (ESPN): stamps season_game_type so analyzers
         # apply playoff treatment per GAME instead of per calendar window, and
@@ -598,8 +618,7 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 errors.append(f"{entry.label} player props unavailable: {_prop_err}")
 
         if not games:
-            _api_err = get_last_api_error()
-            if _api_err:
+            if _api_err and not _fell_back:
                 errors.append(f"{entry.label} odds unavailable: {_api_err}")
             continue
 

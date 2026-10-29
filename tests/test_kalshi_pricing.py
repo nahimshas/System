@@ -528,3 +528,31 @@ class TestSpreadOrientation:
             sp = _best_spread(ms, "26OCT28SASUTA", home)
             assert (sp["home_spread"] < 0) is expect_home_fav
             assert (sp["home_prob"] > 0.5) is expect_home_fav
+
+
+class TestOddsApiErrorsDoNotLeakAcrossSports:
+    """`get_last_api_error()` is module-global and sticky until the next Odds
+    API call. On Oct 29 2026 CFB's dead-key 401 was still set when Liga MX —
+    priced by Kalshi, and simply fixture-free that day — reached its empty-slate
+    check, so the card reported "Liga MX odds unavailable: Odds API 401" for a
+    sport that never called the Odds API at all.
+    """
+
+    def test_error_is_only_read_on_an_odds_api_slate(self):
+        src = open("src/main.py").read()
+        assert '_api_err = get_last_api_error() if _price_src == "oddsapi" else None' in src
+        # and the old unconditional read is gone
+        assert "            _api_err = get_last_api_error()\n" not in src
+
+    def test_the_cause_is_reported_once_not_twice(self):
+        """CFB showed BOTH a fallback line and an odds-unavailable line for the
+        same dead key. The precise message wins; the generic one is suppressed."""
+        src = open("src/main.py").read()
+        assert "if _api_err and not _fell_back:" in src
+
+    def test_an_odds_api_sport_is_not_blamed_on_kalshi(self):
+        """CFB is never routed to Kalshi, so "Kalshi produced no games" points
+        the reader at the wrong system entirely."""
+        src = open("src/main.py").read()
+        assert "elif _price_source_for(slug) == \"kalshi\":" in src
+        assert "the Odds API returned no games but ESPN lists" in src
