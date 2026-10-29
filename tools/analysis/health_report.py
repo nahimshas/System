@@ -278,6 +278,33 @@ MARKET_CLV_COVERAGE_MIN = 50.0
 MARKET_CLV_MIN_N = 5            # below this, coverage % is noise — stay quiet
 
 
+def check_quarantine():
+    """Which shadow-log rows are excluded from learning, and why.
+
+    Printed every week on purpose. A quarantine is the project deliberately
+    throwing away hard-won data, so it must stay in front of someone rather
+    than becoming an invisible filter that quietly shrinks a sample for months.
+    """
+    out = {"name": "quarantine", "windows": [], "ok": True}
+    try:
+        import json as _json
+        from pathlib import Path as _Path
+        from src.state.quarantine import summary
+        rows = []
+        d = _Path("state/shadow_log")
+        if d.exists():
+            for f in sorted(d.glob("*.json")):
+                try:
+                    rows.extend((_json.load(open(f)).get("entries") or {}).values())
+                except Exception:
+                    continue
+        out["windows"] = summary(rows)
+    except Exception as e:
+        out["ok"] = False
+        out["error"] = str(e)
+    return out
+
+
 def check_kalshi_maps():
     """Are our Kalshi team maps still in step with the live moneyline books?
 
@@ -596,6 +623,7 @@ def main():
         "log_liveness": check_log_liveness(),
         "subsystem_liveness": check_subsystem_liveness(),
         "kalshi_maps": check_kalshi_maps(),
+        "quarantine": check_quarantine(),
         "governors": check_governors(),
         "checkpoints": evaluate_checkpoints(),
     }
@@ -653,6 +681,10 @@ def main():
     print(f"[{'OK' if _km.get('ok') else '!!'}] Kalshi team maps: "
           f"{len(_km.get('sports') or {})} sports checked"
           + (f" — STALE: {_stale}" if _stale else " — all in step"))
+    for _q in (report.get("quarantine") or {}).get("windows") or []:
+        print(f"[--] Quarantined from learning: {_q['sport']} {_q['markets']} "
+              f"{_q['window']} — {_q['rows']} rows "
+              f"({_q['settled_excluded']} settled) — fixed by {_q['fixed_by']}")
     print(f"[--] CLV gates: {g.get('clv_gates') or 'none'}")
     print(f"[--] Calibration phases beyond 0: {g.get('calibration_phases') or 'none'}")
     print(f"[--] MLB caps: {g.get('mlb_caps')}")

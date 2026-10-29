@@ -401,6 +401,23 @@
       "measurement": "Actual win rate minus mean market_prob_at_first_pick over NFL shadow-log rows, pool and displayed_in_top separately, alongside the same figure for MLB/NBA/NHL as the control.",
       "status": "open",
       "interim_decision": "Oct 29 2026 — USER DECIDED: leave NFL on budget as is, unchanged, until this checkpoint evaluates. Presented with three options (leave / watchlist-only / reduced stake) alongside the -7.3pp finding and the Sep→Oct improvement, and chose to take the December read. ⚠️ This is a DELIBERATE decision, not an unreviewed default: NFL continuing to stake through Nov is the agreed plan, so do not re-raise it as an alarm before 2026-12-07 and do not quietly flip enters_budget. If NFL deteriorates sharply before then — materially worse than the -7.3pp already measured, on fresh picks rather than the same ones re-counted — that is new information and worth surfacing early; the ordinary variance of a 1-in-4 win-rate swing is not."
+    },
+    {
+      "id": "mls_relearn_after_quarantine",
+      "title": "MLS relearning from the fixed xG model — do the new ratios settle sane?",
+      "created": "2026-10-29",
+      "evaluate_after": "2027-03-15",
+      "data_window_start": "2026-10-29",
+      "type": "note",
+      "rules": {
+        "min_settled_per_market": 100,
+        "raw_gap_pp_max": 10.0
+      },
+      "rationale": "The xgoals_for fix (81cc594f, Oct 28 2026) took MLS's raw |model-market| gap from 39.8pp to 3.9pp, which means every MLS row logged from 2026-05-17 to 2026-10-28 was produced by a model that projected ~1.3 expected goals against a market implying ~2.9. Those 605 rows (598 settled) had taught calibration a Phase A ratio of 0.8232 on Total and 0.896 on Draw, and had gated MLS Total on -1.08% CLV over 278 picks. All of it was learned from the bug. Quarantined rather than deleted (src/state/quarantine.py): the rows stay in the shadow log, the decision log and watchlist_history, and only calibration and the CLV governor skip them. Verified at the time of the change: exactly 4 rows moved in the governor (all MLS) and all 25 other markets were byte-identical, so nothing else was disturbed. MLS is back to Phase 0 with identity ratios across all four markets and out of gating. WHAT TO CHECK: MLS now relearns from scratch. The 2026 regular season is over, so the sample rebuilds through MLS Cup and then the 2027 season — hence the March date. If the fixed model is right, the new ratios should land near 1.0 rather than near 0.82, and the raw gap should stay single-digit. ⚠️ If a new Phase A ratio again comes in far below 1.0 on Total while the raw gap is small, that is a SECOND, different bug, not the same one returning — do not re-quarantine without finding it.",
+      "on_pass": "New single_ratio within ~0.9-1.1 on MLS Total and Draw at >= 100 settled each, with raw |model-market| median under 10pp: the fix is confirmed and the quarantine stays as a permanent historical note.",
+      "on_fail": "If the raw gap is back above 10pp, the Poisson inputs are wrong again — find the input before touching constants, exactly as the xGF case required. Do NOT widen the quarantine to cover the new window as a way of hiding it.",
+      "measurement": "state/calibration_state.json MLS rows + median |model_prob_raw - market_prob_at_first_pick| over MLS shadow rows dated after 2026-10-28.",
+      "status": "open"
     }
   ]
 }

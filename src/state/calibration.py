@@ -37,6 +37,15 @@ logger = logging.getLogger(__name__)
 
 # Source: shadow log shards
 SHADOW_LOG_DIR = Path("state/shadow_log")
+
+# Fail-open on purpose: if the quarantine module cannot be imported, every row
+# teaches exactly as it did before this existed. A broken quarantine must never
+# empty the calibration input.
+try:
+    from src.state.quarantine import is_quarantined as _is_quarantined
+except Exception:            # pragma: no cover
+    def _is_quarantined(_entry) -> bool:  # type: ignore[misc]
+        return False
 # Persisted state for the panel and external inspection
 CALIBRATION_STATE_PATH = Path("state/calibration_state.json")
 
@@ -119,8 +128,13 @@ def _load_all_settled_entries() -> List[Dict[str, Any]]:
             logger.warning(f"Calibration: failed to read {path}: {e}")
             continue
         for entry in shard.get("entries", {}).values():
-            if entry.get("outcome") is not None:
-                out.append(entry)
+            if entry.get("outcome") is None:
+                continue
+            # Rows produced by a model we have since proven was broken are kept
+            # in the log but must not teach — see src/state/quarantine.py.
+            if _is_quarantined(entry):
+                continue
+            out.append(entry)
     return out
 
 

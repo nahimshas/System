@@ -72,6 +72,14 @@ def _market_type_for_rec(rec: Any) -> str:
 # history would. Set CLV_PREFER_KALSHI=False to revert to sportsbook-only.
 CLV_PREFER_KALSHI = True
 
+# Fail-open, same as in calibration: an unimportable quarantine leaves gating
+# exactly as it was rather than silently un-gating every market.
+try:
+    from src.state.quarantine import is_quarantined as _is_quarantined
+except Exception:            # pragma: no cover
+    def _is_quarantined(_entry) -> bool:  # type: ignore[misc]
+        return False
+
 # How recent the secondary CLV series must be to keep a vote on gating.
 ALT_FRESH_DAYS = 45
 
@@ -112,6 +120,11 @@ def compute_clv_stats(force: bool = False) -> Dict[Tuple[str, str], Dict[str, An
             for shard_path in sorted(SHADOW_LOG_DIR.glob("*.json")):
                 shard = _load_shard(shard_path)
                 for entry in shard.get("entries", {}).values():
+                    # Kept in the log, excluded from gating — a market must not
+                    # be gated (or cleared) on CLV earned by a broken model.
+                    # See src/state/quarantine.py.
+                    if _is_quarantined(entry):
+                        continue
                     clv = effective_clv(entry)
                     if clv is None:
                         continue
