@@ -517,6 +517,35 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     except Exception as _e_cap_eval:
         logger.warning(f"Cap auto-adjustment failed (non-fatal): {_e_cap_eval}")
 
+    # Model-output sanity: does what the model produced look like a model, or
+    # like a broken input? Every other automated check here asks "is data
+    # flowing" — this asks "is the output plausible". Backtested against the
+    # MLS xGF bug, it fires on 2026-07-15 with three independent high-severity
+    # signals, against a bug that actually ran undetected from May to October.
+    # DETECTS ONLY — never gates money. Routing is the CLV governor's job and
+    # the user's decision; a noisy detector wired to the budget could silently
+    # kill a healthy market, which is the failure this exists to prevent.
+    try:
+        import json as _json
+        from pathlib import Path as _P
+        from src.state.model_sanity import evaluate as _sanity, findings_for_log
+        _sr = []
+        _sd = _P("state/shadow_log")
+        if _sd.exists():
+            for _f in sorted(_sd.glob("*.json")):
+                try:
+                    _sr.extend((_json.load(open(_f)).get("entries") or {}).values())
+                except Exception:
+                    continue
+        _sanity_res = _sanity(_sr, today=today)
+        for _line in findings_for_log(_sanity_res):
+            logger.warning(_line)
+        if _sanity_res.get("findings"):
+            logger.info(f"Model sanity: {len(_sanity_res['findings'])} finding(s) "
+                        f"across {_sanity_res.get('checked_markets')} markets")
+    except Exception as _e_sanity:
+        logger.warning(f"Model sanity check failed (non-fatal): {_e_sanity}")
+
     if not ODDS_API_KEY:
         logger.error("ODDS_API_KEY is not set.")
         errors.append("ODDS_API_KEY missing — odds data unavailable. Set the secret in GitHub.")

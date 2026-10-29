@@ -278,6 +278,35 @@ MARKET_CLV_COVERAGE_MIN = 50.0
 MARKET_CLV_MIN_N = 5            # below this, coverage % is noise — stay quiet
 
 
+def check_model_sanity():
+    """Does the model's output look like a model, or like a broken input?
+
+    The only check here that reads the model's OUTPUT rather than the health of
+    the pipes. See src/state/model_sanity.py for why the three signals are what
+    they are. High-severity findings become ACTION_NEEDED alerts.
+    """
+    out = {"name": "model_sanity", "findings": [], "ok": True}
+    try:
+        import json as _json
+        from pathlib import Path as _Path
+        from src.state.model_sanity import evaluate
+        rows = []
+        d = _Path("state/shadow_log")
+        if d.exists():
+            for f in sorted(d.glob("*.json")):
+                try:
+                    rows.extend((_json.load(open(f)).get("entries") or {}).values())
+                except Exception:
+                    continue
+        res = evaluate(rows)
+        out["findings"] = res.get("findings") or []
+        out["checked_markets"] = res.get("checked_markets", 0)
+    except Exception as e:
+        out["ok"] = False
+        out["error"] = str(e)
+    return out
+
+
 def check_quarantine():
     """Which shadow-log rows are excluded from learning, and why.
 
@@ -374,6 +403,14 @@ def compute_alerts(report):
                 f"({m['covered']}/{m['n']}, 14d) — this market is dark while the "
                 f"aggregate looks fine; usually a resolver miss or a line we "
                 f"quote that Kalshi does not list")
+    # Model-output sanity. The only alert here that reads what the model SAID
+    # rather than whether the pipes are open. High severity only: the medium
+    # signals are drift warnings worth reading, not worth waking someone for.
+    for f in (report.get("model_sanity") or {}).get("findings") or []:
+        if f.get("severity") == "high":
+            alerts.append(
+                f"model sanity: {f['sport']} {f['market']} — {f['detail']} "
+                f"({f['why']})")
     return alerts
 
 
@@ -624,6 +661,7 @@ def main():
         "subsystem_liveness": check_subsystem_liveness(),
         "kalshi_maps": check_kalshi_maps(),
         "quarantine": check_quarantine(),
+        "model_sanity": check_model_sanity(),
         "governors": check_governors(),
         "checkpoints": evaluate_checkpoints(),
     }
@@ -681,6 +719,13 @@ def main():
     print(f"[{'OK' if _km.get('ok') else '!!'}] Kalshi team maps: "
           f"{len(_km.get('sports') or {})} sports checked"
           + (f" — STALE: {_stale}" if _stale else " — all in step"))
+    _ms = report.get("model_sanity") or {}
+    _msf = _ms.get("findings") or []
+    print(f"[{'OK' if not any(f['severity'] == 'high' for f in _msf) else '!!'}] "
+          f"Model sanity: {len(_msf)} finding(s) across "
+          f"{_ms.get('checked_markets', 0)} markets")
+    for _f in _msf:
+        print(f"[--]   [{_f['severity']}] {_f['sport']} {_f['market']}: {_f['detail']}")
     for _q in (report.get("quarantine") or {}).get("windows") or []:
         print(f"[--] Quarantined from learning: {_q['sport']} {_q['markets']} "
               f"{_q['window']} — {_q['rows']} rows "
