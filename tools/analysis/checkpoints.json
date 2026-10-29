@@ -16,8 +16,9 @@
       },
       "on_pass": "Package confirmed — keep all Jul 4 constants and the promotion.",
       "on_fail": "If budget CLV < 0 persistently or promoted wr <= demote threshold: demote the dog_better_starter promotion and re-run the constants backtest on the fresh window.",
-      "status": "open",
-      "rationale": " Jul 19 eval: FAIL on budget CLV (-0.43%) but promoted wr 56% above demote line; demotion NOT executed (the on_fail clause predates better evidence — pattern holding, package at -4% vs old -12%). Keep monitoring; re-evaluate Aug 2 with pattern_card."
+      "status": "resolved",
+      "rationale": " Jul 19 eval: FAIL on budget CLV (-0.43%) but promoted wr 56% above demote line; demotion NOT executed (the on_fail clause predates better evidence — pattern holding, package at -4% vs old -12%). Keep monitoring; re-evaluate Aug 2 with pattern_card.",
+      "resolution": "RESOLVED Oct 29 2026 — FAIL on the letter, demotion REFUSED, rule retired as unmeasurable. Budget CLV since Jul 5 is -0.45pp (n=481 Kalshi / -0.37pp n=200 Odds API), so it fails budget_clv_pct_min a third straight time. But the composite no longer measures what it was written to measure: in Jul 2026 'budget' WAS MLB; it is now MLB+NFL+NBA+NHL, and the negative aggregate is carried by sports the Jul 4 package never touched (NBA -2.69pp n=23, NHL -0.48pp n=89) while MLB itself is -0.34pp and the promoted pattern -0.11pp. on_fail's prescribed demotion of dog_better_starter is explicitly NOT executed, and not on a judgement call: the promotion clears the KEEP line, not merely the demote line — 57-37 (60.6%) on budget picks, 132-83 (61.4%) over all 215 flagged, +3.5pp against market-implied. It is the best-performing component in the pool; demoting it because an aggregate that now includes three other sports went negative would be the opposite of what the evidence says. SUPERSEDED: src/state/clv_governor.py does per-(sport, market_type) CLV gating continuously and automatically — exactly this job, at the right granularity, without a hand-set annual threshold. Do not re-add an aggregate budget-CLV gate; it cannot distinguish the sports."
     },
     {
       "id": "ha_zero",
@@ -73,7 +74,8 @@
       "rationale": "No constants combo makes a forced full 5-pick MLB slate profitable at 4.5% friction; the profitable pockets are the promoted pattern and large edges. Budget = promoted picks + edges >= 0.08, variable card size. ⚠️ CORRECTED Jul 19: original window (2026-06-13) included the pattern's DISCOVERY data — the Jul 18 'PASS' (58.5%/+2.1%) was in-sample contamination; the July-only out-of-sample slice was 48.6%/-15.8% (n=37, worse than live). Window reset to Jul 5+, min_picks raised to 80, re-evaluate Aug 2. Lesson: a checkpoint's data window must NEVER include the data that generated the hypothesis.",
       "on_pass": "Propose to user as budget policy (display/watchlist unchanged): budget accepts only promoted picks and edges >= 0.08; skip thin days.",
       "on_fail": "Keep the current 5-pick card with the 0.05 floor.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "RESOLVED Oct 29 2026 — clean FAIL, on_fail executed (no change). n=211 (>= min_picks 80) over 68 days of the corrected out-of-sample window, wr 54.5%, ROI -4.6% against pass_if_roi_gt 0.0. The Jul 18 'PASS' was in-sample contamination and the corrected window confirms it. Keeping the 5-pick card with the 0.05 floor. Question CLOSED — this was the last of the MLB full-game card-shape hypotheses, and it joins the Aug 4 verdict."
     },
     {
       "id": "promo_bypass_floor",
@@ -129,7 +131,8 @@
         "min_n_per_bucket": 100
       },
       "rationale": "FIP-blend hypothesis REFUTED Jul 5 (backing FIP-xFIP>1.0 starters is the BEST segment: 58.1% wr, +6.6% ROI, n=105 — never blend FIP into the quality score). Residual: within own-starter ERA-xFIP>1.0 picks, HR-driven gaps ran worse than sequencing-driven (52.3%/-4.4% vs 58.1%/+5.0%) at n=43 — re-test when both buckets reach ~100.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "RESOLVED Oct 29 2026 — underpowered and now moot. Measured on 1172 made+settled MLB Moneyline decision-log rows since Jun 14, splitting own-starter ERA-xFIP>1.0 picks by whether FIP-xFIP>0.3 (HR-driven) or not (sequencing-driven): HR-driven 100-133 (42.9%, n=233), sequencing-driven 30-25 (54.5%, n=55), no-trap 402-422 (48.8%, n=824). Direction matches the Jul 5 observation, but min_n_per_bucket=100 is still unmet on the sequencing side and the 11.6pp gap is ~1.6 s.e. It will never be met: the MLB season is over, and the bucket only fills from MLB full-game picks. Moot regardless — MLB full-game was closed Aug 4 2026 (five independent tests), and a new constant keyed on this split is precisely the additive change that finding forbids. No action."
     },
     {
       "id": "nfl_warm_start",
@@ -142,7 +145,8 @@
         "min_picks": 30
       },
       "rationale": "Jul 2026 NFL audit found THREE compounding bugs that made the model unusable at season start: (1) ESPN standings nesting changed conf->division->teams to conf->teams, so _fetch_all_team_stats returned ZERO teams (every game cold-started even mid-season); (2) ESPN dropped avgPointsFor/Against, so season TOTALS were used as per-game (net ratings ~17x inflated → impossible favorites); (3) no prior-season carryover, so Week 1 rated every team net=0 and bet phantom underdogs against strong favorites (proven: Carolina +15% vs KC 78% market). All three FIXED Jul 24: robust entry collection, per-game division, warm-start blend (prior net regressed x0.67 toward mean, ramping out over 6 games via games_played weight). EVALUATE ~Oct 5 (after ~4 weeks / Weeks 1-4): are NFL budget picks' CLV >= 0 and win rate sane? Watch the warm_start_weight decision-log feature — do warm-start-active (early) picks under/over-perform? NFL is a BUDGET (real-money) sport, so if early CLV is negative the CLV governor auto-gates it; consider forcing watchlist-only or reduced confidence for Weeks 1-2 next season if the warm start proves insufficient.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "RESOLVED Oct 29 2026 — SPLIT VERDICT: the CLV half passes, the win-rate half FAILS, and the failure is the larger finding. n=242 settled NFL picks since Sep 1 (29 of them budget). CLV >= 0: PASS. Kalshi CLV +0.05pp over the pool, +0.14pp on budget picks — NFL is in fact the only budget sport with positive CLV. Win rate sane: FAIL. NFL picks won 43.4% where the market implied 50.7% — -7.3pp against market, on n=242 (1 s.e. = 3.2pp, so ~2.3 s.e.). Budget picks -7.6pp. No other sport is close over the same window: MLB +0.6pp (n=2896), NBA +1.2pp (n=170), NHL -3.5pp (n=432). The model claimed 59.5% against a 43.4% outcome, a +16.1pp overclaim vs MLB's +7.0pp. The warm start is implicated but is not the whole story: Sep was -11.6pp and Oct -3.7pp, improving as the prior decays exactly as predicted — but October alone is still negative. NOT a broken input: NFL's raw |model-market| median is 10.9pp with the cap firing 33.7%, both in line with NBA (12.5pp / 47.8%) and NHL (11.8pp / 31.6%), so this is not the MLS xGF signature. Note the tension worth remembering: CLV said neutral while outcomes said -7pp, i.e. our fastest signal did not see this. ACTION REQUIRED is a money decision and belongs to the user — see the new checkpoint nfl_budget_probation."
     },
     {
       "id": "f5_validation",
@@ -177,7 +181,8 @@
       "on_pass": "If ROI on the post-ship window is >= the pre-ship baseline and no same-game pair has appeared on a card, keep the rule.",
       "on_fail": "Do NOT revert on ROI alone — the structural argument stands independent of the outcome data, and n will still be small. Revert only if the rule is demonstrably costing slots (e.g. cards routinely shipping fewer than MAX_SINGLE_BETS picks).",
       "open_gap": "RESOLVED Aug 10 2026 (same session, user said extend it): _parlay_valid now blocks ALL same-game leg pairs, not just ML+Spread. Spread+Total and ML+Total on one game were being priced as if independent. Impact on live behaviour is near zero — 33 of the 35 historical same-game parlays predate June 2026 and the one July case was the duplicate-leg bug — so this is a safety rail, not a behaviour change. Could not be measured: none of the 35 reconstruct against the shadow log (their legs predate reliable logging), so there is NO outcome evidence either way. Shipped on the same structural grounds as the singles rule. Revisit only with a real correlation model, never by relaxing the rule.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "RESOLVED Oct 29 2026 — PASS, rule kept. Verified on the shipped money cards, not just the logs: of 180 picks files with a singles card, 20 contained a same-game pair and ALL 20 predate the rule, the last being 2026-08-10 (the 'Tampa Bay Rays @ Athletics' case that triggered it). Zero since, across 349 budget game-days. Not costing slots: budget cards average 4.53 picks post-ship vs 4.47 pre-ship, with 58 of 77 at the full 5 — the short cards are thin days, not the rule. Outcome data, as predicted, establishes nothing: -0.9pp vs market post-ship (n=343) against -1.1pp pre-ship (n=140), CLV -0.42pp vs -0.52pp. Both move the right way, both well inside noise. The rule stands on the structural argument, which never depended on this data. FOUND AND FIXED while checking this: the shadow log's `displayed_in_top` flag was built for watchlist sports WITHOUT _one_per_game or _pwa_display_eligible, while the actual tile applies both — so the log marked picks as displayed that no tile ever showed (51 phantom same-game pairs Aug 11 - Oct 28, every one watchlist). The money card was never affected. Budget and watchlist now share one definition in main.py."
     },
     {
       "id": "execution_at_bid",
@@ -193,7 +198,8 @@
       "on_pass": "If average clv_if_bid on picks that WOULD have filled is > 0 after fees, AND it holds in both halves of a time split, AND fill rate is high enough to keep a usable card: adopt 'post at bid, skip if unfilled' as policy and surface the bid price on every card.",
       "on_fail": "If even at the bid we are underwater, execution is not the answer and the MLB pause decision returns with one fewer escape route. Do NOT respond by hunting new model constants -- that question was closed Aug 4.",
       "measurement": "python3 -m tools.analysis.execution_report. Fill detection replays Kalshi candlesticks and asks whether the market traded at or below our bid; it IGNORES QUEUE POSITION, so reported fill rate is an OPTIMISTIC UPPER BOUND. Adverse selection = clv_if_bid on filled picks minus clv_if_bid on all picks; a negative number is the real cost of waiting.",
-      "status": "open"
+      "status": "resolved",
+      "resolution": "RESOLVED Oct 29 2026 — FAIL. n=201 settled MLB picks (>= min 150), Aug 27 - Oct 28. CLV if we always took the ask -2.59pp; if we always got the bid -1.54pp; the spread is worth +1.05pp. Fill rate at the bid 96% (193/201) — an OPTIMISTIC upper bound, it ignores queue position. Adverse selection is only -0.02pp, so waiting is nearly free, which was the hypothesis and it held. It does not matter: even at the bid we are -1.55pp after $0.02 fees, so the saving (+1.05pp) is smaller than the shortfall (-2.59pp). By market: Spread -1.78pp at bid (n=144), Moneyline -0.93pp (n=57). Both still negative, so the time-split condition in on_pass is moot. Execution is NOT the answer; per on_fail, do not respond by hunting model constants."
     },
     {
       "id": "clv_source_switch",
@@ -211,8 +217,9 @@
       "on_pass": "Switch only if ALL hold: (1) Kalshi predictive r >= Odds API r on >= 800 settled paired rows; (2) Kalshi coverage >= Odds API coverage per market; (3) a decision is made about the governor's truncated window — either accept the shorter history explicitly, or run both sources with the governor still reading the Odds API series until Kalshi's own window is long enough to gate on. Do NOT switch silently mid-series: the seam is invisible in the panels and the governor would gate on a mixed-venue average.",
       "on_fail": "Keep both. F5 CLV via Kalshi is a pure gain regardless — it is the only source that exists for those markets — and it costs nothing to keep capturing in parallel.",
       "measurement": "python3 -m tools.analysis.clv_source_compare",
-      "status": "open",
-      "open_gap": "Watchlist sports (WNBA/MLS/WC/LIGAMX) get NO Kalshi CLV: kalshi.TEAM_TO_KALSHI maps MLB teams only, so those entries are skipped — deliberately WITHOUT burning a retry attempt, so they light up the moment team maps are added. Their Kalshi series exist and were verified present. LIGAMX has no Odds API CLV either (0 rows), so it is currently blind."
+      "status": "resolved",
+      "open_gap": "Watchlist sports (WNBA/MLS/WC/LIGAMX) get NO Kalshi CLV: kalshi.TEAM_TO_KALSHI maps MLB teams only, so those entries are skipped — deliberately WITHOUT burning a retry attempt, so they light up the moment team maps are added. Their Kalshi series exist and were verified present. LIGAMX has no Odds API CLV either (0 rows), so it is currently blind.",
+      "resolution": "RESOLVED Oct 29 2026 — the switch already happened, correctly, and events closed the question. The paid Odds API was cancelled Oct 27 2026 and its key is dead (401), so the >= 800 paired rows this gate asked for will never accrue: 595 is the final number and it is frozen. What the evidence says on those 595 settled paired rows: Kalshi is the stronger predictor on both measures (r=+0.0668 vs +0.0153; CLV>0 wins 52.0% vs 48.3%, gap +3.6pp, against the Odds API's +0.0pp gap) — though 1 s.e. is ~0.041, so read it as a tie, which is all 'at least as good' required. Coverage is decisive rather than marginal: 4089 rows vs 595 overall (96% vs 14%), and Kalshi >= Odds API in EVERY market, with 13 markets (all F5, CFB, NFL, NHL, NBA, LIGAMX) that the Odds API cannot serve at any price. on_pass condition (3) is satisfied by the second of its two options, already implemented: clv_governor.effective_clv() prefers kalshi_clv and FALLS BACK to the sportsbook clv, so the pre-Jun-18 history the governor gates on is preserved rather than truncated, and there is no invisible mid-series seam. CLV_PREFER_KALSHI=True is the switch; it is on."
     },
     {
       "id": "cfb_validation",
@@ -376,6 +383,23 @@
         "fail": "only the tournament-winner book exists → IPL still needs the Odds API, which means a free-tier key must be in the ODDS_API_KEY secret before the season"
       },
       "rationale": "Verified Oct 29 2026: Kalshi DOES carry IPL, but what is listed is the SEASON OUTRIGHT — event KXIPL-27, ten markets KXIPL-27-<TEAM> titled 'Will <team> win the IPL?', closing 2027-06-20, quoted two-sided (RCB 25/27c, MI 7/8c). That is a tournament-winner book, NOT the per-match moneyline our model prices, and no per-match series exists while the season is months away (KXIPLGAME / KXIPLMATCH / KXCRICKET all return nothing). Whether a per-match book appears at season start is the open question, and it can only be answered on live data once matches are listed. IPL 2027 has no official schedule yet: BCCI has signalled Mar 10 – May 15 2027 (moved earlier for heat), while a Nov 2024 tentative calendar said Mar 14 – May 30. This checkpoint is dated a few days before the earliest plausible start. ⚠️ If the answer is 'no per-match book', a free-tier ODDS_API_KEY must be in place BEFORE the season — the current key is dead (401 since the paid plan was cancelled)."
+    },
+    {
+      "id": "nfl_budget_probation",
+      "title": "NFL is -7.3pp against the market on outcomes — should it keep real money?",
+      "created": "2026-10-29",
+      "evaluate_after": "2026-12-07",
+      "data_window_start": "2026-09-01",
+      "type": "note",
+      "rules": {
+        "min_picks": 120,
+        "vs_market_pp_min": -2.0
+      },
+      "rationale": "Opened out of nfl_warm_start's split verdict. NFL budget picks carry real money and NFL is the worst sport we price on outcomes: 43.4% actual against 50.7% market-implied over 242 settled picks since Sep 1 2026 (-7.3pp, ~2.3 s.e.), vs MLB +0.6pp, NBA +1.2pp, NHL -3.5pp. ⚠️ THE CLV GOVERNOR WILL NOT CATCH THIS. NFL's Kalshi CLV is POSITIVE (+0.05pp pool, +0.14pp budget), so every NFL market sits in the governor's keep zone while the outcomes are the worst in the pool. This is the second time our fastest signal has failed to separate winners from losers in a sport (the first being MLB's inverted HIGH-confidence label, Aug 4) and it is the reason a CLV gate alone is not sufficient supervision. Trend is favourable and is the reason for waiting rather than acting now: Sep -11.6pp, Oct -3.7pp, consistent with the Jul 24 warm-start prior decaying out over ~6 games as designed. December covers Weeks 13-18 with every team past the ramp, which is the clean read. Not a broken input: raw |model-market| median 10.9pp and cap firing 33.7% are both in line with NBA and NHL, so this is not the MLS xGF / spread-orientation signature. ⚠️ Do NOT respond by hunting new NFL constants — that is the additive move that has failed repeatedly here. The live options are subtractive: route NFL to watchlist-only (enters_budget=False), or exclude it for Weeks 1-4 next season via BUDGET_EXCLUDED_MARKETS, or leave it and accept the variance. The choice is the user's; it is their money.",
+      "on_pass": "If NFL vs-market is >= -2.0pp over >= 120 settled picks with the warm start fully decayed, the Jul 24 warm-start fix is vindicated and NFL keeps its budget slot — the early-season deficit was the cold start, as diagnosed.",
+      "on_fail": "If NFL is still worse than -2.0pp vs market with every team past the ramp, the problem is the model and not the cold start. Put NFL on watchlist-only and run market_test.py on NFL features before it is ever restored. Do not add constants.",
+      "measurement": "Actual win rate minus mean market_prob_at_first_pick over NFL shadow-log rows, pool and displayed_in_top separately, alongside the same figure for MLB/NBA/NHL as the control.",
+      "status": "open"
     }
   ]
 }

@@ -927,11 +927,21 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         # displayed picks outperform shadow-only picks.
         # Mirror the budget card exactly (one bet per game), so the shadow log's
         # displayed_in_top flag keeps meaning "this actually made the card".
+        # ⚠️ The watchlist arm MUST be built the same way `fresh_own_displays`
+        # is, or the flag stops meaning what its name says. It used to take
+        # `sorted(_raw)[:cap]` directly — skipping both `_pwa_display_eligible`
+        # and `_one_per_game` — so the shadow log marked picks as displayed that
+        # the tile never showed: 51 phantom same-game pairs between Aug 11 and
+        # Oct 28 2026, all watchlist, while the money card had none. Anything
+        # that segments on `displayed_in_top` (CLV-by-market, tile analysis)
+        # silently read those. Budget and watchlist now share one definition.
         _top_displayed_recs = list(_budget_pool[:MAX_SINGLE_BETS])
         for _slug, _raw in own_display.items():
-            _own_sorted = sorted(_raw, key=_slot_sort_key)
             _cap = len(_raw) if _slug == "ipl" else MAX_SINGLE_BETS
-            _top_displayed_recs.extend(_own_sorted[:_cap])
+            _top_displayed_recs.extend(
+                _one_per_game(
+                    [r for r in sorted(_raw, key=_slot_sort_key)
+                     if _pwa_display_eligible(r)], _slug)[:_cap])
         _top_keys = compute_top_keys(_top_displayed_recs, today)
 
         # Pool of ALL picks the model produced (top-5 + the rest).
