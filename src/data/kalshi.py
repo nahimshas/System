@@ -23,6 +23,7 @@ import json
 import logging
 import os
 import re
+import unicodedata
 import time
 import urllib.error
 import urllib.parse
@@ -217,7 +218,12 @@ _CFB_QUALIFIERS = {
 
 
 def _cfb_norm(s: str) -> str:
-    s = re.sub(r"[^a-z0-9 ]", " ", str(s or "").lower())
+    # Fold accents FIRST. ESPN writes "San José State Spartans" while Kalshi
+    # writes "San Jose St."; stripping the accent as punctuation would leave
+    # "san jos state", which prefix-matches nothing. NFKD is generic — no
+    # per-school alias list to rot.
+    s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode()
+    s = re.sub(r"[^a-z0-9 ]", " ", s.lower())
     s = re.sub(r"\bst\b\.?", "state", s)
     s = re.sub(r"\bu\b|\buniversity\b|\bcollege\b", " ", s)
     return re.sub(r"\s+", " ", s).strip()

@@ -359,12 +359,14 @@ class TestPriceSourceRouting:
 
     def test_unpriceable_sports_keep_the_odds_api(self):
         from src.data.kalshi_pricing import price_source_for
-        for s in ("CFB", "IPL", "WC"):
+        # CFB moved to Kalshi on Oct 29 2026 via the ESPN-anchored path.
+        # IPL has no Kalshi markets at all; WC's series was never verified.
+        for s in ("IPL", "WC"):
             assert price_source_for(s) == "oddsapi"
 
     def test_priceable_sports_use_kalshi(self):
         from src.data.kalshi_pricing import price_source_for
-        for s in ("MLB", "NBA", "NFL", "NHL", "WNBA", "MLS", "LIGAMX"):
+        for s in ("MLB", "NBA", "NFL", "NHL", "WNBA", "MLS", "LIGAMX", "CFB"):
             assert price_source_for(s) == "kalshi"
 
     def test_env_override_forces_odds_api(self, monkeypatch):
@@ -450,7 +452,7 @@ class TestDeadOddsApiKeyIsLoud:
         class M:
             def fetch_games(self, d):
                 return []
-        games, src, fell = KP.fetch_games_routed("CFB", M(), "2026-11-07",
+        games, src, fell = KP.fetch_games_routed("WC", M(), "2026-11-07",
                                                  odds_key_available=True)
         assert src == "oddsapi" and fell is True
 
@@ -556,3 +558,101 @@ class TestOddsApiErrorsDoNotLeakAcrossSports:
         src = open("src/main.py").read()
         assert "elif _price_source_for(slug) == \"kalshi\":" in src
         assert "the Odds API returned no games but ESPN lists" in src
+
+
+class TestCFBIsEspnAnchored:
+    """CFB discovery cannot use Kalshi's own date or ticker order.
+
+    `KXNCAAFGAME-26OCT30ARIZTTU` is Arizona at Texas Tech, which ESPN kicks
+    off 2026-10-31T16:00Z; its occurrence_datetime (03:00Z) is not the kickoff
+    either. Filtering that book by date drops the entire Saturday slate — 36
+    games read as Friday's — and keeps the wrong ones. ESPN anchors the slate
+    and Kalshi is joined to it by team.
+    """
+
+    def test_cfb_is_priceable_and_anchored(self):
+        from src.data.kalshi_pricing import (KALSHI_PRICEABLE, _ESPN_ANCHORED,
+                                             price_source_for)
+        assert "CFB" in KALSHI_PRICEABLE
+        assert "CFB" in _ESPN_ANCHORED
+        assert price_source_for("CFB") == "kalshi"
+
+    def test_accents_are_folded_not_stripped_as_punctuation(self):
+        """ESPN writes "San José State Spartans", Kalshi "San Jose St.".
+        Stripping the accent leaves "san jos state", which matches nothing."""
+        from src.data.kalshi import cfb_team_matches
+        assert cfb_team_matches("San José State Spartans", "San Jose St.")
+
+    def test_the_ohio_state_guard_still_holds(self):
+        """Accent folding must not loosen the qualifier rule — "Ohio" and
+        "Ohio State" are two different FBS programmes."""
+        from src.data.kalshi import cfb_team_matches
+        assert not cfb_team_matches("Ohio State Buckeyes", "Ohio")
+        assert cfb_team_matches("Ohio Bobcats", "Ohio")
+
+    def test_both_join_keys_are_tried(self):
+        """Name-only resolved 43/47 and abbreviation-only 40/47 on the same
+        slate — a different 40. Either alone leaves games unpriced."""
+        from src.data.kalshi_pricing import _cfb_side
+        name_only = [{"yes_sub_title": "Appalachian St.",
+                      "ticker": "KXNCAAFGAME-26OCT30APPGASO-APP"}]
+        # ESPN says "App State Mountaineers" — no prefix match, abbrev saves it
+        assert _cfb_side(name_only, "App State Mountaineers", "APP") is not None
+        # ESPN says NCSU where Kalshi's ticker says NCST — the name saves it
+        abbr_differs = [{"yes_sub_title": "NC St.",
+                         "ticker": "KXNCAAFGAME-26OCT30CALNCST-NCST"}]
+        assert _cfb_side(abbr_differs, "NC State Wolfpack", "NCSU") is not None
+
+    def test_one_market_cannot_answer_for_both_teams(self):
+        from src.data.kalshi_pricing import _cfb_side
+        mk = [{"yes_sub_title": "Duke", "ticker": "KXNCAAFGAME-26OCT30BCDUKE-DUKE"}]
+        assert _cfb_side(mk, "Duke Blue Devils", "DUKE") is _cfb_side(
+            mk, "Duke Blue Devils", "DUKE")
+
+    def test_espn_slate_carries_the_neutral_site_flag(self):
+        """The Odds API path never set neutral_site at all, so every CFB game
+        was silently modelled as having a home field."""
+        import inspect
+        from src.data.kalshi_pricing import _espn_slate, _discover_espn_anchored
+        assert "neutralSite" in inspect.getsource(_espn_slate)
+        assert "neutral_site" in inspect.getsource(_discover_espn_anchored)
+
+
+class TestCFBLiveDiscovery:
+    @pytest.fixture(scope="class")
+    def games(self):
+        pytest.importorskip("requests")
+        from src.data.kalshi_pricing import discover
+        try:
+            g = discover("CFB", "2026-10-31")
+        except Exception as e:
+            pytest.skip(f"network unavailable: {e}")
+        if not g:
+            pytest.skip("no CFB games listed for that date")
+        return g
+
+    def test_teams_are_our_espn_names(self, games):
+        """cfb_stats builds its SRS ratings off ESPN displayNames, so the slate
+        must speak the same names or every rating lookup misses."""
+        assert all(len(g["home_team"].split()) >= 2 for g in games)
+        assert all("." not in g["home_team"] for g in games)   # not "NC St."
+
+    def test_kickoff_is_espns_not_kalshis_placeholder(self, games):
+        """Kalshi's occurrence_datetime for CFB is a placeholder; commence_time
+        drives the shadow log's game lock and the CLV closing sample."""
+        # A Saturday night kickoff lands on Nov 1 in UTC, so assert the
+        # window rather than the date: Kalshi's placeholder for this slate was
+        # 03:00Z on Oct 31, hours before any of these games.
+        assert all(g["commence_time"][:10] in ("2026-10-31", "2026-11-01")
+                   for g in games)
+        assert any(g["commence_time"][:10] == "2026-11-01" for g in games)
+
+    def test_spread_sign_agrees_with_the_moneyline(self, games):
+        """The standing rule: when two markets in one game dict imply who is
+        favoured, they must agree. This is what inverted 9 of 17 NBA/NHL/MLB
+        games on Oct 28 2026 while looking perfectly healthy."""
+        for g in games:
+            ml, sp = g.get("moneyline"), g.get("spread")
+            if not ml or not sp:
+                continue
+            assert (ml["home_prob"] > ml["away_prob"]) == (sp["home_spread"] < 0), g

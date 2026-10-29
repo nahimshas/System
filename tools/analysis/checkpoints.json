@@ -350,6 +350,19 @@
       },
       "resolution": "FIXED. `_get_asa_season_stats` tried `xGoals` / `xgoals` / `xgf`, none of which exist on the ASA response — the real field is `xgoals_for`. Meanwhile `xgoals_against` WAS in the defensive fallback list and resolved correctly, so xGA was right and xGF was 0.0 for all 30 teams. Fixed by putting the real key first in both chains. Measured on the 2026-10-28 slate: xGF non-zero on 30/30 teams (median 1.62/game), raw |model-market| median fell from 39.8pp to 3.9pp, MLS produced 15 moneyline picks where it had produced ZERO before, totals went from uniformly 'Under' at the capped +10% to a mixed Over/Under spread at +1.5% to +3.9%, and draw edges fell from a capped +10% to +1.9%.",
       "rationale": "⚠️ THE LESSON IS ONE-SIDED BREAKAGE. This survived because the working half kept the output plausible: with both teams' attack at zero the model still RANKED teams correctly off xGA, so MLS moneylines stayed well calibrated (2.2pp off the market) and nothing on the card looked wrong. Only the absolute goal level was destroyed — expected total goals ~1.3 against a market implying ~2.9 — which is why every total was 'Under' and draws were inflated (two teams projected to score nothing draw 0-0 very often). It was found by asking why MLS produced ONLY Draw and Total picks and never a moneyline, then reading the raw model probability (0.8686 for Under 2.5 against a market 0.395) rather than the post-cap number, which the credibility cap had flattened to a tidy-looking +10%. ⚠️ THE CAP HIDES THE SYMPTOM: a market pinned at exactly the cap on every pick is evidence of a broken input, not of edge. The invariant now asserted is that a team cannot have a real xGA and a zero xGF."
+    },
+    {
+      "id": "cfb_on_kalshi",
+      "status": "open",
+      "title": "CFB priced from Kalshi via an ESPN-anchored slate (last budget sport off the Odds API)",
+      "created": "2026-10-29",
+      "evaluate_after": "2026-12-15",
+      "type": "note",
+      "rules": {
+        "pass": "CFB discovers >=90% of ESPN's FBS slate from Kalshi on every run; no game dict where the moneyline and spread disagree on who is favoured; CFB raw |model-market| median stays below 10pp",
+        "fail": "coverage below 90% on two consecutive Saturdays, OR any moneyline/spread orientation disagreement, OR raw gap median above 10pp (the inflation signature)"
+      },
+      "rationale": "Kalshi's CFB tickers carry a PLACEHOLDER date — KXNCAAFGAME-26OCT30ARIZTTU is Arizona at Texas Tech, which ESPN kicks off 2026-10-31T16:00Z, and occurrence_datetime (03:00Z) is not the kickoff either. Filtering that book by Kalshi's own date drops the entire Saturday slate (36 games read as Friday's) and keeps the wrong ones, so the ticker ORDER cannot be trusted to encode home/away either. The slate is therefore anchored on ESPN — which knows the date, the kickoff, the homeAway flags and the neutral-site flag — and Kalshi supplies only prices, joined by team. Two join keys are needed and neither suffices alone: structural NAME matching resolved 43/47 games on 2026-10-31 and ticker ABBREVIATION resolved a different 40/47 (ESPN says NCSU where Kalshi says NCST; ESPN says 'App State' where Kalshi says 'Appalachian St.'). Together: 52/52 across three measured slates. Measured first run: 47/47 games, 47 moneylines, 12 spreads and 15 totals surviving the 10c liquidity filter (CFB spread/total books have median open interest of ZERO, as cfb.py has documented since Aug), median edge +4.5%, raw |model-market| median 4.6pp, zero moneyline/spread orientation disagreements. ALSO A MODEL INPUT CHANGE: neutral_site was never set on the Odds API path, so every CFB game was silently modelled with a 2.6-point home advantage; ESPN supplies it and 2 of 47 games on the measured slate are genuinely neutral (Notre Dame-Navy, Florida-Georgia). CFB remains watchlist-only — no money is routed either way."
     }
   ]
 }

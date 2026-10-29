@@ -26,8 +26,9 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from src.data.kalshi import (_f, _game_code, _norm, _team_token, enabled,
-                             event_date, fetch_open_markets)
+from src.data.kalshi import (_f, _game_code, _norm, _team_token,
+                             cfb_team_matches, enabled, event_date,
+                             fetch_open_markets)
 from src.data.kalshi_clv import SPORT_SERIES
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,21 @@ _CODE_HOME_FIRST = {"MLS", "LIGAMX"}
 
 # Leagues whose moneyline is 3-way (home / draw / away).
 _THREE_WAY = {"MLS", "LIGAMX", "WC"}
+
+# Leagues discovered from ESPN's slate instead of from Kalshi's own event date.
+# ⚠️ CFB is the only one, and it is not a stylistic choice. Kalshi's college
+# football tickers carry a PLACEHOLDER date: KXNCAAFGAME-26OCT30ARIZTTU is
+# Arizona at Texas Tech, which ESPN kicks off 2026-10-31T16:00Z, and its
+# occurrence_datetime (03:00Z) is not the kickoff either. Filtering that book
+# by date drops the whole Saturday slate and keeps the wrong games. ESPN knows
+# the date, the kickoff, who is home, and whether the site is neutral, so it
+# anchors the slate and Kalshi is joined to it by TEAM.
+_ESPN_ANCHORED = {"CFB"}
+
+# How far Kalshi's placeholder date may drift from ESPN's. Observed drift is
+# one day; a college team plays once a week, so two days is generous without
+# ever reaching the same fixture in an adjacent week.
+_ESPN_ANCHOR_WINDOW_DAYS = 2
 
 _REVERSE_SOURCES = {
     "MLB": "TEAM_TO_KALSHI", "NFL": "NFL_TEAM_TO_KALSHI",
@@ -89,6 +105,148 @@ def _point(title: str) -> Optional[float]:
     return float(m.group(1)) if m else None
 
 
+def _price_entry(sport: str, code: str, home: str, away: str,
+                 hm: Dict, am: Dict, sides: List[Dict],
+                 books: Dict[str, List[Dict]], series: Dict[str, str],
+                 commence_time: str) -> Dict[str, Any]:
+    """Turn one identified game's order books into our game dict.
+
+    Shared by both discovery paths so the moneyline / three-way / spread /
+    total logic — and the spread-orientation rule in particular — has exactly
+    one implementation. `hm` and `am` are the home and away MONEYLINE markets;
+    who is home has already been decided by the caller, from the ticker order
+    (Kalshi-anchored) or from ESPN's homeAway flags (ESPN-anchored).
+    """
+    entry: Dict[str, Any] = {
+        "game_id": code, "sport": sport,
+        "home_team": home, "away_team": away,
+        "commence_time": commence_time,
+        "moneyline": None, "spread": None, "total": None,
+        "f5_moneyline": None, "f5_spread": None, "f5_total": None,
+    }
+    h_mid, a_mid = _mid(hm), _mid(am)
+
+    # ⚠️ SOCCER MONEYLINES ARE THREE-WAY. analyze_mls_game bails on
+    # `if not ml or "draw_prob" not in ml`, so a 2-way moneyline produced
+    # ZERO recs for MLS and LigaMX across every slate of the trial while
+    # discovery looked perfectly healthy. Kalshi carries the draw as the
+    # "Tie" market inside the same book.
+    d_mid = None
+    if sport in _THREE_WAY:
+        tie = next((m for m in sides if _norm(m.get("yes_sub_title")) == "tie"), None)
+        d_mid = _mid(tie) if tie is not None else None
+        if h_mid is None or a_mid is None or d_mid is None:
+            h_mid = a_mid = None          # incomplete 3-way → no moneyline
+        else:
+            # Kalshi quotes the three independently; normalise so they sum
+            # to 1 the way the analyzer expects of a no-vig 3-way price.
+            tot = h_mid + d_mid + a_mid
+            if tot > 0:
+                h_mid, d_mid, a_mid = (round(h_mid / tot, 4),
+                                       round(d_mid / tot, 4),
+                                       round(a_mid / tot, 4))
+
+    if h_mid is not None and a_mid is not None:
+        # Both sides are the SAME binary market, so they already sum to ~1
+        # and need no de-vigging. (Contrast the Odds API totals path, which
+        # keeps the overround — see the note in odds_client.)
+        entry["moneyline"] = {"book": "kalshi", "home_prob": h_mid,
+                              "away_prob": a_mid}
+        if d_mid is not None:
+            entry["moneyline"]["draw_prob"] = d_mid
+
+    # ⚠️ Pass the home team's TICKER ABBREVIATION, not its display token.
+    # `_team_token` returns "San Antonio", while spread tickers say "SAS",
+    # so a display token can never match a ticker suffix. `hm` is the home
+    # moneyline market, resolved by the same ticker-order logic above, so
+    # its own suffix IS the home abbreviation — exact, with no second map
+    # to drift out of sync.
+    home_abbr = str(hm.get("ticker") or "").rsplit("-", 1)[-1]
+    entry["spread"] = _best_spread(books.get(series.get("Spread") or "", []),
+                                   code, home_abbr)
+    entry["total"] = _best_total(books.get(series.get("Total") or "", []), code)
+    return entry
+
+
+def _cfb_side(markets: List[Dict], name: str, abbr: str) -> Optional[Dict]:
+    """The moneyline market for one college team, or None.
+
+    Two keys, tried in order, because neither alone covers the slate:
+      1. the team NAME, matched structurally (Kalshi "Ole Miss" ⊂ ESPN
+         "Ole Miss Rebels"), which resolved 43 of 47 games on 2026-10-31;
+      2. the ticker ABBREVIATION, which resolved 40 of the same 47 — a
+         different 40. ESPN says NCSU where Kalshi says NCST, but ESPN says
+         "App State" where Kalshi says "Appalachian St." and no amount of
+         prefix matching joins those two.
+    Together they resolved 52 of 52 across three measured slates. Neither key
+    is allowed to guess: an unmatched game is dropped, never approximated.
+    """
+    for m in markets:
+        if cfb_team_matches(name, m.get("yes_sub_title")):
+            return m
+    if abbr:
+        for m in markets:
+            if str(m.get("ticker") or "").rsplit("-", 1)[-1].upper() == abbr:
+                return m
+    return None
+
+
+def _discover_espn_anchored(sport: str, game_date: str,
+                            books: Dict[str, List[Dict]],
+                            series: Dict[str, str]) -> List[Dict[str, Any]]:
+    """Slate from ESPN, prices from Kalshi, joined by team.
+
+    The Kalshi-anchored path in `discover()` reads the slate out of Kalshi's
+    own moneyline book and infers home/away from the ticker's team order. For
+    CFB neither is usable — the date segment is a placeholder (see
+    _ESPN_ANCHORED) and so the ticker order cannot be trusted to mean anything
+    either. ESPN supplies the slate, the kickoff, the homeAway flags and the
+    neutral-site flag; Kalshi supplies only prices.
+    """
+    ml_series = series.get("Moneyline")
+    by_code: Dict[str, List[Dict]] = {}
+    for m in books.get(ml_series or "", []):
+        by_code.setdefault(_game_code(m), []).append(m)
+
+    target = datetime.strptime(game_date, "%Y-%m-%d").date()
+    near: Dict[str, List[Dict]] = {}
+    for code, mk in by_code.items():
+        try:
+            d = datetime.strptime(event_date(mk[0]) or "", "%Y-%m-%d").date()
+        except Exception:
+            continue
+        if abs((d - target).days) <= _ESPN_ANCHOR_WINDOW_DAYS:
+            near[code] = mk
+
+    out: List[Dict[str, Any]] = []
+    unmatched = 0
+    for g in _espn_slate(sport, game_date):
+        hits = []
+        for code, mk in near.items():
+            hm = _cfb_side(mk, g["home_team"], g["home_abbr"])
+            am = _cfb_side(mk, g["away_team"], g["away_abbr"])
+            # `hm is am` guards the degenerate case where one market answers
+            # for both teams — that is a failed identification, not a game.
+            if hm is not None and am is not None and hm is not am:
+                hits.append((code, hm, am))
+        if len(hits) != 1:
+            unmatched += 1
+            continue                  # unmatched or ambiguous — never guess
+        code, hm, am = hits[0]
+        entry = _price_entry(sport, code, g["home_team"], g["away_team"],
+                             hm, am, near[code], books, series,
+                             g["commence_time"])
+        # ⚠️ ESPN is the only source that knows this, and the Odds API path
+        # never set it at all — every CFB game was silently treated as having
+        # a home field. analyze_cfb_game reads it as `neutral_site`.
+        entry["neutral_site"] = g["neutral_site"]
+        out.append(entry)
+    if unmatched:
+        logger.info(f"{sport}: {unmatched} ESPN game(s) had no unambiguous "
+                    f"Kalshi match — dropped rather than guessed")
+    return out
+
+
 def discover(sport: str, game_date: str) -> List[Dict[str, Any]]:
     """Games listed on Kalshi for `game_date`, priced into our game-dict shape.
 
@@ -109,9 +267,6 @@ def discover(sport: str, game_date: str) -> List[Dict[str, Any]]:
     ml_series = series.get("Moneyline")
     if not ml_series:
         return out
-    rev = _reverse_map(sport)
-    if not rev:
-        return out          # CFB and anything without a static map
 
     # Keyed by SERIES TICKER, not market name — every lookup below is by
     # ticker. Keying by name also silently refetches a series shared by two
@@ -119,6 +274,13 @@ def discover(sport: str, game_date: str) -> List[Dict[str, Any]]:
     books: Dict[str, List[Dict]] = {}
     for _tkr in {v for v in series.values() if v}:
         books[_tkr] = fetch_open_markets(_tkr, max_pages=8)
+
+    if sport in _ESPN_ANCHORED:
+        return _discover_espn_anchored(sport, game_date, books, series)
+
+    rev = _reverse_map(sport)
+    if not rev:
+        return out          # anything without a static map
 
     # ── Discovery: the moneyline book defines the slate ──────────────────────
     # It is the only book whose titles are bare team names, and the ticker's
@@ -162,56 +324,10 @@ def discover(sport: str, game_date: str) -> List[Dict[str, Any]]:
         hm = next(s for n, s in named if n == home)
         am = next(s for n, s in named if n == away)
 
-        entry: Dict[str, Any] = {
-            "game_id": code, "sport": sport,
-            "home_team": home, "away_team": away,
-            "commence_time": str(hm.get("occurrence_datetime")
-                                 or hm.get("expected_expiration_time") or ""),
-            "moneyline": None, "spread": None, "total": None,
-            "f5_moneyline": None, "f5_spread": None, "f5_total": None,
-        }
-        h_mid, a_mid = _mid(hm), _mid(am)
-
-        # ⚠️ SOCCER MONEYLINES ARE THREE-WAY. analyze_mls_game bails on
-        # `if not ml or "draw_prob" not in ml`, so a 2-way moneyline produced
-        # ZERO recs for MLS and LigaMX across every slate of the trial while
-        # discovery looked perfectly healthy. Kalshi carries the draw as the
-        # "Tie" market inside the same book.
-        d_mid = None
-        if sport in _THREE_WAY:
-            tie = next((m for m in sides if _norm(m.get("yes_sub_title")) == "tie"), None)
-            d_mid = _mid(tie) if tie is not None else None
-            if h_mid is None or a_mid is None or d_mid is None:
-                h_mid = a_mid = None          # incomplete 3-way → no moneyline
-            else:
-                # Kalshi quotes the three independently; normalise so they sum
-                # to 1 the way the analyzer expects of a no-vig 3-way price.
-                tot = h_mid + d_mid + a_mid
-                if tot > 0:
-                    h_mid, d_mid, a_mid = (round(h_mid / tot, 4),
-                                           round(d_mid / tot, 4),
-                                           round(a_mid / tot, 4))
-
-        if h_mid is not None and a_mid is not None:
-            # Both sides are the SAME binary market, so they already sum to ~1
-            # and need no de-vigging. (Contrast the Odds API totals path, which
-            # keeps the overround — see the note in odds_client.)
-            entry["moneyline"] = {"book": "kalshi", "home_prob": h_mid,
-                                  "away_prob": a_mid}
-            if d_mid is not None:
-                entry["moneyline"]["draw_prob"] = d_mid
-
-        # ⚠️ Pass the home team's TICKER ABBREVIATION, not its display token.
-        # `_team_token` returns "San Antonio", while spread tickers say "SAS",
-        # so a display token can never match a ticker suffix. `hm` is the home
-        # moneyline market, resolved by the same ticker-order logic above, so
-        # its own suffix IS the home abbreviation — exact, with no second map
-        # to drift out of sync.
-        home_abbr = str(hm.get("ticker") or "").rsplit("-", 1)[-1]
-        entry["spread"] = _best_spread(books.get(series.get("Spread") or "", []),
-                                       code, home_abbr)
-        entry["total"] = _best_total(books.get(series.get("Total") or "", []), code)
-        out.append(entry)
+        out.append(_price_entry(
+            sport, code, home, away, hm, am, sides, books, series,
+            str(hm.get("occurrence_datetime")
+                or hm.get("expected_expiration_time") or "")))
     return out
 
 
@@ -482,7 +598,8 @@ def record_card_comparison(run_date, sport: str, module, ctx, odds_recs) -> bool
 #         structurally for CLV, which is not enough to DISCOVER a slate).
 #   IPL — Kalshi lists no per-match markets at all.
 #   WC  — out of season, series ticker never verified against a live book.
-KALSHI_PRICEABLE = {"MLB", "NBA", "NFL", "NHL", "WNBA", "MLS", "LIGAMX"}
+KALSHI_PRICEABLE = {"MLB", "NBA", "NFL", "NHL", "WNBA", "MLS", "LIGAMX",
+                    "CFB"}
 
 
 def price_source_for(sport: str) -> str:
@@ -506,6 +623,16 @@ def _espn_game_count(sport: str, game_date: str) -> Optional[int]:
     reached, and an unreachable ESPN must NOT be read as "no games" — that
     would silence the very gap this check exists to find.
     """
+    events = _espn_events(sport, game_date)
+    return None if events is None else len(events)
+
+
+def _espn_events(sport: str, game_date: str) -> Optional[List[Dict]]:
+    """ESPN's raw events for a date, or None when ESPN cannot be reached.
+
+    ⚠️ None and [] mean different things and must not be collapsed: None is
+    "we could not ask", [] is "there are no games". See _espn_game_count.
+    """
     try:
         import requests
         from src.data.outcome_checker import (ESPN_BASE, ESPN_SPORT_PATHS,
@@ -514,14 +641,41 @@ def _espn_game_count(sport: str, game_date: str) -> Optional[int]:
                 or ESPN_WATCHLIST_PATHS.get(sport.upper()))
         if not path:
             return None
-        params = {"dates": game_date.replace("-", "")}
+        params: Dict[str, Any] = {"dates": game_date.replace("-", "")}
         if sport.upper() == "CFB":
+            # groups=80 is FBS. The SRS model rates FBS only, and Kalshi lists
+            # FCS games too, so this is also what keeps an unrated Morgan St.
+            # out of the slate rather than relying on a name lookup to fail.
             params.update({"groups": 80, "limit": 300})
         r = requests.get(f"{ESPN_BASE}/{path}/scoreboard", params=params, timeout=12)
         r.raise_for_status()
-        return len((r.json() or {}).get("events", []) or [])
+        return (r.json() or {}).get("events", []) or []
     except Exception:
         return None
+
+
+def _espn_slate(sport: str, game_date: str) -> List[Dict[str, Any]]:
+    """ESPN's games for a date: names, abbreviations, kickoff, neutral site."""
+    out: List[Dict[str, Any]] = []
+    for e in (_espn_events(sport, game_date) or []):
+        try:
+            comp = (e.get("competitions") or [{}])[0]
+            by = {c.get("homeAway"): (c.get("team") or {})
+                  for c in comp.get("competitors") or []}
+            home, away = by.get("home") or {}, by.get("away") or {}
+            if not home.get("displayName") or not away.get("displayName"):
+                continue
+            out.append({
+                "home_team": home["displayName"],
+                "away_team": away["displayName"],
+                "home_abbr": str(home.get("abbreviation") or "").upper(),
+                "away_abbr": str(away.get("abbreviation") or "").upper(),
+                "commence_time": str(e.get("date") or ""),
+                "neutral_site": bool(comp.get("neutralSite")),
+            })
+        except Exception:
+            continue
+    return out
 
 
 def fetch_games_routed(slug: str, module, today_str: str,

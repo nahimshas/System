@@ -167,10 +167,46 @@ so open and close are finally measured at the same venue.
 | sport | priced by | why |
 |---|---|---|
 | MLB, NBA, NFL, NHL, WNBA, MLS, Liga MX | **Kalshi** | verified static team map → discovery works |
-| CFB, IPL, WC | Odds API (**free tier**) | Kalshi cannot DISCOVER them: CFB has no static team map (it is matched structurally for CLV, which is enough to price a known game but not to build a slate), IPL has no Kalshi markets at all, WC's series ticker was never verified live |
+| CFB | **Kalshi**, ESPN-anchored | no static map and no usable Kalshi date — see below |
+| IPL, WC | Odds API (**free tier**) | IPL has no Kalshi markets at all; WC's series ticker was never verified live |
+
+⚠️ **THE ODDS API KEY IS DEAD (401 since Oct 29 2026).** Cancelling the paid plan
+deactivated the key rather than downgrading it, so the "free tier" row above is
+aspirational until a new key is added. IPL and WC are both out of season, so
+nothing is currently affected — but a silent 401 is what took CFB down for a day.
+
+⚠️ **CFB IS ESPN-ANCHORED, NOT KALSHI-ANCHORED** (`_ESPN_ANCHORED` +
+`_discover_espn_anchored` in `kalshi_pricing.py`). Kalshi's college tickers carry
+a **placeholder date**: `KXNCAAFGAME-26OCT30ARIZTTU` is Arizona at Texas Tech,
+which ESPN kicks off `2026-10-31T16:00Z`, and `occurrence_datetime` (03:00Z) is
+not the kickoff either. Filtering that book by Kalshi's date drops the whole
+Saturday slate (36 games read as Friday's) and keeps the wrong ones — so the
+ticker's team ORDER cannot be trusted to encode home/away either. ESPN therefore
+supplies the slate, kickoff, homeAway flags and neutral-site flag; Kalshi supplies
+only prices, joined by team within a ±2-day window.
+- **Two join keys, and neither suffices alone.** Structural NAME matching resolved
+  43/47 games on 2026-10-31; ticker ABBREVIATION resolved a different 40/47 (ESPN
+  says `NCSU` where Kalshi says `NCST`; ESPN says "App State" where Kalshi says
+  "Appalachian St."). Together: **52/52** across three slates. `_cfb_norm` folds
+  accents via NFKD first — "San José State" vs "San Jose St." otherwise matches
+  nothing, and that is a generic fix, not a per-school alias.
+- **`groups=80` (FBS) is load-bearing**, not a tidiness flag: Kalshi lists FCS
+  games too, and the SRS model rates FBS only.
+- **`neutral_site` is now actually set.** The Odds API path never set it at all, so
+  every CFB game was silently modelled with a 2.6-point home advantage. 2 of 47
+  games on the measured slate are genuinely neutral.
+- **Thin books are expected.** First run: 47/47 games and 47 moneylines, but only
+  12 spreads and 15 totals survive the 10c liquidity filter — CFB spread/total
+  books have median open interest of ZERO. That is the filter working.
+- Checkpoint: `cfb_on_kalshi`, evaluate after Dec 15 2026. CFB stays watchlist-only.
 
 - **Routing happens at one place only** — the `fetch_games_routed(...)` call in `main.py`. Never add a
-  per-sport branch; add the sport to `KALSHI_PRICEABLE` (and give it a team map in `kalshi.py`).
+  per-sport branch; add the sport to `KALSHI_PRICEABLE` (and give it a team map in `kalshi.py`, or
+  add it to `_ESPN_ANCHORED` if Kalshi cannot be trusted to date its own games).
+- ⚠️ **`get_last_api_error()` IS MODULE-GLOBAL AND STICKY.** It stays set until the next Odds API
+  call, so a Kalshi-priced sport with a genuinely empty slate will inherit the PREVIOUS sport's
+  error and report a failure it never had. Liga MX did exactly that on Oct 29 2026, wearing CFB's
+  dead key on a day it simply had no fixtures. Only read it when `_price_src == "oddsapi"`.
 - **`PRICE_SOURCE=oddsapi` forces the old path for everything, no deploy needed.** Reverse switch if
   Kalshi misbehaves — only useful while a free-tier key exists.
 - **Edges got SMALLER, not bigger** (measured before shipping: NBA median +7.8% vs +10.2%,
