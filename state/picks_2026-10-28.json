@@ -2423,43 +2423,6 @@
   ],
   "parlays": [
     {
-      "label": "New York Knicks (ML) + Toronto Maple Leafs +1.5",
-      "legs": [
-        {
-          "game": "New York Knicks @ Chicago Bulls",
-          "pick": "New York Knicks",
-          "bet_type": "Moneyline",
-          "sport": "NBA",
-          "model_prob_pct": 83.1,
-          "edge_pct": 12.6,
-          "home_team": "Chicago Bulls",
-          "away_team": "New York Knicks",
-          "commence_time": "2026-10-29T03:00:00Z"
-        },
-        {
-          "game": "Toronto Maple Leafs @ Seattle Kraken",
-          "pick": "Toronto Maple Leafs +1.5",
-          "bet_type": "Spread",
-          "sport": "NHL",
-          "model_prob_pct": 81.5,
-          "edge_pct": 15.0,
-          "home_team": "Seattle Kraken",
-          "away_team": "Toronto Maple Leafs",
-          "commence_time": "2026-10-29T05:00:00Z"
-        }
-      ],
-      "combined_prob_pct": 64.8,
-      "contract_price_cents": 46.9,
-      "edge_pct": 18.0,
-      "num_contracts": 15,
-      "total_cost": 7.33,
-      "profit_if_win": 7.67,
-      "expected_value": 2.4,
-      "confidence": "HIGH",
-      "edge": 0.1797,
-      "locked": false
-    },
-    {
       "label": "New Orleans Pelicans (ML) + New Jersey Devils +1.5",
       "legs": [
         {
@@ -6649,6 +6612,46 @@
       "credibility_cap_fired": true,
       "effective_edge": 0.091496,
       "skipped_reason": "not placed by the user \u2014 the spread sign was inverted (always 'home favoured'), so the line on the card was the wrong side and its price/edge/stake came from the opposite contract"
+    }
+  ],
+  "skipped_parlays": [
+    {
+      "label": "New York Knicks (ML) + Toronto Maple Leafs +1.5",
+      "legs": [
+        {
+          "game": "New York Knicks @ Chicago Bulls",
+          "pick": "New York Knicks",
+          "bet_type": "Moneyline",
+          "sport": "NBA",
+          "model_prob_pct": 83.1,
+          "edge_pct": 12.6,
+          "home_team": "Chicago Bulls",
+          "away_team": "New York Knicks",
+          "commence_time": "2026-10-29T03:00:00Z"
+        },
+        {
+          "game": "Toronto Maple Leafs @ Seattle Kraken",
+          "pick": "Toronto Maple Leafs +1.5",
+          "bet_type": "Spread",
+          "sport": "NHL",
+          "model_prob_pct": 81.5,
+          "edge_pct": 15.0,
+          "home_team": "Seattle Kraken",
+          "away_team": "Toronto Maple Leafs",
+          "commence_time": "2026-10-29T05:00:00Z"
+        }
+      ],
+      "combined_prob_pct": 64.8,
+      "contract_price_cents": 46.9,
+      "edge_pct": 18.0,
+      "num_contracts": 15,
+      "total_cost": 7.33,
+      "profit_if_win": 7.67,
+      "expected_value": 2.4,
+      "confidence": "HIGH",
+      "edge": 0.1797,
+      "locked": false,
+      "skipped_reason": "not placed by the user \u2014 carried the Toronto Maple Leafs +1.5 leg, whose spread sign was inverted"
     }
   ]
 }
