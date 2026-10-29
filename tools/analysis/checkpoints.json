@@ -399,7 +399,8 @@
       "on_pass": "If NFL vs-market is >= -2.0pp over >= 120 settled picks with the warm start fully decayed, the Jul 24 warm-start fix is vindicated and NFL keeps its budget slot — the early-season deficit was the cold start, as diagnosed.",
       "on_fail": "If NFL is still worse than -2.0pp vs market with every team past the ramp, the problem is the model and not the cold start. Put NFL on watchlist-only and run market_test.py on NFL features before it is ever restored. Do not add constants.",
       "measurement": "Actual win rate minus mean market_prob_at_first_pick over NFL shadow-log rows, pool and displayed_in_top separately, alongside the same figure for MLB/NBA/NHL as the control.",
-      "status": "open"
+      "status": "open",
+      "interim_decision": "Oct 29 2026 — USER DECIDED: leave NFL on budget as is, unchanged, until this checkpoint evaluates. Presented with three options (leave / watchlist-only / reduced stake) alongside the -7.3pp finding and the Sep→Oct improvement, and chose to take the December read. ⚠️ This is a DELIBERATE decision, not an unreviewed default: NFL continuing to stake through Nov is the agreed plan, so do not re-raise it as an alarm before 2026-12-07 and do not quietly flip enters_budget. If NFL deteriorates sharply before then — materially worse than the -7.3pp already measured, on fresh picks rather than the same ones re-counted — that is new information and worth surfacing early; the ordinary variance of a 1-in-4 win-rate swing is not."
     }
   ]
 }
