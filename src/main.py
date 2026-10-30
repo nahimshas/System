@@ -13,6 +13,7 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -133,6 +134,54 @@ def _clv_gate_safe(rec) -> bool:
         return allowed
     except Exception:
         return True
+
+
+def _budget_block_reason(rec) -> Optional[str]:
+    """Why this pick cannot take real money, or None if it can.
+
+    ONE definition of budget eligibility, used both to filter the pool and to
+    explain the result on the card. The order is deliberate: the cheapest and
+    most specific reason first, so the message a reader sees names the actual
+    blocker rather than the first of several.
+
+    These are the "refused" and "cannot" reasons — properties of the pick and
+    its market. Losing a slot race to a better pick in the same game, or
+    ranking outside the top five, is decided later against the whole slate and
+    is explained by the report instead.
+    """
+    try:
+        if rec.bet_type in BUDGET_EXCLUDED_MARKETS:
+            return f"{rec.bet_type} is display-and-log only — not routed to money"
+        if not _pwa_display_eligible(rec):
+            return "below the display probability floor"
+        eff = _effective_edge_safe(rec)
+        if eff < BUDGET_MIN_EDGE:
+            return (f"effective edge {eff * 100:.1f}% is under the "
+                    f"{BUDGET_MIN_EDGE * 100:.0f}% real-money floor")
+        from src.state.clv_governor import clv_gate
+        allowed, reason = clv_gate(rec)
+        if not allowed:
+            return reason or "gated by the CLV governor"
+        from src.state.outcome_governor import outcome_gate
+        allowed, reason = outcome_gate(rec)
+        if not allowed:
+            return reason or "gated by the outcome governor"
+        if getattr(rec.sizing, "num_contracts", 0) <= 0:
+            # Kelly asked for less than one contract and contracts are whole.
+            # At a small bankroll this is common and is NOT a defect: on
+            # 2026-10-30 "Florida Panthers -1.5" sized to $0.43 against a
+            # $0.465 contract — 92% of a contract, truncated to zero.
+            alloc = getattr(rec.sizing, "dollar_allocation", 0.0) or 0.0
+            price = getattr(rec.sizing, "contract_price", 0.0) or 0.0
+            if alloc and price:
+                return (f"Kelly stake ${alloc:.2f} is less than one contract "
+                        f"at ${price:.2f} — rounds to zero")
+            return "stake rounds to zero contracts"
+        return None
+    except Exception:
+        # Fail OPEN, matching every other gate here: an unexplainable pick is
+        # allowed rather than silently dropped.
+        return None
 
 
 def _outcome_gate_safe(rec) -> bool:
@@ -752,14 +801,22 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
                 # BUDGET_MIN_EDGE (Jul 4 2026): real money requires a larger
                 # effective edge than display — sub-5% edges showed no
                 # win-rate relationship. Display pools keep MIN_EDGE.
-                all_singles_raw.extend(
-                    r for r in qualifying
-                    if (r.bet_type not in BUDGET_EXCLUDED_MARKETS)
-                    and _effective_edge_safe(r) >= BUDGET_MIN_EDGE
-                    and _clv_gate_safe(r) and _outcome_gate_safe(r)
-                    and getattr(r.sizing, "num_contracts", 0) > 0
-                    and _pwa_display_eligible(r)
-                )
+                # ⚠️ Stamped, not just filtered. A pick that fails one of these
+                # gates still appears in its sport tab, where it used to carry
+                # no sign that the system had declined to bet it — so the tab
+                # showed "Detroit Pistons -7.5" while the card showed the
+                # moneyline, with nothing to explain the difference (user
+                # question, Oct 30 2026). Someone reading the tab as a list of
+                # bets could stake a pick the governor had refused. The reason
+                # now travels with the rec into the display dicts.
+                for r in qualifying:
+                    _why = _budget_block_reason(r)
+                    try:
+                        r.budget_block = _why
+                    except Exception:
+                        pass
+                    if _why is None:
+                        all_singles_raw.append(r)
         else:
             own_display[slug] = qualifying    # IPL / WNBA / MLS → own tile (same MIN_EDGE gate)
 
@@ -834,9 +891,18 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
         _deduped_raw.append(_r)
 
     def _to_dict_with_eff(r) -> dict:
-        """bet_to_dict + stamp effective_edge while we still have the rec object."""
+        """bet_to_dict + stamp effective_edge and the budget verdict.
+
+        `budget_block` travels into the display dicts so a sport tab can say
+        why a pick it is showing is not on the money card. Watchlist sports
+        never route to money, so the reason is meaningless there and is only
+        carried for budget sports.
+        """
         d = bet_to_dict(r)
         d["effective_edge"] = round(_effective_edge_safe(r), 6)
+        _blk = getattr(r, "budget_block", None)
+        if _blk:
+            d["budget_block"] = _blk
         return d
 
     # One budget bet per GAME (Aug 10 2026). The dedup above keys on

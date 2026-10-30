@@ -373,7 +373,7 @@
         </div>
         {% else %}
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
-          📊 Not in today's top 5 budget allocation
+          📊 {% if bet.not_on_card %}Not on today's card — {{ bet.not_on_card }}{% else %}Not in today's top 5 budget allocation{% endif %}
         </div>
         {% endif %}
       </div>
@@ -549,7 +549,7 @@
         </div>
         {% else %}
         <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:6px 10px;background:#1a1d27;border-radius:6px;border:1px solid var(--border);">
-          📊 Not in today's top 5 budget allocation
+          📊 {% if bet.not_on_card %}Not on today's card — {{ bet.not_on_card }}{% else %}Not in today's top 5 budget allocation{% endif %}
         </div>
         {% endif %}
       </div>

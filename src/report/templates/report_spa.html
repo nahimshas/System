@@ -26,8 +26,13 @@
       {% if bet.locked %}<span class="lock-badge">🔒</span>{% endif %}
       {% if bet.bet_type and bet.bet_type.startswith('F5') %}<span class="badge badge-f5">F5</span>{% endif %}
       <span class="badge badge-conf-{{ bet.confidence }}">{{ bet.confidence }}</span>
+      {% if bet.alloc_rank %}<span class="badge badge-oncard">CARD #{{ bet.alloc_rank }}</span>
+      {% elif bet.not_on_card %}<span class="badge badge-notbet">NOT BET</span>{% endif %}
     </div>
   </div>
+  {% if not bet.alloc_rank and bet.not_on_card %}
+  <div class="not-bet-why">Not on today's card — {{ bet.not_on_card }}</div>
+  {% endif %}
   <div class="live-status" style="min-height:0;"></div>
   {%- set ns = namespace(proj_line='') -%}
   {%- set has_ctx = bet.narrative or bet.context -%}
@@ -48,6 +53,8 @@
     {% if bet.context %}{% for item in bet.context %}<div class="context-item">{{ item }}</div>{% endfor %}{% endif %}
     {% if bet.alloc_rank %}
     <div style="margin-top:8px;font-size:0.72rem;color:var(--teal);">📋 Slot #{{ bet.alloc_rank }} in Today's Card</div>
+    {% elif bet.not_on_card %}
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">📊 Not on today's card — {{ bet.not_on_card }}</div>
     {% else %}
     <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;">📊 Not in today's top budget allocation</div>
     {% endif %}
@@ -529,6 +536,12 @@
     .badge-ligamx { background: #064e3b; color: #a7f3d0; }
     .badge-cfb { background: #3b0764; color: #e9d5ff; }
     .badge-f5    { background: #422006; color: #fed7aa; }
+    /* A tab pick the system declined to bet. Muted on purpose: it marks a
+       pick as not-staked, and must not read as a warning about the game. */
+    .badge-oncard { background: rgba(20,184,166,0.15); color: var(--teal); }
+    .badge-notbet { background: rgba(148,163,184,0.15); color: var(--muted); }
+    .not-bet-why { font-size: 0.68rem; color: var(--muted); margin: 2px 0 6px;
+                   padding-left: 2px; line-height: 1.35; }
     .badge-parlay { background: var(--purple-dim); color: var(--purple); }
 
     .lock-badge { font-size: 0.62rem; color: var(--muted); }

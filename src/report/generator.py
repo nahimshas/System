@@ -4,7 +4,8 @@ import logging
 from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
-from src.config import DAILY_BUDGET, MAX_SINGLE_BETS, PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR
+from src.config import (BUDGET_MIN_EDGE, DAILY_BUDGET, MAX_SINGLE_BETS,
+                        PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR)
 
 
 def _pwa_show(d: dict) -> bool:
@@ -441,6 +442,65 @@ def build_report(
     _alloc_rank_map = {(r["pick"], r["game"]): i for i, r in enumerate(all_singles, 1)}
     _alloc_data_map = {(r["pick"], r["game"]): r for r in all_singles}
 
+    def _gated_markets():
+        """{(SPORT, market_type)} currently gated out of the budget.
+
+        Read from the governors' own snapshots rather than re-derived, so the
+        explanation on a card cannot drift from the decision that produced it.
+        """
+        out = set()
+        for name in ("clv_state.json", "outcome_state.json"):
+            try:
+                path = Path("state") / name
+                if not path.exists():
+                    continue
+                with open(path) as f:
+                    data = json.load(f)
+                for m in data.get("markets") or []:
+                    if m.get("gated"):
+                        out.add(((m.get("sport") or "").upper(),
+                                 m.get("market_type") or ""))
+            except Exception:
+                continue
+        return out
+
+    _GATED = _gated_markets()
+
+    def _not_on_card_reason(rec):
+        """Why this pick is not on the money card.
+
+        ⚠️ DERIVED HERE, not required from the run. `budget_block` is stamped at
+        routing time and is preferred when present, but a report re-rendered
+        from saved state (every --code-only render, and every state file
+        written before that field existed) would otherwise fall through to a
+        guess. Guessing was worse than saying nothing: the first version of
+        this reported "one bet per game" for a CLV-gated spread, which reads as
+        "it lost a fair race" when in fact the system refused to bet it.
+
+        Order matters. The "cannot" and "refused" reasons are checked before
+        the slot race, because a pick that was never eligible did not lose one.
+        """
+        blk = rec.get("budget_block")
+        if blk:
+            return blk
+        sport = (rec.get("sport") or "").upper()
+        market = rec.get("bet_type") or ""
+        if (sport, market) in _GATED:
+            return (f"{sport} {market} is gated out of real money on its own "
+                    f"track record — display only")
+        if (rec.get("num_contracts") or 0) <= 0:
+            return "stake rounds to under one contract at the current bankroll"
+        eff = rec.get("effective_edge", rec.get("edge") or 0)
+        if eff < BUDGET_MIN_EDGE:
+            return (f"effective edge {eff * 100:.1f}% is under the "
+                    f"{BUDGET_MIN_EDGE * 100:.0f}% real-money floor")
+        for key in _alloc_rank_map:
+            if key[1] == rec.get("game") and key[0] != rec.get("pick"):
+                return f"one bet per game — this game's slot went to {key[0]}"
+        if _alloc_rank_map:
+            return "outside the top slots by effective edge"
+        return None
+
     def _tag_alloc(lst):
         out = []
         for rec in lst:
@@ -463,7 +523,14 @@ def build_report(
                     "market_prob_pct":      alloc.get("market_prob_pct", rec.get("market_prob_pct", 50)),
                 }
             else:
-                rec = {**rec, "alloc_rank": None}
+                # ⚠️ Not on the card — say why, or the tab silently disagrees
+                # with the card. `budget_block` is stamped at routing time for
+                # the "refused"/"cannot" reasons (gated market, stake rounds to
+                # zero, under the real-money floor). Everything else lost a
+                # slot race, which is decided against the whole slate and so is
+                # only knowable here.
+                rec = {**rec, "alloc_rank": None,
+                       "not_on_card": _not_on_card_reason(rec)}
             out.append(rec)
         return out
 
