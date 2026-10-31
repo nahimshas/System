@@ -6,11 +6,11 @@ from datetime import date
 from src.state.model_sanity import evaluate, findings_for_log
 
 
-# ⚠️ Default sport is NBA, not MLS. MLS dates in 2026 fall inside the xGF
-# quarantine window, so MLS fixtures are excluded by design and every
-# assertion below would pass vacuously. The first draft of this file made
-# exactly that mistake.
-def _row(sport="NBA", market="Total", day="2026-10-28", side="under",
+# ⚠️ The default fixture must be a market with NO exclusion of any kind.
+# Two have bitten already: MLS dates in 2026 sit inside the xGF quarantine
+# window, and "NBA Total" is an ACKNOWLEDGED one-sided finding until Dec 1 —
+# either default makes these assertions pass vacuously. NBA Spread is neither.
+def _row(sport="NBA", market="Spread", day="2026-10-28", side="under",
          raw=0.90, mkt=0.51, cap=False):
     return {"sport": sport, "market_type": market, "date": day,
             "pick_side": side, "model_prob_raw": raw,
@@ -112,3 +112,84 @@ class TestSafety(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAcknowledgedFindings(unittest.TestCase):
+    """An investigated finding stops alerting but stays visible.
+
+    A check that keeps firing on a condition somebody has already explained
+    teaches the reader to skip it — which is how the MLS bug survived five
+    months of weekly reports that all mentioned it.
+    """
+
+    @staticmethod
+    def _rows_near(today, n=30, **kw):
+        """Rows a few days before `today`, so they land in the recent window.
+
+        RECENT_DAYS is 14 — the first draft of these tests used a fixed October
+        date against a November `today`, so every row fell outside the window
+        and the assertions passed on an empty finding list.
+        """
+        from datetime import timedelta
+        day = (today - timedelta(days=3)).isoformat()
+        opts = {"sport": "NBA", "market": "Total", "side": "under",
+                "raw": 0.55, "mkt": 0.50}
+        opts.update(kw)
+        return [_row(day=day, **opts) for _ in range(n)]
+
+    def _nba_totals(self, today, n=30):
+        return self._rows_near(today, n)
+
+    def test_an_acknowledged_finding_is_kept_not_dropped(self):
+        t = date(2026, 11, 15)
+        res = evaluate(self._nba_totals(t), today=t)
+        one = [f for f in res["findings"] if f["code"] == "one_sided"]
+        self.assertTrue(one, "the finding must still be reported")
+        self.assertEqual(one[0]["acknowledged_until"], "2026-12-01")
+
+    def test_an_acknowledged_high_does_not_set_ok_false(self):
+        t = date(2026, 11, 15)
+        self.assertTrue(evaluate(self._nba_totals(t), today=t)["ok"])
+
+    def test_the_acknowledgement_expires(self):
+        t = date(2026, 12, 2)
+        res = evaluate(self._nba_totals(t), today=t)
+        one = [f for f in res["findings"] if f["code"] == "one_sided"]
+        self.assertTrue(one)
+        self.assertIsNone(one[0].get("acknowledged_until"))
+        self.assertFalse(res["ok"], "after expiry it must alert again")
+
+    def test_it_does_not_cover_a_different_market(self):
+        t = date(2026, 11, 15)
+        rows = self._rows_near(t, market="Spread")
+        res = evaluate(rows, today=t)
+        one = [f for f in res["findings"] if f["code"] == "one_sided"]
+        self.assertTrue(one)
+        self.assertIsNone(one[0].get("acknowledged_until"))
+
+    def test_it_does_not_cover_a_different_finding_on_the_same_market(self):
+        # NBA Total is acknowledged for one-sidedness only. A sudden extreme
+        # raw gap there is new information and must still alert.
+        t = date(2026, 11, 15)
+        from datetime import timedelta
+        day = (t - timedelta(days=3)).isoformat()
+        rows = [_row(sport="NBA", market="Total", day=day,
+                     side="under" if i % 2 else "over", raw=0.95, mkt=0.50)
+                for i in range(30)]
+        res = evaluate(rows, today=t)
+        gaps = [f for f in res["findings"] if f["code"] == "raw_gap_extreme"]
+        self.assertTrue(gaps)
+        self.assertIsNone(gaps[0].get("acknowledged_until"))
+        self.assertFalse(res["ok"])
+
+    def test_every_acknowledgement_is_dated_and_explained(self):
+        from src.state.model_sanity import ACKNOWLEDGED
+        for a in ACKNOWLEDGED:
+            date.fromisoformat(a["until"])
+            self.assertTrue(a.get("reason", "").strip(), a)
+            self.assertTrue(a.get("code", "").strip(), a)
+
+    def test_log_lines_mark_acknowledged_findings(self):
+        t = date(2026, 11, 15)
+        lines = findings_for_log(evaluate(self._nba_totals(t), today=t))
+        self.assertTrue(any("acknowledged until" in l for l in lines))

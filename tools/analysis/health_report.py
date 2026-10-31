@@ -439,7 +439,7 @@ def compute_alerts(report):
     # rather than whether the pipes are open. High severity only: the medium
     # signals are drift warnings worth reading, not worth waking someone for.
     for f in (report.get("model_sanity") or {}).get("findings") or []:
-        if f.get("severity") == "high":
+        if f.get("severity") == "high" and not f.get("acknowledged_until"):
             alerts.append(
                 f"model sanity: {f['sport']} {f['market']} — {f['detail']} "
                 f"({f['why']})")
@@ -760,11 +760,17 @@ def main():
         print(f"[!!]   WOULD GATE: {_w}")
     _ms = report.get("model_sanity") or {}
     _msf = _ms.get("findings") or []
-    print(f"[{'OK' if not any(f['severity'] == 'high' for f in _msf) else '!!'}] "
+    _unack_high = [f for f in _msf if f['severity'] == 'high'
+                   and not f.get('acknowledged_until')]
+    print(f"[{'OK' if not _unack_high else '!!'}] "
           f"Model sanity: {len(_msf)} finding(s) across "
           f"{_ms.get('checked_markets', 0)} markets")
     for _f in _msf:
-        print(f"[--]   [{_f['severity']}] {_f['sport']} {_f['market']}: {_f['detail']}")
+        if _f.get("acknowledged_until"):
+            print(f"[--]   [acknowledged until {_f['acknowledged_until']}] "
+                  f"{_f['sport']} {_f['market']}: {_f['detail']}")
+        else:
+            print(f"[--]   [{_f['severity']}] {_f['sport']} {_f['market']}: {_f['detail']}")
     for _q in (report.get("quarantine") or {}).get("windows") or []:
         print(f"[--] Quarantined from learning: {_q['sport']} {_q['markets']} "
               f"{_q['window']} — {_q['rows']} rows "

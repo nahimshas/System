@@ -77,6 +77,52 @@ except Exception:            # pragma: no cover
         return False
 
 
+# --------------------------------------------------------------------------- #
+#  Acknowledged findings
+# --------------------------------------------------------------------------- #
+# ⚠️ A finding that has been INVESTIGATED and explained must stop alerting, or
+# this check trains the reader to skip it — which is precisely how the MLS bug
+# survived five months of weekly reports. Same discipline as the quarantine and
+# the governor exemptions: dated, reasoned, self-expiring, and still PRINTED.
+# Never add an entry to silence something nobody has looked at.
+ACKNOWLEDGED: List[Dict[str, str]] = [
+    {
+        "sport": "NBA",
+        "market": "Total",
+        "code": "one_sided",
+        "until": "2026-12-01",
+        "reason": (
+            "Investigated Oct 30 2026 against 58 actual final scores: the model "
+            "is NOT the thing that is wrong. Model projects 225.9, reality came "
+            "in at 227.3, the market line averaged 232.0 — so the model is ~2 "
+            "points off and the BOOK is ~4.2 points high (median +4.5). The "
+            "model's MAE is lower than the market's, 14.41 vs 14.72, so it is "
+            "the most accurate of the three. Every correction tested made "
+            "accuracy WORSE: restoring the injury subtraction fixes the mean "
+            "bias to +0.5 but raises MAE to 15.5, and the subtraction is "
+            "uncorrelated with the error anyway (r=+0.05), so it is not the "
+            "cause. The one-sidedness reflects a real early-season market bias, "
+            "not a broken input. Expires with the nba_warm_start checkpoint."
+        ),
+    },
+]
+
+
+def _acknowledged(sport: str, market: str, code: str,
+                  today: Optional[date] = None) -> Optional[Dict[str, str]]:
+    today = today or date.today()
+    for a in ACKNOWLEDGED:
+        if (a["sport"].upper() != sport.upper() or a["market"] != market
+                or a["code"] != code):
+            continue
+        try:
+            if date.fromisoformat(a["until"]) >= today:
+                return a
+        except Exception:
+            continue
+    return None
+
+
 def _rows(entries: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Usable rows, with KNOWN-BROKEN windows excluded.
 
@@ -260,11 +306,23 @@ def evaluate(entries: Iterable[Dict[str, Any]],
             findings += _drift_checks(key, rs, by_base.get(key, []))
         findings += _missing_market_checks(rows, recent)
 
+        # Acknowledged findings are KEPT and marked, never removed. The report
+        # still lists them; they just stop raising an alert and stop setting
+        # ok=False. Dropping them would hide a condition that is only explained
+        # until its expiry date.
+        for f in findings:
+            ack = _acknowledged(f["sport"], f["market"], f["code"], today)
+            if ack:
+                f["acknowledged_until"] = ack["until"]
+                f["acknowledged_reason"] = ack["reason"]
         order = {"high": 0, "medium": 1}
-        findings.sort(key=lambda f: (order.get(f["severity"], 9), f["sport"], f["market"]))
+        findings.sort(key=lambda f: (bool(f.get("acknowledged_until")),
+                                     order.get(f["severity"], 9),
+                                     f["sport"], f["market"]))
         out["findings"] = findings
         out["checked_markets"] = len(by_recent)
-        out["ok"] = not any(f["severity"] == "high" for f in findings)
+        out["ok"] = not any(f["severity"] == "high" and not f.get("acknowledged_until")
+                            for f in findings)
     except Exception as e:                       # pragma: no cover
         out["error"] = str(e)
         logger.warning(f"Model sanity check failed (non-fatal): {e}")
@@ -275,6 +333,11 @@ def findings_for_log(result: Dict[str, Any]) -> List[str]:
     """One line per finding, for the daily run log."""
     lines = []
     for f in (result or {}).get("findings") or []:
+        if f.get("acknowledged_until"):
+            lines.append(f"MODEL SANITY [acknowledged until "
+                         f"{f['acknowledged_until']}] {f['sport']} {f['market']}: "
+                         f"{f['detail']}")
+            continue
         lines.append(f"MODEL SANITY [{f['severity']}] {f['sport']} {f['market']}: "
                      f"{f['detail']} — {f['why']}")
     return lines
