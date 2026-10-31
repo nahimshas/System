@@ -486,6 +486,23 @@
       "on_fail": "If it gated a market that then recovered strongly, RAISE MIN_N or Z_GATE rather than adding exceptions. Gated markets keep producing in display and keep being measured, so recovery is automatic and a wrong gate is recoverable — but a governor nobody trusts gets exemptions bolted on until it does nothing, which is the failure mode to avoid.",
       "measurement": "state/outcome_state.json per run, plus the outcome-gate lines in the daily log.",
       "status": "open"
+    },
+    {
+      "id": "draw_raw_prob_visible",
+      "title": "Soccer Draw market: is its raw gap sane now that we can see it?",
+      "created": "2026-10-31",
+      "evaluate_after": "2027-04-15",
+      "data_window_start": "2026-10-31",
+      "type": "note",
+      "rules": {
+        "min_n": 30,
+        "raw_gap_pp_concern": 25.0
+      },
+      "rationale": "The Draw market carried model_prob_raw=None from the day soccer shipped until 2026-10-31 — 166 rows across MLS, Liga MX and WC. CAUSE: _stamp_recs_calibration branched on bt in (\"Moneyline\", \"Spread\") and nothing else claimed Draw, while Totals and props self-stamp before the call. The three analyzers also passed a literal None as the 4th element of their Draw decision-log tuple, so the pre-cap prob was never archived either. CONSEQUENCE: the raw-gap sanity check could not fire on Draw at all — on the market that pinned at its credibility cap MORE OFTEN THAN ANY OTHER WE RUN (MLS Draw 95.7% of 47 picks in the 14 days to Oct 31). That is precisely the condition model_prob_raw exists to explain, and it was unreadable. Verified live after the fix: MLS Draw raw 0.209 vs post-cap 0.200, Liga MX 0.277 vs 0.200 (a 7.7pp gap that had been invisible), WC 0.287 vs 0.250. There is NO BACKFILL — a feature only has history from the day it is wired in — so nothing before Oct 31 2026 can be assessed. SHAPE, not instance: this is the third confirmed case of 'a fix applied to N-1 of N call sites' (after the Kalshi playerPool flag and the stale sport lists). Pinned two ways: an AST test asserts no decision-log candidate tuple passes a literal None raw prob, and model_sanity now reports 'blind_market' for any market with rows but no raw probs, so the next one announces itself in the weekly report instead of waiting to be grepped.",
+      "on_pass": "If Draw's median raw gap is in line with the other markets of the same sport (and well under 25pp), the cap pinning was the cap doing its cold-start job and nothing further is needed.",
+      "on_fail": "If Draw's raw gap is extreme (>= 25pp) the three-way probability split is wrong, the same way MLS's xGF field-name bug was wrong — investigate the Poisson/Dixon-Coles draw mass before trusting any Draw pick. Draw is watchlist-only in every soccer sport, so no money is exposed meanwhile.",
+      "measurement": "tools/analysis/health_report.py model-sanity section (raw_gap_extreme / blind_market), and the per-market cap and raw-gap table over state/shadow_log/.",
+      "status": "open"
     }
   ]
 }

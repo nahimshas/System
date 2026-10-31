@@ -128,6 +128,7 @@ def _stamp_recs_calibration(
     away_team: str = "",
     home_raw: Optional[float] = None,
     away_raw: Optional[float] = None,
+    draw_raw: Optional[float] = None,
     cred_fired: bool = False,
     hardcap_fired: bool = False,
     home_injury_fired: bool = False,
@@ -142,9 +143,16 @@ def _stamp_recs_calibration(
     later run cap counterfactual analysis (raw vs capped realised rates).
 
     For ML/Spread picks, model_prob_raw is set to the home or away raw
-    probability based on pick text. For Total and prop picks the raw value
-    is stamped by bet-specific cap logic before this function is called;
-    this function skips those recs (sentinel: model_prob_raw is not None).
+    probability based on pick text; for the soccer Draw market it comes from
+    draw_raw. For Total and prop picks the raw value is stamped by
+    bet-specific cap logic before this function is called; this function
+    skips those recs (sentinel: model_prob_raw is not None).
+
+    ⚠️ Every market a sport emits must land in one of those branches. "Draw"
+    matched none of them until Oct 31 2026, so 166 soccer Draw rows carried
+    model_prob_raw=None and the raw-gap sanity check could never fire on the
+    market that was pinned at its credibility cap more often than any other
+    we run.
     """
     # Per-game season type (stamped by src/data/game_types.py in main.py) —
     # carried onto every rec so the shadow log can segment CLV/calibration by
@@ -175,6 +183,8 @@ def _stamp_recs_calibration(
                 elif away_team and pick.startswith(away_team):
                     rec.model_prob_raw   = away_raw
                     rec.injury_cap_fired = away_injury_fired
+            elif bt == "Draw":
+                rec.model_prob_raw = draw_raw
         # else: bet-specific cap already populated model_prob_raw / credibility_cap_fired
 
 
@@ -4062,6 +4072,7 @@ def analyze_mls_game(
     # so hardcap_fired = False.
     _mls_raw_home = p_home_win
     _mls_raw_away = p_away_win
+    _mls_raw_draw = p_draw
 
     # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
     # Tighter than other sports (MLS_CRED_CAP = 0.10) due to small-sample noise
@@ -4186,6 +4197,7 @@ def analyze_mls_game(
         home_team=home_raw, away_team=away_raw,
         home_raw=_lv.get("_mls_raw_home"),
         away_raw=_lv.get("_mls_raw_away"),
+        draw_raw=_lv.get("_mls_raw_draw"),
         cred_fired=_lv.get("_mls_cred_fired", False),
         hardcap_fired=False,  # MLS uses Poisson — no hard prob cap currently
         stats_avail=stats_available,
@@ -4200,7 +4212,7 @@ def analyze_mls_game(
     }, [
         ("Moneyline", home_raw, _lv.get("p_home_win"), _lv.get("_mls_raw_home"), _lv.get("market_home_prob"), None),
         ("Moneyline", away_raw, _lv.get("p_away_win"), _lv.get("_mls_raw_away"), _lv.get("market_away_prob"), None),
-        ("Draw", "draw", _lv.get("p_draw"), None, _lv.get("market_draw_prob"), None),
+        ("Draw", "draw", _lv.get("p_draw"), _lv.get("_mls_raw_draw"), _lv.get("market_draw_prob"), None),
         ("Total", "over", _lv.get("model_over"), _lv.get("_mls_total_raw_over"), _lv.get("market_over_prob"),
          _lv.get("line") if _lv.get("line") is not None else _lv.get("market_line")),
         ("Total", "under",
@@ -4392,6 +4404,7 @@ def analyze_wc_game(
     # Calibration capture: raw 3-way probabilities (pre-cred-cap).
     _wc_raw_home = p_home_win
     _wc_raw_away = p_away_win
+    _wc_raw_draw = p_draw
 
     # ── General credibility cap (cold-start safety; auto-relaxed by calibration) ─
     p_home_win, _wc_cred_home_fired = _apply_credibility_cap_dispatched(
@@ -4536,6 +4549,7 @@ def analyze_wc_game(
         home_team=home_raw, away_team=away_raw,
         home_raw=_lv.get("_wc_raw_home"),
         away_raw=_lv.get("_wc_raw_away"),
+        draw_raw=_lv.get("_wc_raw_draw"),
         cred_fired=_lv.get("_wc_cred_fired", False),
         hardcap_fired=False,  # WC uses Poisson — no hard prob cap
         stats_avail=stats_available,
@@ -4551,7 +4565,7 @@ def analyze_wc_game(
     }, [
         ("Moneyline", home_raw, _lv.get("p_home_win"), _lv.get("_wc_raw_home"), _lv.get("market_home_prob"), None),
         ("Moneyline", away_raw, _lv.get("p_away_win"), _lv.get("_wc_raw_away"), _lv.get("market_away_prob"), None),
-        ("Draw", "draw", _lv.get("p_draw"), None, _lv.get("market_draw_prob"), None),
+        ("Draw", "draw", _lv.get("p_draw"), _lv.get("_wc_raw_draw"), _lv.get("market_draw_prob"), None),
         ("Total", "over", _lv.get("model_over"), _lv.get("_wc_total_raw_over"), _lv.get("market_over_prob"),
          _lv.get("line") if _lv.get("line") is not None else _lv.get("market_line")),
         ("Total", "under",
@@ -4689,6 +4703,7 @@ def analyze_ligamx_game(
 
     _lmx_raw_home = p_home_win
     _lmx_raw_away = p_away_win
+    _lmx_raw_draw = p_draw
 
     # General credibility cap (cold-start safety; auto-relaxed by calibration).
     p_home_win, _lmx_cred_home = _apply_credibility_cap_dispatched(
@@ -4724,7 +4739,7 @@ def analyze_ligamx_game(
     for pick_str, model_p, market_p, raw_p in [
         (home_raw, p_home_win, market_home_prob, _lmx_raw_home),
         (away_raw, p_away_win, market_away_prob, _lmx_raw_away),
-        ("Draw",   p_draw,     market_draw_prob, None),
+        ("Draw",   p_draw,     market_draw_prob, _lmx_raw_draw),
     ]:
         bt = "Draw" if pick_str == "Draw" else "Moneyline"
         r = _make_rec(pick_str, bt, model_p, market_p)
@@ -4741,6 +4756,7 @@ def analyze_ligamx_game(
         game=game,
         home_team=home_raw, away_team=away_raw,
         home_raw=_lmx_raw_home, away_raw=_lmx_raw_away,
+        draw_raw=_lmx_raw_draw,
         cred_fired=_lmx_cred_fired,
         hardcap_fired=False,
         stats_avail=stats_available,
@@ -4755,7 +4771,7 @@ def analyze_ligamx_game(
     }, [
         ("Moneyline", home_raw, _lmx_raw_home, _lmx_raw_home, market_home_prob, None),
         ("Moneyline", away_raw, _lmx_raw_away, _lmx_raw_away, market_away_prob, None),
-        ("Draw", "draw", p_draw, None, market_draw_prob, None),
+        ("Draw", "draw", p_draw, _lmx_raw_draw, market_draw_prob, None),
     ], recs)
     return recs
 

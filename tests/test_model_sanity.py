@@ -193,3 +193,65 @@ class TestAcknowledgedFindings(unittest.TestCase):
         t = date(2026, 11, 15)
         lines = findings_for_log(evaluate(self._nba_totals(t), today=t))
         self.assertTrue(any("acknowledged until" in l for l in lines))
+
+
+class TestBlindMarkets(unittest.TestCase):
+    """A market the detector cannot see is itself a finding.
+
+    The soccer Draw market carried no `model_prob_raw` from the day it shipped
+    (Oct 31 2026), so `raw_gap_extreme` could never fire on it — while it
+    pinned at its credibility cap more often than any market we run. The
+    blindness has to be reported, or the next instance waits to be grepped for.
+    """
+
+    @staticmethod
+    def _draw_rows(n=20):
+        rows = []
+        for _ in range(n):
+            r = _row(sport="LIGAMX", market="Draw", day="2026-10-28", side="draw")
+            r["model_prob_raw"] = None
+            rows.append(r)
+        return rows
+
+    def test_a_market_with_no_raw_probs_is_flagged(self):
+        res = evaluate(self._draw_rows(), today=date(2026, 10, 29))
+        self.assertIn("blind_market", _codes(res))
+
+    def test_it_does_not_fire_when_raw_probs_are_present(self):
+        rows = [_row(sport="LIGAMX", market="Draw", day="2026-10-28",
+                     side="draw", raw=0.26, mkt=0.24) for _ in range(20)]
+        self.assertNotIn("blind_market", _codes(evaluate(rows, today=date(2026, 10, 29))))
+
+    def test_a_thin_market_is_not_called_blind(self):
+        res = evaluate(self._draw_rows(n=4), today=date(2026, 10, 29))
+        self.assertNotIn("blind_market", _codes(res))
+
+    def test_blindness_is_not_high_severity(self):
+        # It is a visibility defect, not evidence the model is wrong — it must
+        # not set ok=False and start paging about a market that may be fine.
+        res = evaluate(self._draw_rows(), today=date(2026, 10, 29))
+        f = [x for x in res["findings"] if x["code"] == "blind_market"][0]
+        self.assertEqual(f["severity"], "medium")
+
+
+class TestSingleSidedMarkets(unittest.TestCase):
+    """Draw has no opposite contract, so 100% 'draw' is arithmetic."""
+
+    @staticmethod
+    def _draws(n=20, raw=0.26):
+        return [_row(sport="LIGAMX", market="Draw", day="2026-10-28",
+                     side="draw", raw=raw, mkt=0.24) for _ in range(n)]
+
+    def test_a_draw_market_is_never_called_one_sided(self):
+        res = evaluate(self._draws(), today=date(2026, 10, 29))
+        self.assertNotIn("one_sided", _codes(res))
+
+    def test_the_other_checks_still_run_on_it(self):
+        # Exempting it from one_sided must not exempt it from everything.
+        res = evaluate(self._draws(raw=0.95), today=date(2026, 10, 29))
+        self.assertIn("raw_gap_extreme", _codes(res))
+
+    def test_a_two_sided_market_is_still_checked(self):
+        rows = [_row(sport="LIGAMX", market="Total", day="2026-10-28",
+                     side="under", raw=0.55, mkt=0.50) for _ in range(20)]
+        self.assertIn("one_sided", _codes(evaluate(rows, today=date(2026, 10, 29))))

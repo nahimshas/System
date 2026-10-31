@@ -46,6 +46,9 @@ __all__ = ["evaluate", "findings_for_log"]
 
 # A market where we take the same side of every single bet is not expressing a
 # view, it is expressing an input error. MLS totals ran 100% Under for months.
+# Markets with a single contract, where a 100% one-side rate is arithmetic.
+SINGLE_SIDED_MARKETS = frozenset({"Draw"})
+
 ONE_SIDED_MIN_N = 10
 ONE_SIDED_PCT = 95.0
 
@@ -175,6 +178,13 @@ def _absolute_checks(key, rows) -> List[Dict[str, Any]]:
     found: List[Dict[str, Any]] = []
 
     sides = [e.get("pick_side") for e in rows if e.get("pick_side")]
+    # A market with only one side to take cannot be "one-sided" — Draw has no
+    # opposite contract, so 100% 'draw' is arithmetic, not a signal. This is a
+    # property of the MARKET, not a list of which sports we handle, so it is
+    # safe to name here; it would otherwise cry wolf on every soccer sport the
+    # moment it reached ten Draw picks in a fortnight.
+    if market in SINGLE_SIDED_MARKETS:
+        sides = []
     if len(sides) >= ONE_SIDED_MIN_N:
         top, n = max(((s, sides.count(s)) for s in set(sides)), key=lambda kv: kv[1])
         pct = 100.0 * n / len(sides)
@@ -201,6 +211,23 @@ def _absolute_checks(key, rows) -> List[Dict[str, Any]]:
             })
 
     gaps = [g for g in (_gap(e) for e in rows) if g is not None]
+    # A market with rows but NO usable raw probs is one this detector is blind
+    # to: the raw-gap check below can never fire on it, however broken the
+    # input gets. The soccer Draw market was blind from the day it shipped
+    # until Oct 31 2026 — and it pinned at its credibility cap more often than
+    # any other market we run, which is exactly the condition the raw gap is
+    # there to explain. Report the blindness itself so the next one announces
+    # itself instead of waiting to be grepped for.
+    if len(rows) >= RAW_GAP_MIN_N and not gaps:
+        found.append({
+            "sport": sport, "market": market, "code": "blind_market",
+            "severity": "medium", "n": len(rows),
+            "detail": f"no model_prob_raw on any of {len(rows)} rows",
+            "why": "the raw-gap check cannot run on this market — its pre-cap "
+                   "probability is never stamped, so a broken input here would "
+                   "be invisible",
+        })
+
     if len(gaps) >= RAW_GAP_MIN_N:
         med = statistics.median(gaps)
         if med >= RAW_GAP_PP:
