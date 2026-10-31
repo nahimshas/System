@@ -503,6 +503,23 @@
       "on_fail": "If Draw's raw gap is extreme (>= 25pp) the three-way probability split is wrong, the same way MLS's xGF field-name bug was wrong — investigate the Poisson/Dixon-Coles draw mass before trusting any Draw pick. Draw is watchlist-only in every soccer sport, so no money is exposed meanwhile.",
       "measurement": "tools/analysis/health_report.py model-sanity section (raw_gap_extreme / blind_market), and the per-market cap and raw-gap table over state/shadow_log/.",
       "status": "open"
+    },
+    {
+      "id": "cfb_clv_placeholder_dates",
+      "title": "CFB CLV: does the placeholder-date join hold, and do other sports need it?",
+      "created": "2026-10-31",
+      "evaluate_after": "2026-12-15",
+      "data_window_start": "2026-10-31",
+      "type": "note",
+      "rules": {
+        "per_market_coverage_min_pct": 50.0,
+        "expect_cfb_ml_pct_above": 90.0
+      },
+      "rationale": "CFB Moneyline Kalshi CLV coverage was 47.5% and CFB Spread 51.4% — half the sport dark, on Saturdays only, which is every CFB slate that matters. CAUSE: Kalshi lists some college games TWICE. Pittsburgh @ Boston College, our date 2026-10-17: KXNCAAFGAME-26OCT17PITTBC closed 2026-10-06 with result 'scalar' (voided), while KXNCAAFGAME-26OCT16PITTBC closed 2026-10-17T19:40Z with result yes/no (the real market that traded). resolve_pick() joins on an EXACT event_date, so it matched the VOIDED ticker, read no candles, burned all three attempts and gave up permanently. kalshi_pricing.py already knew CFB cannot date its own games (_ESPN_ANCHORED + a ±2-day team join); this module never learned it — the fourth instance of a fix landing on N-1 of N call sites. FIX: drop voided markets before the date filter, walk a ±2-day candidate window nearest-first for placeholder-dated sports, and accept only a date that both resolves AND yields candles (a voided market resolves cleanly then returns no prices, so resolution alone is not evidence of the right ticker). Both CLV passes now share ONE resolve-and-price helper, because they held identical copies and this fix would otherwise have landed on one of them. MEASURED: CFB Moneyline 47.5% -> 96.7%, CFB Spread 51.4% -> 82.9%, aggregate Kalshi CLV coverage 86.0% -> 93.5%, 105 rows stamped, zero no_candles failures. The recovered CFB CLV is mean -0.11pp, median 0.00pp, with 15 of 52 exactly zero — and those zeros are NOT artefacts: a new guard rejects any pair that read the same single candle at both ends, and it rejected none of them, so the thin college books genuinely did not move between our pick and kickoff. ALSO SHIPPED: RESOLVER_VERSION, so a future resolver fix automatically gets one more pass at the rows that gave up under the old one — 119 rows were stranded that way here, and the rows most in need of rescue are always the ones already past MAX_ATTEMPTS. STILL UNMEASURABLE: 19 CFB spreads at lines Kalshi never listed (8.5, 12.5, 15.5, 19.5, 40.5). That is the separate half-point-rung problem — those are lines the user could not have bet either.",
+      "on_pass": "If CFB coverage holds above 90% (moneyline) and no other market sits under the 50% per-market floor, the join is sound. Then check whether any sport besides CFB needs _PLACEHOLDER_DATED — the window is a no-op for every sport that dates its own games, so adding one is cheap and safe.",
+      "on_fail": "If coverage falls back, do NOT widen the window further — a wider window risks matching a DIFFERENT game between the same teams. Diagnose which ticker it resolved to and whether the voided filter is dropping something real.",
+      "measurement": "tools/analysis/health_report.py per-market Kalshi CLV coverage table, plus the 'placeholder ticker date' lines in the run log.",
+      "status": "open"
     }
   ]
 }

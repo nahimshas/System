@@ -68,6 +68,18 @@ SPORT_SERIES: Dict[str, Dict[str, str]] = {
 }
 
 MAX_ATTEMPTS = 3
+
+# Bump this whenever the resolver or the price reader changes in a way that
+# could rescue an entry it previously gave up on. Rows that exhausted
+# MAX_ATTEMPTS under an OLDER version get exactly one more pass; rows that
+# failed under the CURRENT version stay given up on, so a genuinely
+# unmeasurable line is not retried forever.
+#
+# Without this, every resolver fix needed a hand-run backfill to take effect on
+# the rows it was written for — and the rows most in need of rescue are exactly
+# the ones already past MAX_ATTEMPTS. 119 rows were stranded that way when the
+# CFB placeholder-date fix landed (Oct 31 2026).
+RESOLVER_VERSION = 2
 # Averaging window (seconds) at each CLV endpoint — see prices_at().
 WINDOW_SECONDS = 900
 
@@ -123,6 +135,83 @@ def _anchor_series(sports: set) -> set:
     return out
 
 
+# ── Placeholder-dated series ────────────────────────────────────────────────
+# Kalshi's college-football tickers carry a date that is NOT kickoff, and the
+# exchange sometimes lists the same game twice: a voided market whose segment
+# matches our stored date, and the real one filed a day earlier. Measured Oct
+# 31 2026 on Pittsburgh @ Boston College (our date 2026-10-17):
+#
+#   KXNCAAFGAME-26OCT17PITTBC   closed 2026-10-06, result "scalar"  <- voided
+#   KXNCAAFGAME-26OCT16PITTBC   closed 2026-10-17, result yes/no    <- real
+#
+# resolve_pick() joins on an EXACT event_date, so it matched the voided ticker,
+# found no candles, burned all three attempts and gave up permanently. Half of
+# CFB moneyline CLV went dark that way (coverage 47.5%) — on Saturdays only,
+# which is every CFB slate that matters.
+#
+# kalshi_pricing.py already knows CFB cannot date its own games (_ESPN_ANCHORED
+# + a ±2-day team join). This module never learned it — the fourth instance of
+# a fix landing on N-1 of N call sites.
+try:
+    from src.data.kalshi_pricing import _ESPN_ANCHORED as _PLACEHOLDER_DATED
+except Exception:            # pragma: no cover - import-safety only
+    _PLACEHOLDER_DATED = {"CFB"}
+
+# How far either side of our stored date to look. Matches the pricing path.
+PLACEHOLDER_DATE_WINDOW = 2
+
+
+def _exhausted(e: Dict) -> bool:
+    """Has this entry run out of retries under the CURRENT resolver?
+
+    An entry that burned its attempts under an older resolver gets one more
+    pass — see RESOLVER_VERSION.
+    """
+    try:
+        if (e.get("kalshi_clv_attempts") or 0) < MAX_ATTEMPTS:
+            return False
+        return int(e.get("kalshi_resolver_version") or 1) >= RESOLVER_VERSION
+    except Exception:
+        return True
+
+
+def _candidate_dates(sport: str, game_date: str) -> List[str]:
+    """Dates to try for one entry, nearest first.
+
+    Exactly [game_date] for every sport that dates its own games — so nothing
+    changes for them. Our own date always goes first, so a correct match is
+    never displaced by a neighbour.
+    """
+    if (sport or "").upper() not in _PLACEHOLDER_DATED:
+        return [game_date]
+    try:
+        d0 = datetime.strptime(game_date, "%Y-%m-%d").date()
+    except Exception:
+        return [game_date]
+    out = [game_date]
+    for off in range(1, PLACEHOLDER_DATE_WINDOW + 1):
+        for delta in (-off, off):
+            out.append((d0 + timedelta(days=delta)).isoformat())
+    return out
+
+
+def _is_voided(m: Dict) -> bool:
+    """True for a settled market that never resolved to a real outcome.
+
+    A finalized market whose result is neither "yes" nor "no" was voided or
+    rescheduled: it has no closing price to read, and keeping it in the pool
+    lets it shadow the real market for the same game.
+    """
+    try:
+        status = str(m.get("status") or "").lower()
+        if status not in ("settled", "finalized", "closed"):
+            return False          # open books have no result yet
+        res = str(m.get("result") or "").lower()
+        return res not in ("yes", "no")
+    except Exception:
+        return False
+
+
 def build_index(series_list: List[str], dates: set,
                 max_pages: int = 60) -> Dict[str, List[Dict]]:
     """Open + settled markets for each series, filtered to the dates we need.
@@ -134,6 +223,9 @@ def build_index(series_list: List[str], dates: set,
     for s in series_list:
         markets = (fetch_markets(s, "open", max_pages) +
                    fetch_markets(s, "settled", max_pages))
+        # Drop voided/rescheduled markets before the date filter — one of them
+        # was shadowing the real CFB market for the same game (see _is_voided).
+        markets = [m for m in markets if not _is_voided(m)]
         idx[s] = [m for m in markets if event_date(m) in dates]
         oldest = min((event_date(m) for m in idx[s] if event_date(m)), default=None)
         logger.info(f"Kalshi index {s}: {len(idx[s])} markets across {len(dates)} "
@@ -192,7 +284,14 @@ def prices_at(series: str, ticker: str, side: str,
     # endpoint recovers sub-tick resolution and damps single-print noise, the
     # same way a closing line is normally taken over a window rather than an
     # instant.
-    def _window_mean(centre_ts: int, before: int, after: int) -> Optional[float]:
+    # Which candle timestamps fed each end. A thin book can fall back to the
+    # SAME single candle at both ends, and the difference then comes out an
+    # artificial 0.0000 that is indistinguishable from a market that genuinely
+    # did not move. Tracked so the caller can reject that case.
+    used: Dict[str, set] = {"pick": set(), "close": set()}
+
+    def _window_mean(centre_ts: int, before: int, after: int,
+                     tag: str = "") -> Optional[float]:
         vals = []
         for c in candles:
             ts = c.get("end_period_ts")
@@ -201,26 +300,47 @@ def prices_at(series: str, ticker: str, side: str,
             m = _mid_from_candle(c, side)
             if m is not None:
                 vals.append(m)
+                if tag:
+                    used[tag].add(ts)
         return round(sum(vals) / len(vals), 5) if vals else None
 
     # At pick: look forward, the pick is taken at that moment.
-    at_pick = _window_mean(pick_ts, 0, WINDOW_SECONDS)
+    at_pick = _window_mean(pick_ts, 0, WINDOW_SECONDS, "pick")
     # At close: look back from first pitch — there is no "after".
-    at_close = _window_mean(end, WINDOW_SECONDS, 0)
+    at_close = _window_mean(end, WINDOW_SECONDS, 0, "close")
 
     # Fall back to single candles when a window is empty (thin markets).
     if at_pick is None:
-        at_pick = next((m for c in candles
-                        if (m := _mid_from_candle(c, side)) is not None
-                        and (c.get("end_period_ts") or 0) >= pick_ts), None)
+        for c in candles:
+            m = _mid_from_candle(c, side)
+            if m is not None and (c.get("end_period_ts") or 0) >= pick_ts:
+                at_pick = m
+                used["pick"] = {c.get("end_period_ts")}
+                break
     if at_pick is None:
-        at_pick = next((m for c in candles
-                        if (m := _mid_from_candle(c, side)) is not None), None)
+        for c in candles:
+            m = _mid_from_candle(c, side)
+            if m is not None:
+                at_pick = m
+                used["pick"] = {c.get("end_period_ts")}
+                break
     if at_close is None:
-        last = [m for c in candles
+        last = [(c.get("end_period_ts"), m) for c in candles
                 if (c.get("end_period_ts") or 0) <= end
                 and (m := _mid_from_candle(c, side)) is not None]
-        at_close = last[-1] if last else None
+        if last:
+            at_close = last[-1][1]
+            used["close"] = {last[-1][0]}
+
+    # Reject a pair that read the SAME candle at both ends: that is one price
+    # reported twice, not a measurement of how the price moved. Letting it
+    # through stamps a confident 0.0000 and dilutes the CLV signal with rows
+    # that measured nothing — which is worse than a visible coverage gap,
+    # because the gap at least shows up in the health report.
+    if (at_pick is not None and at_close is not None
+            and used["pick"] and used["pick"] == used["close"]
+            and len(used["pick"]) == 1):
+        return None, None
     return at_pick, at_close
 
 
@@ -256,6 +376,46 @@ def _entry_to_pick(e: Dict) -> Dict[str, Any]:
             "home_team": home.strip(), "away_team": away.strip()}
 
 
+def _resolve_and_price(e: Dict, pick: Optional[Dict], idx: Dict[str, List[Dict]]
+                       ) -> Tuple[Optional[Dict], Optional[float], Optional[float], str]:
+    """Resolve one entry to a Kalshi market and read both ends of its CLV.
+
+    Returns (resolved, at_pick, at_close, failure_reason). failure_reason is
+    "" on success, else "unmatched" or "no_candles".
+
+    ⚠️ ONE helper for both the shadow-log and decision-log passes on purpose.
+    They carried identical copies of this logic, so the placeholder-date fix
+    would have landed on one of them — which is the exact bug shape that put
+    CFB moneyline CLV at 47.5% in the first place.
+
+    Walks _candidate_dates() nearest-first and accepts the first date that both
+    resolves AND yields candles: a voided CFB market resolves cleanly and then
+    returns no prices, so resolution alone is not evidence of the right ticker.
+    """
+    if not pick:
+        return None, None, None, "unmatched"
+    sport = (e.get("sport") or "").upper()
+    series_map = SPORT_SERIES.get(sport)
+    pick_dt = _parse_iso(e.get("first_seen_at") or "") or (
+        _parse_iso(e.get("commence_time", "")) - timedelta(hours=8))
+    close_dt = _parse_iso(e.get("commence_time", ""))
+    matched_any = False
+    for d in _candidate_dates(sport, e.get("date", "")):
+        r = resolve_pick(pick, idx, d, require_quote=False, series_map=series_map)
+        if not r:
+            continue
+        matched_any = True
+        at_pick, at_close = prices_at(r["series"], r["ticker"], r["side"],
+                                      pick_dt, close_dt)
+        if at_pick is not None and at_close is not None:
+            if d != e.get("date", ""):
+                logger.info(f"Kalshi CLV: {e.get('game','')} matched under "
+                            f"{d}, not our {e.get('date','')} — placeholder "
+                            f"ticker date")
+            return r, at_pick, at_close, ""
+    return None, None, None, ("no_candles" if matched_any else "unmatched")
+
+
 def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
                                  max_entries: int = 1500,
                                  sports: Optional[List[str]] = None,
@@ -282,7 +442,7 @@ def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
             for e in shard.get("entries", {}).values():
                 if e.get("kalshi_clv") is not None and not recompute:
                     continue
-                if (e.get("kalshi_clv_attempts") or 0) >= MAX_ATTEMPTS and not recompute:
+                if _exhausted(e) and not recompute:
                     continue
                 if (e.get("date") or "") < since:
                     continue
@@ -304,7 +464,9 @@ def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
             return summary
         todo = todo[:max_entries]
 
-        dates = {e.get("date") for _, e in todo if e.get("date")}
+        dates = {d for _, e in todo
+                 for d in _candidate_dates((e.get("sport") or "").upper(),
+                                           e.get("date") or "") if d}
         series_needed = sorted({SPORT_SERIES[(e.get("sport") or "").upper()][e["market_type"]]
                                 for _, e in todo})
         # ±0.5 F5 spreads resolve against the F5 winner book.
@@ -321,22 +483,12 @@ def update_shadow_log_kalshi_clv(since: str = "0000-00-00",
 
         modified = set()
         for path, e in todo:
-            pick = _entry_to_pick(e)
-            r = resolve_pick(pick, idx, e.get("date", ""), require_quote=False,
-                             series_map=SPORT_SERIES.get((e.get("sport") or "").upper()))
-            if not r:
+            r, at_pick, at_close, why = _resolve_and_price(
+                e, _entry_to_pick(e), idx)
+            if why:
                 e["kalshi_clv_attempts"] = (e.get("kalshi_clv_attempts") or 0) + 1
-                summary["unmatched"] += 1
-                modified.add(path)
-                continue
-            pick_dt = _parse_iso(e.get("first_seen_at") or "") or (
-                _parse_iso(e.get("commence_time", "")) - timedelta(hours=8))
-            close_dt = _parse_iso(e.get("commence_time", ""))
-            at_pick, at_close = prices_at(r["series"], r["ticker"], r["side"],
-                                          pick_dt, close_dt)
-            if at_pick is None or at_close is None:
-                e["kalshi_clv_attempts"] = (e.get("kalshi_clv_attempts") or 0) + 1
-                summary["no_candles"] += 1
+                e["kalshi_resolver_version"] = RESOLVER_VERSION
+                summary[why] += 1
                 modified.add(path)
                 continue
             e["kalshi_ticker"] = r["ticker"]
@@ -431,7 +583,7 @@ def update_decision_log_kalshi_clv(since: str = "0000-00-00",
             for e in shard.get("entries", {}).values():
                 if e.get("kalshi_clv") is not None and not recompute:
                     continue
-                if (e.get("kalshi_clv_attempts") or 0) >= MAX_ATTEMPTS and not recompute:
+                if _exhausted(e) and not recompute:
                     continue
                 if (e.get("date") or "") < since:
                     continue
@@ -451,7 +603,9 @@ def update_decision_log_kalshi_clv(since: str = "0000-00-00",
             return summary
         todo = todo[:max_entries]
 
-        dates = {e.get("date") for _, e in todo if e.get("date")}
+        dates = {d for _, e in todo
+                 for d in _candidate_dates((e.get("sport") or "").upper(),
+                                           e.get("date") or "") if d}
         series = sorted({SPORT_SERIES[(e.get("sport") or "").upper()][e["market_type"]]
                          for _, e in todo})
         if any(e["market_type"] == "F5 Spread" for _, e in todo):
@@ -463,23 +617,12 @@ def update_decision_log_kalshi_clv(since: str = "0000-00-00",
 
         modified = set()
         for i, (path, e) in enumerate(todo, 1):
-            pick = _decision_entry_to_pick(e)
-            r = (resolve_pick(pick, idx, e.get("date", ""), require_quote=False,
-                              series_map=SPORT_SERIES.get((e.get("sport") or "").upper()))
-                 if pick else None)
-            if not r:
+            r, at_pick, at_close, why = _resolve_and_price(
+                e, _decision_entry_to_pick(e), idx)
+            if why:
                 e["kalshi_clv_attempts"] = (e.get("kalshi_clv_attempts") or 0) + 1
-                summary["unmatched"] += 1
-                modified.add(path)
-                continue
-            pick_dt = _parse_iso(e.get("first_seen_at") or "") or (
-                _parse_iso(e.get("commence_time", "")) - timedelta(hours=8))
-            close_dt = _parse_iso(e.get("commence_time", ""))
-            at_pick, at_close = prices_at(r["series"], r["ticker"], r["side"],
-                                          pick_dt, close_dt)
-            if at_pick is None or at_close is None:
-                e["kalshi_clv_attempts"] = (e.get("kalshi_clv_attempts") or 0) + 1
-                summary["no_candles"] += 1
+                e["kalshi_resolver_version"] = RESOLVER_VERSION
+                summary[why] += 1
                 modified.add(path)
                 continue
             e["kalshi_ticker"] = r["ticker"]

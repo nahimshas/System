@@ -115,7 +115,10 @@ def test_backfill_entry_point_exists_and_is_idempotent_by_design():
     import inspect
     src = inspect.getsource(kc.update_shadow_log_kalshi_clv)
     assert 'e.get("kalshi_clv") is not None' in src, "must skip already-stamped rows"
-    assert "MAX_ATTEMPTS" in src, "must cap retries on unmatchable entries"
+    # The retry cap moved into _exhausted(), which also lets a resolver fix
+    # reach rows that gave up under an older resolver (RESOLVER_VERSION).
+    assert "_exhausted(e)" in src, "must cap retries on unmatchable entries"
+    assert "MAX_ATTEMPTS" in inspect.getsource(kc._exhausted)
 
 
 # ── the switch to Kalshi as the primary CLV feed (Aug 25 2026) ────────────
