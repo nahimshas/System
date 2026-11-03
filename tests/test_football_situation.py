@@ -114,3 +114,94 @@ class TestWiring:
     def test_red_zone_is_highlighted(self):
         body = _fn("_footballSituationLine")
         assert "redZone" in body and "#ef4444" in body
+
+
+# ── Field position (Nov 2 2026) ────────────────────────────────────────────
+# User, reading the live NFL card: "says the ball is on chicago's 65, what does
+# that mean?" — it meant nothing. A field only counts to 50 from each sideline,
+# so no yard line above 50 exists. ESPN's `yardLine` is a 0-100 ABSOLUTE
+# measured from the home team's goal line and we printed it raw.
+#
+# These tests RUN the shipped function in node rather than grepping it, because
+# the broken version read perfectly well as source: `abbr + " " + st.yardLine`
+# is exactly what you would write if you believed yardLine were a yard marker.
+# Only evaluating it against ESPN's own labelled pairs shows the difference.
+import json
+import shutil
+import subprocess
+
+_NODE = shutil.which("node")
+
+
+def _run_situation(cases):
+    """Evaluate the SHIPPED _footballSituation over `cases` in node."""
+    harness = (
+        _fn("_ordinalDown") + "\n" + _fn("_footballSituation") + "\n"
+        "var out = JSON.parse(process.argv[1]).map(function (ev) {\n"
+        "  return _footballSituation(ev);\n"
+        "});\n"
+        "console.log(JSON.stringify(out));\n"
+    )
+    res = subprocess.run([_NODE, "-e", harness, json.dumps(cases)],
+                         capture_output=True, text=True, check=True)
+    return json.loads(res.stdout)
+
+
+def _ev(yard_line, home="SEA", away="CHI", possession="3", **kw):
+    ev = {"stateId": "2", "homeAbbr": home, "awayAbbr": away,
+          "homeId": "26", "awayId": "3",
+          "situation": {"yardLine": yard_line, "possession": possession}}
+    ev["situation"].update(kw)
+    return ev
+
+
+@pytest.mark.skipif(_NODE is None, reason="node not installed")
+class TestFieldPosition:
+    # ESPN's own start/end labels for CHI @ SEA, read live on Nov 2 2026.
+    # Home is SEA, so yardLine counts up from Seattle's goal line.
+    ESPN_LABELLED = [(32, "SEA 32"), (80, "CHI 20"), (0, "SEA 0"),
+                     (96, "CHI 4"), (91, "CHI 9"), (46, "SEA 46"),
+                     (75, "CHI 25"), (72, "CHI 28"), (65, "CHI 35")]
+
+    def test_matches_espns_own_labels(self):
+        cases = [_ev(y) for y, _ in self.ESPN_LABELLED]
+        got = _run_situation(cases)
+        for (y, want), g in zip(self.ESPN_LABELLED, got):
+            assert g["fieldPos"] == want, f"yardLine {y} -> {g['fieldPos']}"
+
+    def test_the_reported_bug_specifically(self):
+        """yardLine 65, the value live on the card the user was looking at."""
+        assert _run_situation([_ev(65)])[0]["fieldPos"] == "CHI 35"
+
+    def test_no_yard_line_above_fifty_can_ever_be_printed(self):
+        """The invariant the bug violated, over the whole domain."""
+        got = _run_situation([_ev(y) for y in range(0, 101)])
+        for g in got:
+            n = int(g["fieldPos"].split()[1])
+            assert 0 <= n <= 50, g["fieldPos"]
+
+    def test_the_label_names_the_half_not_the_possessor(self):
+        """A Seattle drive ending on Chicago's 9 is 'CHI 9'.
+
+        The old code chose the abbreviation from `possession`, which is right
+        only while a team is in its own half.
+        """
+        got = _run_situation([_ev(91, possession="26")])   # SEA has the ball
+        assert got[0]["side"] == "home"
+        assert got[0]["fieldPos"] == "CHI 9"
+
+    def test_possession_text_still_wins_when_espn_sends_it(self):
+        got = _run_situation([_ev(65, possessionText="SEA 35")])
+        assert got[0]["fieldPos"] == "SEA 35"
+
+    def test_field_position_survives_unknown_possession(self):
+        """ESPN drops `possession` around timeouts — which is exactly when the
+        fallback runs. Requiring a side meant printing nothing."""
+        ev = _ev(65, possession=None)
+        got = _run_situation([ev])
+        assert got[0]["fieldPos"] == "CHI 35"
+
+    def test_junk_yard_lines_are_dropped_not_printed(self):
+        for bad in (-1, 101, "nope", None):
+            got = _run_situation([_ev(bad, down=2, distance=7)])
+            assert got[0]["fieldPos"] == "", bad

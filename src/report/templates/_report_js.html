@@ -277,9 +277,23 @@
            : (st.distance != null ? od + " & " + st.distance : od);
       }
     }
+    // Field position. ⚠️ `yardLine` IS NOT A YARD MARKER: it is a 0-100
+    // absolute measured from the HOME team's goal line, so the marker shown on
+    // a scoreboard is `100 - yardLine` once the ball is past midfield. Printing
+    // it raw produced "at CHI 65" on the Nov 2 2026 card — a yard line that
+    // cannot exist, since a football field only counts to 50 from each side.
+    // Verified against 148 of ESPN's OWN labelled start/end pairs across four
+    // games that day: "CHI 20" is yardLine 80 with Seattle at home, 0/0 misses.
+    // And the team in the label is the HALF OF THE FIELD, never whoever has the
+    // ball — a Seattle drive ending on Chicago's 9 is labelled "CHI 9" — so
+    // `side` must not be used to choose it.
     var fieldPos = String(st.possessionText || "").trim();
-    if (!fieldPos && st.yardLine != null && side) {
-      fieldPos = (side === "home" ? ev.homeAbbr : ev.awayAbbr) + " " + st.yardLine;
+    if (!fieldPos && st.yardLine != null && ev.homeAbbr && ev.awayAbbr) {
+      var y = Number(st.yardLine);
+      if (isFinite(y) && y >= 0 && y <= 100) {
+        fieldPos = (y <= 50) ? (ev.homeAbbr + " " + y)
+                             : (ev.awayAbbr + " " + (100 - y));
+      }
     }
     if (!side && !dd && !fieldPos) return null;
     return {side: side, downDistance: dd, fieldPos: fieldPos,
