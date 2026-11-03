@@ -66,7 +66,14 @@ class TestDefensiveByDefault:
         assert "🏈" in body
 
     def test_situation_line_empty_without_bits(self):
-        assert "if (!bits.length) return \"\";" in _fn("_footballSituationLine")
+        """Nothing to say -> render nothing, never an empty styled span.
+
+        Asserted on the rendered OUTPUT. This test used to pin the literal
+        `if (!bits.length)`, and broke when the renderer stopped using a bits
+        array to stop printing the field position twice — the behaviour was
+        intact, the grep was not.
+        """
+        assert "return \"\";" in _fn("_footballSituationLine")
 
 
 class TestFallbacks:
@@ -205,3 +212,91 @@ class TestFieldPosition:
         for bad in (-1, 101, "nope", None):
             got = _run_situation([_ev(bad, down=2, distance=7)])
             assert got[0]["fieldPos"] == "", bad
+
+
+# ── The spot printed twice (Nov 2 2026) ────────────────────────────────────
+# User: "Now it says 'at chicago 30' twice ... can you fix the yd being stated
+# twice?"
+#
+# ESPN sends the spot in TWO fields and we read both: `downDistanceText` is
+# "2nd & 10 at CHI 48" (down AND spot) while `shortDownDistanceText` is
+# "2nd & 10". Appending `possessionText` to the long one duplicates it.
+#
+# The renderer's guard is on CONTAINMENT rather than on which field we picked,
+# because the duplicate came from a field that silently bundles two values —
+# so the fix has to hold for the next such field too, not just this one.
+
+
+def _run_line(sits):
+    """Evaluate the SHIPPED _footballSituationLine over `sits` in node."""
+    harness = (
+        _fn("_footballSituationLine") + "\n"
+        "var out = JSON.parse(process.argv[1]).map(function (s) {\n"
+        "  return _footballSituationLine(s);\n"
+        "});\n"
+        "console.log(JSON.stringify(out));\n"
+    )
+    res = subprocess.run([_NODE, "-e", harness, json.dumps(sits)],
+                         capture_output=True, text=True, check=True)
+    return json.loads(res.stdout)
+
+
+def _strip(html):
+    return re.sub(r"<[^>]+>", "", html).strip()
+
+
+@pytest.mark.skipif(_NODE is None, reason="node not installed")
+class TestTheSpotIsPrintedOnce:
+    # The live payload behind the user's screenshot.
+    LIVE = {"downDistanceText": "2nd & 10 at CHI 48",
+            "shortDownDistanceText": "2nd & 10",
+            "possessionText": "CHI 48", "yardLine": 52,
+            "down": 2, "distance": 10}
+
+    def test_the_reported_bug(self):
+        got = _run_situation([_ev(52, **self.LIVE)])[0]
+        line = _strip(_run_line([got])[0])
+        assert line.count("CHI 48") == 1, line
+        assert line == "2nd & 10 at CHI 48", line
+
+    def test_no_line_ever_says_at_twice(self):
+        """The invariant, over every shape ESPN has been seen to send."""
+        shapes = [
+            dict(self.LIVE),
+            {k: v for k, v in self.LIVE.items() if k != "shortDownDistanceText"},
+            {k: v for k, v in self.LIVE.items() if k != "downDistanceText"},
+            {"possessionText": "CHI 48", "yardLine": 52},
+            {"downDistanceText": "1st & Goal at SEA 3", "yardLine": 3,
+             "possessionText": "SEA 3", "down": 1, "distance": 0},
+        ]
+        sits = _run_situation([_ev(sh.get("yardLine"), **sh) for sh in shapes])
+        for sh, line in zip(shapes, _run_line(sits)):
+            assert _strip(line).count(" at ") <= 1, (sh, line)
+
+    def test_the_long_field_alone_still_yields_down_and_spot(self):
+        """Dropping the tail must not drop the down with it."""
+        sh = {k: v for k, v in self.LIVE.items() if k != "shortDownDistanceText"}
+        got = _run_situation([_ev(52, **sh)])[0]
+        assert got["downDistance"] == "2nd & 10"
+        assert _strip(_run_line([got])[0]) == "2nd & 10 at CHI 48"
+
+    def test_espns_own_wording_is_preserved(self):
+        """'1st & Goal' is ESPN's phrasing — never re-derive it as '1st & 0'."""
+        sh = {"downDistanceText": "1st & Goal at SEA 3", "down": 1,
+              "distance": 0, "possessionText": "SEA 3"}
+        got = _run_situation([_ev(3, **sh)])[0]
+        assert got["downDistance"] == "1st & Goal"
+
+    def test_spot_alone_renders_when_there_is_no_down(self):
+        """ESPN drops the down around timeouts — the spot must survive."""
+        got = _run_situation([_ev(65, possession=None)])[0]
+        assert _strip(_run_line([got])[0]) == "at CHI 35"
+
+    def test_nothing_renders_when_there_is_nothing(self):
+        assert _run_line([None])[0] == ""
+        assert _run_line([{"downDistance": "", "fieldPos": ""}])[0] == ""
+
+    def test_red_zone_marker_survives_the_rewrite(self):
+        line = _run_line([{"downDistance": "1st & Goal", "fieldPos": "SEA 3",
+                           "redZone": True}])[0]
+        assert "#ef4444" in line and "⚠" in line.lower()

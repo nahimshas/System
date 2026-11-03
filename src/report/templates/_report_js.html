@@ -269,7 +269,18 @@
       else if (pt && ev.awayAbbr && pt.indexOf(String(ev.awayAbbr).toUpperCase()) === 0) side = "away";
     }
 
-    var dd = String(st.downDistanceText || st.shortDownDistanceText || "").trim();
+    // Down & distance. ⚠️ `downDistanceText` ALSO CARRIES THE FIELD POSITION
+    // ("2nd & 10 at CHI 48") while `shortDownDistanceText` is the down alone
+    // ("2nd & 10"). We render position separately, so preferring the long field
+    // printed it twice — "2nd & 5 at CHI 30 · at CHI 30" on the Nov 2 2026
+    // card. Take the short field first; it exists for exactly this.
+    var dd = String(st.shortDownDistanceText || "").trim();
+    if (!dd) {
+      // Older/odd payloads send only the long field: drop its " at <spot>"
+      // tail rather than re-deriving the down, which ESPN has already worded
+      // ("1st & Goal", "4th & inches").
+      dd = String(st.downDistanceText || "").trim().replace(/\s+at\s+\S.*$/i, "").trim();
+    }
     if (!dd && st.down) {
       var od = _ordinalDown(st.down);
       if (od) {
@@ -307,14 +318,19 @@
   // Down & distance + field position, for the centre column.
   function _footballSituationLine(sit) {
     if (!sit) return "";
-    var bits = [];
-    if (sit.downDistance) bits.push(sit.downDistance);
-    if (sit.fieldPos)     bits.push("at " + sit.fieldPos);
-    if (!bits.length) return "";
+    // ⚠️ Never print the spot twice. The guard is on CONTAINMENT, not on which
+    // ESPN field we read, because the duplicate arrived from a field that
+    // silently bundles the two ("2nd & 10 at CHI 48"), and the next one will
+    // too. Football reads "2nd & 10 at CHI 48", so join with "at", not a dot.
+    var dd  = sit.downDistance || "";
+    var pos = sit.fieldPos || "";
+    if (pos && dd.indexOf(pos) !== -1) pos = "";
+    var text = (dd && pos) ? (dd + " at " + pos) : (dd || (pos && "at " + pos));
+    if (!text) return "";
     var col = sit.redZone ? "#ef4444" : "#e2e8f0";
     return '<span style="font-size:0.66rem;font-weight:600;color:' + col + ';' +
              'white-space:nowrap;">' +
-             (sit.redZone ? "\u26A0 " : "") + bits.join(" \u00B7 ") +
+             (sit.redZone ? "\u26A0 " : "") + text +
            '</span>';
   }
 
