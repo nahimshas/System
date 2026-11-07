@@ -3736,10 +3736,24 @@ def analyze_wnba_game(
     _proj_away_pts = max(50.0, min(120.0, away_ppg + _home_def_allowed - _wnba_avg))
     # Convert the lineup penalty (win-prob units) to points at the SAME rate the
     # moneyline uses on the same quantity, derived above from WNBA_SPREAD_STD.
-    # ⚠️ Unlike NBA's, this 6.0 cap is LIVE, not slack: WNBA_MAX_LINEUP_PENALTY
-    # is 0.3, so the uncapped penalty can reach 9.8 pts.
-    _proj_home_pts -= min(home_lineup_pen * _wnba_prob_to_margin, 6.0)
-    _proj_away_pts -= min(away_lineup_pen * _wnba_prob_to_margin, 6.0)
+    #
+    # ⚠️ NO SECOND CAP HERE, deliberately. The penalty is ALREADY bounded where
+    # it is built: 0.15 per player and WNBA_MAX_LINEUP_PENALTY (0.3) compound,
+    # so this can never exceed 9.8 pts by construction. A further 6.0-point clip
+    # bounded an already-bounded quantity and did real damage: it clipped 248 of
+    # 504 logged team-sides, and across that half the population the true
+    # penalty ranged from 6.03 to 9.78 pts while every one of them displayed as
+    # exactly 6.00. A team missing two starters and a team missing five became
+    # the same projection.
+    #
+    # It also contradicted our own win probability. The moneyline above applies
+    # `adj -= home_lineup_pen` UNCAPPED and converts it at this same rate, so
+    # the model already believes a 0.3 penalty is worth 9.8 pts of margin. Only
+    # the projected score disagreed — and since _score_from_prob takes the
+    # MARGIN from the probability, the clip landed entirely on the TOTAL, which
+    # is why injured teams projected too high.
+    _proj_home_pts -= home_lineup_pen * _wnba_prob_to_margin
+    _proj_away_pts -= away_lineup_pen * _wnba_prob_to_margin
     # NOTE: the projected score is APPENDED BELOW, after the caps, so its margin
     # comes from the final probability. The injury adjustment above (Jul 15) made
     # the total honest but left the MARGIN free to disagree with the win

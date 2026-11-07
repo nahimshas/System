@@ -110,11 +110,29 @@ class TestWnbaUsesTheSameDerivedRate:
         assert "_wnba_prob_to_margin = 1.0 / float(_norm.pdf(0, 0, WNBA_SPREAD_STD))" in body
         assert abs(1.0 / norm.pdf(0, 0, WNBA_SPREAD_STD) - 32.59) < 0.1
 
-    def test_the_wnba_six_point_cap_still_binds(self):
-        """⚠️ Opposite of NBA — do not copy the 'slack cap' comment here.
+    def test_there_is_no_second_cap_on_the_points(self):
+        """The penalty is bounded where it is BUILT, not again where it is used.
 
-        WNBA_MAX_LINEUP_PENALTY is 0.3, so the uncapped penalty reaches 9.8 pts
-        and the cap is load-bearing.
+        The 6.0-point clip hit 248 of 504 logged team-sides. Across that half
+        of the population the true penalty ran from 6.03 to 9.78 pts and every
+        one of them rendered as 6.00 — two starters out looked like five.
         """
+        import inspect
+        body = inspect.getsource(ef.analyze_wnba_game)
+        assert "home_lineup_pen * _wnba_prob_to_margin\n" in body
+        assert "min(home_lineup_pen * _wnba_prob_to_margin, 6.0)" not in body
+        assert "min(away_lineup_pen * _wnba_prob_to_margin, 6.0)" not in body
+
+    def test_the_input_bound_still_makes_it_finite(self):
+        """Removing the clip must not leave the quantity unbounded."""
         from src.config import WNBA_MAX_LINEUP_PENALTY, WNBA_SPREAD_STD
-        assert WNBA_MAX_LINEUP_PENALTY * (1.0 / norm.pdf(0, 0, WNBA_SPREAD_STD)) > 6.0
+        worst = WNBA_MAX_LINEUP_PENALTY * (1.0 / norm.pdf(0, 0, WNBA_SPREAD_STD))
+        assert 0 < worst < 12.0, worst
+
+    def test_the_display_and_the_moneyline_treat_it_the_same_way(self):
+        """The clip existed only on the display side, so the projected total
+        contradicted the probability printed beside it."""
+        import inspect
+        body = inspect.getsource(ef.analyze_wnba_game)
+        assert "adj -= home_lineup_pen" in body      # moneyline: uncapped
+        assert "min(home_lineup_pen" not in body     # display: now likewise
