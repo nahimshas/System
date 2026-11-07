@@ -842,27 +842,60 @@ def fetch_candles(series: str, ticker: str, start_ts: int, end_ts: int,
 
 
 def snapshot(picks: List[Dict], game_date: str) -> List[Dict[str, Any]]:
-    """Bid/ask snapshot for every pick we can match. Never raises."""
+    """Bid/ask snapshot for every pick we can match. Never raises.
+
+    ⚠️ PER-SPORT, keyed off each pick's own `sport`. This read the bare MLB
+    `SERIES` map until Nov 7 2026 — the exact mistake `resolve_pick` warns
+    about two functions up — so every non-MLB pick landed in the MLB books and
+    resolved nothing. It looked like a working feature for as long as MLB was
+    the budget sport: all 201 rows ever written are MLB, and the log went
+    silent when the season ended rather than when it broke. Measured live that
+    day: 0 of 17 NBA/NHL picks resolved before, 15 of 17 after.
+    """
     if not enabled():
         logger.info("Kalshi snapshot disabled via ENABLE_KALSHI_SNAPSHOT")
         return []
     try:
-        needed = {SERIES[b] for b in {str(p.get("bet_type")) for p in picks}
-                  if b in SERIES}
-        if any(str(p.get("bet_type")) == "F5 Spread" for p in picks):
-            needed.add("KXMLBF5")           # ±0.5 resolves against the F5 winner book
+        # Lazy: kalshi_clv imports THIS module, so a top-level import cycles.
+        from src.data.kalshi_clv import SPORT_SERIES, _candidate_dates
+
+        by_sport: Dict[str, List[Dict]] = {}
+        for p in picks:
+            by_sport.setdefault(str(p.get("sport") or "MLB").upper(), []).append(p)
+
+        needed = set()
+        for sp, sp_picks in by_sport.items():
+            smap = SPORT_SERIES.get(sp) or {}
+            for p in sp_picks:
+                bt = str(p.get("bet_type"))
+                if smap.get(bt):
+                    needed.add(smap[bt])
+                if sp == "MLB" and bt == "F5 Spread":
+                    needed.add("KXMLBF5")   # ±0.5 resolves against the F5 winner book
         markets = {s: fetch_open_markets(s) for s in sorted(needed)}
         total = sum(len(v) for v in markets.values())
         if not total:
             logger.warning("Kalshi snapshot: no markets returned — skipping")
             return []
-        out = []
-        for p in picks:
-            r = resolve_pick(p, markets, game_date)
-            if r:
-                out.append({"pick": p, "kalshi": r})
+        out, unmapped = [], []
+        for sp, sp_picks in by_sport.items():
+            smap = SPORT_SERIES.get(sp)
+            if not smap:
+                unmapped.append(f"{sp}x{len(sp_picks)}")
+                continue
+            for p in sp_picks:
+                # CFB tickers carry a PLACEHOLDER date, so an exact-date join
+                # drops the whole slate — the same trap that hid CFB CLV.
+                for d in _candidate_dates(sp, game_date):
+                    r = resolve_pick(p, markets, d, series_map=smap)
+                    if r:
+                        out.append({"pick": p, "kalshi": r})
+                        break
+        if unmapped:
+            logger.info("Kalshi snapshot: no series map for " + ", ".join(sorted(unmapped)))
         logger.info(f"Kalshi snapshot: matched {len(out)}/{len(picks)} picks "
-                    f"across {total} markets")
+                    f"across {total} markets "
+                    f"({', '.join(f'{k}:{len(v)}' for k, v in sorted(by_sport.items()))})")
         return out
     except Exception as e:
         logger.error(f"Kalshi snapshot failed (non-fatal): {e}")
