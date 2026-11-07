@@ -252,7 +252,7 @@
     },
     {
       "id": "projected_score_consistency",
-      "status": "open",
+      "status": "resolved",
       "title": "Projected score now derived from the model probability \u2014 does the card still read right?",
       "created": "2026-09-17",
       "evaluate_after": "2026-11-01",
@@ -261,7 +261,8 @@
       "rules": {
         "min_cards": 100
       },
-      "rationale": "User caught the Sep 17 NFL card picking Detroit while projecting Buffalo by 1. The projected score was built from season scoring averages alone while the win probability came from team strength + home field + injuries + rest + caps, so the two were free to disagree. Measured across live cards: NFL mean 6.2 pts off, worst 27.7 with the SIGN FLIPPED (Sep 10 SF@LAR projected LAR by 24 while the model believed SF by 3.7); WNBA mean 4.9. || CHANGE: the TOTAL still comes from scoring data, the MARGIN now comes from the final post-cap probability (_score_from_prob), so they agree by construction in NFL/NBA/NHL/WNBA. CFB already did this. DISPLAY ONLY \u2014 no probability, edge, or stake changes. || WHAT TO CHECK: that projected scores now look sane against actual results (the margin is a median-ish expectation, not a point forecast), and that the value-underdog note reads clearly on cards where we back a side the model expects to lose. If projected totals now look systematically off, the TOTAL formula is the suspect, not the split."
+      "rationale": "User caught the Sep 17 NFL card picking Detroit while projecting Buffalo by 1. The projected score was built from season scoring averages alone while the win probability came from team strength + home field + injuries + rest + caps, so the two were free to disagree. Measured across live cards: NFL mean 6.2 pts off, worst 27.7 with the SIGN FLIPPED (Sep 10 SF@LAR projected LAR by 24 while the model believed SF by 3.7); WNBA mean 4.9. || CHANGE: the TOTAL still comes from scoring data, the MARGIN now comes from the final post-cap probability (_score_from_prob), so they agree by construction in NFL/NBA/NHL/WNBA. CFB already did this. DISPLAY ONLY \u2014 no probability, edge, or stake changes. || WHAT TO CHECK: that projected scores now look sane against actual results (the margin is a median-ish expectation, not a point forecast), and that the value-underdog note reads clearly on cards where we back a side the model expects to lose. If projected totals now look systematically off, the TOTAL formula is the suspect, not the split.",
+      "resolution": "PASS on the question asked, 2026-11-07 (n=199 cards since 2026-09-18, 194 graded against finals; min_cards 100 met). SIGN: 112/112 moneyline cards project the same winner the model's probability favours \u2014 the Sep 17 contradiction (Detroit picked, Buffalo projected) cannot recur by construction. MARGIN: bias +0.0 NBA / +0.8 NFL, MAE 10.8 / 10.4 pts, which is the spread of a median expectation, not a point forecast. || NEW FINDING, the direction this checkpoint named in advance ('if totals look systematically off, the TOTAL formula is the suspect'): the NBA DISPLAYED total reads 5.8 pts LOW (median -6.0, z=-3.47, n=125, stable across halves -6.3/-5.2, 62% of games under). NFL is unbiased (-0.4, z=-0.23, sign flips across halves). DISPLAY ONLY \u2014 _proj_home/_proj_away feed the card text and nothing else; Over/Under is priced off a separate market-anchored blended_total. Carried forward as nba_projected_total_low. || \u26a0\ufe0f MEASUREMENT NOTE: the first parse of these cards reported 3 sign contradictions. Two were the regex eating team names that contain digits ('San Francisco 49ers' -> score 49, 'Philadelphia 76ers' -> 76) and one was a 50.6% coin flip rounding to 26-26. Anchor the score to the END of the side, not the first number."
     },
     {
       "id": "totals_devig",
@@ -536,6 +537,22 @@
       "on_pass": "Execution measurement is live for the sports that actually carry money. Re-run tools/analysis/execution_report.py and compare bid-vs-ask cost for NBA/NHL/NFL against the MLB-era finding (execution_at_bid FAILED at -1.55pp even at the bid).",
       "on_fail": "Investigate before trusting any execution-cost conclusion; the measurement layer has then been dark for its entire existence on these sports.",
       "measurement": "python3 -c \"import json,glob,collections; c=collections.Counter(); [c.update([r.get('sport')]) for f in glob.glob('state/execution_log/*.json') for r in json.load(open(f)).get('entries',{}).values()]; print(c)\"",
+      "status": "open"
+    },
+    {
+      "id": "nba_projected_total_low",
+      "title": "NBA projected score on the card reads ~6 points low",
+      "created": "2026-11-07",
+      "evaluate_after": "2026-12-20",
+      "data_window_start": "2026-09-18",
+      "type": "note",
+      "rules": [
+        "Re-measure projected total minus actual total for NBA. INVESTIGATE if the bias is still <= -3 pts with |z| >= 2 and stable across both halves of the window. CLOSE if it has drifted inside +/-3 pts."
+      ],
+      "rationale": "Found while resolving projected_score_consistency on 2026-11-07. Across 125 graded NBA cards since 2026-09-18 the displayed projected total is 5.8 pts below the actual total (median -6.0, z=-3.47, stable -6.3/-5.2 across halves, 62% of games under). NFL over the same window is unbiased (-0.4, z=-0.23). DISPLAY ONLY: _proj_home/_proj_away are used at edge_finder.py:546 and :736 and nowhere else, so no probability, edge, stake or routing is affected. Suspects, in order: the flat -4.0 zero-rest penalty applied per team, the injury points subtraction (both also applied on the pricing path), and the pace/offence-defence average itself. \u26a0\ufe0f Do NOT read this as the cause of the acknowledged 97%-under NBA Total one-sidedness without measuring: the PRICED total is a different quantity, anchored to the market line, and measured at only -1.4 vs actual over 58 games. Two different numbers, two different populations.",
+      "on_pass": "Close it: the card's projected score is honest within a few points.",
+      "on_fail": "Fix the TOTAL formula per this checkpoint's own prediction; margins are already correct and must not be disturbed. Coordinate with nba_reaudit (Nov 10).",
+      "measurement": "Parse 'Model projected score' from state/picks_*.json signals (anchor the score to the END of each side - team names contain digits) and join to docs/debrief_history.json finals.",
       "status": "open"
     }
   ]
