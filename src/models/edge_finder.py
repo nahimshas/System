@@ -282,9 +282,14 @@ def _apply_credibility_cap_dispatched(
 # the Over/Under probability, so this moves money. It moves it the safe way —
 # NBA Total candidates clearing min_edge fall 120 → 83.
 _NBA_INJ_TO_PTS    = _NBA_PROB_TO_MARGIN   # 30.1 at σ=12.0; was a bare 75.0
-_WNBA_INJ_TO_PTS   = 28.0  # WNBA lineup penalty (prob units) → projected-score pts
-                           # (margin-consistent: WNBA margin σ≈11 → 1% win prob ≈ 0.28 pts;
-                           # capped at 6 pts. Display-only — used in the projected score line.)
+# _WNBA_INJ_TO_PTS was deliberately NOT replaced with a corrected constant:
+# analyze_wnba_game already derives this rate as `_wnba_prob_to_margin`, and
+# that local value is now used directly, so there is no second name left to
+# drift. The removed constant was 28.0, written down as "margin-consistent:
+# WNBA margin σ≈11". That was true when it was written — and WNBA_SPREAD_STD
+# has since moved to 13.0, which puts the rate at 32.6. A number derived once
+# and then written down stops tracking what it was derived FROM; that is the
+# same failure as NBA's 75.0, caught earlier rather than later.
 _TOTAL_MARKET_ANCHOR = 0.40  # 40% weight toward market line — was 0.20; raised to neutralise
                              # the systematic upward (Over) projection bias measured in MLB totals
                              # (model "Over 66%" realised ~39%). The market total line is essentially
@@ -3715,15 +3720,26 @@ def analyze_wnba_game(
     # the lineup penalty was large (Indiana@GSV: card said "Indiana 64% to win"
     # while projecting GSV by 7 — GSV's 91 assumed their injured scorers
     # played). Subtract each side's lineup penalty converted to points, same
-    # treatment the NBA analyzer applies (_NBA_INJ_TO_PTS). Display-only:
-    # win probabilities and edges are untouched.
+    # treatment the NBA analyzer applies.
+    #
+    # Display-only, and that claim is checked rather than assumed: WNBA has
+    # never produced a Total market (267 shadow-log rows, all Moneyline), and
+    # _wnba_proj_total reaches only _score_from_prob for the card text. The
+    # identical sentence was written about the NBA projection and was WRONG
+    # there — the same computation ran again in NBA's totals block and priced
+    # Over/Under. "These variables are display-only" is not the same claim as
+    # "this quantity is display-only".
     _wnba_avg = 82.0
     _away_def_allowed = away_recent.get("recent_opp_ppg", away_stats.get("opp_ppg", _wnba_avg))
     _home_def_allowed = home_recent.get("recent_opp_ppg", home_stats.get("opp_ppg", _wnba_avg))
     _proj_home_pts = max(50.0, min(120.0, home_ppg + _away_def_allowed - _wnba_avg))
     _proj_away_pts = max(50.0, min(120.0, away_ppg + _home_def_allowed - _wnba_avg))
-    _proj_home_pts -= min(home_lineup_pen * _WNBA_INJ_TO_PTS, 6.0)
-    _proj_away_pts -= min(away_lineup_pen * _WNBA_INJ_TO_PTS, 6.0)
+    # Convert the lineup penalty (win-prob units) to points at the SAME rate the
+    # moneyline uses on the same quantity, derived above from WNBA_SPREAD_STD.
+    # ⚠️ Unlike NBA's, this 6.0 cap is LIVE, not slack: WNBA_MAX_LINEUP_PENALTY
+    # is 0.3, so the uncapped penalty can reach 9.8 pts.
+    _proj_home_pts -= min(home_lineup_pen * _wnba_prob_to_margin, 6.0)
+    _proj_away_pts -= min(away_lineup_pen * _wnba_prob_to_margin, 6.0)
     # NOTE: the projected score is APPENDED BELOW, after the caps, so its margin
     # comes from the final probability. The injury adjustment above (Jul 15) made
     # the total honest but left the MARGIN free to disagree with the win

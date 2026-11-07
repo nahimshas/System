@@ -574,6 +574,24 @@
       "on_fail": "Revert _NBA_INJ_TO_PTS to 75.0, reopen nba_projected_total_low, and look at the base pace/off-def blend instead.",
       "measurement": "Parse 'Model projected score' from state/picks_*.json (anchor the score to the END of each side - team names contain digits), join to docs/debrief_history.json finals, restrict to dates > 2026-11-08. Cross-check inj_pts_home/inj_pts_away now stamped in the decision log.",
       "status": "open"
+    },
+    {
+      "id": "wnba_injury_points_conversion",
+      "title": "WNBA lineup penalty converted at the rate the same function derives",
+      "created": "2026-11-07",
+      "evaluate_after": "2027-07-15",
+      "data_window_start": "2027-05-01",
+      "type": "model_change",
+      "rules": [
+        "PASS if, over WNBA cards from the 2027 season (n >= 60), projected total minus actual total has |bias| <= 3.0 pts OR |z| < 2.",
+        "FAIL if the bias is <= -3 pts with |z| >= 2, i.e. the larger penalty over-corrected.",
+        "ALSO REVIEW regardless of outcome: the share of team-sides pinned at the 6.0-point cap. 43% were already capped before this change and 49% after (216 -> 248 of 504 logged sides). A cap that binds on half the population is doing more of the work than the model is."
+      ],
+      "rationale": "_WNBA_INJ_TO_PTS was 28.0, written down as 'margin-consistent: WNBA margin sigma~11'. That was correct when written; WNBA_SPREAD_STD has since moved to 13.0, which puts the rate at 32.6. analyze_wnba_game already derives exactly this value as _wnba_prob_to_margin (line 3626) and uses it for the moneyline, so the constant was removed outright rather than corrected - there is no longer a second name that can drift. Same shape as NBA's 75.0, found by looking rather than by it surfacing. \u26a0\ufe0f NOT VALIDATED ON OUTCOMES AND COULD NOT BE: only 22 WNBA cards have a projected score graded against a final, which detects a bias of ~9.6 pts; the NBA error just fixed was 5.2 pts and would be invisible at that sample size. The measured WNBA bias is +2.0 (z=+0.40) - no power, not evidence of health. Justification is internal consistency with the rate the same function already uses. Effect measured on 252 logged games: projected total falls 0.50 pts on average (max 1.63), which nudges the +2.0 toward zero. DISPLAY ONLY, and verified rather than assumed: WNBA has never produced a Total market (267 shadow rows, all Moneyline) and _wnba_proj_total reaches only _score_from_prob. \u26a0\ufe0f Unlike NBA's, WNBA's 6.0-point cap is LIVE, not slack.",
+      "on_pass": "Close. Consider whether the 6.0 cap should scale with the derived rate rather than being an absolute.",
+      "on_fail": "Revert to a constant 28.0 and investigate the base ppg/opp-ppg projection instead.",
+      "measurement": "Parse 'Model projected score' from the wnba_display / morning_wnba_display pools in state/picks_*.json (NOT singles_display - WNBA is watchlist-only and never appears there), join to docs/debrief_history.json finals.",
+      "status": "open"
     }
   ]
 }
