@@ -553,6 +553,26 @@
       "on_pass": "Close it: the card's projected score is honest within a few points.",
       "on_fail": "Fix the TOTAL formula per this checkpoint's own prediction; margins are already correct and must not be disturbed. Coordinate with nba_reaudit (Nov 10).",
       "measurement": "Parse 'Model projected score' from state/picks_*.json signals (anchor the score to the END of each side - team names contain digits) and join to docs/debrief_history.json finals.",
+      "status": "resolved",
+      "resolution": "CAUSE FOUND AND FIXED, 2026-11-07 (same day). The NBA analyzer converted a win-probability injury adjustment into points at TWO different rates: the moneyline path used _NBA_PROB_TO_MARGIN (sigma/phi(0) = 30.1, defined at edge_finder.py:47), the totals path a hand-written 75.0 - 2.5x larger, for the same input, in the same function. The penalty therefore averaged 6.2 pts and fired on 115 of 116 graded cards. Before penalties the model was unbiased (+2.2, z=+1.30); at the derived rate the bias is -1.6 (z=-0.92) and BOTH halves improve independently (-6.2 -> -2.9 and -4.2 -> -0.3), MAE 15.0 -> 14.5. The constant was NOT fitted to this data - it is the rate the file already used elsewhere, which is what makes it defensible against the in-sample contamination lesson. Verified live on the 2026-11-07 Kalshi slate: +4.4 pts across 7 games. Superseded by nba_injury_points_conversion.",
+      "correction": "\u26a0\ufe0f This entry originally said 'DISPLAY ONLY - no probability, edge, stake or routing is affected'. That was WRONG and is corrected here rather than edited away. It was true of the VARIABLES _proj_home/_proj_away, which only reach the card text, but the identical computation runs again in the totals block and feeds expected_total -> blended_total -> the Over/Under probability. Fixing it moves money. The lesson: 'these variables are display-only' is not the same claim as 'this quantity is display-only', and the second is the one that matters."
+    },
+    {
+      "id": "nba_injury_points_conversion",
+      "title": "NBA injury points now use the model's own prob-to-margin rate",
+      "created": "2026-11-07",
+      "evaluate_after": "2026-12-20",
+      "data_window_start": "2026-11-08",
+      "type": "model_change",
+      "rules": [
+        "PASS if, over NBA cards priced AFTER 2026-11-08 (n >= 60), projected total minus actual total has |bias| <= 3.0 pts OR |z| < 2.",
+        "PASS additionally requires the NBA Total Over/Under split to be less extreme than the pre-fix 97% under, and NBA Total CLV not to fall below its pre-fix -1.48%.",
+        "FAIL if the bias is still <= -3 pts with |z| >= 2 (the conversion was not the cause), or if NBA Total CLV or win rate deteriorates materially - in which case revert to 75.0 and reopen."
+      ],
+      "rationale": "_NBA_INJ_TO_PTS was a hand-written 75.0 while the same win-prob-to-points conversion elsewhere in the same analyzer (_NBA_PROB_TO_MARGIN) is sigma/phi(0) = 30.1. The totals path subtracted 2.5x too much injury, averaging 6.2 pts on 115 of 116 graded cards and putting the projected total 5.2 pts below actual (z=-3.08). The base model was unbiased before penalties (+2.2, z=+1.30). The new value is now DERIVED from NBA_SPREAD_STD rather than written down, so the two conversions cannot drift apart again; a test pins the relationship rather than the number. Backtest LIVE sync does not apply - that dict is MLB-only. \u26a0\ufe0f This moves money: expected_total -> blended_total -> Over/Under probability. Replaying the decision log, NBA Total candidates clearing min_edge fall 120 -> 83 (1% Over -> 5% Over), i.e. strictly LESS betting, which is the safe direction. Settled win rate on those candidates 53% -> 55%.",
+      "on_pass": "Close. Consider whether WNBA's 28.0 should likewise be derived (its own sigma=13.0 implies 32.6; it was left alone because it was not measured as biased and was out of scope).",
+      "on_fail": "Revert _NBA_INJ_TO_PTS to 75.0, reopen nba_projected_total_low, and look at the base pace/off-def blend instead.",
+      "measurement": "Parse 'Model projected score' from state/picks_*.json (anchor the score to the END of each side - team names contain digits), join to docs/debrief_history.json finals, restrict to dates > 2026-11-08. Cross-check inj_pts_home/inj_pts_away now stamped in the decision log.",
       "status": "open"
     }
   ]

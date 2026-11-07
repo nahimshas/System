@@ -264,7 +264,24 @@ def _apply_credibility_cap_dispatched(
     return _apply_credibility_cap(model_prob, market_prob, max_drift)
 
 # Totals model helpers
-_NBA_INJ_TO_PTS    = 75.0  # converts win-prob injury_adj → expected pts reduction in totals
+# ⚠️ ONE win-probability unit is worth ONE number of points, and the file
+# already says what it is: _NBA_PROB_TO_MARGIN (σ/φ(0), defined up at line 47)
+# is what the MONEYLINE path uses to turn the very same injury adjustment into
+# margin. The totals path hand-wrote 75.0 — 2.5x that — so the identical input
+# was converted two different ways inside one analyzer.
+#
+# Measured 2026-11-07 over 116 graded NBA cards: the injury penalty averaged
+# 6.2 pts and fired on 115 of them, dragging the projected total to 5.2 pts
+# BELOW the actual (z=-3.08). Before penalties the model was unbiased (+2.2,
+# z=+1.30) — the base was never the problem. At the derived rate the bias is
+# -1.6 (z=-0.92) and BOTH halves improve independently (-6.2→-2.9, -4.2→-0.3),
+# which is the check that matters, since a constant tuned to fit 116 games
+# would not have to.
+#
+# NOT display-only: the same figure reaches expected_total → blended_total →
+# the Over/Under probability, so this moves money. It moves it the safe way —
+# NBA Total candidates clearing min_edge fall 120 → 83.
+_NBA_INJ_TO_PTS    = _NBA_PROB_TO_MARGIN   # 30.1 at σ=12.0; was a bare 75.0
 _WNBA_INJ_TO_PTS   = 28.0  # WNBA lineup penalty (prob units) → projected-score pts
                            # (margin-consistent: WNBA margin σ≈11 → 1% win prob ≈ 0.28 pts;
                            # capped at 6 pts. Display-only — used in the projected score line.)
@@ -537,6 +554,9 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
             _proj_home -= 4.0
         if away_rest == 0:
             _proj_away -= 4.0
+        # The 6.0 cap is now slack, not live: INJURY_DRAG_CAP (0.15) bounds the
+        # input, so the most this can subtract is 0.15 × 30.1 = 4.5 pts. Kept as
+        # a floor-level guard against a future change to that cap.
         _inj_home_pts_pre = min(home_inj * _NBA_INJ_TO_PTS, 6.0)
         _inj_away_pts_pre = min(away_inj * _NBA_INJ_TO_PTS, 6.0)
         if _inj_home_pts_pre > 0.5:
@@ -1027,6 +1047,13 @@ def analyze_nba_game(game: Dict, nba_ctx: Dict, nba_injuries: Dict, min_edge: fl
         "expected_total": _lv.get("blended_total"), "total_std": _lv.get("total_std"),
         "home_rest": _lv.get("home_rest"), "away_rest": _lv.get("away_rest"),
         "home_inj": _lv.get("home_inj"), "away_inj": _lv.get("away_inj"),
+        # The injury adjustment IN POINTS, as actually subtracted from the
+        # projected total, plus the pre-anchor total. The win-prob figures
+        # above cannot be converted after the fact without knowing which rate
+        # was live that day — reconstructing that by hand is exactly what the
+        # Nov 7 2026 audit had to do to discover the rate was 2.5x too big.
+        "inj_pts_home": _lv.get("inj_home_pts"), "inj_pts_away": _lv.get("inj_away_pts"),
+        "expected_total_raw": _lv.get("expected_total"),
         "playoff": _lv.get("playoff"), "stats_available": stats_available,
     }, [
         ("Moneyline", home, _lv.get("adjusted_home_prob"), _nba_rh, _lv.get("market_home_prob"), None),
