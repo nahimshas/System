@@ -3,7 +3,7 @@
 // Each new report overwrites the cache so the phone always shows
 // today's picks when online, and yesterday's when offline.
 
-const CACHE = 'picks-2026-11-13-163030';
+const CACHE = 'picks-2026-11-14-163005';
 const PRECACHE = ['/'];
 
 self.addEventListener('install', e => {
