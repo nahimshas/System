@@ -1,40 +1,6 @@
 {
   "entries": [
     {
-      "date": "2026-09-28",
-      "generated_at": "2026-09-29T13:21:11Z",
-      "generated_by": "workflow",
-      "headline": "No budget card today \u2014 watchlist went 1-0",
-      "budget_record": "0-0",
-      "watchlist_record": "1-0",
-      "budget_pnl": 0,
-      "avg_budget_clv": null,
-      "snapshot_timeout": false,
-      "picks": [
-        {
-          "game": "Philadelphia Eagles @ Chicago Bears",
-          "sport": "NFL",
-          "pick": "Chicago Bears",
-          "bet_type": "Moneyline",
-          "confidence": "MEDIUM",
-          "result": "WON",
-          "score": "Philadelphia Eagles 7, Chicago Bears 27",
-          "pnl": "",
-          "clv_pct": 2.0,
-          "why_picked": "Primary signal: Injury Impact. (Home field advantage: Chicago Bears (+2%))",
-          "what_happened": "Case Keenum drives Chicago to 3 touchdowns as the Bears beat the Eagles 27-7.",
-          "signals": [
-            "Injury Impact"
-          ],
-          "signal_verdict": "CORRECT \u2014 won and beat the close (+2.0%)",
-          "key_insight": "",
-          "in_budget": false
-        }
-      ],
-      "patterns": [],
-      "model_observations": []
-    },
-    {
       "date": "2026-09-29",
       "generated_at": "2026-09-30T13:02:53Z",
       "generated_by": "workflow",
@@ -23107,6 +23073,660 @@
       ],
       "patterns": [],
       "model_observations": []
+    },
+    {
+      "date": "2026-11-27",
+      "generated_at": "2026-11-28T06:50:08Z",
+      "generated_by": "workflow",
+      "headline": "4-3 on budget (+$3.97), avg CLV +0.22%",
+      "budget_record": "4-3",
+      "watchlist_record": "13-6",
+      "budget_pnl": 3.97,
+      "avg_budget_clv": 0.22,
+      "snapshot_timeout": false,
+      "picks": [
+        {
+          "game": "Pittsburgh Penguins @ Buffalo Sabres",
+          "sport": "NHL",
+          "pick": "Buffalo Sabres",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Pittsburgh Penguins 6, Buffalo Sabres 3",
+          "pnl": "-$1.15",
+          "clv_pct": -1.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Buffalo Sabres (+2%))",
+          "what_happened": "Penguins snap a 5-game skid with a 6-3 victory over the Sabres.",
+          "signals": [
+            "Rating Edge"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.0% against us",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Florida Panthers @ Washington Capitals",
+          "sport": "NHL",
+          "pick": "Florida Panthers",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Florida Panthers 3, Washington Capitals 2",
+          "pnl": "+$0.95",
+          "clv_pct": 1.6,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Washington Capitals (+2%))",
+          "what_happened": "Sam Bennett scores 200th career goal with 24 seconds left as Panthers beat Capitals 3-2.",
+          "signals": [
+            "Rating Edge"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.6%)",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Detroit Red Wings @ Columbus Blue Jackets",
+          "sport": "NHL",
+          "pick": "Detroit Red Wings",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Detroit Red Wings 2, Columbus Blue Jackets 0",
+          "pnl": "+$1.05",
+          "clv_pct": -4.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Columbus Blue Jackets (+2%))",
+          "what_happened": "Gibson records 29th career shutout as Red Wings beat the Blue Jackets 2-0.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -4.0% against this pick",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Ottawa Senators @ Tampa Bay Lightning",
+          "sport": "NHL",
+          "pick": "Ottawa Senators",
+          "bet_type": "Moneyline",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Ottawa Senators 6, Tampa Bay Lightning 2",
+          "pnl": "+$0.55",
+          "clv_pct": 4.5,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Tampa Bay Lightning (+2%))",
+          "what_happened": "Senators top Lightning 6-2 in historic win for Linus Ullmark.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+4.5%)",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Denver Broncos @ Pittsburgh Steelers",
+          "sport": "NFL",
+          "pick": "Denver Broncos -4.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "LOST",
+          "score": "Denver Broncos 5, Pittsburgh Steelers 27",
+          "pnl": "-$0.53",
+          "clv_pct": 0.0,
+          "why_picked": "Primary signal: Rating Edge. (Home field advantage: Pittsburgh Steelers (+2%))",
+          "what_happened": "Inspired Steelers move on from Rodgers' exit with cathartic 27-5 win over sloppy Broncos.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.0%)",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Pittsburgh Penguins @ Buffalo Sabres / Detroit Red Wings @ Columbus Blue Jackets",
+          "pick": "Buffalo Sabres (ML) + Detroit Red Wings +1.5",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "LOST",
+          "pnl": "-$5.92",
+          "legs": [
+            {
+              "pick": "Buffalo Sabres",
+              "sport": "NHL",
+              "result": "LOST"
+            },
+            {
+              "pick": "Detroit Red Wings +1.5",
+              "sport": "NHL",
+              "result": "WON"
+            }
+          ],
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 a leg missed",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Ottawa Senators @ Tampa Bay Lightning / Florida Panthers @ Washington Capitals",
+          "pick": "Ottawa Senators +1.5 + Florida Panthers (ML)",
+          "sport": "PARLAY",
+          "bet_type": "Parlay",
+          "result": "WON",
+          "pnl": "+$9.02",
+          "legs": [
+            {
+              "pick": "Ottawa Senators +1.5",
+              "sport": "NHL",
+              "result": "WON"
+            },
+            {
+              "pick": "Florida Panthers",
+              "sport": "NHL",
+              "result": "WON"
+            }
+          ],
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "CORRECT \u2014 all legs hit",
+          "key_insight": "",
+          "in_budget": true
+        },
+        {
+          "game": "Miami Heat @ New York Knicks",
+          "sport": "NBA",
+          "pick": "Miami Heat +4.5",
+          "bet_type": "Spread",
+          "confidence": "HIGH",
+          "result": "WON",
+          "score": "Miami Heat 108, New York Knicks 105",
+          "pnl": "",
+          "clv_pct": 3.0,
+          "why_picked": "Primary signal: Injury Impact. (Home court advantage: New York Knicks (+2%))",
+          "what_happened": "Antetokounmpo has 22 points and 23 rebounds as the Heat stop the Knicks' 6-game winning streak.",
+          "signals": [
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+3.0%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "New York Rangers @ Chicago Blackhawks",
+          "sport": "NHL",
+          "pick": "Chicago Blackhawks +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "New York Rangers 1, Chicago Blackhawks 2",
+          "pnl": "",
+          "clv_pct": -0.2,
+          "why_picked": "Primary signal: Model Projection. (Home ice advantage: Chicago Blackhawks (+2%))",
+          "what_happened": "Mangiapane scores twice, Knight makes 30 saves to help Blackhawks edge Rangers 2-1.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (-0.2%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Los Angeles Kings @ Anaheim Ducks",
+          "sport": "NHL",
+          "pick": "Anaheim Ducks +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Los Angeles Kings 5, Anaheim Ducks 3",
+          "pnl": "",
+          "clv_pct": -0.1,
+          "why_picked": "Primary signal: Model Projection. (Home ice advantage: Anaheim Ducks (+2%))",
+          "what_happened": "Mats Zuccarello, Andre Lee lead LA Kings past Ducks 5-3 in first Freeway Faceoff of season.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (-0.1%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Philadelphia 76ers @ Indiana Pacers",
+          "sport": "NBA",
+          "pick": "Philadelphia 76ers -3.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Philadelphia 76ers 111, Indiana Pacers 87",
+          "pnl": "",
+          "clv_pct": 3.0,
+          "why_picked": "Primary signal: Rating Edge. (Home court advantage: Indiana Pacers (+2%))",
+          "what_happened": "LeBron James and 76ers breeze past Pacers 111-87, advance to NBA Cup knockout round.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+3.0%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Memphis Grizzlies @ Minnesota Timberwolves",
+          "sport": "NBA",
+          "pick": "Memphis Grizzlies +4.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Memphis Grizzlies 114, Minnesota Timberwolves 109",
+          "pnl": "",
+          "clv_pct": 8.0,
+          "why_picked": "Primary signal: Injury Impact. (Home court advantage: Minnesota Timberwolves (+2%))",
+          "what_happened": "Grizzlies top Timberwolves 114-109 to win NBA Cup West Group B.",
+          "signals": [
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+8.0%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Toronto Maple Leafs @ Boston Bruins",
+          "sport": "NHL",
+          "pick": "Boston Bruins",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Toronto Maple Leafs 3, Boston Bruins 1",
+          "pnl": "",
+          "clv_pct": 0.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Boston Bruins (+2%))",
+          "what_happened": "Morgan Rielly scores twice as Maple Leafs defeat Bruins, who lose David Pastrnak to injury.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.0%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Los Angeles Lakers @ San Antonio Spurs",
+          "sport": "NBA",
+          "pick": "Los Angeles Lakers +6.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Los Angeles Lakers 96, San Antonio Spurs 99",
+          "pnl": "",
+          "clv_pct": -1.4,
+          "why_picked": "Primary signal: Rating Edge. (Home court advantage: San Antonio Spurs (+2%))",
+          "what_happened": "Spurs ride second-half surge to earn spot in NBA Cup knockout round with 99-96 victory over Lakers.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.4% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Milwaukee Bucks @ Detroit Pistons",
+          "sport": "NBA",
+          "pick": "Detroit Pistons -9.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Milwaukee Bucks 98, Detroit Pistons 113",
+          "pnl": "",
+          "clv_pct": 0.0,
+          "why_picked": "Primary signal: Rating Edge. (Home court advantage: Detroit Pistons (+2%))",
+          "what_happened": "Isaiah Joe scores 22 points, Pistons' reserves power NBA Cup win over Bucks.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.0%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Winnipeg Jets @ New York Islanders",
+          "sport": "NHL",
+          "pick": "New York Islanders",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Winnipeg Jets 3, New York Islanders 1",
+          "pnl": "",
+          "clv_pct": -1.2,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: New York Islanders (+2%))",
+          "what_happened": "Connor scores twice and the Jets beat the Islanders 3-1 for 3rd straight win.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost AND the market moved -1.2% against us",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Vancouver Canucks @ Philadelphia Flyers",
+          "sport": "NHL",
+          "pick": "Vancouver Canucks +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Vancouver Canucks 2, Philadelphia Flyers 5",
+          "pnl": "",
+          "clv_pct": 2.4,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Philadelphia Flyers (+2%))",
+          "what_happened": "Flyers beat Canucks 5-2 after leading scorer Matvei Michkov is benched for 'internal team matter'.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+2.4%), lost on variance",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Utah Mammoth @ Nashville Predators",
+          "sport": "NHL",
+          "pick": "Nashville Predators +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Utah Mammoth 6, Nashville Predators 5",
+          "pnl": "",
+          "clv_pct": -1.0,
+          "why_picked": "Primary signal: Model Projection. (Home ice advantage: Nashville Predators (+2%))",
+          "what_happened": "Trocheck's shootout goal lifts Mammoth to a 6-5 win over the Predators.",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.0% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Atlanta Hawks @ Boston Celtics",
+          "sport": "NBA",
+          "pick": "Atlanta Hawks +8.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Atlanta Hawks 87, Boston Celtics 86",
+          "pnl": "",
+          "clv_pct": -2.0,
+          "why_picked": "Primary signal: Rating Edge. (Home court advantage: Boston Celtics (+2%))",
+          "what_happened": "Johnson helps Hawks close out NBA Cup group stage with 87-86 win over Celtics.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -2.0% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Denver Nuggets @ Utah Jazz",
+          "sport": "NBA",
+          "pick": "Utah Jazz +9.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Denver Nuggets 120, Utah Jazz 107",
+          "pnl": "",
+          "clv_pct": 1.1,
+          "why_picked": "Primary signal: Rating Edge. (Home court advantage: Utah Jazz (+2%))",
+          "what_happened": "Jamal Murray scores 36 to lead Nuggets past Jazz 120-107.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 beat the close (+1.1%), lost on variance",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Vegas Golden Knights @ San Jose Sharks",
+          "sport": "NHL",
+          "pick": "Vegas Golden Knights",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "LOST",
+          "score": "Vegas Golden Knights 1, San Jose Sharks 4",
+          "pnl": "",
+          "clv_pct": 0.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: San Jose Sharks (+2%))",
+          "what_happened": "Sharks beat Vegas 4-1 for franchise\u2019s first regulation win over Golden Knights at SAP Center.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "INCORRECT \u2014 lost; line movement flat (+0.0%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Golden State Warriors @ Portland Trail Blazers",
+          "sport": "NBA",
+          "pick": "Portland Trail Blazers",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Golden State Warriors 94, Portland Trail Blazers 116",
+          "pnl": "",
+          "clv_pct": -3.3,
+          "why_picked": "Primary signal: Rating Edge. (Home court advantage: Portland Trail Blazers (+2%))",
+          "what_happened": "Trail Blazers beat the Warriors 116-94 to advance to the NBA Cup quarterfinals.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -3.3% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "New Orleans Pelicans @ LA Clippers",
+          "sport": "NBA",
+          "pick": "New Orleans Pelicans +2.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "New Orleans Pelicans 105, LA Clippers 104",
+          "pnl": "",
+          "clv_pct": 1.8,
+          "why_picked": "Primary signal: Injury Impact. (Home court advantage: LA Clippers (+2%))",
+          "what_happened": "Pelicans beat Clippers 105-104 in NBA Cup group finale.",
+          "signals": [
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won and beat the close (+1.8%)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Seattle Kraken @ Edmonton Oilers",
+          "sport": "NHL",
+          "pick": "Seattle Kraken +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Seattle Kraken 4, Edmonton Oilers 2",
+          "pnl": "",
+          "clv_pct": -1.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: Edmonton Oilers (+2%))",
+          "what_happened": "Kakko scores twice in 3rd as Kraken hand Oilers their 5th straight loss.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "MIXED \u2014 won, but the market moved -1.0% against this pick",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Colorado Avalanche @ Minnesota Wild",
+          "sport": "NHL",
+          "pick": "Colorado Avalanche +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Colorado Avalanche 4, Minnesota Wild 3",
+          "pnl": "",
+          "clv_pct": 0.1,
+          "why_picked": "Primary signal: Injury Impact. (Home ice advantage: Minnesota Wild (+2%))",
+          "what_happened": "Makar gets shootout winner as Avalanche overcome 3-goal, 3rd-period deficit to beat Wild 4-3.",
+          "signals": [
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.1%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Calgary Flames @ New Jersey Devils",
+          "sport": "NHL",
+          "pick": "New Jersey Devils",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "WON",
+          "score": "Calgary Flames 3, New Jersey Devils 5",
+          "pnl": "",
+          "clv_pct": 0.0,
+          "why_picked": "Primary signal: Rating Edge. (Home ice advantage: New Jersey Devils (+2%))",
+          "what_happened": "Connor Brown's third-period goal lifts Devils to a 5-3 comeback win over Flames.",
+          "signals": [
+            "Rating Edge",
+            "Injury Impact"
+          ],
+          "signal_verdict": "CORRECT \u2014 won; line movement flat (+0.0%, noise range)",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Inter Miami CF @ Columbus Crew SC",
+          "sport": "MLS",
+          "pick": "Columbus Crew SC",
+          "bet_type": "Moneyline",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "clv_pct": -1.0,
+          "why_picked": "Primary signal: Model Projection.",
+          "what_happened": "",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "North Dakota State Bison @ San Jos\u00e9 State Spartans",
+          "sport": "CFB",
+          "pick": "North Dakota State Bison -7.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "why_picked": "Primary signal: Model Projection. (Power ratings -2.9 vs +12.3 (points vs average) \u2192 projected margin -12.6 for North Dakota State Bison)",
+          "what_happened": "",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Tulsa Golden Hurricane @ UTSA Roadrunners",
+          "sport": "CFB",
+          "pick": "UTSA Roadrunners +1.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "why_picked": "Primary signal: Model Projection. (Power ratings +8.1 vs +7.6 (points vs average) \u2192 projected margin +3.1 for UTSA Roadrunners)",
+          "what_happened": "",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "Temple Owls @ Memphis Tigers",
+          "sport": "CFB",
+          "pick": "Temple Owls +20.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "why_picked": "Primary signal: Model Projection. (Power ratings +10.5 vs -2.9 (points vs average) \u2192 projected margin +16.0 for Memphis Tigers)",
+          "what_happened": "",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "West Virginia Mountaineers @ Utah Utes",
+          "sport": "CFB",
+          "pick": "West Virginia Mountaineers +24.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "why_picked": "Primary signal: Model Projection. (Power ratings +23.5 vs +4.8 (points vs average) \u2192 projected margin +21.3 for Utah Utes)",
+          "what_happened": "",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": false
+        },
+        {
+          "game": "App State Mountaineers @ South Alabama Jaguars",
+          "sport": "CFB",
+          "pick": "South Alabama Jaguars -3.5",
+          "bet_type": "Spread",
+          "confidence": "MEDIUM",
+          "result": "PENDING",
+          "score": "Score not available",
+          "pnl": "",
+          "why_picked": "Primary signal: Model Projection. (Power ratings +0.2 vs -1.3 (points vs average) \u2192 projected margin +4.2 for South Alabama Jaguars)",
+          "what_happened": "",
+          "signals": [
+            "Model Projection"
+          ],
+          "signal_verdict": "",
+          "key_insight": "",
+          "in_budget": false
+        }
+      ],
+      "patterns": [
+        "HIGH confidence: 3-2 today",
+        "NHL Moneyline: 3-1",
+        "NFL Spread: 0-1"
+      ],
+      "model_observations": [
+        "Rating Edge picks: 3-2 with avg CLV +0.2%",
+        "Injury Impact picks: 2-1 with avg CLV +0.2%"
+      ]
     }
   ]
 }
