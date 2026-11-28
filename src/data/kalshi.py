@@ -193,8 +193,22 @@ def event_date(market: Dict) -> Optional[str]:
     return f"20{yy}-{mth:02d}-{int(dd):02d}"
 
 
+# Kalshi started prefixing its SOCCER moneyline titles with the settlement
+# basis — "reg time: america", "reg time: tie" — some time before Nov 27 2026.
+# Every Liga MX token therefore stopped matching the team map at once
+# (map_health: 9/9 unknown, 100%), which by the blast-radius table in
+# map_health() means that whole sport could not be priced, and the draw side
+# stopped being recognised as a draw because the "tie" comparison is exact.
+# Stripped in _norm so EVERY consumer is fixed in one place rather than at the
+# call site that happened to be noticed — matching, the reverse map, the draw
+# detection and map_health all route through here. Generic (no team names), so
+# it covers MLS and the World Cup if Kalshi relabels those books too.
+_SETTLE_BASIS_PREFIX = re.compile(r"^reg(?:ulation)?\.?\s*time\s*:\s*")
+
+
 def _norm(s: str) -> str:
-    return re.sub(r"\s+", " ", str(s or "")).strip().lower()
+    t = re.sub(r"\s+", " ", str(s or "")).strip().lower()
+    return _SETTLE_BASIS_PREFIX.sub("", t).strip()
 
 
 def _pick_point(pick: str) -> Optional[float]:

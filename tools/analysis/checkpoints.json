@@ -592,6 +592,37 @@
       "on_fail": "Revert to a constant 28.0 and investigate the base ppg/opp-ppg projection instead.",
       "measurement": "Parse 'Model projected score' from the wnba_display / morning_wnba_display pools in state/picks_*.json (NOT singles_display - WNBA is watchlist-only and never appears there), join to docs/debrief_history.json finals.",
       "status": "open"
+    },
+    {
+      "id": "kelly_quarter_plus_exposure_cap",
+      "title": "Quarter Kelly + 10% total daily exposure cap",
+      "created": "2026-11-27",
+      "evaluate_after": "2027-01-31",
+      "data_window_start": "2026-11-28",
+      "type": "model_change",
+      "rules": [
+        "PASS if, over cards from 2026-11-28 onward (n >= 45 betting days), the daily staked total is <= 10% of that morning's bankroll on EVERY day. One day over is a FAIL of the mechanism regardless of P&L - the cap is an invariant, not a target.",
+        "PASS on severity if max peak-to-trough bankroll drawdown over the window is < 50%. The uncapped half-Kelly regime ran 100% (bankroll $23 on Nov 7 -> ~$95 Nov 18 -> the $10 floor Nov 22), and a counterfactual rescale of actual history put a 10% cap at 61%.",
+        "DO NOT read P&L as the verdict on this change. It is a variance-control change, not an edge change: measured realised edge over the 261 budget picks since Oct 1 2026 is -0.5pp vs market (z=-0.15, CLV -0.50pp), i.e. zero. A smaller stake on a zero edge loses less in absolute terms and the same in percentage terms. If the window happens to be profitable, that is NOT evidence the cap works, and if it loses, that is NOT evidence it failed.",
+        "EXPECTED SIDE EFFECT, not a bug: while the bankroll sits at the $10 floor, 10% is $1.00, which does not buy one ~60c contract plus commission - so the card will show $0 stakes and `zeroed` bets in the run log. Confirm the report renders and the shadow/decision logs still record the picks (logging is independent of sizing). If the user wants paper-trading continuity at the floor instead, that is a product decision to raise separately, NOT a reason to lift the cap.",
+        "ALSO CHECK that the cap's three call sites all still fire (grep _cap_daily_exposure_safe in src/main.py: fresh / final / code_only). A cap applied at N-1 of N call sites is this project's second-most-common bug shape."
+      ],
+      "rationale": "robinhood_kelly() is a PER-BET rule, but main.py called it once per pick with the FULL rolling bankroll as `budget` (_resize_with_calibrated_probs) and the card then summed ~5 singles + 2 parlays. Nothing in the system bounded the DAY: `reserve` in generator.py is computed with max(0.0, ...) and is display-only, so it never restrained anything, and parlay_kelly was not even sized off the rolling bankroll (it defaults to DAILY_BUDGET). Measured across 207 betting days: median day staked 36% of bankroll, mean 58%, p90 163%, max 204%, and 39 days staked MORE THAN THE ENTIRE BANKROLL. Separately, KELLY_FRACTION was 0.50 - half Kelly sizes off a KNOWN edge, and ours measures at zero or slightly negative, where fractional Kelly is pure variance with negative drift. Shipped together because they address one failure (position size untethered from measured skill) at two levels: per-bet (0.50 -> 0.25) and per-day (new MAX_DAILY_EXPOSURE_PCT = 0.10).",
+      "notes": "NOT in tools/analysis/backtest.py's LIVE dict on purpose: that engine scores FLAT-STAKE ROI and does not model Kelly sizing at all, so adding KELLY_FRACTION/MAX_DAILY_EXPOSURE_PCT keys there would imply coverage it does not have. Neither constant affects pick SELECTION, so no backtest baseline moves. Invariant pinned by tests/test_exposure_cap.py (idempotence, priority order, per-pick Kelly ceiling, floor-zeroing, parlay inclusion)."
+    },
+    {
+      "id": "ligamx_settle_basis_prefix",
+      "title": "Liga MX Kalshi tokens gained a 'reg time: ' prefix",
+      "created": "2026-11-27",
+      "evaluate_after": "2027-01-15",
+      "type": "note",
+      "rules": [
+        "CHECK map_health('ligamx') and map_health('mls') are still ok=True with unknown_pct 0.0. On 2026-11-27 Liga MX read 9/9 unknown (100%) because Kalshi had started titling its soccer moneyline sides 'reg time: america', 'reg time: tie' and so on.",
+        "CONFIRM Liga MX picks are carrying CLV again (kalshi_clv present on ligamx rows in the shadow log after this date). Before the fix the sport could not be priced OR CLV-measured at all: by the blast-radius table in kalshi_pricing.map_health, a renamed MONEYLINE book takes down the whole sport.",
+        "If a FUTURE prefix appears that _SETTLE_BASIS_PREFIX in src/data/kalshi.py does not strip, extend that one regex - do not add per-team aliases, and do not fix it at a call site. Every consumer (matching, reverse map, draw detection, map_health) routes through _norm."
+      ],
+      "rationale": "Caught by the weekly health report, which is the only reason it was visible: the failure is silent - an unpriceable sport looks exactly like a sport with no fixtures. The 'tie' token was broken too, because the draw side is found by an exact == 'tie' comparison, so the three-way market lost its draw leg. Liga MX is watchlist-only so no money was staked on it, but this is the FIFTH Kalshi soccer rename in roughly two months (see the Tijuana note in LIGAMX_TEAM_TO_KALSHI), and the same relabelling would hit MLS or the World Cup identically.",
+      "notes": "Verified on live data, not by reading the diff: after the fix map_health('ligamx') returned ok=True with 8 live tokens and 0 unknown, discover('ligamx', '2026-11-28') returned 2 games (0 before) with two-sided prices and the draw leg restored (0.4527/0.2438/0.3035). MLS/NBA/NHL/NFL re-checked for regression: all 0.0% unknown."
     }
   ]
 }

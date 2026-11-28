@@ -53,7 +53,25 @@ SPORT_ACTIVE_MONTHS = {
 # --- Betting parameters ---
 DAILY_BUDGET: float = float(os.environ.get("DAILY_BUDGET", "100"))
 ROBINHOOD_COMMISSION: float = 0.02   # $0.02 per contract bought
-KELLY_FRACTION: float = 0.50          # 1/2 Kelly
+# ⚠️ QUARTER Kelly since Nov 27 2026 (was 0.50 = half Kelly).
+# Kelly sizes a bet off a KNOWN edge. Measured over 261 budget picks since
+# Oct 1 2026 the realised edge is -0.5pp vs the market (z=-0.15) with CLV
+# -0.50pp — i.e. indistinguishable from zero, and if anything negative. Half
+# Kelly on a zero-or-negative edge is pure variance with negative drift, and
+# it is what took the bankroll from $23 (Nov 7) to the $10 floor (Nov 22) on
+# a win rate that barely moved. Raise this ONLY after a market passes
+# market_test.py + CLV >= 0 + positive ROI in both halves of a time split.
+# Checkpoint: kelly_quarter_plus_exposure_cap.
+KELLY_FRACTION: float = 0.25          # 1/4 Kelly
+# ⚠️ TOTAL daily exposure cap, as a fraction of the rolling bankroll.
+# robinhood_kelly() is called ONCE PER PICK with the FULL bankroll as its
+# budget (main.py `_resize_with_calibrated_probs`), and the ~5 singles + 2
+# parlays that reach the card are then summed — so nothing ever constrained
+# the DAY. `reserve` on the report is display-only and clamped at zero, so it
+# never restrained anything either. Measured across 207 betting days: median
+# day staked 36% of bankroll, mean 58%, p90 163%, max 204%, and 39 days
+# staked MORE THAN THE ENTIRE BANKROLL. Enforced in cap_total_exposure().
+MAX_DAILY_EXPOSURE_PCT: float = 0.10  # 10% of bankroll across ALL bets per day
 MIN_EDGE: float = 0.03                # minimum 3% edge to recommend (analyzers + display pools)
 BUDGET_MIN_EDGE: float = 0.05         # Jul 4 2026 optimization: budget (real-money) entry requires ≥5% effective edge — sub-5% edges showed no win-rate relationship (noise); display/watchlist/logs keep MIN_EDGE
 MAX_SINGLE_BETS: int = 5              # max single-game bets per day

@@ -21,6 +21,7 @@ from src.config import (
     ODDS_API_KEY, REPORT_DIR, REPORT_FILE,
     MAX_SINGLE_BETS, MAX_BUDGET_BETS_PER_GAME, MAX_PROPS_PER_SPORT, MIN_EDGE, BUDGET_MIN_EDGE,
     PWA_HIDDEN_MARKETS, PWA_MODEL_PROB_FLOOR, BUDGET_EXCLUDED_MARKETS,
+    MAX_DAILY_EXPOSURE_PCT,
 )
 from src.data.odds_client import get_last_api_error, get_api_credits
 from src.models.parlay_builder import build_parlays
@@ -268,6 +269,57 @@ def _resize_with_calibrated_probs(recs) -> None:
             continue
 
 
+def _cap_daily_exposure_safe(singles, parlays, label: str = "") -> dict:
+    """Bound the TOTAL staked today to MAX_DAILY_EXPOSURE_PCT of the bankroll.
+
+    ⚠️ WHY THIS EXISTS. Kelly is a per-bet rule: its fraction is a fraction of
+    the bankroll only if you place one bet. `_resize_with_calibrated_probs`
+    calls robinhood_kelly() once per pick with the FULL bankroll as the budget,
+    and the card then sums ~5 singles + 2 parlays — so nothing bounded the DAY.
+    `reserve` on the report is computed with max(0, ...) and is display-only, so
+    it never restrained anything either. Measured over 207 betting days: median
+    day staked 36% of bankroll, mean 58%, p90 163%, max 204%, and 39 days
+    staked more than the whole bankroll.
+
+    Singles come FIRST and in card order, so when capacity runs out it is the
+    lowest-ranked single and then the parlays that lose contracts. Parlays are
+    included because exposure is exposure — and they were never even sized off
+    the rolling bankroll (parlay_kelly defaults to DAILY_BUDGET).
+
+    Fail-open and idempotent, like every other governor here: any failure
+    leaves sizing exactly as Kelly set it, and a card already under the cap is
+    returned untouched.
+    """
+    try:
+        from src.models.kelly import cap_total_exposure
+        from src.state.bankroll import reconcile_bankroll_from_history
+        bankroll = reconcile_bankroll_from_history()
+        rep = cap_total_exposure(list(singles or []) + list(parlays or []),
+                                 bankroll, MAX_DAILY_EXPOSURE_PCT)
+        tag = f" [{label}]" if label else ""
+        if rep.get("capped"):
+            logger.warning(
+                f"Daily exposure cap{tag}: ${rep['before']:.2f} -> ${rep['after']:.2f} "
+                f"(limit ${rep['limit']:.2f} = {MAX_DAILY_EXPOSURE_PCT:.0%} of "
+                f"${rep['bankroll']:.2f} bankroll); {rep['zeroed']} bet(s) zeroed"
+            )
+            if rep.get("zeroed") and rep["zeroed"] >= rep.get("rows", 0):
+                logger.warning(
+                    "Daily exposure cap zeroed the ENTIRE card — the bankroll is "
+                    "at or near the floor, so the cap allows less than one "
+                    "contract. This is the cap working, not a pricing failure."
+                )
+        else:
+            logger.info(
+                f"Daily exposure{tag}: ${rep['before']:.2f} of ${rep['limit']:.2f} "
+                f"allowed ({MAX_DAILY_EXPOSURE_PCT:.0%} of ${rep['bankroll']:.2f}) — under cap"
+            )
+        return rep
+    except Exception as e:
+        logger.warning(f"Daily exposure cap skipped (non-fatal): {e}")
+        return {}
+
+
 def _recalibrate_confidence(recs) -> None:
     """
     Downgrade HIGH → MEDIUM for any pick whose *calibrated* edge falls below the
@@ -421,6 +473,11 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
             # Hydrate narrative/context for picks saved before the card context feature
             final_singles_display = [_hydrate_bet(d) for d in final_singles_display]
             final_singles         = [_hydrate_bet(d) for d in final_singles]
+            # Exposure gate on the code_only re-render too. State written
+            # before the cap existed holds uncapped stakes, and a re-render is
+            # exactly when such a file is read back. Idempotent — a no-op on
+            # state that was already bounded.
+            _cap_daily_exposure_safe(final_singles, final_parlays, label="code_only")
             final_props_display   = [_hydrate_prop(d) for d in final_props_display]
             final_props           = [_hydrate_prop(d) for d in final_props]
             final_mls_display     = [_hydrate_bet(d) for d in final_mls_display]
@@ -927,6 +984,10 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # bets that dropped out of the top-5 since the morning run.
     fresh_singles_all = [_to_dict_with_eff(r) for r in _deduped_raw]
     fresh_parlays = [parlay_to_dict(p) for p in parlays_raw]
+    # Bound the day BEFORE state is written, so a re-run's cached picks carry
+    # capped stakes too. Applied again after merge_picks below — the cap is
+    # idempotent, so the second pass is a no-op unless the merge changed the card.
+    _cap_daily_exposure_safe(fresh_singles, fresh_parlays, label="fresh")
     # Cap props at MAX_PROPS_PER_SPORT per sport before saving to state.
     # Without this cap, when min_edge is explicitly passed to fetch_props() the
     # analyzer's internal [:6] guard is bypassed and all qualifying props are
@@ -1456,6 +1517,11 @@ def run(leagues: list[str], send_email: bool = True, reevaluate: bool = False,
     # (also catches WNBA/IPL picks saved before those sports had narrative support)
     final_singles_display = [_hydrate_bet(d) for d in final_singles_display]
     final_singles         = [_hydrate_bet(d) for d in final_singles]
+    # ── FINAL exposure gate ─────────────────────────────────────────────────
+    # The one chokepoint that sees exactly what reaches the money card, after
+    # merge_picks() has mixed fresh picks with locked morning ones. Idempotent,
+    # so this is a no-op whenever the "fresh" pass above already bounded the day.
+    _cap_daily_exposure_safe(final_singles, final_parlays, label="final")
     final_props_display   = [_hydrate_prop(d) for d in final_props_display]
     final_props           = [_hydrate_prop(d) for d in final_props]
     # Hydrate all own-tile sports in one pass, then refresh named aliases.
